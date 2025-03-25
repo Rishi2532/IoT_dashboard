@@ -120,7 +120,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
         <CardContent className="p-6">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-gradient-to-br from-sky-500 to-sky-600 rounded-lg p-3 shadow-sm">
-              <img src="/esr-tank.svg" alt="ESR" className="h-6 w-6 text-white" />
+              <img src="/esr-tank.svg" alt="ESR" className="h-8 w-8 text-white" style={{ filter: 'brightness(0) invert(1)' }} />
             </div>
             <div className="ml-5 flex-1">
               <h3 className="text-sm font-medium text-sky-800">Total ESR</h3>
