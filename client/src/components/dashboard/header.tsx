@@ -14,12 +14,12 @@ export default function Header() {
               </div>
               <div>
                 <h1 className="font-bold text-xl text-white">
-                  Maharashtra 
+                  SWSM 
                   <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-white ml-1">
-                    Water Scheme Dashboard
+                    IoT Project
                   </span>
                 </h1>
-                <p className="text-xs text-blue-100 -mt-1">Water Integration Monitoring System</p>
+                <p className="text-xs text-blue-100 -mt-1">JJM Integration Monitoring System</p>
               </div>
             </div>
           </div>
