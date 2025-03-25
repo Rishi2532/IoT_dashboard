@@ -1,0 +1,63 @@
+import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Users table from original schema (keeping it for reference)
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+});
+
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+});
+
+export type InsertUser = z.infer<typeof insertUserSchema>;
+export type User = typeof users.$inferSelect;
+
+// Region table
+export const regions = pgTable("regions", {
+  region_id: serial("region_id").primaryKey(),
+  region_name: text("region_name").notNull(),
+  total_esr_integrated: integer("total_esr_integrated"),
+  fully_completed_esr: integer("fully_completed_esr"),
+  partial_esr: integer("partial_esr"),
+  total_villages_integrated: integer("total_villages_integrated"),
+  fully_completed_villages: integer("fully_completed_villages"),
+  total_schemes_integrated: integer("total_schemes_integrated"),
+  fully_completed_schemes: integer("fully_completed_schemes"),
+});
+
+export const insertRegionSchema = createInsertSchema(regions)
+  .omit({ region_id: true });
+
+export type InsertRegion = z.infer<typeof insertRegionSchema>;
+export type Region = typeof regions.$inferSelect;
+
+// SchemeStatus table
+export const schemeStatuses = pgTable("scheme_statuses", {
+  scheme_id: serial("scheme_id").primaryKey(),
+  scheme_name: text("scheme_name").notNull(),
+  region_name: text("region_name"),
+  agency: text("agency"),
+  total_villages_in_scheme: integer("total_villages_in_scheme"),
+  total_esr_in_scheme: integer("total_esr_in_scheme"),
+  villages_integrated_on_iot: integer("villages_integrated_on_iot"),
+  fully_completed_villages: integer("fully_completed_villages"),
+  esr_request_received: integer("esr_request_received"),
+  esr_integrated_on_iot: integer("esr_integrated_on_iot"),
+  fully_completed_esr: integer("fully_completed_esr"),
+  balance_for_fully_completion: integer("balance_for_fully_completion"),
+  fm_integrated: integer("fm_integrated"),
+  rca_integrated: integer("rca_integrated"),
+  pt_integrated: integer("pt_integrated"),
+  scheme_completion_status: text("scheme_completion_status"),
+});
+
+export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses)
+  .omit({ scheme_id: true });
+
+export type InsertSchemeStatus = z.infer<typeof insertSchemeStatusSchema>;
+export type SchemeStatus = typeof schemeStatuses.$inferSelect;
