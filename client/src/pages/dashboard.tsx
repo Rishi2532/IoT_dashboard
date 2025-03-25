@@ -70,7 +70,38 @@ export default function Dashboard() {
     });
   };
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    try {
+      // Fetch all required data
+      const schemesResponse = await fetch('/api/schemes');
+      const schemes = await schemesResponse.json();
+      
+      // Import XLSX dynamically
+      const XLSX = await import('xlsx');
+      
+      // Create workbook and worksheet
+      const wb = XLSX.utils.book_new();
+      const ws = XLSX.utils.json_to_sheet(schemes.map(scheme => ({
+        'Scheme Name': scheme.scheme_name,
+        'Region': scheme.region_name,
+        'Agency': scheme.agency,
+        'Total Villages': scheme.total_villages_in_scheme,
+        'Villages Integrated': scheme.villages_integrated_on_iot,
+        'Villages Completed': scheme.fully_completed_villages,
+        'Total ESR': scheme.total_esr_in_scheme,
+        'ESR Integrated': scheme.esr_integrated_on_iot,
+        'ESR Completed': scheme.fully_completed_esr,
+        'Status': scheme.scheme_completion_status
+      })));
+      
+      // Add worksheet to workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'Schemes Data');
+      
+      // Generate and download file
+      XLSX.writeFile(wb, 'swsm-schemes-data.xlsx');
+    } catch (error) {
+      console.error('Export failed:', error);
+    }
     // In a real application, this would export data to CSV
     toast({
       title: "Export Feature",
