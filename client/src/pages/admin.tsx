@@ -102,27 +102,43 @@ export default function AdminPage() {
   // Fetch regions data
   const { data: regions, isLoading: isLoadingRegions } = useQuery({
     queryKey: ['/api/regions'],
-    select: (data: Region[]) => data
+    queryFn: async () => {
+      const response = await fetch('/api/regions');
+      if (!response.ok) {
+        throw new Error('Failed to fetch regions');
+      }
+      return response.json() as Promise<Region[]>;
+    }
   });
 
   // Fetch schemes data with region filter
   const { data: schemes, isLoading: isLoadingSchemes } = useQuery({
     queryKey: ['/api/schemes', selectedRegion],
-    queryFn: () => 
-      apiRequest(`/api/schemes${selectedRegion !== 'all' ? `?region=${selectedRegion}` : ''}`),
-    select: (data: SchemeStatus[]) => data
+    queryFn: async () => {
+      const response = await fetch(`/api/schemes${selectedRegion !== 'all' ? `?region=${selectedRegion}` : ''}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch schemes');
+      }
+      return response.json() as Promise<SchemeStatus[]>;
+    }
   });
 
   // Create scheme mutation
   const createSchemeMutation = useMutation({
-    mutationFn: (data: Omit<SchemeFormValues, 'scheme_id'>) =>
-      apiRequest('/api/schemes', {
+    mutationFn: async (data: Omit<SchemeFormValues, 'scheme_id'>) => {
+      const response = await fetch('/api/schemes', {
         method: 'POST',
         body: JSON.stringify(data),
         headers: {
           'Content-Type': 'application/json'
         }
-      }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to create scheme');
+      }
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: 'Success',
@@ -143,14 +159,20 @@ export default function AdminPage() {
 
   // Update scheme mutation
   const updateSchemeMutation = useMutation({
-    mutationFn: (data: SchemeFormValues) =>
-      apiRequest(`/api/schemes/${data.scheme_id}`, {
+    mutationFn: async (data: SchemeFormValues) => {
+      const response = await fetch(`/api/schemes/${data.scheme_id}`, {
         method: 'PUT',
         body: JSON.stringify(data),
         headers: {
           'Content-Type': 'application/json'
         }
-      }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to update scheme');
+      }
+      return response.json();
+    },
     onSuccess: () => {
       toast({
         title: 'Success',
@@ -172,10 +194,16 @@ export default function AdminPage() {
 
   // Delete scheme mutation
   const deleteSchemeMutation = useMutation({
-    mutationFn: (schemeId: number) =>
-      apiRequest(`/api/schemes/${schemeId}`, {
+    mutationFn: async (schemeId: number) => {
+      const response = await fetch(`/api/schemes/${schemeId}`, {
         method: 'DELETE'
-      }),
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || 'Failed to delete scheme');
+      }
+      return true;
+    },
     onSuccess: () => {
       toast({
         title: 'Success',

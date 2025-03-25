@@ -4,6 +4,7 @@ import Schemes from "./pages/schemes";
 import Regions from "./pages/regions";
 import Reports from "./pages/reports";
 import Settings from "./pages/settings";
+import Admin from "./pages/admin";
 import NotFound from "./pages/not-found";
 
 function App() {
@@ -14,6 +15,7 @@ function App() {
       <Route path="/regions" component={Regions} />
       <Route path="/reports" component={Reports} />
       <Route path="/settings" component={Settings} />
+      <Route path="/admin" component={Admin} />
       <Route component={NotFound} />
     </Switch>
   );

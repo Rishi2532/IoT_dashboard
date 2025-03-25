@@ -1,12 +1,13 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Home, GitBranchPlus, MapPin, BarChart2, Settings } from "lucide-react";
+import { Home, GitBranchPlus, MapPin, BarChart2, Settings, ShieldCheck } from "lucide-react";
 
 const navigationItems = [
   { name: "Dashboard", href: "/", icon: Home },
   { name: "Schemes", href: "/schemes", icon: GitBranchPlus },
   { name: "Regions", href: "/regions", icon: MapPin },
   { name: "Reports", href: "/reports", icon: BarChart2 },
+  { name: "Admin", href: "/admin", icon: ShieldCheck },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
