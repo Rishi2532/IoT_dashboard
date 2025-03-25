@@ -31,8 +31,13 @@ export default function RegionComparisonChart({ regions, isLoading }: RegionComp
       return region.region_name;
     });
     
-    const totalEsrData = sortedRegions.map(region => region.total_esr || 0);
+    // Extract all required data from regions
+    const totalEsrData = sortedRegions.map(region => region.total_esr_integrated || 0);
     const completedEsrData = sortedRegions.map(region => region.fully_completed_esr || 0);
+    const totalVillagesData = sortedRegions.map(region => region.total_villages_integrated || 0);
+    const completedVillagesData = sortedRegions.map(region => region.fully_completed_villages || 0);
+    const totalSchemesData = sortedRegions.map(region => region.total_schemes_integrated || 0);
+    const completedSchemesData = sortedRegions.map(region => region.fully_completed_schemes || 0);
 
     chartInstance.current = new Chart(ctx, {
       type: 'bar',
@@ -40,17 +45,45 @@ export default function RegionComparisonChart({ regions, isLoading }: RegionComp
         labels,
         datasets: [
           {
-            label: 'Total ESR',
+            label: 'Total ESR Integrated',
             data: totalEsrData,
             backgroundColor: 'rgba(59, 130, 246, 0.6)',
             borderColor: 'rgba(59, 130, 246, 1)',
             borderWidth: 1
           },
           {
-            label: 'Completed ESR',
+            label: 'Fully Completed ESR',
             data: completedEsrData,
             backgroundColor: 'rgba(16, 185, 129, 0.6)',
             borderColor: 'rgba(16, 185, 129, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'Total Villages Integrated',
+            data: totalVillagesData,
+            backgroundColor: 'rgba(245, 158, 11, 0.6)',
+            borderColor: 'rgba(245, 158, 11, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'Fully Completed Villages',
+            data: completedVillagesData,
+            backgroundColor: 'rgba(236, 72, 153, 0.6)',
+            borderColor: 'rgba(236, 72, 153, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'Total Schemes Integrated',
+            data: totalSchemesData,
+            backgroundColor: 'rgba(124, 58, 237, 0.6)',
+            borderColor: 'rgba(124, 58, 237, 1)',
+            borderWidth: 1
+          },
+          {
+            label: 'Fully Completed Schemes',
+            data: completedSchemesData,
+            backgroundColor: 'rgba(239, 68, 68, 0.6)',
+            borderColor: 'rgba(239, 68, 68, 1)',
             borderWidth: 1
           }
         ]
@@ -65,11 +98,36 @@ export default function RegionComparisonChart({ regions, isLoading }: RegionComp
               display: true,
               text: 'Count'
             }
+          },
+          x: {
+            ticks: {
+              autoSkip: false,
+              maxRotation: 45,
+              minRotation: 45
+            }
           }
         },
         plugins: {
           legend: {
             position: 'top',
+            labels: {
+              boxWidth: 15,
+              padding: 10,
+              font: {
+                size: 10
+              }
+            }
+          },
+          tooltip: {
+            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+            titleFont: {
+              size: 12
+            },
+            bodyFont: {
+              size: 11
+            },
+            padding: 10,
+            displayColors: true
           }
         }
       }
@@ -89,7 +147,7 @@ export default function RegionComparisonChart({ regions, isLoading }: RegionComp
         <div className="mt-1 text-sm text-neutral-500">
           Progress across different regions
         </div>
-        <div className="mt-4 h-[250px] w-full">
+        <div className="mt-4 h-[350px] w-full">
           {isLoading ? (
             <div className="animate-pulse h-full w-full bg-gray-200 rounded"></div>
           ) : (

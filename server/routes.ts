@@ -1,6 +1,8 @@
-import type { Express } from "express";
+import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { insertRegionSchema, insertSchemeStatusSchema } from "@shared/schema";
+import { z } from "zod";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -46,6 +48,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch region" });
     }
   });
+  
+  // Create a new region
+  app.post("/api/regions", async (req, res) => {
+    try {
+      const regionData = insertRegionSchema.parse(req.body);
+      const newRegion = await storage.createRegion(regionData);
+      res.status(201).json(newRegion);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid region data", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error creating region:", error);
+      res.status(500).json({ message: "Failed to create region" });
+    }
+  });
+  
+  // Update an existing region
+  app.put("/api/regions/:id", async (req, res) => {
+    try {
+      const regionId = parseInt(req.params.id);
+      
+      if (isNaN(regionId)) {
+        return res.status(400).json({ message: "Invalid region ID" });
+      }
+      
+      const regionData = req.body;
+      
+      // Ensure the ID in the path matches the ID in the body
+      if (regionData.region_id !== regionId) {
+        return res.status(400).json({ message: "Region ID mismatch" });
+      }
+      
+      const existingRegion = await storage.getRegionByName(regionData.region_name);
+      
+      if (!existingRegion) {
+        return res.status(404).json({ message: "Region not found" });
+      }
+      
+      const updatedRegion = await storage.updateRegion(regionData);
+      res.json(updatedRegion);
+    } catch (error) {
+      console.error("Error updating region:", error);
+      res.status(500).json({ message: "Failed to update region" });
+    }
+  });
 
   // Get all schemes with optional region filter
   app.get("/api/schemes", async (req, res) => {
@@ -84,6 +134,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching scheme:", error);
       res.status(500).json({ message: "Failed to fetch scheme" });
+    }
+  });
+  
+  // Create a new scheme
+  app.post("/api/schemes", async (req, res) => {
+    try {
+      const schemeData = insertSchemeStatusSchema.parse(req.body);
+      const newScheme = await storage.createScheme(schemeData);
+      res.status(201).json(newScheme);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid scheme data", 
+          errors: error.errors 
+        });
+      }
+      console.error("Error creating scheme:", error);
+      res.status(500).json({ message: "Failed to create scheme" });
+    }
+  });
+  
+  // Update an existing scheme
+  app.put("/api/schemes/:id", async (req, res) => {
+    try {
+      const schemeId = parseInt(req.params.id);
+      
+      if (isNaN(schemeId)) {
+        return res.status(400).json({ message: "Invalid scheme ID" });
+      }
+      
+      const schemeData = req.body;
+      
+      // Ensure the ID in the path matches the ID in the body
+      if (schemeData.scheme_id !== schemeId) {
+        return res.status(400).json({ message: "Scheme ID mismatch" });
+      }
+      
+      const existingScheme = await storage.getSchemeById(schemeId);
+      
+      if (!existingScheme) {
+        return res.status(404).json({ message: "Scheme not found" });
+      }
+      
+      const updatedScheme = await storage.updateScheme(schemeData);
+      res.json(updatedScheme);
+    } catch (error) {
+      console.error("Error updating scheme:", error);
+      res.status(500).json({ message: "Failed to update scheme" });
+    }
+  });
+  
+  // Delete a scheme
+  app.delete("/api/schemes/:id", async (req, res) => {
+    try {
+      const schemeId = parseInt(req.params.id);
+      
+      if (isNaN(schemeId)) {
+        return res.status(400).json({ message: "Invalid scheme ID" });
+      }
+      
+      const existingScheme = await storage.getSchemeById(schemeId);
+      
+      if (!existingScheme) {
+        return res.status(404).json({ message: "Scheme not found" });
+      }
+      
+      await storage.deleteScheme(schemeId);
+      res.status(204).end();
+    } catch (error) {
+      console.error("Error deleting scheme:", error);
+      res.status(500).json({ message: "Failed to delete scheme" });
     }
   });
 

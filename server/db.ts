@@ -1,126 +1,123 @@
-import sqlite3 from 'sqlite3';
-import * as sqlite from 'sqlite';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import { drizzle } from 'drizzle-orm/node-postgres';
+import { sql } from 'drizzle-orm';
+import { regions, schemeStatuses } from '../shared/schema';
+import pg from 'pg';
+const { Pool } = pg;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// PostgreSQL connection
+let pool: Pool;
+let db: ReturnType<typeof drizzle>;
 
-// Open a database connection
-export async function open() {
-  return await sqlite.open({
-    filename: ':memory:', // In-memory database
-    driver: sqlite3.Database
-  });
-}
-
-// Initialize the database with schema and data
-export async function initializeDatabase() {
-  const db = await open();
-  
-  // Create tables
-  await db.exec(`
-    CREATE TABLE region (
-      region_id INTEGER PRIMARY KEY AUTOINCREMENT,
-      region_name TEXT NOT NULL,
-      total_esr_integrated INTEGER,
-      fully_completed_esr INTEGER,
-      partial_esr INTEGER,
-      total_villages_integrated INTEGER,
-      fully_completed_villages INTEGER,
-      total_schemes_integrated INTEGER,
-      fully_completed_schemes INTEGER
-    );
+// Create database connection
+export async function getDB() {
+  if (!db) {
+    pool = new Pool({
+      connectionString: process.env.DATABASE_URL,
+      max: 10, // Maximum number of clients in the pool
+      idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
+    });
     
-    CREATE TABLE scheme_status (
-      scheme_id INTEGER PRIMARY KEY AUTOINCREMENT,
-      scheme_name TEXT NOT NULL,
-      region_name TEXT,
-      agency TEXT,
-      total_villages_in_scheme INTEGER,
-      total_esr_in_scheme INTEGER,
-      villages_integrated_on_iot INTEGER,
-      fully_completed_villages INTEGER,
-      esr_request_received INTEGER,
-      esr_integrated_on_iot INTEGER,
-      fully_completed_esr INTEGER,
-      balance_for_fully_completion INTEGER,
-      fm_integrated INTEGER,
-      rca_integrated INTEGER,
-      pt_integrated INTEGER,
-      scheme_completion_status TEXT
-    );
-  `);
-  
-  // Insert region data
-  await db.exec(`
-    INSERT INTO region (region_name, total_esr_integrated, fully_completed_esr, partial_esr, total_villages_integrated, fully_completed_villages, total_schemes_integrated, fully_completed_schemes)
-    VALUES 
-    ('Nagpur', 117, 58, 59, 91, 38, 15, 9),
-    ('Chhatrapati Sambhajinagar', 142, 73, 69, 130, 71, 8, 2),
-    ('Pune', 97, 31, 66, 53, 16, 9, 0),
-    ('Konkan', 11, 1, 10, 11, 0, 4, 0),
-    ('Amravati', 145, 59, 86, 119, 24, 11, 1),
-    ('Nashik', 70, 23, 46, 44, 4, 11, 2);
-  `);
-  
-  // Insert scheme data for Nashik
-  await db.exec(`
-    INSERT INTO scheme_status (scheme_name, region_name, agency, total_villages_in_scheme, total_esr_in_scheme, villages_integrated_on_iot, fully_completed_villages, esr_request_received, esr_integrated_on_iot, fully_completed_esr, balance_for_fully_completion, fm_integrated, rca_integrated, pt_integrated, scheme_completion_status)
-    VALUES
-    ('Nampur and 4 villages RR Tal Baglan (C 39)', 'Nashik', 'M/S Ceinsys', 5, 10, 0, 0, 0, 0, 0, 10, 0, 0, 0, 'Not-Connected'),
-    ('Bargaonpimpri & 6 VRWSS Tal Sinnar', 'Nashik', 'M/S Ceinsys', 0, 16, 5, 0, 16, 11, 0, 16, 7, 11, 0, 'Partial'),
-    ('Nirhale-Fatehpur and 5 villages, Tal. Sinnar', 'Nashik', 'M/S Ceinsys', 5, 11, 3, 0, 8, 2, 0, 11, 3, 2, 1, 'Partial'),
-    ('Retro.Lasalgaon Vinchur 16 villages, Tal. Nifad', 'Nashik', 'M/S Ceinsys', 0, 26, 0, 0, 0, 0, 0, 26, 0, 0, 0, 'Not-Connected'),
-    ('Retrofitting To Yeola 38 Villages', 'Nashik', 'M/S Ceinsys', 28, 30, 0, 0, 5, 0, 0, 30, 0, 0, 0, 'Not-Connected'),
-    ('78 villages in Nandgaon, Malegaon and Deola talukas', 'Nashik', 'M/S Ceinsys', 78, 137, 0, 0, 0, 0, 0, 137, 0, 0, 0, 'Not-Connected'),
-    ('Dhahiwal &25 Villages WSS Tal Malegaon', 'Nashik', 'M/S Ceinsys', 20, 33, 0, 0, 0, 0, 0, 33, 0, 0, 0, 'Not-Connected'),
-    ('Malmatha and 25 villages Ta. Malegaon', 'Nashik', 'M/S Ceinsys', 10, 12, 0, 0, 0, 0, 0, 12, 0, 0, 0, 'Not-Connected'),
-    ('Retro.Chandwad and WSS 44 villages. Ta. Chandwad', 'Nashik', 'M/S Ceinsys', 58, 68, 7, 0, 25, 7, 0, 68, 0, 2, 5, 'Partial'),
-    ('Retrofitting To Wadzire (Naigaon) & 4 Villages RRWSS', 'Nashik', 'M/S Ceinsys', 4, 5, 1, 0, 4, 1, 0, 5, 1, 1, 0, 'Partial'),
-    ('Ozar-Sakore & 2 Villages', 'Nashik', 'M/S Ceinsys', 4, 10, 4, 1, 9, 8, 5, 5, 6, 7, 5, 'Partial'),
-    ('Paldhi (bk& Kh) RR Tal DHARANGAON', 'Nashik', 'M/S Ceinsys', 2, 6, 2, 2, 5, 5, 5, 1, 5, 5, 5, 'Fully-Completed'),
-    ('Lasur and 9 villages RRWSS. Ta. Chopda', 'Nashik', 'M/S Ceinsys', 10, 20, 0, 0, 0, 0, 0, 20, 0, 0, 0, 'Not-Connected'),
-    ('Dondigar-Rohini & 15 Villages WSS', 'Nashik', 'M/S Ceinsys', 17, 35, 0, 0, 0, 0, 0, 35, 0, 0, 0, 'Not-Connected'),
-    ('Retro.Sonai Karjgaon and 16 villages, Tal. Nevasa', 'Nashik', 'M/S Ceinsys', 18, 35, 5, 0, 6, 6, 0, 35, 4, 5, 0, 'Partial')
-  `);
-  
-  // Insert scheme data for Amravati
-  await db.exec(`
-    INSERT INTO scheme_status (scheme_name, region_name, agency, total_villages_in_scheme, total_esr_in_scheme, villages_integrated_on_iot, fully_completed_villages, esr_request_received, esr_integrated_on_iot, fully_completed_esr, balance_for_fully_completion, fm_integrated, rca_integrated, pt_integrated, scheme_completion_status)
-    VALUES
-    ('83 Village RRWS Scheme MJP RR (C 39)', 'Amravati', 'M/S Ceinsys', 87, 124, 24, 8, 27, 27, 24, 100, 27, 27, 24, 'Partial'),
-    ('Nandgaon Peth & 32 Villages', 'Amravati', 'M/S Ceinsys', 33, 52, 0, 0, 0, 0, 0, 52, 0, 0, 0, 'Not-Connected'),
-    ('105 villages RRWSS', 'Amravati', 'M/S Ceinsys', 113, 173, 41, 1, 63, 52, 10, 163, 51, 14, 40, 'Partial'),
-    ('Shahanur & 9 Villages RRWS', 'Amravati', 'M/S Ceinsys', 10, 14, 7, 1, 8, 8, 3, 11, 6, 6, 6, 'Partial'),
-    ('Chirodi & 4 Villages RRWS', 'Amravati', 'M/S Ceinsys', 5, 12, 0, 0, 0, 0, 0, 12, 0, 0, 0, 'Not-Connected'),
-    ('Padli and 5 villages', 'Amravati', 'M/S Ceinsys', 6, 7, 6, 6, 7, 7, 7, 0, 7, 7, 7, 'Fully-Completed')
-  `);
-  
-  // Insert scheme data for Pune
-  await db.exec(`
-    INSERT INTO scheme_status (scheme_name, region_name, agency, total_villages_in_scheme, total_esr_in_scheme, villages_integrated_on_iot, fully_completed_villages, esr_request_received, esr_integrated_on_iot, fully_completed_esr, balance_for_fully_completion, fm_integrated, rca_integrated, pt_integrated, scheme_completion_status)
-    VALUES
-    ('Wangani RRWSS', 'Pune', 'Chetas', 3, 6, 4, 0, 6, 6, 0, 6, 6, 4, 0, 'Partial'),
-    ('RR Girvi WSS', 'Pune', NULL, 4, 5, 5, 0, 5, 5, 2, 3, 5, 5, 2, 'Partial'),
-    ('Peth & two Villages', 'Pune', NULL, 3, 5, 3, 0, 5, 5, 0, 5, 4, 5, 0, 'Partial'),
-    ('MURTI & 7 VILLAGES RRWSS', 'Pune', NULL, 6, 13, 7, 2, 13, 13, 6, 7, 13, 5, 7, 'Partial'),
-    ('HOL SASTEWADI', 'Pune', NULL, 4, 8, 2, 0, 8, 8, 3, 5, 8, 7, 3, 'Partial')
-  `);
-  
-  // Insert scheme data for Nagpur
-  await db.exec(`
-    INSERT INTO scheme_status (scheme_name, region_name, agency, total_villages_in_scheme, total_esr_in_scheme, villages_integrated_on_iot, fully_completed_villages, esr_request_received, esr_integrated_on_iot, fully_completed_esr, balance_for_fully_completion, fm_integrated, rca_integrated, pt_integrated, scheme_completion_status)
-    VALUES
-    ('20036500 Vyahad & 2 Village RR WSS', 'Nagpur', 'M/S Rite Water', 3, 5, 3, 0, 3, 3, 0, 5, 3, 3, 0, 'Partial'),
-    ('20036536 Bothali & 7 Villages Rrwss', 'Nagpur', 'M/S Rite Water', 8, 8, 8, 6, 8, 8, 5, 3, 8, 8, 5, 'Partial'),
-    ('20036862 Bor Chandli 5 Village Rr Wss', 'Nagpur', 'M/S Rite Water', 5, 5, 5, 5, 5, 5, 5, 0, 5, 5, 5, 'Fully-Completed'),
-    ('2009882 Ghot Rrwss', 'Nagpur', 'M/S Rite Water', 3, 4, 3, 3, 4, 4, 4, 0, 4, 4, 3, 'Fully-Completed'),
-    ('GOREGAON RR Retrofitting (20019216)', 'Nagpur', 'M/S Rite Water', 5, 7, 5, 5, 7, 7, 7, 0, 7, 7, 5, 'Fully-Completed')
-  `);
+    db = drizzle(pool);
+  }
   
   return db;
 }
 
-// Export the function to initialize the database
-export default { open, initializeDatabase };
+// Initialize the database with schema and data
+export async function initializeDatabase() {
+  const db = await getDB();
+  
+  try {
+    // Check if tables exist and create them if they don't
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "regions" (
+        "region_id" SERIAL PRIMARY KEY,
+        "region_name" TEXT NOT NULL,
+        "total_esr_integrated" INTEGER,
+        "fully_completed_esr" INTEGER,
+        "partial_esr" INTEGER,
+        "total_villages_integrated" INTEGER,
+        "fully_completed_villages" INTEGER,
+        "total_schemes_integrated" INTEGER,
+        "fully_completed_schemes" INTEGER
+      );
+
+      CREATE TABLE IF NOT EXISTS "scheme_statuses" (
+        "scheme_id" SERIAL PRIMARY KEY,
+        "scheme_name" TEXT NOT NULL,
+        "region_name" TEXT,
+        "agency" TEXT,
+        "total_villages_in_scheme" INTEGER,
+        "total_esr_in_scheme" INTEGER,
+        "villages_integrated_on_iot" INTEGER,
+        "fully_completed_villages" INTEGER,
+        "esr_request_received" INTEGER,
+        "esr_integrated_on_iot" INTEGER,
+        "fully_completed_esr" INTEGER,
+        "balance_for_fully_completion" INTEGER,
+        "fm_integrated" INTEGER,
+        "rca_integrated" INTEGER,
+        "pt_integrated" INTEGER,
+        "scheme_completion_status" TEXT
+      );
+    `);
+
+    // Check if data exists
+    const regionsCount = await db.select({ count: sql<number>`count(*)` })
+      .from(regions)
+      .execute()
+      .then(result => result[0]?.count || 0);
+
+    // Only insert data if there are no regions
+    if (regionsCount === 0) {
+      console.log('Initializing database with sample data...');
+      
+      // Insert region data
+      await db.insert(regions).values([
+        { region_name: 'Nagpur', total_esr_integrated: 117, fully_completed_esr: 58, partial_esr: 59, total_villages_integrated: 91, fully_completed_villages: 38, total_schemes_integrated: 15, fully_completed_schemes: 9 },
+        { region_name: 'Chhatrapati Sambhajinagar', total_esr_integrated: 142, fully_completed_esr: 73, partial_esr: 69, total_villages_integrated: 130, fully_completed_villages: 71, total_schemes_integrated: 8, fully_completed_schemes: 2 },
+        { region_name: 'Pune', total_esr_integrated: 97, fully_completed_esr: 31, partial_esr: 66, total_villages_integrated: 53, fully_completed_villages: 16, total_schemes_integrated: 9, fully_completed_schemes: 0 },
+        { region_name: 'Konkan', total_esr_integrated: 11, fully_completed_esr: 1, partial_esr: 10, total_villages_integrated: 11, fully_completed_villages: 0, total_schemes_integrated: 4, fully_completed_schemes: 0 },
+        { region_name: 'Amravati', total_esr_integrated: 145, fully_completed_esr: 59, partial_esr: 86, total_villages_integrated: 119, fully_completed_villages: 24, total_schemes_integrated: 11, fully_completed_schemes: 1 },
+        { region_name: 'Nashik', total_esr_integrated: 70, fully_completed_esr: 23, partial_esr: 46, total_villages_integrated: 44, fully_completed_villages: 4, total_schemes_integrated: 11, fully_completed_schemes: 2 }
+      ]);
+      
+      // Insert scheme data for Nashik
+      await db.insert(schemeStatuses).values([
+        { scheme_name: 'Nampur and 4 villages RR Tal Baglan (C 39)', region_name: 'Nashik', agency: 'M/S Ceinsys', total_villages_in_scheme: 5, total_esr_in_scheme: 10, villages_integrated_on_iot: 0, fully_completed_villages: 0, esr_request_received: 0, esr_integrated_on_iot: 0, fully_completed_esr: 0, balance_for_fully_completion: 10, fm_integrated: 0, rca_integrated: 0, pt_integrated: 0, scheme_completion_status: 'Not-Connected' },
+        { scheme_name: 'Bargaonpimpri & 6 VRWSS Tal Sinnar', region_name: 'Nashik', agency: 'M/S Ceinsys', total_villages_in_scheme: 0, total_esr_in_scheme: 16, villages_integrated_on_iot: 5, fully_completed_villages: 0, esr_request_received: 16, esr_integrated_on_iot: 11, fully_completed_esr: 0, balance_for_fully_completion: 16, fm_integrated: 7, rca_integrated: 11, pt_integrated: 0, scheme_completion_status: 'Partial' },
+        { scheme_name: 'Nirhale-Fatehpur and 5 villages, Tal. Sinnar', region_name: 'Nashik', agency: 'M/S Ceinsys', total_villages_in_scheme: 5, total_esr_in_scheme: 11, villages_integrated_on_iot: 3, fully_completed_villages: 0, esr_request_received: 8, esr_integrated_on_iot: 2, fully_completed_esr: 0, balance_for_fully_completion: 11, fm_integrated: 3, rca_integrated: 2, pt_integrated: 1, scheme_completion_status: 'Partial' }
+      ]);
+      
+      // Insert scheme data for Amravati
+      await db.insert(schemeStatuses).values([
+        { scheme_name: '83 Village RRWS Scheme MJP RR (C 39)', region_name: 'Amravati', agency: 'M/S Ceinsys', total_villages_in_scheme: 87, total_esr_in_scheme: 124, villages_integrated_on_iot: 24, fully_completed_villages: 8, esr_request_received: 27, esr_integrated_on_iot: 27, fully_completed_esr: 24, balance_for_fully_completion: 100, fm_integrated: 27, rca_integrated: 27, pt_integrated: 24, scheme_completion_status: 'Partial' },
+        { scheme_name: 'Nandgaon Peth & 32 Villages', region_name: 'Amravati', agency: 'M/S Ceinsys', total_villages_in_scheme: 33, total_esr_in_scheme: 52, villages_integrated_on_iot: 0, fully_completed_villages: 0, esr_request_received: 0, esr_integrated_on_iot: 0, fully_completed_esr: 0, balance_for_fully_completion: 52, fm_integrated: 0, rca_integrated: 0, pt_integrated: 0, scheme_completion_status: 'Not-Connected' }
+      ]);
+      
+      // Insert scheme data for Pune
+      await db.insert(schemeStatuses).values([
+        { scheme_name: 'Wangani RRWSS', region_name: 'Pune', agency: 'Chetas', total_villages_in_scheme: 3, total_esr_in_scheme: 6, villages_integrated_on_iot: 4, fully_completed_villages: 0, esr_request_received: 6, esr_integrated_on_iot: 6, fully_completed_esr: 0, balance_for_fully_completion: 6, fm_integrated: 6, rca_integrated: 4, pt_integrated: 0, scheme_completion_status: 'Partial' },
+        { scheme_name: 'RR Girvi WSS', region_name: 'Pune', agency: null, total_villages_in_scheme: 4, total_esr_in_scheme: 5, villages_integrated_on_iot: 5, fully_completed_villages: 0, esr_request_received: 5, esr_integrated_on_iot: 5, fully_completed_esr: 2, balance_for_fully_completion: 3, fm_integrated: 5, rca_integrated: 5, pt_integrated: 2, scheme_completion_status: 'Partial' }
+      ]);
+      
+      // Insert scheme data for Nagpur
+      await db.insert(schemeStatuses).values([
+        { scheme_name: '20036500 Vyahad & 2 Village RR WSS', region_name: 'Nagpur', agency: 'M/S Rite Water', total_villages_in_scheme: 3, total_esr_in_scheme: 5, villages_integrated_on_iot: 3, fully_completed_villages: 0, esr_request_received: 3, esr_integrated_on_iot: 3, fully_completed_esr: 0, balance_for_fully_completion: 5, fm_integrated: 3, rca_integrated: 3, pt_integrated: 0, scheme_completion_status: 'Partial' },
+        { scheme_name: '20036536 Bothali & 7 Villages Rrwss', region_name: 'Nagpur', agency: 'M/S Rite Water', total_villages_in_scheme: 8, total_esr_in_scheme: 8, villages_integrated_on_iot: 8, fully_completed_villages: 6, esr_request_received: 8, esr_integrated_on_iot: 8, fully_completed_esr: 5, balance_for_fully_completion: 3, fm_integrated: 8, rca_integrated: 8, pt_integrated: 5, scheme_completion_status: 'Partial' }
+      ]);
+
+      console.log('Database initialized with sample data.');
+    } else {
+      console.log('Database already contains data, skipping initialization.');
+    }
+
+    return db;
+  } catch (error) {
+    console.error('Error initializing database:', error);
+    throw error;
+  }
+}
+
+// Export the functions
+export default { getDB, initializeDatabase };

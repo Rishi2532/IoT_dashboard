@@ -1,5 +1,6 @@
-import { users, type User, type InsertUser, type Region, type SchemeStatus } from "@shared/schema";
-import { open, initializeDatabase } from "./db";
+import { users, regions, schemeStatuses, type User, type InsertUser, type Region, type InsertRegion, type SchemeStatus, type InsertSchemeStatus } from "@shared/schema";
+import { getDB, initializeDatabase } from "./db";
+import { eq, sql } from 'drizzle-orm';
 
 // Interface for storage operations
 export interface IStorage {
@@ -12,170 +13,189 @@ export interface IStorage {
   getAllRegions(): Promise<Region[]>;
   getRegionByName(regionName: string): Promise<Region | undefined>;
   getRegionSummary(regionName?: string): Promise<any>;
+  createRegion(region: InsertRegion): Promise<Region>;
+  updateRegion(region: Region): Promise<Region>;
   
   // Scheme operations
   getAllSchemes(): Promise<SchemeStatus[]>;
   getSchemesByRegion(regionName: string): Promise<SchemeStatus[]>;
   getSchemeById(schemeId: number): Promise<SchemeStatus | undefined>;
+  createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus>;
+  updateScheme(scheme: SchemeStatus): Promise<SchemeStatus>;
+  deleteScheme(schemeId: number): Promise<boolean>;
 }
 
-// In-memory implementation
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private regions: Map<number, Region>;
-  private schemes: Map<number, SchemeStatus>;
-  private currentUserId: number;
+// PostgreSQL implementation
+export class PostgresStorage implements IStorage {
   private db: any;
   private initialized: Promise<void>;
 
   constructor() {
-    this.users = new Map();
-    this.regions = new Map();
-    this.schemes = new Map();
-    this.currentUserId = 1;
-    
-    // Store the initialization promise so we can await it in other methods
     this.initialized = this.initializeDb().catch(error => {
       console.error("Failed to initialize database in constructor:", error);
       throw error;
     });
   }
   
-  // Method to ensure DB is initialized before proceeding with operations
-  private async ensureInitialized() {
-    await this.initialized;
-  }
-
   private async initializeDb() {
     try {
-      // Use the initialized database
-      this.db = await initializeDatabase();
-      
-      // Load regions from SQLite
-      const regions = await this.db.all("SELECT * FROM region");
-      regions.forEach((region: any) => {
-        this.regions.set(region.region_id, {
-          region_id: region.region_id,
-          region_name: region.region_name,
-          total_esr_integrated: region.total_esr_integrated,
-          fully_completed_esr: region.fully_completed_esr,
-          partial_esr: region.partial_esr,
-          total_villages_integrated: region.total_villages_integrated,
-          fully_completed_villages: region.fully_completed_villages,
-          total_schemes_integrated: region.total_schemes_integrated,
-          fully_completed_schemes: region.fully_completed_schemes
-        });
-      });
-      
-      // Load schemes from SQLite
-      const schemes = await this.db.all("SELECT * FROM scheme_status");
-      schemes.forEach((scheme: any) => {
-        this.schemes.set(scheme.scheme_id, {
-          scheme_id: scheme.scheme_id,
-          scheme_name: scheme.scheme_name,
-          region_name: scheme.region_name,
-          agency: scheme.agency,
-          total_villages_in_scheme: scheme.total_villages_in_scheme,
-          total_esr_in_scheme: scheme.total_esr_in_scheme,
-          villages_integrated_on_iot: scheme.villages_integrated_on_iot,
-          fully_completed_villages: scheme.fully_completed_villages,
-          esr_request_received: scheme.esr_request_received,
-          esr_integrated_on_iot: scheme.esr_integrated_on_iot,
-          fully_completed_esr: scheme.fully_completed_esr,
-          balance_for_fully_completion: scheme.balance_for_fully_completion,
-          fm_integrated: scheme.fm_integrated,
-          rca_integrated: scheme.rca_integrated,
-          pt_integrated: scheme.pt_integrated,
-          scheme_completion_status: scheme.scheme_completion_status
-        });
-      });
+      // Initialize the PostgreSQL database
+      await initializeDatabase();
     } catch (error) {
       console.error("Error initializing database in storage:", error);
       throw error;
     }
   }
 
+  private async ensureInitialized() {
+    await this.initialized;
+    return getDB();
+  }
+
   // User methods (from original schema)
   async getUser(id: number): Promise<User | undefined> {
-    await this.ensureInitialized();
-    return this.users.get(id);
+    const db = await this.ensureInitialized();
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    await this.ensureInitialized();
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const db = await this.ensureInitialized();
+    const result = await db.select().from(users).where(eq(users.username, username));
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    await this.ensureInitialized();
-    const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const db = await this.ensureInitialized();
+    const result = await db.insert(users).values(insertUser).returning();
+    return result[0];
   }
 
   // Region methods
   async getAllRegions(): Promise<Region[]> {
-    await this.ensureInitialized();
-    return Array.from(this.regions.values());
+    const db = await this.ensureInitialized();
+    return db.select().from(regions).orderBy(regions.region_name);
   }
 
   async getRegionByName(regionName: string): Promise<Region | undefined> {
-    await this.ensureInitialized();
-    return Array.from(this.regions.values()).find(
-      (region) => region.region_name === regionName
-    );
+    const db = await this.ensureInitialized();
+    const result = await db.select().from(regions).where(eq(regions.region_name, regionName));
+    return result.length > 0 ? result[0] : undefined;
   }
 
   async getRegionSummary(regionName?: string): Promise<any> {
-    await this.ensureInitialized();
+    const db = await this.ensureInitialized();
+    
     if (regionName) {
       // If region is specified, get summary for that region
       const region = await this.getRegionByName(regionName);
       if (!region) return null;
       
       return {
-        total_schemes_integrated: region.total_schemes_integrated,
-        fully_completed_schemes: region.fully_completed_schemes,
-        total_villages_integrated: region.total_villages_integrated,
-        fully_completed_villages: region.fully_completed_villages,
-        total_esr_integrated: region.total_esr_integrated,
-        fully_completed_esr: region.fully_completed_esr
+        total_schemes_integrated: region.total_schemes_integrated || 0,
+        fully_completed_schemes: region.fully_completed_schemes || 0,
+        total_villages_integrated: region.total_villages_integrated || 0,
+        fully_completed_villages: region.fully_completed_villages || 0,
+        total_esr_integrated: region.total_esr_integrated || 0,
+        fully_completed_esr: region.fully_completed_esr || 0,
+        partial_esr: region.partial_esr || 0
       };
     } else {
       // Otherwise, get total summary across all regions
-      const regions = await this.getAllRegions();
+      const result = await db.select({
+        total_schemes_integrated: sql<number>`SUM(${regions.total_schemes_integrated})`,
+        fully_completed_schemes: sql<number>`SUM(${regions.fully_completed_schemes})`,
+        total_villages_integrated: sql<number>`SUM(${regions.total_villages_integrated})`,
+        fully_completed_villages: sql<number>`SUM(${regions.fully_completed_villages})`,
+        total_esr_integrated: sql<number>`SUM(${regions.total_esr_integrated})`,
+        fully_completed_esr: sql<number>`SUM(${regions.fully_completed_esr})`,
+        partial_esr: sql<number>`SUM(${regions.partial_esr})`
+      }).from(regions);
       
-      return {
-        total_schemes_integrated: regions.reduce((sum, region) => sum + (region.total_schemes_integrated || 0), 0),
-        fully_completed_schemes: regions.reduce((sum, region) => sum + (region.fully_completed_schemes || 0), 0),
-        total_villages_integrated: regions.reduce((sum, region) => sum + (region.total_villages_integrated || 0), 0),
-        fully_completed_villages: regions.reduce((sum, region) => sum + (region.fully_completed_villages || 0), 0),
-        total_esr_integrated: regions.reduce((sum, region) => sum + (region.total_esr_integrated || 0), 0),
-        fully_completed_esr: regions.reduce((sum, region) => sum + (region.fully_completed_esr || 0), 0)
-      };
+      return result[0];
     }
+  }
+
+  async createRegion(region: InsertRegion): Promise<Region> {
+    const db = await this.ensureInitialized();
+    const result = await db.insert(regions).values(region).returning();
+    return result[0];
+  }
+
+  async updateRegion(region: Region): Promise<Region> {
+    const db = await this.ensureInitialized();
+    await db.update(regions)
+      .set({
+        region_name: region.region_name,
+        total_esr_integrated: region.total_esr_integrated,
+        fully_completed_esr: region.fully_completed_esr,
+        partial_esr: region.partial_esr,
+        total_villages_integrated: region.total_villages_integrated,
+        fully_completed_villages: region.fully_completed_villages,
+        total_schemes_integrated: region.total_schemes_integrated,
+        fully_completed_schemes: region.fully_completed_schemes
+      })
+      .where(eq(regions.region_id, region.region_id));
+    
+    return region;
   }
 
   // Scheme methods
   async getAllSchemes(): Promise<SchemeStatus[]> {
-    await this.ensureInitialized();
-    return Array.from(this.schemes.values());
+    const db = await this.ensureInitialized();
+    return db.select().from(schemeStatuses).orderBy(schemeStatuses.region_name, schemeStatuses.scheme_name);
   }
 
   async getSchemesByRegion(regionName: string): Promise<SchemeStatus[]> {
-    await this.ensureInitialized();
-    return Array.from(this.schemes.values()).filter(
-      (scheme) => scheme.region_name === regionName
-    );
+    const db = await this.ensureInitialized();
+    return db.select()
+      .from(schemeStatuses)
+      .where(eq(schemeStatuses.region_name, regionName))
+      .orderBy(schemeStatuses.scheme_name);
   }
 
   async getSchemeById(schemeId: number): Promise<SchemeStatus | undefined> {
-    await this.ensureInitialized();
-    return this.schemes.get(schemeId);
+    const db = await this.ensureInitialized();
+    const result = await db.select().from(schemeStatuses).where(eq(schemeStatuses.scheme_id, schemeId));
+    return result.length > 0 ? result[0] : undefined;
+  }
+  
+  async createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus> {
+    const db = await this.ensureInitialized();
+    const result = await db.insert(schemeStatuses).values(scheme).returning();
+    return result[0];
+  }
+  
+  async updateScheme(scheme: SchemeStatus): Promise<SchemeStatus> {
+    const db = await this.ensureInitialized();
+    await db.update(schemeStatuses)
+      .set({
+        scheme_name: scheme.scheme_name,
+        region_name: scheme.region_name,
+        agency: scheme.agency,
+        total_villages_in_scheme: scheme.total_villages_in_scheme,
+        total_esr_in_scheme: scheme.total_esr_in_scheme,
+        villages_integrated_on_iot: scheme.villages_integrated_on_iot,
+        fully_completed_villages: scheme.fully_completed_villages,
+        esr_request_received: scheme.esr_request_received,
+        esr_integrated_on_iot: scheme.esr_integrated_on_iot,
+        fully_completed_esr: scheme.fully_completed_esr,
+        balance_for_fully_completion: scheme.balance_for_fully_completion,
+        fm_integrated: scheme.fm_integrated,
+        rca_integrated: scheme.rca_integrated,
+        pt_integrated: scheme.pt_integrated,
+        scheme_completion_status: scheme.scheme_completion_status
+      })
+      .where(eq(schemeStatuses.scheme_id, scheme.scheme_id));
+    
+    return scheme;
+  }
+  
+  async deleteScheme(schemeId: number): Promise<boolean> {
+    const db = await this.ensureInitialized();
+    const result = await db.delete(schemeStatuses).where(eq(schemeStatuses.scheme_id, schemeId));
+    return true;
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new PostgresStorage();
