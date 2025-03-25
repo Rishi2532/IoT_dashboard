@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { calculatePercentage } from "@/lib/utils";
 import { RegionSummary } from "@/types";
-import { GitBranchPlus, Home, Droplet } from "lucide-react";
+import { GitBranchPlus, Home, Droplet, BarChart3 } from "lucide-react";
 
 interface StatsCardsProps {
   data?: RegionSummary;
@@ -11,9 +11,9 @@ interface StatsCardsProps {
 export default function StatsCards({ data, isLoading }: StatsCardsProps) {
   if (isLoading || !data) {
     return (
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {[...Array(3)].map((_, i) => (
-          <Card key={i} className="bg-white overflow-hidden">
+          <Card key={i} className="bg-white overflow-hidden border border-gray-200 shadow-sm">
             <CardContent className="p-6">
               <div className="h-24 flex items-center justify-center">
                 <div className="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
@@ -37,95 +37,113 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
   const esrCompletionPercentage = calculatePercentage(completedEsr, totalEsr);
 
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 mb-6">
+    <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
       {/* Total Schemes Card */}
-      <Card className="bg-white overflow-hidden">
-        <CardContent className="px-4 py-5 sm:p-6">
+      <Card className="bg-white overflow-hidden border border-blue-100 hover:shadow-md transition-all duration-300 hover:translate-y-[-2px]">
+        <div className="absolute top-0 right-0 h-20 w-20 opacity-10">
+          <BarChart3 className="h-full w-full text-blue-700" />
+        </div>
+        <CardContent className="p-6">
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-primary-50 rounded-md p-3">
-              <GitBranchPlus className="h-5 w-5 text-primary-600" />
+            <div className="flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-3 shadow-sm">
+              <GitBranchPlus className="h-6 w-6 text-white" />
             </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-neutral-500 truncate">Total Schemes</dt>
-                <dd>
-                  <div className="text-lg font-semibold text-neutral-900">{totalSchemes}</div>
-                </dd>
-              </dl>
+            <div className="ml-5 flex-1">
+              <h3 className="text-sm font-medium text-blue-800">Total Schemes</h3>
+              <div className="mt-1 flex items-baseline">
+                <p className="text-3xl font-bold text-blue-900">{totalSchemes}</p>
+                <p className="ml-2 text-sm text-blue-600">schemes integrated</p>
+              </div>
             </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-6">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-neutral-500">Fully Completed</span>
-              <span className="text-sm font-medium text-success-600">{completedSchemes}</span>
+              <span className="text-sm font-medium text-blue-800">Completion Rate</span>
+              <span className="text-sm font-bold text-blue-900">{schemeCompletionPercentage}%</span>
             </div>
-            <div className="w-full bg-neutral-200 rounded-full h-2 mt-1">
+            <div className="w-full bg-blue-100 rounded-full h-3 mt-2 overflow-hidden">
               <div 
-                className="bg-success-500 h-2 rounded-full" 
+                className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full shadow-inner" 
                 style={{ width: `${schemeCompletionPercentage}%` }}
               ></div>
+            </div>
+            <div className="flex justify-between text-xs mt-1">
+              <span className="text-blue-600">{completedSchemes} completed</span>
+              <span className="text-blue-600">{totalSchemes - completedSchemes} in progress</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Total Villages Card */}
-      <Card className="bg-white overflow-hidden">
-        <CardContent className="px-4 py-5 sm:p-6">
+      <Card className="bg-white overflow-hidden border border-amber-100 hover:shadow-md transition-all duration-300 hover:translate-y-[-2px]">
+        <div className="absolute top-0 right-0 h-20 w-20 opacity-10">
+          <BarChart3 className="h-full w-full text-amber-700" />
+        </div>
+        <CardContent className="p-6">
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-warning-50 rounded-md p-3">
-              <Home className="h-5 w-5 text-warning-600" />
+            <div className="flex-shrink-0 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg p-3 shadow-sm">
+              <Home className="h-6 w-6 text-white" />
             </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-neutral-500 truncate">Total Villages</dt>
-                <dd>
-                  <div className="text-lg font-semibold text-neutral-900">{totalVillages}</div>
-                </dd>
-              </dl>
+            <div className="ml-5 flex-1">
+              <h3 className="text-sm font-medium text-amber-800">Total Villages</h3>
+              <div className="mt-1 flex items-baseline">
+                <p className="text-3xl font-bold text-amber-900">{totalVillages}</p>
+                <p className="ml-2 text-sm text-amber-600">villages integrated</p>
+              </div>
             </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-6">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-neutral-500">Fully Completed</span>
-              <span className="text-sm font-medium text-success-600">{completedVillages}</span>
+              <span className="text-sm font-medium text-amber-800">Completion Rate</span>
+              <span className="text-sm font-bold text-amber-900">{villageCompletionPercentage}%</span>
             </div>
-            <div className="w-full bg-neutral-200 rounded-full h-2 mt-1">
+            <div className="w-full bg-amber-100 rounded-full h-3 mt-2 overflow-hidden">
               <div 
-                className="bg-success-500 h-2 rounded-full" 
+                className="bg-gradient-to-r from-amber-500 to-amber-600 h-3 rounded-full shadow-inner" 
                 style={{ width: `${villageCompletionPercentage}%` }}
               ></div>
+            </div>
+            <div className="flex justify-between text-xs mt-1">
+              <span className="text-amber-600">{completedVillages} completed</span>
+              <span className="text-amber-600">{totalVillages - completedVillages} in progress</span>
             </div>
           </div>
         </CardContent>
       </Card>
 
       {/* Total ESR Card */}
-      <Card className="bg-white overflow-hidden">
-        <CardContent className="px-4 py-5 sm:p-6">
+      <Card className="bg-white overflow-hidden border border-sky-100 hover:shadow-md transition-all duration-300 hover:translate-y-[-2px]">
+        <div className="absolute top-0 right-0 h-20 w-20 opacity-10">
+          <BarChart3 className="h-full w-full text-sky-700" />
+        </div>
+        <CardContent className="p-6">
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-primary-50 rounded-md p-3">
-              <Droplet className="h-5 w-5 text-primary-600" />
+            <div className="flex-shrink-0 bg-gradient-to-br from-sky-500 to-sky-600 rounded-lg p-3 shadow-sm">
+              <Droplet className="h-6 w-6 text-white" />
             </div>
-            <div className="ml-5 w-0 flex-1">
-              <dl>
-                <dt className="text-sm font-medium text-neutral-500 truncate">Total ESR</dt>
-                <dd>
-                  <div className="text-lg font-semibold text-neutral-900">{totalEsr}</div>
-                </dd>
-              </dl>
+            <div className="ml-5 flex-1">
+              <h3 className="text-sm font-medium text-sky-800">Total ESR</h3>
+              <div className="mt-1 flex items-baseline">
+                <p className="text-3xl font-bold text-sky-900">{totalEsr}</p>
+                <p className="ml-2 text-sm text-sky-600">ESRs integrated</p>
+              </div>
             </div>
           </div>
-          <div className="mt-4">
+          <div className="mt-6">
             <div className="flex justify-between items-center">
-              <span className="text-sm text-neutral-500">Fully Completed</span>
-              <span className="text-sm font-medium text-success-600">{completedEsr}</span>
+              <span className="text-sm font-medium text-sky-800">Completion Rate</span>
+              <span className="text-sm font-bold text-sky-900">{esrCompletionPercentage}%</span>
             </div>
-            <div className="w-full bg-neutral-200 rounded-full h-2 mt-1">
+            <div className="w-full bg-sky-100 rounded-full h-3 mt-2 overflow-hidden">
               <div 
-                className="bg-success-500 h-2 rounded-full" 
+                className="bg-gradient-to-r from-sky-500 to-sky-600 h-3 rounded-full shadow-inner" 
                 style={{ width: `${esrCompletionPercentage}%` }}
               ></div>
+            </div>
+            <div className="flex justify-between text-xs mt-1">
+              <span className="text-sky-600">{completedEsr} completed</span>
+              <span className="text-sky-600">{totalEsr - completedEsr} in progress</span>
             </div>
           </div>
         </CardContent>

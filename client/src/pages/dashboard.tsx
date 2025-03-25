@@ -68,64 +68,85 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      {/* Dashboard Header */}
-      <div className="md:flex md:items-center md:justify-between mb-4">
-        <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-semibold text-neutral-900">Dashboard Overview</h1>
-          <p className="mt-1 text-sm text-neutral-500">
-            Water Scheme Implementation Status
-          </p>
-        </div>
-        <div className="mt-4 flex md:mt-0 md:ml-4">
-          <Button 
-            variant="outline" 
-            className="mr-3"
-            onClick={handleExport}
-          >
-            <Download className="mr-2 h-4 w-4" />
-            Export
-          </Button>
-          <Button 
-            onClick={handleRefresh}
-          >
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
-          </Button>
+      {/* Dashboard Header with gradient */}
+      <div className="p-6 bg-gradient-to-r from-blue-500/10 to-blue-600/5 rounded-lg mb-6">
+        <div className="md:flex md:items-center md:justify-between">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-3xl font-bold text-blue-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">
+              Maharashtra Water Schemes
+            </h1>
+            <p className="mt-2 text-sm text-blue-700/80 font-medium">
+              Integration Dashboard for Water Scheme Implementation Status
+            </p>
+          </div>
+          <div className="mt-4 flex md:mt-0 md:ml-4 space-x-3">
+            <Button 
+              variant="outline" 
+              className="border-blue-300 hover:bg-blue-50 transition-all"
+              onClick={handleExport}
+            >
+              <Download className="mr-2 h-4 w-4" />
+              Export
+            </Button>
+            <Button 
+              onClick={handleRefresh}
+              className="bg-blue-600 hover:bg-blue-700 transition-all"
+            >
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Refresh
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* Region Filter */}
-      <RegionFilter 
-        regions={regions || []} 
-        selectedRegion={selectedRegion} 
-        onChange={handleRegionChange}
-        className="mb-6"
-      />
+      {/* Region Filter in card */}
+      <div className="mb-8 p-4 bg-white rounded-lg border shadow-sm">
+        <h2 className="text-lg font-medium mb-3 text-blue-800">Filter Dashboard</h2>
+        <RegionFilter 
+          regions={regions || []} 
+          selectedRegion={selectedRegion} 
+          onChange={handleRegionChange}
+        />
+      </div>
 
-      {/* Stats Cards */}
-      <StatsCards 
-        data={regionSummary} 
-        isLoading={isSummaryLoading} 
-      />
+      {/* Stats Cards with extra spacing and animations */}
+      <div className="mb-8 animate-in fade-in duration-500">
+        <StatsCards 
+          data={regionSummary} 
+          isLoading={isSummaryLoading} 
+        />
+      </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 mb-6">
-        <RegionComparisonChart 
-          regions={regions || []} 
-          isLoading={isRegionsLoading} 
-        />
-        <CompletionStatusChart 
-          schemes={schemes || []} 
-          isLoading={isSchemesLoading} 
-        />
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
+        <div className="bg-white p-5 rounded-lg border shadow-sm hover:shadow-md transition-all">
+          <h2 className="text-lg font-medium mb-4 text-blue-800">Region Comparison</h2>
+          <RegionComparisonChart 
+            regions={regions || []} 
+            isLoading={isRegionsLoading} 
+          />
+        </div>
+        <div className="bg-white p-5 rounded-lg border shadow-sm hover:shadow-md transition-all">
+          <h2 className="text-lg font-medium mb-4 text-blue-800">Completion Status</h2>
+          <CompletionStatusChart 
+            schemes={schemes || []} 
+            isLoading={isSchemesLoading} 
+          />
+        </div>
       </div>
 
-      {/* Schemes Table */}
-      <SchemeTable 
-        schemes={schemes || []} 
-        isLoading={isSchemesLoading}
-        onViewDetails={handleViewSchemeDetails}
-      />
+      {/* Schemes Table with title and styling */}
+      <div className="bg-white p-5 rounded-lg border shadow-sm mb-6">
+        <h2 className="text-lg font-medium mb-4 text-blue-800">Water Scheme Details</h2>
+        <p className="text-sm text-neutral-500 mb-4">
+          Click on any scheme to view detailed integration status and progress information.
+        </p>
+        <SchemeTable 
+          schemes={schemes || []} 
+          isLoading={isSchemesLoading}
+          onViewDetails={handleViewSchemeDetails}
+        />
+      </div>
 
       {/* Scheme Details Modal */}
       <SchemeDetailsModal 
