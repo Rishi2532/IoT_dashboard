@@ -1,37 +1,46 @@
 import { Button } from "../ui/button";
-import { UserCircle, Settings } from "lucide-react";
+import { UserCircle, Settings, Droplet, LayoutDashboard } from "lucide-react";
+import { Link } from "wouter";
 
 export default function Header() {
   return (
-    <header className="bg-white border-b border-neutral-200 shadow-sm">
+    <header className="bg-gradient-to-r from-blue-600 to-blue-800 shadow-md">
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0 flex items-center">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="h-6 w-6 text-primary mr-2"
-              >
-                <path d="M8.75 6.75C10.7855 6.75 12.25 8.21447 12.25 10.25C12.25 12.2855 10.7855 13.75 8.75 13.75H2.5V6.75H8.75Z" />
-                <path d="M12.25 10.25C12.25 8.21447 13.7145 6.75 15.75 6.75H22V17.25H15.75C13.7145 17.25 12.25 15.7855 12.25 13.75V10.25Z" />
-                <path d="M7 13.75V17.25H2.5" />
-              </svg>
-              <span className="font-semibold text-xl">Water Scheme Dashboard</span>
+              <div className="bg-white/10 rounded-full p-2 mr-3">
+                <Droplet className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="font-bold text-xl text-white">
+                  Maharashtra 
+                  <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-white ml-1">
+                    Water Scheme Dashboard
+                  </span>
+                </h1>
+                <p className="text-xs text-blue-100 -mt-1">Water Integration Monitoring System</p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center">
-            <Button variant="ghost" size="icon">
-              <UserCircle className="h-5 w-5" />
-            </Button>
-            <Button variant="ghost" size="icon" className="ml-2">
-              <Settings className="h-5 w-5" />
-            </Button>
+          <div className="flex items-center space-x-2">
+            <Link href="/dashboard">
+              <Button variant="ghost" size="sm" className="text-blue-100 hover:text-white hover:bg-blue-700">
+                <LayoutDashboard className="h-4 w-4 mr-1" />
+                Dashboard
+              </Button>
+            </Link>
+            <Link href="/admin">
+              <Button variant="ghost" size="sm" className="text-blue-100 hover:text-white hover:bg-blue-700">
+                <Settings className="h-4 w-4 mr-1" />
+                Admin
+              </Button>
+            </Link>
+            <div className="ml-4 pl-4 border-l border-blue-500">
+              <Button variant="ghost" size="icon" className="rounded-full bg-white/10 hover:bg-white/20 text-white">
+                <UserCircle className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
         </div>
       </div>
