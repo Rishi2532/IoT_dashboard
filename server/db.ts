@@ -1,5 +1,5 @@
 import { drizzle } from 'drizzle-orm/node-postgres';
-import { sql } from 'drizzle-orm';
+import { sql, eq } from 'drizzle-orm';
 import { regions, schemeStatuses } from '../shared/schema';
 import pg from 'pg';
 
@@ -22,6 +22,72 @@ export async function getDB() {
   return db;
 }
 
+// Function to update region summary data based on scheme data
+export async function updateRegionSummaries() {
+  try {
+    const db = await getDB();
+    
+    // Get all regions
+    const allRegions = await db.select().from(regions);
+    
+    for (const region of allRegions) {
+      // Get schemes for this region
+      const schemes = await db.select()
+        .from(schemeStatuses)
+        .where(eq(schemeStatuses.region_name, region.region_name));
+      
+      if (schemes.length === 0) continue;
+      
+      // Calculate summary data
+      const total_schemes_integrated = schemes.length;
+      const fully_completed_schemes = schemes.filter(s => s.scheme_completion_status === 'Fully-completed').length;
+      
+      // Sum up village data
+      let total_villages_integrated = 0;
+      let fully_completed_villages = 0;
+      
+      // Sum up ESR data
+      let total_esr_integrated = 0;
+      let fully_completed_esr = 0;
+      let partial_esr = 0;
+      
+      for (const scheme of schemes) {
+        // Count villages
+        total_villages_integrated += scheme.villages_integrated_on_iot || 0;
+        fully_completed_villages += scheme.fully_completed_villages || 0;
+        
+        // Count ESRs
+        total_esr_integrated += scheme.esr_integrated_on_iot || 0;
+        fully_completed_esr += scheme.fully_completed_esr || 0;
+        
+        // Calculate partial ESRs (integrated but not fully completed)
+        if (scheme.esr_integrated_on_iot && scheme.fully_completed_esr) {
+          partial_esr += (scheme.esr_integrated_on_iot - scheme.fully_completed_esr);
+        }
+      }
+      
+      // Update region with calculated data
+      await db.update(regions)
+        .set({
+          total_schemes_integrated,
+          fully_completed_schemes,
+          total_villages_integrated,
+          fully_completed_villages,
+          total_esr_integrated,
+          fully_completed_esr,
+          partial_esr
+        })
+        .where(eq(regions.region_id, region.region_id));
+        
+      console.log(`Updated summary data for region: ${region.region_name}`);
+    }
+    
+    console.log("All region summaries updated successfully");
+  } catch (error) {
+    console.error("Error updating region summaries:", error);
+  }
+}
+
 // Initialize the database with schema and data
 export async function initializeDatabase() {
   const db = await getDB();
@@ -29,7 +95,7 @@ export async function initializeDatabase() {
   try {
     // Check if tables exist and create them if they don't
     await db.execute(sql`
-      CREATE TABLE IF NOT EXISTS "regions" (
+      CREATE TABLE IF NOT EXISTS "region" (
         "region_id" SERIAL PRIMARY KEY,
         "region_name" TEXT NOT NULL,
         "total_esr_integrated" INTEGER,
@@ -41,7 +107,7 @@ export async function initializeDatabase() {
         "fully_completed_schemes" INTEGER
       );
 
-      CREATE TABLE IF NOT EXISTS "scheme_statuses" (
+      CREATE TABLE IF NOT EXISTS "scheme_status" (
         "scheme_id" SERIAL PRIMARY KEY,
         "scheme_name" TEXT NOT NULL,
         "region_name" TEXT,
@@ -65,7 +131,9 @@ export async function initializeDatabase() {
     const regionsCount = await db.select({ count: sql<number>`count(*)` })
       .from(regions)
       .execute()
-      .then(result => result[0]?.count || 0);
+      .then(result => Number(result[0]?.count) || 0);
+
+    console.log(`Found ${regionsCount} regions in database`);
 
     // Only insert data if there are no regions
     if (regionsCount === 0) {
@@ -108,7 +176,9 @@ export async function initializeDatabase() {
 
       console.log('Database initialized with sample data.');
     } else {
-      console.log('Database already contains data, skipping initialization.');
+      console.log('Database already contains data, updating region summaries...');
+      // Update region summary data based on scheme data
+      await updateRegionSummaries();
     }
 
     return db;
@@ -119,4 +189,4 @@ export async function initializeDatabase() {
 }
 
 // Export the functions
-export default { getDB, initializeDatabase };
+export default { getDB, initializeDatabase, updateRegionSummaries };

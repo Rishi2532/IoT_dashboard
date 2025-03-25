@@ -1,8 +1,9 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertRegionSchema, insertSchemeStatusSchema } from "@shared/schema";
 import { z } from "zod";
+import { updateRegionSummaries } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -205,6 +206,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting scheme:", error);
       res.status(500).json({ message: "Failed to delete scheme" });
+    }
+  });
+
+  // Update region summaries based on current scheme data
+  app.post("/api/admin/update-region-summaries", async (req, res) => {
+    try {
+      await updateRegionSummaries();
+      res.status(200).json({ message: "Region summaries updated successfully" });
+    } catch (error) {
+      console.error("Error updating region summaries:", error);
+      res.status(500).json({ message: "Failed to update region summaries" });
     }
   });
 

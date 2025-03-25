@@ -17,8 +17,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
-// Region table
-export const regions = pgTable("regions", {
+// Region table - using the correct table name "region" instead of "regions"
+export const regions = pgTable("region", {
   region_id: serial("region_id").primaryKey(),
   region_name: text("region_name").notNull(),
   total_esr_integrated: integer("total_esr_integrated"),
@@ -36,8 +36,8 @@ export const insertRegionSchema = createInsertSchema(regions)
 export type InsertRegion = z.infer<typeof insertRegionSchema>;
 export type Region = typeof regions.$inferSelect;
 
-// SchemeStatus table
-export const schemeStatuses = pgTable("scheme_statuses", {
+// SchemeStatus table - using the correct table name "scheme_status" instead of "scheme_statuses"
+export const schemeStatuses = pgTable("scheme_status", {
   scheme_id: serial("scheme_id").primaryKey(),
   scheme_name: text("scheme_name").notNull(),
   region_name: text("region_name"),
