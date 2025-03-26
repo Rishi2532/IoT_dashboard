@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: navy;
+    --background: rgb(59 130 246 / 0.5);
   }
 
   * {
