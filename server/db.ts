@@ -118,7 +118,7 @@ export async function updateRegionSummaries() {
           12, -- fully completed schemes
           448, -- total villages
           153, -- fully completed villages
-          582, -- total ESR
+          588, -- total ESR
           245  -- fully completed ESR
       )
     `);
@@ -241,7 +241,7 @@ export async function initializeDatabase() {
           total_villages_integrated: 44,
           fully_completed_villages: 4,
           total_schemes_integrated: 11,
-          fully_completed_schemes: 2,
+          fully_completed_schemes: 1,
         },
       ]);
 

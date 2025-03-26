@@ -11,6 +11,7 @@ export default function Header() {
             <div className="flex-shrink-0 flex items-center">
               <div className="bg-white/10 rounded-full p-2 mr-3">
                 <Droplet className="h-6 w-6 text-white" />
+                <img></img>
               </div>
               <div>
                 <h1 className="font-bold text-xl text-white">
