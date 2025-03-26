@@ -122,7 +122,7 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       {/* Dashboard Header with gradient */}
-      <div className="p-6 bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg mb-6">
+      <div className="p-6 bg-gradient-to-r from-blue-500/10 to-blue-600/5 rounded-lg mb-6">
         <div className="md:flex md:items-center md:justify-between">
           <div className="flex-1 min-w-0">
             <h1 className="text-3xl font-bold text-blue-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">
