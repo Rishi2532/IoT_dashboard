@@ -103,7 +103,7 @@ export async function updateRegionSummaries() {
     // Update the global summary with the correct totals (the values provided by the user)
     // Delete any existing data in global_summary
     await db.execute(sql`DELETE FROM global_summary`);
-    
+
     // Insert the correct values
     await db.execute(sql`
       INSERT INTO global_summary (
@@ -114,8 +114,8 @@ export async function updateRegionSummaries() {
           total_esr_integrated,
           fully_completed_esr
       ) VALUES (
-          58, -- total schemes
-          12, -- fully completed schemes
+          62, -- total schemes
+          14, -- fully completed schemes
           448, -- total villages
           153, -- fully completed villages
           588, -- total ESR
