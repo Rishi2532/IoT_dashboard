@@ -91,18 +91,10 @@ export class PostgresStorage implements IStorage {
       const region = await this.getRegionByName(regionName);
       if (!region) return null;
       
-      // Get actual count from schemes table
-      const schemes = await db
-        .select()
-        .from(schemeStatuses)
-        .where(eq(schemeStatuses.region_name, regionName));
-      
-      const total_schemes = schemes.length;
-      const fully_completed = schemes.filter(s => s.scheme_completion_status === 'Fully-completed').length;
-      
+      // Use data directly from the regions table
       return {
-        total_schemes_integrated: total_schemes,
-        fully_completed_schemes: fully_completed,
+        total_schemes_integrated: region.total_schemes_integrated || 0,
+        fully_completed_schemes: region.fully_completed_schemes || 0,
         total_villages_integrated: region.total_villages_integrated || 0,
         fully_completed_villages: region.fully_completed_villages || 0,
         total_esr_integrated: region.total_esr_integrated || 0,
