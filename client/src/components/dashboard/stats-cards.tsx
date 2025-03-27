@@ -137,7 +137,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
             </div>
             <div className="flex justify-between text-xs mt-1">
               <span className="text-amber-600">
-                <b>{completedEsr} Fully completed</b>
+                <b>{completedVillages} Fully completed</b>
               </span>
               <span className="text-amber-600">
                 {totalVillages - completedVillages} Partially Completed
