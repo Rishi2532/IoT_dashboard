@@ -89,16 +89,39 @@ export default function Dashboard() {
 
   const handleExport = async () => {
     try {
-      // Use the already filtered data from our current state
-      // This ensures the Excel export respects the current filters
-      const filteredSchemes = schemes;
+      // Directly fetch all data with the appropriate filters
+      // This ensures we get all pages of data for the export
+      let url = `/api/schemes`;
+      const params = new URLSearchParams();
+      
+      if (selectedRegion !== "all") {
+        params.append('region', selectedRegion);
+      }
+      
+      if (statusFilter !== "all") {
+        params.append('status', statusFilter);
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      
+      // Show loading toast
+      toast({
+        title: "Preparing Export",
+        description: "Gathering data for export...",
+      });
+      
+      // Fetch all filtered data
+      const response = await fetch(url);
+      const allFilteredSchemes = await response.json();
       
       // Import XLSX dynamically
       const XLSX = await import('xlsx');
       
       // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(filteredSchemes.map((scheme: SchemeStatus) => ({
+      const ws = XLSX.utils.json_to_sheet(allFilteredSchemes.map((scheme: SchemeStatus) => ({
         'Scheme Name': scheme.scheme_name,
         'Region': scheme.region_name,
         'Agency': scheme.agency,
@@ -129,7 +152,7 @@ export default function Dashboard() {
       
       toast({
         title: "Export Complete",
-        description: `Exported ${filteredSchemes.length} schemes to Excel with your current filters applied.`,
+        description: `Exported ${allFilteredSchemes.length} schemes to Excel with your current filters applied.`,
       });
     } catch (error) {
       console.error('Export failed:', error);
