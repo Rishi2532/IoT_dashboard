@@ -826,7 +826,7 @@ export async function initializeDatabase() {
           fm_integrated: 7,
           rca_integrated: 7,
           pt_integrated: 7,
-          scheme_completion_status: "Fully-Completed",
+          scheme_completion_status: "Fully-completed",
         },
         {
           scheme_name: "Wadali 5 VRRWSS",
@@ -1553,7 +1553,7 @@ export async function initializeDatabase() {
           fm_integrated: 7,
           rca_integrated: 7,
           pt_integrated: 4,
-          scheme_completion_status: "Partial",
+          scheme_completion_status: "Fully-completed",
         },
         {
           scheme_name:

@@ -89,16 +89,16 @@ export default function Dashboard() {
 
   const handleExport = async () => {
     try {
-      // Fetch all required data
-      const schemesResponse = await fetch('/api/schemes');
-      const schemes = await schemesResponse.json();
+      // Use the already filtered data from our current state
+      // This ensures the Excel export respects the current filters
+      const filteredSchemes = schemes;
       
       // Import XLSX dynamically
       const XLSX = await import('xlsx');
       
       // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(schemes.map((scheme: SchemeStatus) => ({
+      const ws = XLSX.utils.json_to_sheet(filteredSchemes.map((scheme: SchemeStatus) => ({
         'Scheme Name': scheme.scheme_name,
         'Region': scheme.region_name,
         'Agency': scheme.agency,
@@ -114,17 +114,31 @@ export default function Dashboard() {
       // Add worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, 'Schemes Data');
       
+      // Generate filename based on filters
+      let filename = 'swsm-schemes';
+      if (selectedRegion !== 'all') {
+        filename += `-${selectedRegion}`;
+      }
+      if (statusFilter !== 'all') {
+        filename += `-${statusFilter}`;
+      }
+      filename += '.xlsx';
+      
       // Generate and download file
-      XLSX.writeFile(wb, 'swsm-schemes-data.xlsx');
+      XLSX.writeFile(wb, filename);
+      
+      toast({
+        title: "Export Complete",
+        description: `Exported ${filteredSchemes.length} schemes to Excel with your current filters applied.`,
+      });
     } catch (error) {
       console.error('Export failed:', error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting the data. Please try again.",
+        variant: "destructive"
+      });
     }
-    // In a real application, this would export data to CSV
-    toast({
-      title: "Export Feature",
-      description:
-        "This would export the dashboard data to CSV in a real application.",
-    });
   };
 
   const handleViewSchemeDetails = (scheme: SchemeStatus) => {
