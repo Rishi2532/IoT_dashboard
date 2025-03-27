@@ -98,17 +98,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all schemes with optional region filter
+  // Get all schemes with optional region and status filters
   app.get("/api/schemes", async (req, res) => {
     try {
       const regionName = req.query.region as string;
+      const status = req.query.status as string;
+      
+      let schemes;
       
       if (regionName && regionName !== "all") {
-        const schemes = await storage.getSchemesByRegion(regionName);
-        return res.json(schemes);
+        // Pass the status filter to storage method for database filtering
+        schemes = await storage.getSchemesByRegion(regionName, status);
+      } else {
+        // Pass the status filter to storage method for database filtering
+        schemes = await storage.getAllSchemes(status);
       }
       
-      const schemes = await storage.getAllSchemes();
       res.json(schemes);
     } catch (error) {
       console.error("Error fetching schemes:", error);

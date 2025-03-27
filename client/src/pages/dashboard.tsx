@@ -43,17 +43,34 @@ export default function Dashboard() {
       ).then((res) => res.json()),
   });
 
-  // Fetch schemes data
+  // State for status filter
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
+  // Fetch schemes data with region and status filters
   const {
     data: schemes = [],
     isLoading: isSchemesLoading,
     refetch: refetchSchemes,
   } = useQuery<SchemeStatus[]>({
-    queryKey: ["/api/schemes", selectedRegion],
-    queryFn: () =>
-      fetch(
-        `/api/schemes${selectedRegion !== "all" ? `?region=${selectedRegion}` : ""}`,
-      ).then((res) => res.json()),
+    queryKey: ["/api/schemes", selectedRegion, statusFilter],
+    queryFn: () => {
+      let url = `/api/schemes`;
+      const params = new URLSearchParams();
+      
+      if (selectedRegion !== "all") {
+        params.append('region', selectedRegion);
+      }
+      
+      if (statusFilter !== "all") {
+        params.append('status', statusFilter);
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      
+      return fetch(url).then((res) => res.json());
+    }
   });
 
   const handleRegionChange = (region: string) => {
@@ -81,7 +98,7 @@ export default function Dashboard() {
       
       // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(schemes.map(scheme => ({
+      const ws = XLSX.utils.json_to_sheet(schemes.map((scheme: SchemeStatus) => ({
         'Scheme Name': scheme.scheme_name,
         'Region': scheme.region_name,
         'Agency': scheme.agency,
@@ -117,6 +134,11 @@ export default function Dashboard() {
 
   const handleCloseModal = () => {
     setIsModalOpen(false);
+  };
+
+  // Handler for status filter changes
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
   };
 
   return (
@@ -204,6 +226,8 @@ export default function Dashboard() {
           schemes={schemes || []}
           isLoading={isSchemesLoading}
           onViewDetails={handleViewSchemeDetails}
+          statusFilter={statusFilter}
+          onStatusFilterChange={handleStatusFilterChange}
         />
       </div>
 

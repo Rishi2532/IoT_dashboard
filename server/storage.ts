@@ -17,8 +17,8 @@ export interface IStorage {
   updateRegion(region: Region): Promise<Region>;
   
   // Scheme operations
-  getAllSchemes(): Promise<SchemeStatus[]>;
-  getSchemesByRegion(regionName: string): Promise<SchemeStatus[]>;
+  getAllSchemes(statusFilter?: string): Promise<SchemeStatus[]>;
+  getSchemesByRegion(regionName: string, statusFilter?: string): Promise<SchemeStatus[]>;
   getSchemeById(schemeId: number): Promise<SchemeStatus | undefined>;
   createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus>;
   updateScheme(scheme: SchemeStatus): Promise<SchemeStatus>;
@@ -159,13 +159,33 @@ export class PostgresStorage implements IStorage {
   }
 
   // Scheme methods
-  async getAllSchemes(): Promise<SchemeStatus[]> {
+  async getAllSchemes(statusFilter?: string): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
-    return db.select().from(schemeStatuses).orderBy(schemeStatuses.region_name, schemeStatuses.scheme_name);
+    
+    if (statusFilter && statusFilter !== 'all') {
+      return db.select()
+        .from(schemeStatuses)
+        .where(sql`${schemeStatuses.scheme_completion_status} = ${statusFilter}`)
+        .orderBy(schemeStatuses.region_name, schemeStatuses.scheme_name);
+    }
+    
+    return db.select()
+      .from(schemeStatuses)
+      .orderBy(schemeStatuses.region_name, schemeStatuses.scheme_name);
   }
 
-  async getSchemesByRegion(regionName: string): Promise<SchemeStatus[]> {
+  async getSchemesByRegion(regionName: string, statusFilter?: string): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
+    
+    if (statusFilter && statusFilter !== 'all') {
+      return db.select()
+        .from(schemeStatuses)
+        .where(
+          sql`${schemeStatuses.region_name} = ${regionName} AND ${schemeStatuses.scheme_completion_status} = ${statusFilter}`
+        )
+        .orderBy(schemeStatuses.scheme_name);
+    }
+    
     return db.select()
       .from(schemeStatuses)
       .where(eq(schemeStatuses.region_name, regionName))

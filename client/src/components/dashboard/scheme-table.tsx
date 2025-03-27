@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,22 +28,33 @@ interface SchemeTableProps {
   schemes: SchemeStatus[];
   isLoading: boolean;
   onViewDetails: (scheme: SchemeStatus) => void;
+  statusFilter?: string;
+  onStatusFilterChange?: (status: string) => void;
 }
 
-export default function SchemeTable({ schemes, isLoading, onViewDetails }: SchemeTableProps) {
+export default function SchemeTable({ 
+  schemes, 
+  isLoading, 
+  onViewDetails,
+  statusFilter = "all",
+  onStatusFilterChange
+}: SchemeTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [localStatusFilter, setLocalStatusFilter] = useState<string>(statusFilter);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   
+  // If statusFilter prop changes, update local state
+  useEffect(() => {
+    setLocalStatusFilter(statusFilter);
+  }, [statusFilter]);
+  
+  // Filter schemes only by search (status is now filtered server-side)
   const filteredSchemes = schemes.filter(scheme => {
     const matchesSearch = searchTerm === "" || 
       scheme.scheme_name.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === "all" || 
-      scheme.scheme_completion_status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
+    return matchesSearch;
   });
   
   const totalPages = Math.ceil(filteredSchemes.length / itemsPerPage);
@@ -76,8 +87,13 @@ export default function SchemeTable({ schemes, isLoading, onViewDetails }: Schem
             />
           </div>
           <Select 
-            value={statusFilter} 
-            onValueChange={(value) => setStatusFilter(value)}
+            value={localStatusFilter} 
+            onValueChange={(value) => {
+              setLocalStatusFilter(value);
+              if (onStatusFilterChange) {
+                onStatusFilterChange(value);
+              }
+            }}
           >
             <SelectTrigger className="w-full sm:w-[180px]">
               <SelectValue placeholder="All Status" />
