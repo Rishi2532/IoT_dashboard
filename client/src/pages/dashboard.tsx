@@ -187,7 +187,7 @@ export default function Dashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 min-w-0">
             <h1 className="text-2xl sm:text-3xl font-bold text-blue-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">
-              SWSM IoT Dashboard
+              SWSM IoT Project Progress Dashboard
             </h1>
             <p className="mt-1 sm:mt-2 text-sm text-blue-700/80 font-medium">
               Integration Dashboard for Jal Jeevan Mission

@@ -12,7 +12,7 @@ export function formatNumber(num: number | undefined | null): string {
 
 export function calculatePercentage(value: number | undefined | null, total: number | undefined | null): number {
   if (!value || !total || total === 0) return 0;
-  return (value / total) * 100;
+  return Number(((value / total) * 100).toFixed(2));
 }
 
 export type SchemeCompletionStatus = 'Fully-Completed' | 'Partial' | 'Not-Connected';
