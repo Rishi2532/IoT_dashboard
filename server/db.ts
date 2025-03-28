@@ -62,11 +62,11 @@ export async function updateRegionSummaries() {
           total_esr_integrated,
           fully_completed_esr
       ) VALUES (
-          62, -- total schemes
+          64, -- total schemes
           14, -- fully completed schemes
-          458, -- total villages
+          492, -- total villages
           171, -- fully completed villages
-          587, -- total ESR
+          626, -- total ESR
           277  -- fully completed ESR
       )
     `);
@@ -133,9 +133,9 @@ export async function initializeDatabase() {
       await db.insert(regions).values([
         {
           region_name: "Nagpur",
-          total_esr_integrated: 117,
+          total_esr_integrated: 116,
           fully_completed_esr: 58,
-          partial_esr: 59,
+          partial_esr: 58,
           total_villages_integrated: 91,
           fully_completed_villages: 38,
           total_schemes_integrated: 15,
@@ -143,12 +143,12 @@ export async function initializeDatabase() {
         },
         {
           region_name: "Chhatrapati Sambhajinagar",
-          total_esr_integrated: 142,
+          total_esr_integrated: 147,
           fully_completed_esr: 73,
           partial_esr: 69,
-          total_villages_integrated: 130,
+          total_villages_integrated: 140,
           fully_completed_villages: 71,
-          total_schemes_integrated: 8,
+          total_schemes_integrated: 10,
           fully_completed_schemes: 2,
         },
         {
@@ -173,20 +173,20 @@ export async function initializeDatabase() {
         },
         {
           region_name: "Amravati",
-          total_esr_integrated: 145,
+          total_esr_integrated: 149,
           fully_completed_esr: 59,
           partial_esr: 86,
-          total_villages_integrated: 119,
+          total_villages_integrated: 121,
           fully_completed_villages: 24,
           total_schemes_integrated: 11,
           fully_completed_schemes: 1,
         },
         {
           region_name: "Nashik",
-          total_esr_integrated: 70,
+          total_esr_integrated: 106,
           fully_completed_esr: 23,
           partial_esr: 46,
-          total_villages_integrated: 44,
+          total_villages_integrated: 76,
           fully_completed_villages: 4,
           total_schemes_integrated: 11,
           fully_completed_schemes: 1,
