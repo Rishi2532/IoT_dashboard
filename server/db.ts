@@ -62,7 +62,7 @@ export async function updateRegionSummaries() {
           total_esr_integrated,
           fully_completed_esr
       ) VALUES (
-          65, -- total schemes
+          64, -- total schemes
           14, -- fully completed schemes
           492, -- total villages
           171, -- fully completed villages
