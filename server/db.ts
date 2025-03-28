@@ -1756,9 +1756,8 @@ export async function initializeDatabase() {
       );
       // Update region summary data based on scheme data
       await updateRegionSummaries();
-
-      // Reset region data to original values by calling the function we define below
-      await resetRegionData();
+      
+      // We no longer automatically reset region data to allow manual updates to persist
     }
 
     return db;

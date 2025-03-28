@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertRegionSchema, insertSchemeStatusSchema } from "@shared/schema";
 import { z } from "zod";
-import { updateRegionSummaries } from "./db";
+import { updateRegionSummaries, resetRegionData } from "./db";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -222,6 +222,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error updating region summaries:", error);
       res.status(500).json({ message: "Failed to update region summaries" });
+    }
+  });
+  
+  // Reset region data to original values (only for admin use)
+  app.post("/api/admin/reset-region-data", async (req, res) => {
+    try {
+      await resetRegionData();
+      res.status(200).json({ message: "Region data reset successfully" });
+    } catch (error) {
+      console.error("Error resetting region data:", error);
+      res.status(500).json({ message: "Failed to reset region data" });
     }
   });
 
