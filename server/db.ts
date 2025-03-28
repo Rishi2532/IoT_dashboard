@@ -62,7 +62,7 @@ export async function updateRegionSummaries() {
           total_esr_integrated,
           fully_completed_esr
       ) VALUES (
-          66, -- total schemes
+          65, -- total schemes
           14, -- fully completed schemes
           492, -- total villages
           171, -- fully completed villages
@@ -133,7 +133,7 @@ export async function initializeDatabase() {
       await db.insert(regions).values([
         {
           region_name: "Nagpur",
-          total_esr_integrated: 116,
+          total_esr_integrated: 117,
           fully_completed_esr: 58,
           partial_esr: 58,
           total_villages_integrated: 91,
