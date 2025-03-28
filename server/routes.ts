@@ -1,9 +1,10 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertRegionSchema, insertSchemeStatusSchema } from "@shared/schema";
+import { insertRegionSchema, insertSchemeStatusSchema, regions } from "@shared/schema";
 import { z } from "zod";
-import { updateRegionSummaries, resetRegionData } from "./db";
+import { updateRegionSummaries, resetRegionData, getDB } from "./db";
+import { eq } from "drizzle-orm";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
@@ -230,6 +231,102 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       await resetRegionData();
       res.status(200).json({ message: "Region data reset successfully" });
+    } catch (error) {
+      console.error("Error resetting region data:", error);
+      res.status(500).json({ message: "Failed to reset region data" });
+    }
+  });
+  
+  // Reset individual region data (only for admin use)
+  app.post("/api/admin/reset-region/:name", async (req, res) => {
+    try {
+      const regionName = req.params.name;
+      const db = await getDB();
+      
+      // Reset data for the specific region based on the region name
+      if (regionName === "Nagpur") {
+        await db
+          .update(regions)
+          .set({
+            total_esr_integrated: 117,
+            fully_completed_esr: 58,
+            partial_esr: 59,
+            total_villages_integrated: 91,
+            fully_completed_villages: 38,
+            total_schemes_integrated: 15,
+            fully_completed_schemes: 9,
+          })
+          .where(eq(regions.region_name, "Nagpur"));
+      } else if (regionName === "Chhatrapati Sambhajinagar") {
+        await db
+          .update(regions)
+          .set({
+            total_esr_integrated: 142,
+            fully_completed_esr: 73,
+            partial_esr: 69,
+            total_villages_integrated: 130,
+            fully_completed_villages: 71,
+            total_schemes_integrated: 8,
+            fully_completed_schemes: 2,
+          })
+          .where(eq(regions.region_name, "Chhatrapati Sambhajinagar"));
+      } else if (regionName === "Pune") {
+        await db
+          .update(regions)
+          .set({
+            total_esr_integrated: 97,
+            fully_completed_esr: 31,
+            partial_esr: 66,
+            total_villages_integrated: 53,
+            fully_completed_villages: 16,
+            total_schemes_integrated: 9,
+            fully_completed_schemes: 0,
+          })
+          .where(eq(regions.region_name, "Pune"));
+      } else if (regionName === "Konkan") {
+        await db
+          .update(regions)
+          .set({
+            total_esr_integrated: 11,
+            fully_completed_esr: 1,
+            partial_esr: 10,
+            total_villages_integrated: 11,
+            fully_completed_villages: 0,
+            total_schemes_integrated: 4,
+            fully_completed_schemes: 0,
+          })
+          .where(eq(regions.region_name, "Konkan"));
+      } else if (regionName === "Amravati") {
+        await db
+          .update(regions)
+          .set({
+            total_esr_integrated: 145,
+            fully_completed_esr: 59,
+            partial_esr: 86,
+            total_villages_integrated: 119,
+            fully_completed_villages: 24,
+            total_schemes_integrated: 11,
+            fully_completed_schemes: 1,
+          })
+          .where(eq(regions.region_name, "Amravati"));
+      } else if (regionName === "Nashik") {
+        await db
+          .update(regions)
+          .set({
+            total_esr_integrated: 70,
+            fully_completed_esr: 23,
+            partial_esr: 46,
+            total_villages_integrated: 44,
+            fully_completed_villages: 4,
+            total_schemes_integrated: 11,
+            fully_completed_schemes: 1,
+          })
+          .where(eq(regions.region_name, "Nashik"));
+      } else {
+        return res.status(400).json({ message: "Invalid region name" });
+      }
+      
+      res.status(200).json({ message: `${regionName} region data reset successfully` });
     } catch (error) {
       console.error("Error resetting region data:", error);
       res.status(500).json({ message: "Failed to reset region data" });
