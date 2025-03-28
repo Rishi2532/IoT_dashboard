@@ -10,19 +10,42 @@ export default function Schemes() {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [selectedScheme, setSelectedScheme] = useState<SchemeStatus | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Fetch regions data
   const { data: regions, isLoading: isRegionsLoading } = useQuery({
     queryKey: ['/api/regions'],
   });
 
-  // Fetch schemes data
+  // Fetch schemes data with region and status filters
   const { data: schemes, isLoading: isSchemesLoading } = useQuery({
-    queryKey: ['/api/schemes', selectedRegion],
+    queryKey: ['/api/schemes', selectedRegion, statusFilter],
+    queryFn: () => {
+      let url = `/api/schemes`;
+      const params = new URLSearchParams();
+
+      if (selectedRegion !== "" && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      if (statusFilter !== "all") {
+        params.append("status", statusFilter);
+      }
+
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+
+      return fetch(url).then((res) => res.json());
+    },
   });
 
   const handleRegionChange = (region: string) => {
     setSelectedRegion(region);
+  };
+
+  const handleStatusFilterChange = (status: string) => {
+    setStatusFilter(status);
   };
 
   const handleViewSchemeDetails = (scheme: SchemeStatus) => {
@@ -54,6 +77,8 @@ export default function Schemes() {
         schemes={schemes || []} 
         isLoading={isSchemesLoading}
         onViewDetails={handleViewSchemeDetails}
+        statusFilter={statusFilter}
+        onStatusFilterChange={handleStatusFilterChange}
       />
 
       <SchemeDetailsModal 
