@@ -248,9 +248,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db
           .update(regions)
           .set({
-            total_esr_integrated: 117,
+            total_esr_integrated: 116,
             fully_completed_esr: 58,
-            partial_esr: 59,
+            partial_esr: 58,
             total_villages_integrated: 91,
             fully_completed_villages: 38,
             total_schemes_integrated: 15,
@@ -261,12 +261,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db
           .update(regions)
           .set({
-            total_esr_integrated: 142,
+            total_esr_integrated: 147,
             fully_completed_esr: 73,
             partial_esr: 69,
-            total_villages_integrated: 130,
+            total_villages_integrated: 140,
             fully_completed_villages: 71,
-            total_schemes_integrated: 8,
+            total_schemes_integrated: 10,
             fully_completed_schemes: 2,
           })
           .where(eq(regions.region_name, "Chhatrapati Sambhajinagar"));
@@ -300,10 +300,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db
           .update(regions)
           .set({
-            total_esr_integrated: 145,
+            total_esr_integrated: 149,
             fully_completed_esr: 59,
             partial_esr: 86,
-            total_villages_integrated: 119,
+            total_villages_integrated: 121,
             fully_completed_villages: 24,
             total_schemes_integrated: 11,
             fully_completed_schemes: 1,
@@ -313,10 +313,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await db
           .update(regions)
           .set({
-            total_esr_integrated: 70,
+            total_esr_integrated: 106,
             fully_completed_esr: 23,
             partial_esr: 46,
-            total_villages_integrated: 44,
+            total_villages_integrated: 76,
             fully_completed_villages: 4,
             total_schemes_integrated: 11,
             fully_completed_schemes: 1,
