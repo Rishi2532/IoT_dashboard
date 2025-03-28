@@ -1336,11 +1336,11 @@ export async function initializeDatabase() {
       console.log(
         "Database already contains data, updating region summaries...",
       );
-      // Update region summary data based on scheme data
-      await updateRegionSummaries();
-
       // We no longer automatically reset region data to allow manual updates to persist
     }
+    
+    // Always update region summaries, whether the database was just initialized or not
+    await updateRegionSummaries();
 
     return db;
   } catch (error) {
