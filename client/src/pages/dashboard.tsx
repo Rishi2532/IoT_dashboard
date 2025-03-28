@@ -56,21 +56,21 @@ export default function Dashboard() {
     queryFn: () => {
       let url = `/api/schemes`;
       const params = new URLSearchParams();
-      
+
       if (selectedRegion !== "all") {
-        params.append('region', selectedRegion);
+        params.append("region", selectedRegion);
       }
-      
+
       if (statusFilter !== "all") {
-        params.append('status', statusFilter);
+        params.append("status", statusFilter);
       }
-      
+
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
-      
+
       return fetch(url).then((res) => res.json());
-    }
+    },
   });
 
   const handleRegionChange = (region: string) => {
@@ -93,73 +93,75 @@ export default function Dashboard() {
       // This ensures we get all pages of data for the export
       let url = `/api/schemes`;
       const params = new URLSearchParams();
-      
+
       if (selectedRegion !== "all") {
-        params.append('region', selectedRegion);
+        params.append("region", selectedRegion);
       }
-      
+
       if (statusFilter !== "all") {
-        params.append('status', statusFilter);
+        params.append("status", statusFilter);
       }
-      
+
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
-      
+
       // Show loading toast
       toast({
         title: "Preparing Export",
         description: "Gathering data for export...",
       });
-      
+
       // Fetch all filtered data
       const response = await fetch(url);
       const allFilteredSchemes = await response.json();
-      
+
       // Import XLSX dynamically
-      const XLSX = await import('xlsx');
-      
+      const XLSX = await import("xlsx");
+
       // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(allFilteredSchemes.map((scheme: SchemeStatus) => ({
-        'Scheme Name': scheme.scheme_name,
-        'Region': scheme.region_name,
-        'Agency': scheme.agency,
-        'Total Villages': scheme.total_villages_in_scheme,
-        'Villages Integrated': scheme.villages_integrated_on_iot,
-        'Villages Completed': scheme.fully_completed_villages,
-        'Total ESR': scheme.total_esr_in_scheme,
-        'ESR Integrated': scheme.esr_integrated_on_iot,
-        'ESR Completed': scheme.fully_completed_esr,
-        'Status': scheme.scheme_completion_status
-      })));
-      
+      const ws = XLSX.utils.json_to_sheet(
+        allFilteredSchemes.map((scheme: SchemeStatus) => ({
+          "Scheme Name": scheme.scheme_name,
+          Region: scheme.region_name,
+          Agency: scheme.agency,
+          "Total Villages": scheme.total_villages_in_scheme,
+          "Villages Integrated": scheme.villages_integrated_on_iot,
+          "Villages Completed": scheme.fully_completed_villages,
+          "Total ESR": scheme.total_esr_in_scheme,
+          "ESR Integrated": scheme.esr_integrated_on_iot,
+          "ESR Completed": scheme.fully_completed_esr,
+          Status: scheme.scheme_completion_status,
+        })),
+      );
+
       // Add worksheet to workbook
-      XLSX.utils.book_append_sheet(wb, ws, 'Schemes Data');
-      
+      XLSX.utils.book_append_sheet(wb, ws, "Schemes Data");
+
       // Generate filename based on filters
-      let filename = 'swsm-schemes';
-      if (selectedRegion !== 'all') {
+      let filename = "swsm-schemes";
+      if (selectedRegion !== "all") {
         filename += `-${selectedRegion}`;
       }
-      if (statusFilter !== 'all') {
+      if (statusFilter !== "all") {
         filename += `-${statusFilter}`;
       }
-      filename += '.xlsx';
-      
+      filename += ".xlsx";
+
       // Generate and download file
       XLSX.writeFile(wb, filename);
-      
+
       toast({
         title: "Export Complete",
         description: `Exported ${allFilteredSchemes.length} schemes to Excel with your current filters applied.`,
       });
     } catch (error) {
-      console.error('Export failed:', error);
+      console.error("Export failed:", error);
       toast({
         title: "Export Failed",
         description: "There was an error exporting the data. Please try again.",
-        variant: "destructive"
+        variant: "destructive",
       });
     }
   };
@@ -185,7 +187,7 @@ export default function Dashboard() {
         <div className="md:flex md:items-center md:justify-between">
           <div className="flex-1 min-w-0">
             <h1 className="text-3xl font-bold text-blue-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">
-              SWSM IoT Dashboard
+              SWSM IoT Project Progress Dashboard
             </h1>
             <p className="mt-2 text-sm text-blue-700/80 font-medium">
               Integration Dashboard for Jal Jeevan Mission

@@ -40,19 +40,109 @@ export async function updateRegionSummaries() {
       );
     `);
 
-    // Get all regions - but don't modify them
+    // Get all regions
     const allRegions = await db.select().from(regions);
-
-    // Log regions but do not modify their values
+    
+    // Get all schemes
+    const allSchemes = await db.select().from(schemeStatuses);
+    
+    // Create a mapping of region names to updated stats
+    const regionStats = {};
+    
+    // Initialize stats for each region
+    allRegions.forEach(region => {
+      regionStats[region.region_name] = {
+        total_esr_integrated: 0,
+        fully_completed_esr: 0,
+        partial_esr: 0,
+        total_villages_integrated: 0,
+        fully_completed_villages: 0,
+        total_schemes_integrated: 0,
+        fully_completed_schemes: 0
+      };
+    });
+    
+    // Calculate updated statistics based on scheme data
+    allSchemes.forEach(scheme => {
+      const regionName = scheme.region_name;
+      
+      // Skip if the region doesn't exist
+      if (!regionStats[regionName]) return;
+      
+      // Update region stats based on scheme data
+      regionStats[regionName].total_schemes_integrated++;
+      
+      if (scheme.scheme_completion_status === "Fully-completed") {
+        regionStats[regionName].fully_completed_schemes++;
+      }
+      
+      // Add scheme's villages and ESRs to region totals
+      if (scheme.villages_integrated_on_iot) {
+        regionStats[regionName].total_villages_integrated += scheme.villages_integrated_on_iot;
+      }
+      
+      if (scheme.fully_completed_villages) {
+        regionStats[regionName].fully_completed_villages += scheme.fully_completed_villages;
+      }
+      
+      if (scheme.esr_integrated_on_iot) {
+        regionStats[regionName].total_esr_integrated += scheme.esr_integrated_on_iot;
+      }
+      
+      if (scheme.fully_completed_esr) {
+        regionStats[regionName].fully_completed_esr += scheme.fully_completed_esr;
+      }
+      
+      // Calculate partial ESRs (integrated but not fully completed)
+      if (scheme.esr_integrated_on_iot && scheme.fully_completed_esr) {
+        regionStats[regionName].partial_esr += (scheme.esr_integrated_on_iot - scheme.fully_completed_esr);
+      }
+    });
+    
+    // Update each region with the calculated stats
     for (const region of allRegions) {
+      const stats = regionStats[region.region_name];
+      
+      await db.update(regions)
+        .set({
+          total_esr_integrated: stats.total_esr_integrated,
+          fully_completed_esr: stats.fully_completed_esr,
+          partial_esr: stats.partial_esr,
+          total_villages_integrated: stats.total_villages_integrated,
+          fully_completed_villages: stats.fully_completed_villages,
+          total_schemes_integrated: stats.total_schemes_integrated,
+          fully_completed_schemes: stats.fully_completed_schemes
+        })
+        .where(eq(regions.region_name, region.region_name));
+      
       console.log(`Updated summary data for region: ${region.region_name}`);
     }
 
-    // Update the global summary with the correct totals (the values provided by the user)
+    // Calculate global totals
+    let globalTotals = {
+      total_schemes_integrated: 0,
+      fully_completed_schemes: 0,
+      total_villages_integrated: 0,
+      fully_completed_villages: 0,
+      total_esr_integrated: 0,
+      fully_completed_esr: 0
+    };
+    
+    // Sum up all region stats for global totals
+    Object.values(regionStats).forEach(stats => {
+      globalTotals.total_schemes_integrated += stats.total_schemes_integrated;
+      globalTotals.fully_completed_schemes += stats.fully_completed_schemes;
+      globalTotals.total_villages_integrated += stats.total_villages_integrated;
+      globalTotals.fully_completed_villages += stats.fully_completed_villages;
+      globalTotals.total_esr_integrated += stats.total_esr_integrated;
+      globalTotals.fully_completed_esr += stats.fully_completed_esr;
+    });
+    
+    // Update the global summary
     // Delete any existing data in global_summary
     await db.execute(sql`DELETE FROM global_summary`);
 
-    // Insert the correct values
+    // Insert the calculated global totals
     await db.execute(sql`
       INSERT INTO global_summary (
           total_schemes_integrated,
@@ -62,12 +152,12 @@ export async function updateRegionSummaries() {
           total_esr_integrated,
           fully_completed_esr
       ) VALUES (
-          64, -- total schemes
-          14, -- fully completed schemes
-          492, -- total villages
-          171, -- fully completed villages
-          626, -- total ESR
-          277  -- fully completed ESR
+          ${globalTotals.total_schemes_integrated}, 
+          ${globalTotals.fully_completed_schemes}, 
+          ${globalTotals.total_villages_integrated}, 
+          ${globalTotals.fully_completed_villages}, 
+          ${globalTotals.total_esr_integrated}, 
+          ${globalTotals.fully_completed_esr}
       )
     `);
 
@@ -1756,7 +1846,7 @@ export async function initializeDatabase() {
       );
       // Update region summary data based on scheme data
       await updateRegionSummaries();
-      
+
       // We no longer automatically reset region data to allow manual updates to persist
     }
 

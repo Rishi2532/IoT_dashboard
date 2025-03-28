@@ -84,13 +84,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Region ID mismatch" });
       }
       
-      const existingRegion = await storage.getRegionByName(regionData.region_name);
+      // First check if a region with the given ID exists
+      const allRegions = await storage.getAllRegions();
+      const existingRegion = allRegions.find(r => r.region_id === regionId);
       
       if (!existingRegion) {
         return res.status(404).json({ message: "Region not found" });
       }
       
       const updatedRegion = await storage.updateRegion(regionData);
+      
+      // Trigger an update to region summaries whenever a region is updated
+      await updateRegionSummaries();
+      
       res.json(updatedRegion);
     } catch (error) {
       console.error("Error updating region:", error);
@@ -148,6 +154,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const schemeData = insertSchemeStatusSchema.parse(req.body);
       const newScheme = await storage.createScheme(schemeData);
+      
+      // Trigger an update to region summaries whenever a new scheme is created
+      await updateRegionSummaries();
+      
       res.status(201).json(newScheme);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -184,6 +194,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const updatedScheme = await storage.updateScheme(schemeData);
+      
+      // Trigger an update to region summaries whenever a scheme is updated
+      await updateRegionSummaries();
+      
       res.json(updatedScheme);
     } catch (error) {
       console.error("Error updating scheme:", error);
@@ -207,6 +221,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       await storage.deleteScheme(schemeId);
+      
+      // Trigger an update to region summaries whenever a scheme is deleted
+      await updateRegionSummaries();
+      
       res.status(204).end();
     } catch (error) {
       console.error("Error deleting scheme:", error);
