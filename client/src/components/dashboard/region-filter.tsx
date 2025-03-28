@@ -17,17 +17,17 @@ export default function RegionFilter({
 }: RegionFilterProps) {
   return (
     <div className={className}>
-      <Label htmlFor="region" className="text-sm font-medium text-neutral-700">
+      <Label htmlFor="region" className="text-xs sm:text-sm font-medium text-neutral-700">
         Filter by Region
       </Label>
       <Select 
         value={selectedRegion} 
         onValueChange={onChange}
       >
-        <SelectTrigger className="mt-1 w-full">
+        <SelectTrigger className="mt-1 w-full h-8 sm:h-10 text-xs sm:text-sm">
           <SelectValue placeholder="All Regions" />
         </SelectTrigger>
-        <SelectContent>
+        <SelectContent className="text-xs sm:text-sm">
           <SelectItem value="all">All Regions</SelectItem>
           {regions.map((region) => (
             <SelectItem key={region.region_id} value={region.region_name}>

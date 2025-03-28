@@ -183,30 +183,32 @@ export default function Dashboard() {
   return (
     <DashboardLayout>
       {/* Dashboard Header with gradient */}
-      <div className="p-6 bg-gradient-to-r from-blue-500/10 to-blue-600/5 rounded-lg mb-6">
-        <div className="md:flex md:items-center md:justify-between">
+      <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-500/10 to-blue-600/5 rounded-lg mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 min-w-0">
-            <h1 className="text-3xl font-bold text-blue-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">
-              SWSM IoT Project Progress Dashboard
+            <h1 className="text-2xl sm:text-3xl font-bold text-blue-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">
+              SWSM IoT Dashboard
             </h1>
-            <p className="mt-2 text-sm text-blue-700/80 font-medium">
+            <p className="mt-1 sm:mt-2 text-sm text-blue-700/80 font-medium">
               Integration Dashboard for Jal Jeevan Mission
             </p>
           </div>
-          <div className="mt-4 flex md:mt-0 md:ml-4 space-x-3">
+          <div className="mt-4 flex sm:mt-0 sm:ml-4 space-x-3">
             <Button
               variant="outline"
-              className="border-blue-300 hover:bg-blue-50 transition-all"
+              size="sm"
+              className="border-blue-300 hover:bg-blue-50 transition-all text-xs sm:text-sm"
               onClick={handleExport}
             >
-              <Download className="mr-2 h-4 w-4" />
+              <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Export
             </Button>
             <Button
+              size="sm"
               onClick={handleRefresh}
-              className="bg-blue-600 hover:bg-blue-700 transition-all"
+              className="bg-blue-600 hover:bg-blue-700 transition-all text-xs sm:text-sm"
             >
-              <RefreshCw className="mr-2 h-4 w-4" />
+              <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Refresh
             </Button>
           </div>
@@ -214,8 +216,8 @@ export default function Dashboard() {
       </div>
 
       {/* Region Filter in card */}
-      <div className="mb-8 p-4 bg-white rounded-lg border shadow-sm">
-        <h2 className="text-lg font-medium mb-3 text-blue-800">
+      <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-lg border shadow-sm">
+        <h2 className="text-base sm:text-lg font-medium mb-2 sm:mb-3 text-blue-800">
           Filter Dashboard
         </h2>
         <RegionFilter
@@ -226,48 +228,60 @@ export default function Dashboard() {
       </div>
 
       {/* Stats Cards with extra spacing and animations */}
-      <div className="mb-8 animate-in fade-in duration-500">
+      <div className="mb-4 sm:mb-6 animate-in fade-in duration-500">
         <StatsCards data={regionSummary} isLoading={isSummaryLoading} />
       </div>
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 mb-8">
-        <div className="bg-white p-5 rounded-lg border shadow-sm hover:shadow-md transition-all">
-          <h2 className="text-lg font-medium mb-4 text-blue-800">
+      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 mb-4 sm:mb-6">
+        <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all">
+          <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
             Region Comparison
           </h2>
-          <RegionComparisonChart
-            regions={regions || []}
-            isLoading={isRegionsLoading}
-          />
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-[300px] sm:min-w-full">
+              <RegionComparisonChart
+                regions={regions || []}
+                isLoading={isRegionsLoading}
+              />
+            </div>
+          </div>
         </div>
-        <div className="bg-white p-5 rounded-lg border shadow-sm hover:shadow-md transition-all">
-          <h2 className="text-lg font-medium mb-4 text-blue-800">
+        <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all">
+          <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
             Completion Status
           </h2>
-          <CompletionStatusChart
-            schemes={schemes || []}
-            isLoading={isSchemesLoading}
-          />
+          <div className="w-full overflow-x-auto">
+            <div className="min-w-[300px] sm:min-w-full">
+              <CompletionStatusChart
+                schemes={schemes || []}
+                isLoading={isSchemesLoading}
+              />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Schemes Table with title and styling */}
-      <div className="bg-white p-5 rounded-lg border shadow-sm mb-6">
-        <h2 className="text-lg font-medium mb-4 text-blue-800">
+      <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm mb-4 sm:mb-6">
+        <h2 className="text-base sm:text-lg font-medium mb-2 sm:mb-4 text-blue-800">
           Water Scheme Details
         </h2>
-        <p className="text-sm text-neutral-500 mb-4">
+        <p className="text-xs sm:text-sm text-neutral-500 mb-3 sm:mb-4">
           Click on any scheme to view detailed integration status and progress
           information.
         </p>
-        <SchemeTable
-          schemes={schemes || []}
-          isLoading={isSchemesLoading}
-          onViewDetails={handleViewSchemeDetails}
-          statusFilter={statusFilter}
-          onStatusFilterChange={handleStatusFilterChange}
-        />
+        <div className="w-full overflow-x-auto">
+          <div className="min-w-[650px]">
+            <SchemeTable
+              schemes={schemes || []}
+              isLoading={isSchemesLoading}
+              onViewDetails={handleViewSchemeDetails}
+              statusFilter={statusFilter}
+              onStatusFilterChange={handleStatusFilterChange}
+            />
+          </div>
+        </div>
       </div>
 
       {/* Scheme Details Modal */}
