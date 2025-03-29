@@ -1,0 +1,22 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Launch Water Dashboard",
+      "skipFiles": ["<node_internals>/**"],
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev"],
+      "env": {
+        "DATABASE_URL": "postgres://postgres:Salunke@123@localhost:5432/water_scheme_dashboard",
+        "PGHOST": "localhost",
+        "PGPORT": "5432",
+        "PGUSER": "postgres",
+        "PGPASSWORD": "Salunke@123",
+        "PGDATABASE": "water_scheme_dashboard",
+        "NODE_ENV": "development"
+      }
+    }
+  ]
+}
