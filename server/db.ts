@@ -131,7 +131,7 @@ export async function initializeDatabase() {
       .select({ count: sql<number>`count(*)` })
       .from(regions)
       .execute()
-      .then((result) => Number(result[0]?.count) || 0);
+      .then((result: any) => Number(result[0]?.count) || 0);
 
     console.log(`Found ${regionsCount} regions in database`);
 
