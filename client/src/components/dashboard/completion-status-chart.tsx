@@ -13,7 +13,10 @@ export default function CompletionStatusChart({ schemes, isLoading }: Completion
   const chartInstance = useRef<Chart | null>(null);
 
   useEffect(() => {
-    if (isLoading || !schemes.length || !chartRef.current) return;
+    // Ensure schemes is an array
+    const schemesArray = Array.isArray(schemes) ? schemes : [];
+    
+    if (isLoading || !schemesArray.length || !chartRef.current) return;
 
     // Destroy existing chart if it exists
     if (chartInstance.current) {
@@ -23,15 +26,15 @@ export default function CompletionStatusChart({ schemes, isLoading }: Completion
     const ctx = chartRef.current.getContext('2d');
     if (!ctx) return;
 
-    const fullyCompletedCount = schemes.filter(scheme => 
+    const fullyCompletedCount = schemesArray.filter(scheme => 
       scheme.scheme_completion_status === 'Fully-Completed'
     ).length;
     
-    const partialCount = schemes.filter(scheme => 
+    const partialCount = schemesArray.filter(scheme => 
       scheme.scheme_completion_status === 'Partial'
     ).length;
     
-    const notConnectedCount = schemes.filter(scheme => 
+    const notConnectedCount = schemesArray.filter(scheme => 
       scheme.scheme_completion_status === 'Not-Connected'
     ).length;
 

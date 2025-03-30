@@ -49,8 +49,11 @@ export default function SchemeTable({
     setLocalStatusFilter(statusFilter);
   }, [statusFilter]);
   
+  // Ensure schemes is an array before filtering
+  const schemesArray = Array.isArray(schemes) ? schemes : [];
+  
   // Filter schemes only by search (status is now filtered server-side)
-  const filteredSchemes = schemes.filter(scheme => {
+  const filteredSchemes = schemesArray.filter(scheme => {
     const matchesSearch = searchTerm === "" || 
       scheme.scheme_name.toLowerCase().includes(searchTerm.toLowerCase());
     
