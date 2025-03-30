@@ -34,6 +34,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
   const completedVillages = data.fully_completed_villages || 0;
   const totalEsr = data.total_esr_integrated || 0;
   const completedEsr = data.fully_completed_esr || 0;
+  const partialEsr = data.partial_esr || 0;
 
   const schemeCompletionPercentage = calculatePercentage(
     completedSchemes,
@@ -217,7 +218,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
                 <b>{completedEsr} Fully Completed</b>
               </span>
               <span className="text-sky-600">
-                {totalEsr - completedEsr} Partially Completed
+                {partialEsr} Partially Completed
               </span>
             </div>
             

@@ -39,4 +39,5 @@ export interface RegionSummary {
   fully_completed_villages: number;
   total_esr_integrated: number;
   fully_completed_esr: number;
+  partial_esr: number;
 }
