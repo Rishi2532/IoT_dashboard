@@ -30,20 +30,35 @@ if (!password || typeof password !== 'string') {
   }
 }
 
-// Create pool with explicit parameters and password as string
-const pool = new Pool({
-  host: process.env.PGHOST || 'localhost',
-  user: process.env.PGUSER || 'postgres',
-  password: password, // Use the string version
-  database: process.env.PGDATABASE,
-  port: parseInt(process.env.PGPORT || '5432'),
-  max: 10,
-  idleTimeoutMillis: 30000,
-  ssl: {
-    require: true,
-    rejectUnauthorized: false // This is needed for self-signed certificates
-  }
-});
+// Create pool using DATABASE_URL or fallback to explicit parameters
+let pool;
+if (process.env.DATABASE_URL) {
+  console.log('Using DATABASE_URL for PostgreSQL connection');
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    max: 10,
+    idleTimeoutMillis: 30000,
+    ssl: {
+      require: true,
+      rejectUnauthorized: false // This is needed for self-signed certificates
+    }
+  });
+} else {
+  console.log('Using explicit parameters for PostgreSQL connection');
+  pool = new Pool({
+    host: process.env.PGHOST || 'localhost',
+    user: process.env.PGUSER || 'postgres',
+    password: password, // Use the string version
+    database: process.env.PGDATABASE,
+    port: parseInt(process.env.PGPORT || '5432'),
+    max: 10,
+    idleTimeoutMillis: 30000,
+    ssl: {
+      require: true,
+      rejectUnauthorized: false // This is needed for self-signed certificates
+    }
+  });
+}
 
 // Log connection attempts
 pool.on('connect', () => {
