@@ -1,22 +1,32 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { sql, eq } from "drizzle-orm";
 import { regions, schemeStatuses } from "../shared/schema";
-import pg from "pg";
+import { createRequire } from "module";
 
-// PostgreSQL connection
-let pool: pg.Pool;
-let db: ReturnType<typeof drizzle>;
+// Use createRequire to load CommonJS modules from ESM
+const require = createRequire(import.meta.url);
+const dotenv = require("dotenv");
+dotenv.config();
+
+// We're using a separate CommonJS module for PostgreSQL connection
+// This avoids the ESM compatibility issues with pg
+let pool: any;
+let db: any;
 
 // Create database connection
 export async function getDB() {
   if (!db) {
-    pool = new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-      max: 10, // Maximum number of clients in the pool
-      idleTimeoutMillis: 30000, // How long a client is allowed to remain idle before being closed
-    });
-
-    db = drizzle(pool);
+    try {
+      // Import the pool from CommonJS module
+      pool = require("./pg-adapter.cjs");
+      console.log("PostgreSQL pool imported successfully");
+      
+      // Create drizzle instance with the pool
+      db = drizzle(pool);
+    } catch (error) {
+      console.error("Failed to initialize PostgreSQL connection:", error);
+      throw error;
+    }
   }
 
   return db;
