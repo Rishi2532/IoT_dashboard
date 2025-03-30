@@ -121,43 +121,25 @@ export class PostgresStorage implements IStorage {
         partial_esr: region.partial_esr || 0,
       };
     } else {
-      // Use global_summary for total (all regions) values instead of summing up individual regions
-      const globalSummary = await db.execute(
-        sql`SELECT * FROM global_summary LIMIT 1`,
-      );
-
-      if (
-        globalSummary &&
-        globalSummary.rows &&
-        globalSummary.rows.length > 0
-      ) {
-        const summary = globalSummary.rows[0];
-
-        return {
-          total_schemes_integrated: summary.total_schemes_integrated || 0,
-          fully_completed_schemes: summary.fully_completed_schemes || 0,
-          total_villages_integrated: summary.total_villages_integrated || 0,
-          fully_completed_villages: summary.fully_completed_villages || 0,
-          total_esr_integrated: summary.total_esr_integrated || 0,
-          fully_completed_esr: summary.fully_completed_esr || 0,
-          partial_esr: 0, // Not tracked in global summary
-        };
-      } else {
-        // Fallback to summing regions if global summary doesn't exist
-        const result = await db
-          .select({
-            total_schemes_integrated: sql<number>`SUM(${regions.total_schemes_integrated})`,
-            fully_completed_schemes: sql<number>`SUM(${regions.fully_completed_schemes})`,
-            total_villages_integrated: sql<number>`SUM(${regions.total_villages_integrated})`,
-            fully_completed_villages: sql<number>`SUM(${regions.fully_completed_villages})`,
-            total_esr_integrated: sql<number>`SUM(${regions.total_esr_integrated})`,
-            fully_completed_esr: sql<number>`SUM(${regions.fully_completed_esr})`,
-            partial_esr: sql<number>`SUM(${regions.partial_esr})`,
-          })
-          .from(regions);
-
-        return result[0];
-      }
+      // Always dynamically calculate the sum of all regions instead of using global_summary
+      console.log("Calculating dynamic sum of all regions");
+      
+      const result = await db
+        .select({
+          total_schemes_integrated: sql<number>`SUM(${regions.total_schemes_integrated})`,
+          fully_completed_schemes: sql<number>`SUM(${regions.fully_completed_schemes})`,
+          total_villages_integrated: sql<number>`SUM(${regions.total_villages_integrated})`,
+          fully_completed_villages: sql<number>`SUM(${regions.fully_completed_villages})`,
+          total_esr_integrated: sql<number>`SUM(${regions.total_esr_integrated})`,
+          fully_completed_esr: sql<number>`SUM(${regions.fully_completed_esr})`,
+          partial_esr: sql<number>`SUM(${regions.partial_esr})`,
+        })
+        .from(regions);
+      
+      // Log the dynamically calculated summary for debugging
+      console.log("Dynamic region summary calculated:", result[0]);
+      
+      return result[0];
     }
   }
 
