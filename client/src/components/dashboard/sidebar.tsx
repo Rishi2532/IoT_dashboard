@@ -73,7 +73,7 @@ export default function Sidebar() {
             <Menu className="h-6 w-6" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="w-[250px] p-0">
+        <SheetContent side="left" className="w-[250px] p-0 bg-blue-50">
           <SheetHeader className="p-4 border-b">
             <SheetTitle className="text-left">Navigation</SheetTitle>
           </SheetHeader>

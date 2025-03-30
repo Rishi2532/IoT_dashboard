@@ -39,7 +39,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-4xl">
+      <DialogContent className="sm:max-w-4xl bg-sky-50">
         <DialogHeader>
           <DialogTitle>Scheme Details: {scheme.scheme_name}</DialogTitle>
         </DialogHeader>

@@ -19,24 +19,28 @@ export async function getDB() {
     try {
       // Import the pool from CommonJS module
       // Check if this is a local environment (VS Code) by checking for specific folder paths
-      const isLocalEnvironment = process.cwd().includes('\\') || 
-        process.cwd().includes('OneDrive') || 
-        process.cwd().includes('Users');
-        
+      const isLocalEnvironment =
+        process.cwd().includes("\\") ||
+        process.cwd().includes("OneDrive") ||
+        process.cwd().includes("Users");
+
       // Use the appropriate adapter based on environment
       if (isLocalEnvironment) {
         try {
           pool = require("./local-adapter.js");
           console.log("PostgreSQL pool imported from local adapter");
         } catch (error) {
-          console.error("Failed to import local adapter, falling back to default adapter:", error);
+          console.error(
+            "Failed to import local adapter, falling back to default adapter:",
+            error,
+          );
           pool = require("./pg-adapter.cjs");
         }
       } else {
         pool = require("./pg-adapter.cjs");
         console.log("PostgreSQL pool imported from default adapter");
       }
-      
+
       // Create drizzle instance with the pool
       db = drizzle(pool);
     } catch (error) {
@@ -214,7 +218,7 @@ export async function initializeDatabase() {
           partial_esr: 46,
           total_villages_integrated: 76,
           fully_completed_villages: 4,
-          total_schemes_integrated: 11,
+          total_schemes_integrated: 14,
           fully_completed_schemes: 1,
         },
       ]);
@@ -1459,7 +1463,7 @@ export async function resetRegionData() {
         partial_esr: 46,
         total_villages_integrated: 76,
         fully_completed_villages: 4,
-        total_schemes_integrated: 11,
+        total_schemes_integrated: 14,
         fully_completed_schemes: 1,
       })
       .where(eq(regions.region_name, "Nashik"));
