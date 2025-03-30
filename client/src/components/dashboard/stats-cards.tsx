@@ -218,7 +218,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
                 <b>{completedEsr} Fully Completed</b>
               </span>
               <span className="text-sky-600">
-                {partialEsr} Partially Completed
+                {totalEsr - completedEsr} Partially Completed
               </span>
             </div>
             

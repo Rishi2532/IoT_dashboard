@@ -57,7 +57,7 @@ export default function Reports() {
             (region.total_schemes_integrated || 0) - (region.fully_completed_schemes || 0),
           "Partially Completed Villages": 
             (region.total_villages_integrated || 0) - (region.fully_completed_villages || 0),
-          "Partially Completed ESR": region.partial_esr || 0,
+          "Partially Completed ESR": (region.total_esr_integrated || 0) - (region.fully_completed_esr || 0),
           "Nos of Flow meter integrated": regionComponents.flow_meter_integrated,
           "Nos of RCA integrated": regionComponents.rca_integrated,
           "Nos of Pressure Transmitter integrated": regionComponents.pressure_transmitter_integrated,
@@ -74,7 +74,8 @@ export default function Reports() {
           sum + ((r.total_schemes_integrated || 0) - (r.fully_completed_schemes || 0)), 0),
         "Partially Completed Villages": regions.reduce((sum, r) => 
           sum + ((r.total_villages_integrated || 0) - (r.fully_completed_villages || 0)), 0),
-        "Partially Completed ESR": regions.reduce((sum, r) => sum + (r.partial_esr || 0), 0),
+        "Partially Completed ESR": regions.reduce((sum, r) => 
+          sum + ((r.total_esr_integrated || 0) - (r.fully_completed_esr || 0)), 0),
         "Nos of Flow meter integrated": componentData.reduce((sum, c) => sum + c.flow_meter_integrated, 0),
         "Nos of RCA integrated": componentData.reduce((sum, c) => sum + c.rca_integrated, 0),
         "Nos of Pressure Transmitter integrated": componentData.reduce((sum, c) => sum + c.pressure_transmitter_integrated, 0),
