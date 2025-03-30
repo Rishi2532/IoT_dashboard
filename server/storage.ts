@@ -14,10 +14,11 @@ import { eq, sql } from "drizzle-orm";
 
 // Interface for storage operations
 export interface IStorage {
-  // User operations (from original schema)
+  // User operations
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  validateUserCredentials(username: string, password: string): Promise<User | null>;
 
   // Region operations
   getAllRegions(): Promise<Region[]>;
@@ -85,6 +86,22 @@ export class PostgresStorage implements IStorage {
     const db = await this.ensureInitialized();
     const result = await db.insert(users).values(insertUser).returning();
     return result[0];
+  }
+  
+  async validateUserCredentials(username: string, password: string): Promise<User | null> {
+    const db = await this.ensureInitialized();
+    const user = await this.getUserByUsername(username);
+    
+    if (!user) {
+      return null;
+    }
+    
+    // Simple password check (in a real app, you would use bcrypt or similar)
+    if (user.password === password) {
+      return user;
+    }
+    
+    return null;
   }
 
   // Region methods

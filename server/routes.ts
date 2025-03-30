@@ -1,13 +1,98 @@
-import type { Express, Request, Response, NextFunction } from "express";
+import type { Express, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertRegionSchema, insertSchemeStatusSchema, regions } from "@shared/schema";
+import { insertRegionSchema, insertSchemeStatusSchema, regions, loginSchema } from "@shared/schema";
 import { z } from "zod";
 import { updateRegionSummaries, resetRegionData, getDB } from "./db";
 import { eq } from "drizzle-orm";
+import 'express-session';
+import multer from 'multer';
+import * as XLSX from 'xlsx';
+import * as path from 'path';
+import * as fs from 'fs';
+import { log } from './vite';
+
+// Extend Express Request type to include session properties
+declare module 'express-session' {
+  interface Session {
+    userId?: number;
+    isAdmin?: boolean;
+  }
+}
+
+import { Request } from 'express';
+
+// Admin authorization middleware
+const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.session || !req.session.userId || !req.session.isAdmin) {
+    return res.status(401).json({ message: "Unauthorized. Admin login required." });
+  }
+  next();
+};
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
+  
+  // Login endpoint
+  app.post("/api/auth/login", async (req, res) => {
+    try {
+      const credentials = loginSchema.parse(req.body);
+      const user = await storage.validateUserCredentials(
+        credentials.username, 
+        credentials.password
+      );
+      
+      if (!user) {
+        return res.status(401).json({ message: "Invalid username or password" });
+      }
+      
+      if (!user.role || user.role !== "admin") {
+        return res.status(403).json({ message: "Access denied. Admin privileges required." });
+      }
+      
+      // Set a session value to track admin login
+      if (req.session) {
+        req.session.userId = user.id;
+        req.session.isAdmin = user.role === "admin";
+      }
+      
+      res.json({ 
+        id: user.id,
+        username: user.username,
+        role: user.role,
+        name: user.name
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid login data", 
+          errors: error.errors 
+        });
+      }
+      console.error("Login error:", error);
+      res.status(500).json({ message: "Login failed" });
+    }
+  });
+  
+  // Check auth status
+  app.get("/api/auth/status", (req, res) => {
+    const isLoggedIn = req.session && req.session.userId && req.session.isAdmin;
+    res.json({ isLoggedIn, isAdmin: isLoggedIn ? true : false });
+  });
+  
+  // Logout endpoint
+  app.post("/api/auth/logout", (req, res) => {
+    if (req.session) {
+      req.session.destroy((err: Error | null) => {
+        if (err) {
+          return res.status(500).json({ message: "Logout failed" });
+        }
+        res.json({ message: "Logged out successfully" });
+      });
+    } else {
+      res.json({ message: "Not logged in" });
+    }
+  });
   
   // Get all regions
   app.get("/api/regions", async (req, res) => {
@@ -216,7 +301,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update region summaries based on current scheme data
-  app.post("/api/admin/update-region-summaries", async (req, res) => {
+  app.post("/api/admin/update-region-summaries", requireAdmin, async (req, res) => {
     try {
       await updateRegionSummaries();
       res.status(200).json({ message: "Region summaries updated successfully" });
@@ -227,7 +312,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Reset region data to original values (only for admin use)
-  app.post("/api/admin/reset-region-data", async (req, res) => {
+  app.post("/api/admin/reset-region-data", requireAdmin, async (req, res) => {
     try {
       await resetRegionData();
       res.status(200).json({ message: "Region data reset successfully" });
@@ -238,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
   
   // Reset individual region data (only for admin use)
-  app.post("/api/admin/reset-region/:name", async (req, res) => {
+  app.post("/api/admin/reset-region/:name", requireAdmin, async (req, res) => {
     try {
       const regionName = req.params.name;
       const db = await getDB();
@@ -368,6 +453,203 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching component integration data:", error);
       res.status(500).json({ message: "Failed to fetch component integration data" });
+    }
+  });
+  
+  // Configure file upload middleware with memory storage
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  });
+  
+  // Import region data from Excel
+  app.post("/api/admin/import/regions", requireAdmin, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const fileBuffer = req.file.buffer;
+      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+      
+      // Assume the first sheet is the one we want
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      // Convert to JSON with header: true to use first row as keys
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      
+      log(`Processing ${jsonData.length} rows of region data...`, 'import');
+      
+      let updatedCount = 0;
+      const db = await getDB();
+      
+      for (const row of jsonData) {
+        try {
+          // Map Excel columns to database fields
+          // Adjust column names based on the Excel file structure
+          const regionData = {
+            region_name: row['Region Name'],
+            total_esr_integrated: Number(row['Total ESR Integrated'] || 0),
+            fully_completed_esr: Number(row['Fully Completed ESR'] || 0),
+            partial_esr: Number(row['Partial ESR'] || 0),
+            total_villages_integrated: Number(row['Total Villages Integrated'] || 0),
+            fully_completed_villages: Number(row['Fully Completed Villages'] || 0),
+            total_schemes_integrated: Number(row['Total Schemes Integrated'] || 0),
+            fully_completed_schemes: Number(row['Fully Completed Schemes'] || 0)
+          };
+          
+          if (!regionData.region_name) {
+            log(`Skipping row - missing region name`, 'import');
+            continue;
+          }
+          
+          // Check if region exists
+          const existingRegion = await storage.getRegionByName(regionData.region_name);
+          
+          if (existingRegion) {
+            // Update existing region
+            const updatedRegion = {
+              ...existingRegion,
+              ...regionData
+            };
+            
+            await storage.updateRegion(updatedRegion);
+            updatedCount++;
+            log(`Updated region: ${regionData.region_name}`, 'import');
+          } else {
+            // Create new region
+            const newRegion = {
+              region_name: regionData.region_name,
+              total_esr_integrated: regionData.total_esr_integrated,
+              fully_completed_esr: regionData.fully_completed_esr,
+              partial_esr: regionData.partial_esr,
+              total_villages_integrated: regionData.total_villages_integrated,
+              fully_completed_villages: regionData.fully_completed_villages,
+              total_schemes_integrated: regionData.total_schemes_integrated,
+              fully_completed_schemes: regionData.fully_completed_schemes
+            };
+            
+            await storage.createRegion(newRegion);
+            updatedCount++;
+            log(`Created new region: ${regionData.region_name}`, 'import');
+          }
+        } catch (rowError) {
+          console.error(`Error processing row:`, row, rowError);
+          // Continue with next row
+        }
+      }
+      
+      // Update region summaries after import
+      await updateRegionSummaries();
+      
+      res.json({ 
+        message: `Region data imported successfully. ${updatedCount} regions updated.`,
+        updatedCount 
+      });
+    } catch (error) {
+      console.error("Error importing region data:", error);
+      res.status(500).json({ message: "Failed to import region data" });
+    }
+  });
+  
+  // Import scheme data from Excel
+  app.post("/api/admin/import/schemes", requireAdmin, upload.single('file'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const fileBuffer = req.file.buffer;
+      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+      
+      // Assume the first sheet is the one we want
+      const firstSheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[firstSheetName];
+      
+      // Convert to JSON with header: true to use first row as keys
+      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      
+      log(`Processing ${jsonData.length} rows of scheme data...`, 'import');
+      
+      let updatedCount = 0;
+      const db = await getDB();
+      
+      for (const row of jsonData) {
+        try {
+          // Map Excel columns to database fields
+          // Adjust property names based on actual Excel column names
+          const schemeData = {
+            // Using optional chaining to safely access potentially undefined properties
+            scheme_id: Number(row['Scheme ID'] || 0),
+            scheme_name: row['Scheme Name'],
+            region_name: row['Region Name'],
+            agency: row['Agency'] || null,
+            total_villages_in_scheme: Number(row['Total Villages In Scheme'] || 0),
+            total_esr_in_scheme: Number(row['Total ESR In Scheme'] || 0),
+            villages_integrated_on_iot: Number(row['Villages Integrated on IoT'] || 0),
+            fully_completed_villages: Number(row['Fully Completed Villages'] || 0),
+            esr_request_received: Number(row['ESR Request Received'] || 0),
+            esr_integrated_on_iot: Number(row['ESR Integrated on IoT'] || 0),
+            fully_completed_esr: Number(row['Fully Completed ESR'] || 0),
+            balance_for_fully_completion: Number(row['Balance For Fully Completion'] || 0),
+            fm_integrated: Number(row['FM Integrated'] || 0),
+            rca_integrated: Number(row['RCA Integrated'] || 0),
+            pt_integrated: Number(row['PT Integrated'] || 0),
+            scheme_completion_status: row['Scheme Completion Status'] || 'Not-Connected'
+          };
+          
+          // Ensure required fields are present
+          if (!schemeData.scheme_name || !schemeData.region_name) {
+            log(`Skipping row - missing scheme name or region name`, 'import');
+            continue;
+          }
+          
+          // Handle potential integer conversion issues
+          if (isNaN(schemeData.scheme_id) || schemeData.scheme_id <= 0) {
+            log(`Warning: Invalid scheme_id for ${schemeData.scheme_name}, generating a new ID...`, 'import');
+            // For missing or invalid IDs, we'll need to query an existing one or generate a new one
+            // This is just a placeholder approach
+            const allSchemes = await storage.getAllSchemes();
+            const maxId = allSchemes.reduce((max, scheme) => Math.max(max, scheme.scheme_id), 0);
+            schemeData.scheme_id = maxId + 1;
+          }
+          
+          // Check if scheme exists
+          const existingScheme = await storage.getSchemeById(schemeData.scheme_id);
+          
+          if (existingScheme) {
+            // Update existing scheme
+            const updatedScheme = {
+              ...existingScheme,
+              ...schemeData
+            };
+            
+            await storage.updateScheme(updatedScheme);
+            updatedCount++;
+            log(`Updated scheme: ${schemeData.scheme_name} (ID: ${schemeData.scheme_id})`, 'import');
+          } else {
+            // Create new scheme
+            await storage.createScheme(schemeData);
+            updatedCount++;
+            log(`Created new scheme: ${schemeData.scheme_name} (ID: ${schemeData.scheme_id})`, 'import');
+          }
+        } catch (rowError) {
+          console.error(`Error processing scheme row:`, row, rowError);
+          // Continue with next row
+        }
+      }
+      
+      // Update region summaries after import
+      await updateRegionSummaries();
+      
+      res.json({ 
+        message: `Scheme data imported successfully. ${updatedCount} schemes updated.`,
+        updatedCount
+      });
+    } catch (error) {
+      console.error("Error importing scheme data:", error);
+      res.status(500).json({ message: "Failed to import scheme data" });
     }
   });
 

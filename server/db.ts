@@ -1458,10 +1458,10 @@ export async function resetRegionData() {
     await db
       .update(regions)
       .set({
-        total_esr_integrated: 106,
+        total_esr_integrated: 109,
         fully_completed_esr: 23,
         partial_esr: 46,
-        total_villages_integrated: 76,
+        total_villages_integrated: 78,
         fully_completed_villages: 4,
         total_schemes_integrated: 14,
         fully_completed_schemes: 1,
