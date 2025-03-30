@@ -332,6 +332,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to reset region data" });
     }
   });
+  
+  // Get component integration data for reports
+  app.get("/api/reports/component-integration", async (req, res) => {
+    try {
+      const allSchemes = await storage.getAllSchemes();
+      
+      // Calculate component integration totals by region
+      const regionComponentData = [];
+      const regions = await storage.getAllRegions();
+      
+      for (const region of regions) {
+        const regionSchemes = allSchemes.filter(
+          scheme => scheme.region_name === region.region_name
+        );
+        
+        // Sum up component integration values
+        const regionData = {
+          region_name: region.region_name,
+          flow_meter_integrated: regionSchemes.reduce(
+            (sum, scheme) => sum + (scheme.fm_integrated || 0), 0
+          ),
+          rca_integrated: regionSchemes.reduce(
+            (sum, scheme) => sum + (scheme.rca_integrated || 0), 0
+          ),
+          pressure_transmitter_integrated: regionSchemes.reduce(
+            (sum, scheme) => sum + (scheme.pt_integrated || 0), 0
+          )
+        };
+        
+        regionComponentData.push(regionData);
+      }
+      
+      res.json(regionComponentData);
+    } catch (error) {
+      console.error("Error fetching component integration data:", error);
+      res.status(500).json({ message: "Failed to fetch component integration data" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
