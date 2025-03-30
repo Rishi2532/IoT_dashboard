@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { sql, eq } from "drizzle-orm";
-import { regions, schemeStatuses } from "../shared/schema";
+import { regions, schemeStatuses, users } from "../shared/schema";
 import { createRequire } from "module";
 
 // Use createRequire to load CommonJS modules from ESM
@@ -144,6 +144,14 @@ export async function initializeDatabase() {
         "pt_integrated" INTEGER,
         "scheme_completion_status" TEXT
       );
+
+      CREATE TABLE IF NOT EXISTS "users" (
+        "id" SERIAL PRIMARY KEY,
+        "username" TEXT NOT NULL UNIQUE,
+        "password" TEXT NOT NULL,
+        "name" TEXT,
+        "role" TEXT NOT NULL DEFAULT 'user'
+      );
     `);
 
     // Check if data exists
@@ -153,7 +161,25 @@ export async function initializeDatabase() {
       .execute()
       .then((result: any) => Number(result[0]?.count) || 0);
 
-    console.log(`Found ${regionsCount} regions in database`);
+    const usersCount = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(users)
+      .execute()
+      .then((result: any) => Number(result[0]?.count) || 0);
+
+    console.log(`Found ${regionsCount} regions and ${usersCount} users in database`);
+
+    // Create default admin user if no users exist
+    if (usersCount === 0) {
+      console.log("Creating default admin user...");
+      await db.insert(users).values({
+        username: "admin",
+        password: "admin123",
+        name: "Administrator",
+        role: "admin"
+      });
+      console.log("Default admin user created successfully");
+    }
 
     // Only insert data if there are no regions
     if (regionsCount === 0) {
