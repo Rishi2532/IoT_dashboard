@@ -19,13 +19,13 @@ interface StatsCardsProps {
 export default function StatsCards({ data, isLoading }: StatsCardsProps) {
   if (isLoading || !data) {
     return (
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {[...Array(3)].map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+        {[...Array(4)].map((_, i) => (
           <Card
             key={i}
-            className="bg-white overflow-hidden border border-gray-200 shadow-sm"
+            className="bg-white overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-all"
           >
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-5 lg:p-6">
               <div className="h-24 flex items-center justify-center">
                 <div className="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
               </div>
@@ -59,7 +59,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
   const esrCompletionPercentage = calculatePercentage(completedEsr, totalEsr);
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 xl:gap-8 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
       {/* Total Schemes Card */}
       <Card className="bg-white overflow-hidden border-2 border-blue-200 hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px] rounded-xl">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">

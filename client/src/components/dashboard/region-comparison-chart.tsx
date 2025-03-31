@@ -134,7 +134,11 @@ export default function RegionComparisonChart({ regions, isLoading }: RegionComp
             displayColors: true
           },
           datalabels: {
-            color: '#fff',
+            color: '#000',
+            backgroundColor: 'rgba(255, 255, 255, 0.7)',
+            borderRadius: 4,
+            padding: 2,
+            offset: 0,
             font: {
               weight: 'bold',
               size: 10
@@ -146,8 +150,8 @@ export default function RegionComparisonChart({ regions, isLoading }: RegionComp
               const value = context.dataset.data[context.dataIndex];
               return typeof value === 'number' && value > 0;
             },
-            anchor: 'center',
-            align: 'center'
+            anchor: 'end',
+            align: 'top'
           }
         }
       }

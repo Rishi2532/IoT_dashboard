@@ -38,25 +38,20 @@ export default function CompletionStatusChart({ schemes, isLoading }: Completion
       scheme.scheme_completion_status === 'Partial'
     ).length;
     
-    const notConnectedCount = schemesArray.filter(scheme => 
-      scheme.scheme_completion_status === 'Not-Connected'
-    ).length;
-
+    // Removing Not Connected as requested
     chartInstance.current = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: [`Fully Completed (${fullyCompletedCount})`, `Partial (${partialCount})`, `Not Connected (${notConnectedCount})`],
+        labels: [`Fully Completed (${fullyCompletedCount})`, `Partial (${partialCount})`],
         datasets: [{
-          data: [fullyCompletedCount, partialCount, notConnectedCount],
+          data: [fullyCompletedCount, partialCount],
           backgroundColor: [
             'rgba(16, 185, 129, 0.8)',
             'rgba(245, 158, 11, 0.8)',
-            'rgba(239, 68, 68, 0.8)'
           ],
           borderColor: [
             'rgba(16, 185, 129, 1)',
             'rgba(245, 158, 11, 1)',
-            'rgba(239, 68, 68, 1)'
           ],
           borderWidth: 1
         }]
@@ -83,14 +78,10 @@ export default function CompletionStatusChart({ schemes, isLoading }: Completion
             color: '#fff',
             font: {
               weight: 'bold',
-              size: 12
+              size: 14
             },
-            formatter: (value: number, ctx: any) => {
-              const dataset = ctx.chart.data.datasets[0];
-              const data = dataset.data as (number | null)[];
-              const total = data.reduce((sum: number, val) => sum + (typeof val === 'number' ? val : 0), 0);
-              const percentage = total > 0 ? Math.round((value / total) * 100).toString() : '0';
-              return percentage + '%';
+            formatter: (value: number) => {
+              return value.toString();
             }
           }
         }
