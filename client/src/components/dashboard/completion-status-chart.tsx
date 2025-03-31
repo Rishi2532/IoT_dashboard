@@ -1,23 +1,20 @@
 import { useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { SchemeStatus } from "@/types";
+import { RegionSummary } from "@/types";
 import Chart from "chart.js/auto";
 import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 interface CompletionStatusChartProps {
-  schemes: SchemeStatus[];
+  regionSummary?: RegionSummary;
   isLoading: boolean;
 }
 
-export default function CompletionStatusChart({ schemes, isLoading }: CompletionStatusChartProps) {
+export default function CompletionStatusChart({ regionSummary, isLoading }: CompletionStatusChartProps) {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
 
   useEffect(() => {
-    // Ensure schemes is an array
-    const schemesArray = Array.isArray(schemes) ? schemes : [];
-    
-    if (isLoading || !schemesArray.length || !chartRef.current) return;
+    if (isLoading || !regionSummary || !chartRef.current) return;
 
     // Destroy existing chart if it exists
     if (chartInstance.current) {
@@ -30,13 +27,8 @@ export default function CompletionStatusChart({ schemes, isLoading }: Completion
     // Register the plugin
     Chart.register(ChartDataLabels);
 
-    const fullyCompletedCount = schemesArray.filter(scheme => 
-      scheme.scheme_completion_status === 'Fully-Completed'
-    ).length;
-    
-    const partialCount = schemesArray.filter(scheme => 
-      scheme.scheme_completion_status === 'Partial'
-    ).length;
+    const fullyCompletedCount = regionSummary.fully_completed_schemes || 0;
+    const partialCount = (regionSummary.total_schemes_integrated || 0) - fullyCompletedCount;
     
     // Removing Not Connected as requested
     chartInstance.current = new Chart(ctx, {
@@ -93,7 +85,7 @@ export default function CompletionStatusChart({ schemes, isLoading }: Completion
         chartInstance.current.destroy();
       }
     };
-  }, [schemes, isLoading]);
+  }, [regionSummary, isLoading]);
 
   return (
     <Card className="bg-white">

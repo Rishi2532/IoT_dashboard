@@ -254,8 +254,8 @@ export default function Dashboard() {
           <div className="w-full overflow-x-auto">
             <div className="min-w-[300px] sm:min-w-full">
               <CompletionStatusChart
-                schemes={schemes || []}
-                isLoading={isSchemesLoading}
+                regionSummary={regionSummary}
+                isLoading={isSummaryLoading}
               />
             </div>
           </div>
