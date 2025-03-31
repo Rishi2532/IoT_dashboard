@@ -211,15 +211,23 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
       <Card className="bg-white overflow-hidden border-2 border-purple-200 hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px] rounded-xl">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-full w-full text-purple-700">
-            <path fill="currentColor" d="M12,2l9,4v12l-9,4l-9-4V6L12,2z M12,4.2L5,7.2v9.6l7,3l7-3V7.2L12,4.2z M12,17l-5-2.2v-6.1l5,2.2V17z M7,7.8l5,2.2v0.9l-5-2.2V7.8z" />
+            <path fill="currentColor" d="M7,12 L17,12 L17,8 L7,8 Z M5,8 L19,8 L19,6 L5,6 Z M7,6 L17,6 L17,3 L12,1 L7,3 Z M10,12 L14,12 L14,15 L10,15 Z M8,15 L16,15 L16,18 L8,18 Z M7,18 L9,23 M17,18 L15,23 M9,23 L15,23 M9,20 L15,20" />
+            <circle cx="12" cy="9" r="1" fill="currentColor" />
           </svg>
         </div>
         <CardContent className="p-3 sm:p-4 md:p-6 xl:p-8">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-2 sm:p-3 xl:p-4 shadow-md">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 xl:h-7 xl:w-7 text-white">
-                <path d="M12,3 L20,8 V16 L12,21 L4,16 V8 L12,3 Z" />
-                <path d="M12,12 m0,3 a3,3 0 1,0 0,-6 a3,3 0 1,0 0,6 Z" />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 xl:h-7 xl:w-7 text-white">
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M7,12 L17,12 L17,8 L7,8 Z" />
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M5,8 L19,8 L19,6 L5,6 Z" />
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="rgba(255,255,255,0.2)" d="M7,6 L17,6 L17,3 L12,1 L7,3 Z" />
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M10,12 L14,12 L14,15 L10,15 Z" />
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M8,15 L16,15 L16,18 L8,18 Z" />
+                <path stroke="currentColor" strokeWidth="1.5" fill="rgba(255,255,255,0.1)" d="M12,8 L12,12" />
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M7,18 L9,23 M17,18 L15,23" />
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M9,23 L15,23" />
+                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M9,20 L15,20" />
               </svg>
             </div>
             <div className="ml-3 sm:ml-4 md:ml-5 xl:ml-6 flex-1">
@@ -323,7 +331,18 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
             <div className="mt-2 space-y-2">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <Gauge className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="7" fill="rgba(186, 230, 253, 0.3)" />
+                    <path d="M12 6L12 8" />
+                    <path d="M16 10L14.5 11" />
+                    <path d="M18 14L16 14" />
+                    <path d="M8 10L9.5 11" />
+                    <path d="M6 14L8 14" />
+                    <path d="M12 12L15 15" strokeWidth="2" />
+                    <circle cx="12" cy="12" r="1" fill="currentColor" />
+                    <path d="M5 18L8 21M19 18L16 21" />
+                    <path d="M5 21L19 21" />
+                  </svg>
                   <span className="text-xs sm:text-sm text-emerald-800">
                     Flow Meters
                   </span>
@@ -334,12 +353,19 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M8 12h8" />
-                    <path d="M12 16V8" />
-                    <path d="M9 9l6 6" />
-                    <path d="M15 9l-6 6" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="5" y="3" width="14" height="3" rx="1" fill="rgba(107, 114, 128, 0.3)" stroke="currentColor" />
+                    <rect x="7" y="6" width="10" height="9" rx="1" fill="white" stroke="currentColor" />
+                    <rect x="5" y="15" width="14" height="3" rx="1" fill="rgba(107, 114, 128, 0.3)" stroke="currentColor" />
+                    <path d="M10 8.5h1M10 10h1M10 11.5h1" strokeWidth="1" />
+                    <path d="M14 7.5L15 10L14 12.5" strokeWidth="2.5" />
+                    <rect x="8.5" y="18" width="2" height="2" rx="1" fill="currentColor" />
+                    <rect x="13.5" y="18" width="2" height="2" rx="1" fill="currentColor" />
+                    <path d="M9.5 20L9.5 22.5" strokeWidth="1" />
+                    <path d="M14.5 20L14.5 22.5" strokeWidth="1" />
+                    <rect x="7" y="15" width="10" height="1.5" fill="rgba(59, 130, 246, 0.5)" stroke="none" />
+                    <rect x="11.5" y="9" width="1.5" height="1.5" fill="rgba(59, 130, 246, 0.5)" stroke="none" />
+                    <path d="M7 22.5L17 22.5" strokeWidth="1" />
                   </svg>
                   <span className="text-xs sm:text-sm text-emerald-800">
                     Residual Chlorine Analyzer
@@ -351,7 +377,22 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <Droplet className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" />
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="7" r="5" fill="rgba(186, 230, 253, 0.4)" stroke="currentColor" />
+                    <path d="M12 4.5 A0.5,0.5 0 1,1 12,4 A0.5,0.5 0 1,1 12,4.5 Z" />
+                    <path d="M14.5 5 A0.5,0.5 0 1,1 14.5,4.5 A0.5,0.5 0 1,1 14.5,5 Z" />
+                    <path d="M9.5 5 A0.5,0.5 0 1,1 9.5,4.5 A0.5,0.5 0 1,1 9.5,5 Z" />
+                    <path d="M15.5 7 A0.5,0.5 0 1,1 15.5,6.5 A0.5,0.5 0 1,1 15.5,7 Z" />
+                    <path d="M8.5 7 A0.5,0.5 0 1,1 8.5,6.5 A0.5,0.5 0 1,1 8.5,7 Z" />
+                    <path d="M14.5 9 A0.5,0.5 0 1,1 14.5,8.5 A0.5,0.5 0 1,1 14.5,9 Z" />
+                    <path d="M9.5 9 A0.5,0.5 0 1,1 9.5,8.5 A0.5,0.5 0 1,1 9.5,9 Z" />
+                    <path d="M12 10 A0.5,0.5 0 1,1 12,9.5 A0.5,0.5 0 1,1 12,10 Z" />
+                    <rect x="11" y="10" width="2" height="3" fill="rgba(186, 230, 253, 0.6)" stroke="currentColor" />
+                    <path d="M12 7L12 9" strokeWidth="1.8" strokeLinecap="round" fill="rgba(75, 85, 99, 0.4)" />
+                    <rect x="8" y="13" width="8" height="4" rx="1" fill="rgba(219, 234, 254, 0.6)" stroke="currentColor" />
+                    <rect x="5" y="15" width="3" height="2" fill="rgba(219, 234, 254, 0.4)" stroke="currentColor" />
+                    <rect x="16" y="15" width="3" height="2" fill="rgba(219, 234, 254, 0.4)" stroke="currentColor" />
+                  </svg>
                   <span className="text-xs sm:text-sm text-emerald-800">
                     Pressure Transmitters
                   </span>
