@@ -54,7 +54,7 @@ export const schemeStatuses = pgTable("scheme_status", {
   scheme_id: serial("scheme_id").primaryKey(),
   scheme_name: text("scheme_name").notNull(),
   region_name: text("region_name"),
-  agency: text("agency"),
+  // agency column removed - now determined by region_name
   total_villages_in_scheme: integer("total_villages_in_scheme"),
   total_esr_in_scheme: integer("total_esr_in_scheme"),
   villages_integrated_on_iot: integer("villages_integrated_on_iot"),

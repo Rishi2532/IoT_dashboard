@@ -1,7 +1,7 @@
 
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { calculatePercentage, SchemeCompletionStatus, getStatusColorClass, getStatusDisplayName } from "@/lib/utils";
+import { calculatePercentage, SchemeCompletionStatus, getStatusColorClass, getStatusDisplayName, getAgencyByRegion } from "@/lib/utils";
 import { SchemeStatus } from "@/types";
 
 interface SchemeDetailsModalProps {
@@ -56,7 +56,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Agency</h4>
-                <p className="mt-1 text-sm text-neutral-900">{scheme.agency || 'N/A'}</p>
+                <p className="mt-1 text-sm text-neutral-900">{getAgencyByRegion(scheme.region_name)}</p>
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Total Villages</h4>

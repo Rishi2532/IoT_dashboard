@@ -40,3 +40,22 @@ export function getStatusDisplayName(status: SchemeCompletionStatus): string {
       return status;
   }
 }
+
+// Function to get agency based on region name
+export function getAgencyByRegion(regionName: string | null | undefined): string {
+  if (!regionName) return 'N/A';
+  
+  switch (regionName) {
+    case 'Nagpur':
+    case 'Chhatrapati Sambhajinagar':
+      return 'M/S Rite Water';
+    case 'Pune':
+    case 'Konkan':
+      return 'M/S Indo/Chetas';
+    case 'Nashik':
+    case 'Amravati':
+      return 'M/S Ceinsys';
+    default:
+      return 'N/A';
+  }
+}
