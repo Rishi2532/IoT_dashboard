@@ -311,7 +311,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
                 <div className="flex items-center">
                   <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" />
                   <span className="text-xs sm:text-sm text-emerald-800">
-                    Remote Control Access
+                    Residual Chlorine Analyzer
                   </span>
                 </div>
                 <span className="text-xs sm:text-sm font-bold text-emerald-900">

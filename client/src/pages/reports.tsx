@@ -13,72 +13,57 @@ export default function Reports() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [exportError, setExportError] = useState("");
 
-  // Fetch region data
-  const { data: regions, isLoading: isRegionsLoading, isError: isRegionsError } = useQuery<Region[]>({
+  // Fetch region data - this is the only data source we need now
+  const { data: regions, isLoading, isError } = useQuery<Region[]>({
     queryKey: ["/api/regions"],
   });
   
-  // Fetch component integration data
-  const { 
-    data: componentData, 
-    isLoading: isComponentsLoading, 
-    isError: isComponentsError 
-  } = useQuery<any[]>({
-    queryKey: ["/api/reports/component-integration"],
-  });
-  
-  // Combined loading and error states
-  const isLoading = isRegionsLoading || isComponentsLoading;
-  const isError = isRegionsError || isComponentsError;
-
   // Function to generate and download Excel report
   const generateExcelReport = async () => {
-    if (!regions || regions.length === 0 || !componentData) return;
+    if (!regions || regions.length === 0) return;
     
     try {
       setIsGenerating(true);
       setExportError("");
 
-      // Create worksheet data by combining region data with component data
+      // Create worksheet data using only region table data
       const worksheetData = regions.map(region => {
-        // Find component data for this region
-        const regionComponents = componentData.find(c => c.region_name === region.region_name) || {
-          flow_meter_integrated: 0,
-          rca_integrated: 0,
-          pressure_transmitter_integrated: 0
-        };
-        
         return {
           "Region": region.region_name,
-          "Fully Completed schemes": region.fully_completed_schemes || 0,
-          "Fully Completed Villages": region.fully_completed_villages || 0,
-          "Fully Completed ESR": region.fully_completed_esr || 0,
-          "Partially Completed schemes": 
+          "Total Schemes Integrated": region.total_schemes_integrated || 0,
+          "Fully Completed Schemes": region.fully_completed_schemes || 0,
+          "Partially Completed Schemes": 
             (region.total_schemes_integrated || 0) - (region.fully_completed_schemes || 0),
+          "Total Villages Integrated": region.total_villages_integrated || 0,
+          "Fully Completed Villages": region.fully_completed_villages || 0,
           "Partially Completed Villages": 
             (region.total_villages_integrated || 0) - (region.fully_completed_villages || 0),
-          "Partially Completed ESR": (region.total_esr_integrated || 0) - (region.fully_completed_esr || 0),
-          "Nos of Flow meter integrated": regionComponents.flow_meter_integrated,
-          "Nos of RCA integrated": regionComponents.rca_integrated,
-          "Nos of Pressure Transmitter integrated": regionComponents.pressure_transmitter_integrated,
+          "Total ESR Integrated": region.total_esr_integrated || 0,
+          "Fully Completed ESR": region.fully_completed_esr || 0,
+          "Partially Completed ESR": region.partial_esr || 0,
+          "Flow Meters Integrated": region.flow_meter_integrated || 0,
+          "RCA Integrated": region.rca_integrated || 0,
+          "Pressure Transmitters Integrated": region.pressure_transmitter_integrated || 0,
         };
       });
 
-      // Calculate totals for all columns
+      // Calculate totals for all columns directly from region data
       const totalRow = {
         "Region": "Total",
-        "Fully Completed schemes": regions.reduce((sum, r) => sum + (r.fully_completed_schemes || 0), 0),
-        "Fully Completed Villages": regions.reduce((sum, r) => sum + (r.fully_completed_villages || 0), 0),
-        "Fully Completed ESR": regions.reduce((sum, r) => sum + (r.fully_completed_esr || 0), 0),
-        "Partially Completed schemes": regions.reduce((sum, r) => 
+        "Total Schemes Integrated": regions.reduce((sum, r) => sum + (r.total_schemes_integrated || 0), 0),
+        "Fully Completed Schemes": regions.reduce((sum, r) => sum + (r.fully_completed_schemes || 0), 0),
+        "Partially Completed Schemes": regions.reduce((sum, r) => 
           sum + ((r.total_schemes_integrated || 0) - (r.fully_completed_schemes || 0)), 0),
+        "Total Villages Integrated": regions.reduce((sum, r) => sum + (r.total_villages_integrated || 0), 0),
+        "Fully Completed Villages": regions.reduce((sum, r) => sum + (r.fully_completed_villages || 0), 0),
         "Partially Completed Villages": regions.reduce((sum, r) => 
           sum + ((r.total_villages_integrated || 0) - (r.fully_completed_villages || 0)), 0),
-        "Partially Completed ESR": regions.reduce((sum, r) => 
-          sum + ((r.total_esr_integrated || 0) - (r.fully_completed_esr || 0)), 0),
-        "Nos of Flow meter integrated": componentData.reduce((sum, c) => sum + c.flow_meter_integrated, 0),
-        "Nos of RCA integrated": componentData.reduce((sum, c) => sum + c.rca_integrated, 0),
-        "Nos of Pressure Transmitter integrated": componentData.reduce((sum, c) => sum + c.pressure_transmitter_integrated, 0),
+        "Total ESR Integrated": regions.reduce((sum, r) => sum + (r.total_esr_integrated || 0), 0),
+        "Fully Completed ESR": regions.reduce((sum, r) => sum + (r.fully_completed_esr || 0), 0),
+        "Partially Completed ESR": regions.reduce((sum, r) => sum + (r.partial_esr || 0), 0),
+        "Flow Meters Integrated": regions.reduce((sum, r) => sum + (r.flow_meter_integrated || 0), 0),
+        "RCA Integrated": regions.reduce((sum, r) => sum + (r.rca_integrated || 0), 0),
+        "Pressure Transmitters Integrated": regions.reduce((sum, r) => sum + (r.pressure_transmitter_integrated || 0), 0),
       };
       worksheetData.push(totalRow);
 
@@ -156,7 +141,7 @@ export default function Reports() {
               
               <Button 
                 onClick={generateExcelReport} 
-                disabled={isGenerating || !regions || regions.length === 0 || !componentData}
+                disabled={isGenerating || !regions || regions.length === 0}
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <FileDown className="mr-2 h-4 w-4" />
