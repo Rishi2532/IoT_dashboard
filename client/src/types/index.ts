@@ -9,6 +9,9 @@ export interface Region {
   fully_completed_villages: number;
   total_schemes_integrated: number;
   fully_completed_schemes: number;
+  flow_meter_integrated: number;
+  rca_integrated: number;
+  pressure_transmitter_integrated: number;
 }
 
 // Define scheme status types
@@ -40,4 +43,7 @@ export interface RegionSummary {
   total_esr_integrated: number;
   fully_completed_esr: number;
   partial_esr: number;
+  flow_meter_integrated: number;
+  rca_integrated: number;
+  pressure_transmitter_integrated: number;
 }

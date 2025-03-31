@@ -66,7 +66,10 @@ export async function updateRegionSummaries() {
           total_villages_integrated INTEGER,
           fully_completed_villages INTEGER,
           total_esr_integrated INTEGER,
-          fully_completed_esr INTEGER
+          fully_completed_esr INTEGER,
+          flow_meter_integrated INTEGER,
+          rca_integrated INTEGER,
+          pressure_transmitter_integrated INTEGER
       );
     `);
 
@@ -90,14 +93,20 @@ export async function updateRegionSummaries() {
           total_villages_integrated,
           fully_completed_villages,
           total_esr_integrated,
-          fully_completed_esr
+          fully_completed_esr,
+          flow_meter_integrated,
+          rca_integrated,
+          pressure_transmitter_integrated
       ) VALUES (
           64, -- total schemes
           14, -- fully completed schemes
           492, -- total villages
           171, -- fully completed villages
           626, -- total ESR
-          277  -- fully completed ESR
+          277, -- fully completed ESR
+          575, -- flow meter integrated
+          503, -- RCA integrated
+          357  -- pressure transmitter integrated
       )
     `);
 
@@ -123,7 +132,10 @@ export async function initializeDatabase() {
         "total_villages_integrated" INTEGER,
         "fully_completed_villages" INTEGER,
         "total_schemes_integrated" INTEGER,
-        "fully_completed_schemes" INTEGER
+        "fully_completed_schemes" INTEGER,
+        "flow_meter_integrated" INTEGER,
+        "rca_integrated" INTEGER,
+        "pressure_transmitter_integrated" INTEGER
       );
 
       CREATE TABLE IF NOT EXISTS "scheme_status" (
@@ -196,6 +208,9 @@ export async function initializeDatabase() {
           fully_completed_villages: 38,
           total_schemes_integrated: 15,
           fully_completed_schemes: 9,
+          flow_meter_integrated: 113,
+          rca_integrated: 113,
+          pressure_transmitter_integrated: 63,
         },
         {
           region_name: "Chhatrapati Sambhajinagar",
@@ -206,6 +221,9 @@ export async function initializeDatabase() {
           fully_completed_villages: 71,
           total_schemes_integrated: 10,
           fully_completed_schemes: 2,
+          flow_meter_integrated: 132,
+          rca_integrated: 138,
+          pressure_transmitter_integrated: 93,
         },
         {
           region_name: "Pune",
@@ -216,6 +234,9 @@ export async function initializeDatabase() {
           fully_completed_villages: 16,
           total_schemes_integrated: 9,
           fully_completed_schemes: 0,
+          flow_meter_integrated: 95,
+          rca_integrated: 65,
+          pressure_transmitter_integrated: 49,
         },
         {
           region_name: "Konkan",
@@ -226,6 +247,9 @@ export async function initializeDatabase() {
           fully_completed_villages: 0,
           total_schemes_integrated: 4,
           fully_completed_schemes: 0,
+          flow_meter_integrated: 11,
+          rca_integrated: 10,
+          pressure_transmitter_integrated: 3,
         },
         {
           region_name: "Amravati",
@@ -236,6 +260,9 @@ export async function initializeDatabase() {
           fully_completed_villages: 24,
           total_schemes_integrated: 11,
           fully_completed_schemes: 1,
+          flow_meter_integrated: 143,
+          rca_integrated: 95,
+          pressure_transmitter_integrated: 111,
         },
         {
           region_name: "Nashik",
@@ -246,6 +273,9 @@ export async function initializeDatabase() {
           fully_completed_villages: 4,
           total_schemes_integrated: 14,
           fully_completed_schemes: 1,
+          flow_meter_integrated: 81,
+          rca_integrated: 82,
+          pressure_transmitter_integrated: 38,
         },
       ]);
 

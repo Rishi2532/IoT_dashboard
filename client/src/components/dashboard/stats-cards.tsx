@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { calculatePercentage } from "@/lib/utils";
 import { RegionSummary } from "@/types";
-import { GitBranchPlus, Home, Droplet, BarChart3 } from "lucide-react";
+import { GitBranchPlus, Home, Droplet, BarChart3, Gauge, Activity, Cpu } from "lucide-react";
 
 interface StatsCardsProps {
   data?: RegionSummary;
@@ -35,6 +35,9 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
   const totalEsr = data.total_esr_integrated || 0;
   const completedEsr = data.fully_completed_esr || 0;
   const partialEsr = data.partial_esr || 0;
+  const flowMeterIntegrated = data.flow_meter_integrated || 0;
+  const rcaIntegrated = data.rca_integrated || 0;
+  const pressureTransmitterIntegrated = data.pressure_transmitter_integrated || 0;
 
   const schemeCompletionPercentage = calculatePercentage(
     completedSchemes,
@@ -47,7 +50,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
   const esrCompletionPercentage = calculatePercentage(completedEsr, totalEsr);
 
   return (
-    <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 xl:gap-8 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-3">
+    <div className="grid grid-cols-1 gap-3 sm:gap-4 md:gap-6 xl:gap-8 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
       {/* Total Schemes Card */}
       <Card className="bg-white overflow-hidden border border-blue-100 hover:shadow-md transition-all duration-300 hover:translate-y-[-2px]">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
@@ -235,6 +238,75 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               <div className="flex justify-between text-sm text-sky-700 mt-1">
                 <span>Completion Rate:</span>
                 <span className="font-semibold">{esrCompletionPercentage}%</span>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Infrastructure Components Card */}
+      <Card className="bg-white overflow-hidden border border-emerald-100 hover:shadow-md transition-all duration-300 hover:translate-y-[-2px]">
+        <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
+          <BarChart3 className="h-full w-full text-emerald-700" />
+        </div>
+        <CardContent className="p-3 sm:p-4 md:p-6 xl:p-8">
+          <div className="flex items-center">
+            <div className="flex-shrink-0 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg p-2 sm:p-3 xl:p-4 shadow-sm">
+              <Cpu className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 xl:h-7 xl:w-7 text-white" />
+            </div>
+            <div className="ml-3 sm:ml-4 md:ml-5 xl:ml-6 flex-1">
+              <h3 className="text-xs sm:text-sm xl:text-base font-medium text-emerald-800">
+                Infrastructure Components
+              </h3>
+              <div className="mt-1 flex items-baseline">
+                <p className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-emerald-900">
+                  {flowMeterIntegrated + rcaIntegrated + pressureTransmitterIntegrated}
+                </p>
+                <p className="ml-1 sm:ml-2 text-xs sm:text-sm xl:text-base text-emerald-600">components integrated</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3 sm:mt-4 md:mt-6 xl:mt-8">
+            <div className="flex justify-between items-center">
+              <span className="text-xs sm:text-sm xl:text-base font-medium text-emerald-800">
+                Monitoring Systems
+              </span>
+            </div>
+            <div className="mt-2 space-y-2">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <Gauge className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" />
+                  <span className="text-xs sm:text-sm text-emerald-800">Flow Meters</span>
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-emerald-900">{flowMeterIntegrated}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" />
+                  <span className="text-xs sm:text-sm text-emerald-800">Remote Control Access</span>
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-emerald-900">{rcaIntegrated}</span>
+              </div>
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <Droplet className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" />
+                  <span className="text-xs sm:text-sm text-emerald-800">Pressure Transmitters</span>
+                </div>
+                <span className="text-xs sm:text-sm font-bold text-emerald-900">{pressureTransmitterIntegrated}</span>
+              </div>
+            </div>
+            
+            {/* Additional large-screen details */}
+            <div className="hidden 2xl:block mt-4 pt-4 border-t border-emerald-100">
+              <div className="flex justify-between text-sm text-emerald-700">
+                <span>Total Components:</span>
+                <span className="font-semibold">{flowMeterIntegrated + rcaIntegrated + pressureTransmitterIntegrated}</span>
+              </div>
+              <div className="flex justify-between text-sm text-emerald-700 mt-1">
+                <span>Coverage Rate:</span>
+                <span className="font-semibold">
+                  {Math.round((flowMeterIntegrated + rcaIntegrated + pressureTransmitterIntegrated) / (totalEsr * 3) * 100)}%
+                </span>
               </div>
             </div>
           </div>

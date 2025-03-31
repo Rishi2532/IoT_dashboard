@@ -38,6 +38,9 @@ export const regions = pgTable("region", {
   fully_completed_villages: integer("fully_completed_villages"),
   total_schemes_integrated: integer("total_schemes_integrated"),
   fully_completed_schemes: integer("fully_completed_schemes"),
+  flow_meter_integrated: integer("flow_meter_integrated"),
+  rca_integrated: integer("rca_integrated"),
+  pressure_transmitter_integrated: integer("pressure_transmitter_integrated"),
 });
 
 export const insertRegionSchema = createInsertSchema(regions)
