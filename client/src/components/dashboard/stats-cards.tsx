@@ -256,7 +256,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
             </div>
             <div className="ml-3 sm:ml-4 md:ml-5 xl:ml-6 flex-1">
               <h3 className="text-xs sm:text-sm xl:text-base font-medium text-emerald-800">
-                Infrastructure Components
+                Connected Sensors
               </h3>
               <div className="mt-1 flex items-baseline">
                 <p className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-emerald-900">

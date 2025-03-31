@@ -253,7 +253,7 @@ export async function initializeDatabase() {
         },
         {
           region_name: "Amravati",
-          total_esr_integrated: 1,
+          total_esr_integrated: 149,
           fully_completed_esr: 59,
           partial_esr: 86,
           total_villages_integrated: 121,
