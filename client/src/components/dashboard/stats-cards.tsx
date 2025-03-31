@@ -279,7 +279,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
             </div>
             <div className="ml-3 sm:ml-4 md:ml-5 xl:ml-6 flex-1">
               <h3 className="text-xs sm:text-sm xl:text-base font-medium text-emerald-800">
-                Connected Sensors
+                Connected Sensors on IoT Platform
               </h3>
               {/* <div className="mt-1 flex items-baseline">
                 <p className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-emerald-900">
@@ -336,23 +336,23 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               <div className="flex justify-between text-sm text-emerald-700">
                 <span>Total Components:</span>
                 <span className="font-semibold">
-                  {flowMeterIntegrated +
-                    rcaIntegrated +
-                    pressureTransmitterIntegrated}
+                  {Number(flowMeterIntegrated) +
+                    Number(rcaIntegrated) +
+                    Number(pressureTransmitterIntegrated)}
                 </span>
               </div>
               <div className="flex justify-between text-sm text-emerald-700 mt-1">
-                <span>Coverage Rate:</span>
+                {/* <span>Coverage Rate:</span>
                 <span className="font-semibold">
                   {Math.round(
-                    ((flowMeterIntegrated +
-                      rcaIntegrated +
-                      pressureTransmitterIntegrated) /
+                    ((Number(flowMeterIntegrated) +
+                      Number(rcaIntegrated) +
+                      Number(pressureTransmitterIntegrated)) /
                       (totalEsr * 3)) *
                       100,
                   )}
                   %
-                </span>
+                </span> */}
               </div>
             </div>
           </div>
