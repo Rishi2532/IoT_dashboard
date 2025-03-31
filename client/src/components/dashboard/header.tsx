@@ -1,5 +1,5 @@
 import { Button } from "../ui/button";
-import { UserCircle, Settings, Droplet, LayoutDashboard } from "lucide-react";
+import { UserCircle, Settings, Droplet, LayoutDashboard, Menu } from "lucide-react";
 import { Link } from "wouter";
 import Sidebar from "./sidebar";
 
@@ -9,10 +9,9 @@ export default function Header() {
       <div className="mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            {/* Mobile menu button displayed on small screens */}
             <div className="flex-shrink-0 flex items-center">
-              {/* The mobile sidebar menu button */}
-              <div className="md:hidden mr-2">
+              {/* Always show the sidebar menu button */}
+              <div className="mr-2">
                 <Sidebar />
               </div>
               

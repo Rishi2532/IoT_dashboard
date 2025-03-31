@@ -1,7 +1,15 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { calculatePercentage } from "@/lib/utils";
 import { RegionSummary } from "@/types";
-import { GitBranchPlus, Home, Droplet, BarChart3, Gauge, Activity, Cpu } from "lucide-react";
+import {
+  GitBranchPlus,
+  Home,
+  Droplet,
+  BarChart3,
+  Gauge,
+  Activity,
+  Cpu,
+} from "lucide-react";
 
 interface StatsCardsProps {
   data?: RegionSummary;
@@ -37,7 +45,8 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
   const partialEsr = data.partial_esr || 0;
   const flowMeterIntegrated = data.flow_meter_integrated || 0;
   const rcaIntegrated = data.rca_integrated || 0;
-  const pressureTransmitterIntegrated = data.pressure_transmitter_integrated || 0;
+  const pressureTransmitterIntegrated =
+    data.pressure_transmitter_integrated || 0;
 
   const schemeCompletionPercentage = calculatePercentage(
     completedSchemes,
@@ -69,7 +78,9 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
                 <p className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-blue-900">
                   {totalSchemes}
                 </p>
-                <p className="ml-1 sm:ml-2 text-xs sm:text-sm xl:text-base text-blue-600">water schemes</p>
+                <p className="ml-1 sm:ml-2 text-xs sm:text-sm xl:text-base text-blue-600">
+                  water schemes
+                </p>
               </div>
             </div>
           </div>
@@ -96,7 +107,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
                 {totalSchemes - completedSchemes} Partially Completed
               </span>
             </div>
-            
+
             {/* Additional large-screen details */}
             <div className="hidden 2xl:block mt-4 pt-4 border-t border-blue-100">
               <div className="flex justify-between text-sm text-blue-700">
@@ -109,7 +120,9 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               </div>
               <div className="flex justify-between text-sm text-blue-700 mt-1">
                 <span>Completion Rate:</span>
-                <span className="font-semibold">{schemeCompletionPercentage}%</span>
+                <span className="font-semibold">
+                  {schemeCompletionPercentage}%
+                </span>
               </div>
             </div>
           </div>
@@ -163,7 +176,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
                 {totalVillages - completedVillages} Partially Completed
               </span>
             </div>
-            
+
             {/* Additional large-screen details */}
             <div className="hidden 2xl:block mt-4 pt-4 border-t border-amber-100">
               <div className="flex justify-between text-sm text-amber-700">
@@ -176,7 +189,9 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               </div>
               <div className="flex justify-between text-sm text-amber-700 mt-1">
                 <span>Completion Rate:</span>
-                <span className="font-semibold">{villageCompletionPercentage}%</span>
+                <span className="font-semibold">
+                  {villageCompletionPercentage}%
+                </span>
               </div>
             </div>
           </div>
@@ -194,10 +209,16 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               <Droplet className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 xl:h-7 xl:w-7 text-white" />
             </div>
             <div className="ml-3 sm:ml-4 md:ml-5 xl:ml-6 flex-1">
-              <h3 className="text-xs sm:text-sm xl:text-base font-medium text-sky-800">Total ESR</h3>
+              <h3 className="text-xs sm:text-sm xl:text-base font-medium text-sky-800">
+                Total ESR
+              </h3>
               <div className="mt-1 flex items-baseline">
-                <p className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-sky-900">{totalEsr}</p>
-                <p className="ml-1 sm:ml-2 text-xs sm:text-sm xl:text-base text-sky-600">ESR tanks integrated</p>
+                <p className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-sky-900">
+                  {totalEsr}
+                </p>
+                <p className="ml-1 sm:ml-2 text-xs sm:text-sm xl:text-base text-sky-600">
+                  ESR tanks integrated
+                </p>
               </div>
             </div>
           </div>
@@ -224,7 +245,7 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
                 {totalEsr - completedEsr} Partially Completed
               </span>
             </div>
-            
+
             {/* Additional large-screen details */}
             <div className="hidden 2xl:block mt-4 pt-4 border-t border-sky-100">
               <div className="flex justify-between text-sm text-sky-700">
@@ -237,7 +258,9 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               </div>
               <div className="flex justify-between text-sm text-sky-700 mt-1">
                 <span>Completion Rate:</span>
-                <span className="font-semibold">{esrCompletionPercentage}%</span>
+                <span className="font-semibold">
+                  {esrCompletionPercentage}%
+                </span>
               </div>
             </div>
           </div>
@@ -258,12 +281,12 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               <h3 className="text-xs sm:text-sm xl:text-base font-medium text-emerald-800">
                 Connected Sensors
               </h3>
-              <div className="mt-1 flex items-baseline">
+              {/* <div className="mt-1 flex items-baseline">
                 <p className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-emerald-900">
                   {flowMeterIntegrated + rcaIntegrated + pressureTransmitterIntegrated}
                 </p>
                 <p className="ml-1 sm:ml-2 text-xs sm:text-sm xl:text-base text-emerald-600">components integrated</p>
-              </div>
+              </div> */}
             </div>
           </div>
           <div className="mt-3 sm:mt-4 md:mt-6 xl:mt-8">
@@ -276,36 +299,59 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
                   <Gauge className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" />
-                  <span className="text-xs sm:text-sm text-emerald-800">Flow Meters</span>
+                  <span className="text-xs sm:text-sm text-emerald-800">
+                    Flow Meters
+                  </span>
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-emerald-900">{flowMeterIntegrated}</span>
+                <span className="text-xs sm:text-sm font-bold text-emerald-900">
+                  {flowMeterIntegrated}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
                   <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" />
-                  <span className="text-xs sm:text-sm text-emerald-800">Remote Control Access</span>
+                  <span className="text-xs sm:text-sm text-emerald-800">
+                    Remote Control Access
+                  </span>
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-emerald-900">{rcaIntegrated}</span>
+                <span className="text-xs sm:text-sm font-bold text-emerald-900">
+                  {rcaIntegrated}
+                </span>
               </div>
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
                   <Droplet className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" />
-                  <span className="text-xs sm:text-sm text-emerald-800">Pressure Transmitters</span>
+                  <span className="text-xs sm:text-sm text-emerald-800">
+                    Pressure Transmitters
+                  </span>
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-emerald-900">{pressureTransmitterIntegrated}</span>
+                <span className="text-xs sm:text-sm font-bold text-emerald-900">
+                  {pressureTransmitterIntegrated}
+                </span>
               </div>
             </div>
-            
+
             {/* Additional large-screen details */}
             <div className="hidden 2xl:block mt-4 pt-4 border-t border-emerald-100">
               <div className="flex justify-between text-sm text-emerald-700">
                 <span>Total Components:</span>
-                <span className="font-semibold">{flowMeterIntegrated + rcaIntegrated + pressureTransmitterIntegrated}</span>
+                <span className="font-semibold">
+                  {flowMeterIntegrated +
+                    rcaIntegrated +
+                    pressureTransmitterIntegrated}
+                </span>
               </div>
               <div className="flex justify-between text-sm text-emerald-700 mt-1">
                 <span>Coverage Rate:</span>
                 <span className="font-semibold">
-                  {Math.round((flowMeterIntegrated + rcaIntegrated + pressureTransmitterIntegrated) / (totalEsr * 3) * 100)}%
+                  {Math.round(
+                    ((flowMeterIntegrated +
+                      rcaIntegrated +
+                      pressureTransmitterIntegrated) /
+                      (totalEsr * 3)) *
+                      100,
+                  )}
+                  %
                 </span>
               </div>
             </div>
