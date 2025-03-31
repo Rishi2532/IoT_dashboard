@@ -107,6 +107,8 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               <span className="text-green-600 font-medium">
                 <b>{completedSchemes} Fully Completed</b>
               </span>
+            </div>
+            <div className="text-right text-[10px] sm:text-xs xl:text-sm">
               <span className="text-yellow-600 font-medium">
                 {totalSchemes - completedSchemes} Partially Completed
               </span>
@@ -181,6 +183,8 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               <span className="text-green-600 font-medium">
                 <b>{completedVillages} Fully Completed</b>
               </span>
+            </div>
+            <div className="text-right text-[10px] sm:text-xs xl:text-sm">
               <span className="text-yellow-600 font-medium">
                 {totalVillages - completedVillages} Partially Completed
               </span>
@@ -263,6 +267,8 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
               <span className="text-green-600 font-medium">
                 <b>{completedEsr} Fully Completed</b>
               </span>
+            </div>
+            <div className="text-right text-[10px] sm:text-xs xl:text-sm">
               <span className="text-yellow-600 font-medium">
                 {totalEsr - completedEsr} Partially Completed
               </span>

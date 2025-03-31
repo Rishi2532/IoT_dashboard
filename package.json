@@ -45,6 +45,7 @@
     "@types/multer": "^1.4.12",
     "@types/pg": "^8.11.11",
     "chart.js": "^4.4.8",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",

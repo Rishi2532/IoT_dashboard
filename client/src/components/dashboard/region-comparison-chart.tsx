@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Region } from "@/types";
 import Chart from "chart.js/auto";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 interface RegionComparisonChartProps {
   regions: Region[];
@@ -22,6 +23,9 @@ export default function RegionComparisonChart({ regions, isLoading }: RegionComp
 
     const ctx = chartRef.current.getContext('2d');
     if (!ctx) return;
+
+    // Register the plugin
+    Chart.register(ChartDataLabels);
 
     const sortedRegions = [...regions].sort((a, b) => a.region_name.localeCompare(b.region_name));
     
@@ -128,6 +132,22 @@ export default function RegionComparisonChart({ regions, isLoading }: RegionComp
             },
             padding: 10,
             displayColors: true
+          },
+          datalabels: {
+            color: '#fff',
+            font: {
+              weight: 'bold',
+              size: 10
+            },
+            formatter: (value: number) => {
+              return value.toString();
+            },
+            display: (context: any) => {
+              const value = context.dataset.data[context.dataIndex];
+              return typeof value === 'number' && value > 0;
+            },
+            anchor: 'center',
+            align: 'center'
           }
         }
       }

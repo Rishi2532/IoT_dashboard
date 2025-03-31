@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { SchemeStatus } from "@/types";
 import Chart from "chart.js/auto";
+import ChartDataLabels from 'chartjs-plugin-datalabels';
 
 interface CompletionStatusChartProps {
   schemes: SchemeStatus[];
@@ -26,6 +27,9 @@ export default function CompletionStatusChart({ schemes, isLoading }: Completion
     const ctx = chartRef.current.getContext('2d');
     if (!ctx) return;
 
+    // Register the plugin
+    Chart.register(ChartDataLabels);
+
     const fullyCompletedCount = schemesArray.filter(scheme => 
       scheme.scheme_completion_status === 'Fully-Completed'
     ).length;
@@ -41,7 +45,7 @@ export default function CompletionStatusChart({ schemes, isLoading }: Completion
     chartInstance.current = new Chart(ctx, {
       type: 'doughnut',
       data: {
-        labels: ['Fully Completed', 'Partial', 'Not Connected'],
+        labels: [`Fully Completed (${fullyCompletedCount})`, `Partial (${partialCount})`, `Not Connected (${notConnectedCount})`],
         datasets: [{
           data: [fullyCompletedCount, partialCount, notConnectedCount],
           backgroundColor: [
@@ -63,6 +67,31 @@ export default function CompletionStatusChart({ schemes, isLoading }: Completion
         plugins: {
           legend: {
             position: 'bottom',
+          },
+          tooltip: {
+            callbacks: {
+              label: function(context) {
+                const value = context.raw as number;
+                const data = context.chart.data.datasets[0].data as number[];
+                const total = data.reduce((sum, val) => sum + (val || 0), 0);
+                const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : '0.0';
+                return `${context.label}: ${value} (${percentage}%)`;
+              }
+            }
+          },
+          datalabels: {
+            color: '#fff',
+            font: {
+              weight: 'bold',
+              size: 12
+            },
+            formatter: (value: number, ctx: any) => {
+              const dataset = ctx.chart.data.datasets[0];
+              const data = dataset.data as (number | null)[];
+              const total = data.reduce((sum: number, val) => sum + (typeof val === 'number' ? val : 0), 0);
+              const percentage = total > 0 ? Math.round((value / total) * 100).toString() : '0';
+              return percentage + '%';
+            }
           }
         }
       }
