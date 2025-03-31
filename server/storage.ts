@@ -150,6 +150,9 @@ export class PostgresStorage implements IStorage {
           total_esr_integrated: sql<number>`SUM(${regions.total_esr_integrated})`,
           fully_completed_esr: sql<number>`SUM(${regions.fully_completed_esr})`,
           partial_esr: sql<number>`SUM(${regions.partial_esr})`,
+          flow_meter_integrated: sql<number>`SUM(${regions.flow_meter_integrated})`,
+          rca_integrated: sql<number>`SUM(${regions.rca_integrated})`,
+          pressure_transmitter_integrated: sql<number>`SUM(${regions.pressure_transmitter_integrated})`,
         })
         .from(regions);
       
@@ -179,6 +182,9 @@ export class PostgresStorage implements IStorage {
         fully_completed_villages: region.fully_completed_villages,
         total_schemes_integrated: region.total_schemes_integrated,
         fully_completed_schemes: region.fully_completed_schemes,
+        flow_meter_integrated: region.flow_meter_integrated,
+        rca_integrated: region.rca_integrated,
+        pressure_transmitter_integrated: region.pressure_transmitter_integrated,
       })
       .where(eq(regions.region_id, region.region_id));
 

@@ -39,37 +39,40 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-4xl bg-white">
+      <DialogContent className="sm:max-w-4xl bg-blue-50">
         <DialogHeader>
           <DialogTitle>Scheme Details: {scheme.scheme_name}</DialogTitle>
         </DialogHeader>
         
         <div className="mt-4">
           {/* Scheme Info */}
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 mb-6">
-            <div>
-              <h4 className="text-sm font-medium text-neutral-500">Region</h4>
-              <p className="mt-1 text-sm text-neutral-900">{scheme.region_name || 'N/A'}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-neutral-500">Agency</h4>
-              <p className="mt-1 text-sm text-neutral-900">{scheme.agency || 'N/A'}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-neutral-500">Total Villages</h4>
-              <p className="mt-1 text-sm text-neutral-900">{scheme.total_villages_in_scheme || 0}</p>
-            </div>
-            <div>
-              <h4 className="text-sm font-medium text-neutral-500">Total ESR</h4>
-              <p className="mt-1 text-sm text-neutral-900">{scheme.total_esr_in_scheme || 0}</p>
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-neutral-200 mb-6">
+            <h4 className="text-sm font-medium text-neutral-700 mb-3">Scheme Information</h4>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Region</h4>
+                <p className="mt-1 text-sm text-neutral-900">{scheme.region_name || 'N/A'}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Agency</h4>
+                <p className="mt-1 text-sm text-neutral-900">{scheme.agency || 'N/A'}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Total Villages</h4>
+                <p className="mt-1 text-sm text-neutral-900">{scheme.total_villages_in_scheme || 0}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Total ESR</h4>
+                <p className="mt-1 text-sm text-neutral-900">{scheme.total_esr_in_scheme || 0}</p>
+              </div>
             </div>
           </div>
 
           {/* Progress Charts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <h4 className="text-sm font-medium text-neutral-700 mb-2">Village Integration Status</h4>
-              <div className="bg-neutral-100 rounded-lg p-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-neutral-200">
+              <h4 className="text-sm font-medium text-neutral-700 mb-3">Village Integration Status</h4>
+              <div className="bg-neutral-50 rounded-lg p-4">
                 <div className="flex justify-between mb-2">
                   <span className="text-xs text-neutral-500">Villages integrated on IoT</span>
                   <span className="text-xs font-semibold text-neutral-700">
@@ -98,9 +101,9 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               </div>
             </div>
             
-            <div>
-              <h4 className="text-sm font-medium text-neutral-700 mb-2">ESR Integration Status</h4>
-              <div className="bg-neutral-100 rounded-lg p-4">
+            <div className="bg-white p-4 rounded-lg shadow-sm border border-neutral-200">
+              <h4 className="text-sm font-medium text-neutral-700 mb-3">ESR Integration Status</h4>
+              <div className="bg-neutral-50 rounded-lg p-4">
                 <div className="flex justify-between mb-2">
                   <span className="text-xs text-neutral-500">ESR requests received</span>
                   <span className="text-xs font-semibold text-neutral-700">
@@ -144,9 +147,9 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
           </div>
 
           {/* Integration Details */}
-          <div className="mb-6">
+          <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-neutral-200">
             <h4 className="text-sm font-medium text-neutral-700 mb-3">Component Integration</h4>
-            <div className="bg-neutral-50 overflow-hidden rounded-lg border border-neutral-200">
+            <div className="bg-white overflow-hidden rounded-lg border border-neutral-200">
               <div className="grid grid-cols-4 border-b border-neutral-200">
                 <div className="py-3 px-4 text-xs font-medium text-neutral-500 border-r border-neutral-200">Component</div>
                 <div className="py-3 px-4 text-xs font-medium text-neutral-500 border-r border-neutral-200">Integrated</div>
