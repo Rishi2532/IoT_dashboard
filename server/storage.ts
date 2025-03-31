@@ -136,6 +136,9 @@ export class PostgresStorage implements IStorage {
         total_esr_integrated: region.total_esr_integrated || 0,
         fully_completed_esr: region.fully_completed_esr || 0,
         partial_esr: region.partial_esr || 0,
+        flow_meter_integrated: region.flow_meter_integrated || 0,
+        rca_integrated: region.rca_integrated || 0,
+        pressure_transmitter_integrated: region.pressure_transmitter_integrated || 0,
       };
     } else {
       // Always dynamically calculate the sum of all regions instead of using global_summary
