@@ -114,14 +114,14 @@ export default function SchemeTable({
         <div className="border-t border-neutral-200">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-neutral-50">
+              <TableHeader className="bg-blue-50">
                 <TableRow>
-                  <TableHead className="w-[35%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5">Scheme Name</TableHead>
-                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5">Region</TableHead>
-                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5">Villages</TableHead>
-                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5">ESR</TableHead>
-                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5">Status</TableHead>
-                  <TableHead className="text-right text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5">Action</TableHead>
+                  <TableHead className="w-[35%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">Scheme Name</TableHead>
+                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">Region</TableHead>
+                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">Villages</TableHead>
+                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">ESR</TableHead>
+                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">Status</TableHead>
+                  <TableHead className="text-center text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -141,36 +141,54 @@ export default function SchemeTable({
                   </TableRow>
                 ) : (
                   currentItems.map((scheme) => (
-                    <TableRow key={scheme.scheme_id} className="hover:bg-neutral-50">
-                      <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base">
+                    <TableRow key={scheme.scheme_id} className="hover:bg-blue-50 transition-colors duration-150">
+                      <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100">
                         {scheme.scheme_name}
                       </TableCell>
-                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base">
-                        {scheme.region_name}
+                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
+                        <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
+                          {scheme.region_name}
+                        </span>
                       </TableCell>
-                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base">
-                        <span className="font-medium">{scheme.fully_completed_villages || 0}</span>
-                        <span className="text-neutral-400 mx-0.5 sm:mx-1">/</span>
-                        {scheme.total_villages_in_scheme || 0}
+                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
+                        <div className="flex items-center justify-center">
+                          <span className="font-medium">{scheme.fully_completed_villages || 0}</span>
+                          <span className="text-neutral-400 mx-1">/</span>
+                          <span>{scheme.total_villages_in_scheme || 0}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                          <div 
+                            className="bg-blue-600 h-1.5 rounded-full" 
+                            style={{ width: `${scheme.total_villages_in_scheme ? Math.round((scheme.fully_completed_villages || 0) / scheme.total_villages_in_scheme * 100) : 0}%` }}
+                          ></div>
+                        </div>
                       </TableCell>
-                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base">
-                        <span className="font-medium">{scheme.fully_completed_esr || 0}</span>
-                        <span className="text-neutral-400 mx-0.5 sm:mx-1">/</span>
-                        {scheme.total_esr_in_scheme || 0}
+                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
+                        <div className="flex items-center justify-center">
+                          <span className="font-medium">{scheme.fully_completed_esr || 0}</span>
+                          <span className="text-neutral-400 mx-1">/</span>
+                          <span className="text-purple-600 font-medium">{scheme.total_esr_in_scheme || 0}</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
+                          <div 
+                            className="bg-purple-500 h-1.5 rounded-full" 
+                            style={{ width: `${scheme.total_esr_in_scheme ? Math.round((scheme.fully_completed_esr || 0) / scheme.total_esr_in_scheme * 100) : 0}%` }}
+                          ></div>
+                        </div>
                       </TableCell>
-                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base">
-                        <span className={`px-1 sm:px-2 lg:px-3 py-0.5 lg:py-1 inline-flex text-[10px] sm:text-xs lg:text-sm leading-4 sm:leading-5 lg:leading-6 font-semibold rounded-full ${getStatusColorClass(scheme.scheme_completion_status as SchemeCompletionStatus)}`}>
+                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
+                        <span className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${getStatusColorClass(scheme.scheme_completion_status as SchemeCompletionStatus)}`}>
                           {getStatusDisplayName(scheme.scheme_completion_status as SchemeCompletionStatus)}
                         </span>
                       </TableCell>
-                      <TableCell className="text-right p-1 sm:p-3 lg:p-4 xl:p-5">
+                      <TableCell className="text-center p-1 sm:p-3 lg:p-4 xl:p-5 border-b border-gray-100">
                         <Button 
-                          variant="ghost" 
+                          variant="outline" 
                           size="sm"
-                          className="text-primary-600 hover:text-primary-800 text-xs sm:text-sm lg:text-base h-7 sm:h-8 lg:h-9 xl:h-10 px-2 sm:px-3 lg:px-4"
+                          className="bg-white hover:bg-blue-50 text-blue-700 hover:text-blue-800 border-blue-200 hover:border-blue-300 transition-colors duration-150 text-xs sm:text-sm h-8 sm:h-9 font-medium"
                           onClick={() => onViewDetails(scheme)}
                         >
-                          View
+                          View Details
                         </Button>
                       </TableCell>
                     </TableRow>

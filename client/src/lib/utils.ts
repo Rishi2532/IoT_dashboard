@@ -20,11 +20,11 @@ export type SchemeCompletionStatus = 'Fully-Completed' | 'Partial' | 'Not-Connec
 export function getStatusColorClass(status: SchemeCompletionStatus): string {
   switch (status) {
     case 'Fully-Completed':
-      return 'bg-success-50 text-success-600';
+      return 'bg-green-100 text-green-800';
     case 'Partial':
-      return 'bg-warning-50 text-warning-600';
+      return 'bg-yellow-100 text-yellow-800';
     case 'Not-Connected':
-      return 'bg-danger-50 text-danger-600';
+      return 'bg-red-100 text-red-800';
     default:
       return 'bg-neutral-50 text-neutral-600';
   }
