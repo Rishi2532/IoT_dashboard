@@ -37,6 +37,9 @@ export interface IStorage {
   createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus>;
   updateScheme(scheme: SchemeStatus): Promise<SchemeStatus>;
   deleteScheme(schemeId: number): Promise<boolean>;
+  
+  // Updates operations
+  getTodayUpdates(): Promise<any[]>;
 }
 
 // PostgreSQL implementation
@@ -284,6 +287,49 @@ export class PostgresStorage implements IStorage {
       .delete(schemeStatuses)
       .where(eq(schemeStatuses.scheme_id, schemeId));
     return true;
+  }
+  
+  async getTodayUpdates(): Promise<any[]> {
+    // In an actual implementation, this would query an updates or activity log table
+    // For demo purposes, we'll return sample data representing today's updates
+    
+    console.log("Fetching today's updates");
+    
+    // This is a placeholder implementation
+    // In a real application, you would:
+    // 1. Have a table for tracking daily changes
+    // 2. Query that table with today's date
+    // 3. Return actual changes from the database
+    
+    // For now we'll return demo data
+    return [
+      { type: 'village', count: 3, status: 'new' },
+      { type: 'esr', count: 2, status: 'new' },
+      { type: 'flow_meter', count: 4, status: 'new' },
+      { type: 'scheme', count: 1, name: 'Nashik Rural Water Supply', status: 'completed' },
+      { type: 'rca', count: 2, status: 'new' },
+      { type: 'pressure_transmitter', count: 3, status: 'new' }
+    ];
+    
+    // In a production implementation, you would set up a proper change tracking system
+    // and query based on timestamp/date
+    /* Example of actual implementation:
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const updates = await db
+      .select()
+      .from(changesTable)
+      .where(sql`timestamp >= ${today}`)
+      .orderBy(sql`timestamp desc`);
+      
+    return updates.map(update => ({
+      type: update.entity_type,
+      count: update.count,
+      name: update.entity_name,
+      status: update.status
+    }));
+    */
   }
 }
 

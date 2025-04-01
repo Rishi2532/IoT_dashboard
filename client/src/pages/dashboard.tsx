@@ -5,6 +5,7 @@ import RegionFilter from "@/components/dashboard/region-filter";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RegionComparisonChart from "@/components/dashboard/region-comparison-chart";
 import CompletionStatusChart from "@/components/dashboard/completion-status-chart";
+import DailyUpdates from "@/components/dashboard/daily-updates";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import { Button } from "@/components/ui/button";
@@ -214,6 +215,9 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+
+      {/* Daily Updates */}
+      <DailyUpdates isLoading={false} />
 
       {/* Region Filter in card */}
       <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-lg border shadow-sm">

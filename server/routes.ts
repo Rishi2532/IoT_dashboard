@@ -118,6 +118,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch region summary" });
     }
   });
+  
+  // Get today's updates (new and completed items)
+  app.get("/api/updates/today", async (req, res) => {
+    try {
+      const todayUpdates = await storage.getTodayUpdates();
+      res.json(todayUpdates);
+    } catch (error) {
+      console.error("Error fetching today's updates:", error);
+      res.status(500).json({ message: "Failed to fetch today's updates" });
+    }
+  });
 
   // Get a specific region by name
   app.get("/api/regions/:name", async (req, res) => {
