@@ -11,7 +11,6 @@ const navigationItems = [
   { name: "Schemes", href: "/schemes", icon: GitBranchPlus },
   { name: "Regions", href: "/regions", icon: MapPin },
   { name: "Reports", href: "/reports", icon: BarChart2 },
-  { name: "Admin", href: "/admin", icon: ShieldCheck },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

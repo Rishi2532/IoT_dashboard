@@ -30,12 +30,6 @@ export default function Header() {
             </div>
           </div>
           <div className="flex items-center space-x-1 sm:space-x-2">
-            <Link href="/dashboard">
-              <Button variant="ghost" size="sm" className="text-blue-100 hover:text-white hover:bg-blue-700 px-2 sm:px-3">
-                <LayoutDashboard className="h-4 w-4 sm:mr-1" />
-                <span className="hidden sm:inline">Dashboard</span>
-              </Button>
-            </Link>
             <Link href="/admin">
               <Button variant="ghost" size="sm" className="text-blue-100 hover:text-white hover:bg-blue-700 px-2 sm:px-3">
                 <Settings className="h-4 w-4 sm:mr-1" />
