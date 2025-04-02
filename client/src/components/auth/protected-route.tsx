@@ -10,9 +10,15 @@ interface AuthStatusResponse {
 
 interface ProtectedRouteProps {
   children: ReactNode;
+  requireAdmin?: boolean;
+  redirectTo?: string;
 }
 
-export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+export default function ProtectedRoute({ 
+  children, 
+  requireAdmin = false,
+  redirectTo = '/login' 
+}: ProtectedRouteProps) {
   const [, setLocation] = useLocation();
   const [isChecking, setIsChecking] = useState(true);
 
@@ -26,12 +32,20 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   useEffect(() => {
     if (!isLoading) {
       setIsChecking(false);
-      if (!data?.isLoggedIn || !data?.isAdmin) {
-        // Redirect to login page if not authenticated
-        setLocation('/admin');
+      
+      // Not logged in at all - redirect to login
+      if (!data?.isLoggedIn) {
+        setLocation(redirectTo);
+        return;
+      }
+      
+      // Logged in but not admin when admin is required - redirect
+      if (requireAdmin && !data.isAdmin) {
+        setLocation(redirectTo);
+        return;
       }
     }
-  }, [data, isLoading, setLocation]);
+  }, [data, isLoading, setLocation, requireAdmin, redirectTo]);
 
   if (isChecking || isLoading) {
     // Show loading spinner while checking auth status
@@ -45,12 +59,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (isError || !data?.isLoggedIn || !data?.isAdmin) {
-    // If there's an error or not authenticated, return null 
-    // (useEffect will handle redirect)
+  // Not authenticated or not admin when required
+  if (isError || !data?.isLoggedIn || (requireAdmin && !data.isAdmin)) {
+    // Return null (useEffect will handle redirect)
     return null;
   }
 
-  // If authenticated, render the children
+  // If properly authenticated with correct permissions, render the children
   return <>{children}</>;
 }

@@ -18,6 +18,14 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
 });
 
+export const registerUserSchema = insertUserSchema.extend({
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords do not match",
+  path: ["confirmPassword"],
+});
+
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
   password: z.string().min(1, "Password is required"),
@@ -26,6 +34,7 @@ export const loginSchema = z.object({
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type LoginCredentials = z.infer<typeof loginSchema>;
+export type RegisterCredentials = z.infer<typeof registerUserSchema>;
 
 // Region table - using the correct table name "region" instead of "regions"
 export const regions = pgTable("region", {

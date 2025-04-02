@@ -7,17 +7,52 @@ import Settings from "./pages/settings";
 import Admin from "./pages/admin";
 import AdminDashboard from "./pages/admin/dashboard";
 import NotFound from "./pages/not-found";
+import LoginPage from "./pages/login";
+import ProtectedRoute from "./components/auth/protected-route";
 
 function App() {
   return (
     <Switch>
-      <Route path="/" component={Dashboard} />
-      <Route path="/schemes" component={Schemes} />
-      <Route path="/regions" component={Regions} />
-      <Route path="/reports" component={Reports} />
-      <Route path="/settings" component={Settings} />
+      {/* Public routes */}
+      <Route path="/" component={LoginPage} />
+      <Route path="/login" component={LoginPage} />
       <Route path="/admin" component={Admin} />
-      <Route path="/admin/dashboard" component={AdminDashboard} />
+      
+      {/* User protected routes */}
+      <Route path="/dashboard">
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/schemes">
+        <ProtectedRoute>
+          <Schemes />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/regions">
+        <ProtectedRoute>
+          <Regions />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/reports">
+        <ProtectedRoute>
+          <Reports />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/settings">
+        <ProtectedRoute>
+          <Settings />
+        </ProtectedRoute>
+      </Route>
+      
+      {/* Admin protected routes */}
+      <Route path="/admin/dashboard">
+        <ProtectedRoute requireAdmin={true} redirectTo="/login">
+          <AdminDashboard />
+        </ProtectedRoute>
+      </Route>
+      
+      {/* Fallback route */}
       <Route component={NotFound} />
     </Switch>
   );

@@ -1,7 +1,13 @@
 import type { Express, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertRegionSchema, insertSchemeStatusSchema, regions, loginSchema } from "@shared/schema";
+import { 
+  insertRegionSchema, 
+  insertSchemeStatusSchema, 
+  regions, 
+  loginSchema,
+  registerUserSchema
+} from "@shared/schema";
 import { z } from "zod";
 import { updateRegionSummaries, resetRegionData, getDB } from "./db";
 import { eq } from "drizzle-orm";
@@ -22,10 +28,18 @@ declare module 'express-session' {
 
 import { Request } from 'express';
 
-// Admin authorization middleware
+// Authentication middleware - checks if user is logged in
+const requireAuth = (req: Request, res: Response, next: NextFunction) => {
+  if (!req.session || !req.session.userId) {
+    return res.status(401).json({ message: "Unauthorized. Please login." });
+  }
+  next();
+};
+
+// Admin authorization middleware - checks if logged in user is an admin
 const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
   if (!req.session || !req.session.userId || !req.session.isAdmin) {
-    return res.status(401).json({ message: "Unauthorized. Admin login required." });
+    return res.status(403).json({ message: "Forbidden. Admin privileges required." });
   }
   next();
 };
@@ -33,6 +47,44 @@ const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
   
+  // Register endpoint
+  app.post("/api/auth/register", async (req, res) => {
+    try {
+      // Validate request body using registerUserSchema (includes confirm password)
+      const registerData = registerUserSchema.parse(req.body);
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(registerData.username);
+      if (existingUser) {
+        return res.status(409).json({ message: "Username already exists" });
+      }
+
+      // Remove confirmPassword before creating user as it's not in our database schema
+      const { confirmPassword, ...userData } = registerData;
+      
+      // Create the new user
+      const newUser = await storage.createUser(userData);
+      
+      // Return success without sensitive data
+      res.status(201).json({ 
+        message: "User registered successfully",
+        id: newUser.id,
+        username: newUser.username,
+        role: newUser.role,
+        name: newUser.name
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ 
+          message: "Invalid registration data", 
+          errors: error.errors 
+        });
+      }
+      console.error("Registration error:", error);
+      res.status(500).json({ message: "Registration failed" });
+    }
+  });
+
   // Login endpoint
   app.post("/api/auth/login", async (req, res) => {
     try {
@@ -46,11 +98,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid username or password" });
       }
       
-      if (!user.role || user.role !== "admin") {
-        return res.status(403).json({ message: "Access denied. Admin privileges required." });
-      }
-      
-      // Set a session value to track admin login
+      // Set a session value to track login
       if (req.session) {
         req.session.userId = user.id;
         req.session.isAdmin = user.role === "admin";
@@ -60,7 +108,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         id: user.id,
         username: user.username,
         role: user.role,
-        name: user.name
+        name: user.name,
+        isAdmin: user.role === "admin"
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -76,8 +125,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Check auth status
   app.get("/api/auth/status", (req, res) => {
-    const isLoggedIn = req.session && req.session.userId && req.session.isAdmin;
-    res.json({ isLoggedIn, isAdmin: isLoggedIn ? true : false });
+    const isLoggedIn = req.session && req.session.userId;
+    const isAdmin = req.session && req.session.isAdmin === true;
+    res.json({ isLoggedIn, isAdmin });
   });
   
   // Logout endpoint
