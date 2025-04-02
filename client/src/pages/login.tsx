@@ -171,7 +171,7 @@ export default function LoginPage() {
             className="w-72 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer"
             onClick={() => {
               if (loginMutation.isPending) return;
-              setLocation('/dashboard');
+              setLocation('/user-login');
             }}
           >
             <div className="p-6 flex flex-col items-center h-full">

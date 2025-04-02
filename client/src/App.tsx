@@ -8,6 +8,7 @@ import Admin from "./pages/admin";
 import AdminDashboard from "./pages/admin/dashboard";
 import NotFound from "./pages/not-found";
 import LoginPage from "./pages/login";
+import UserLoginPage from "./pages/user-login";
 import RegisterPage from "./pages/register";
 import ForgotPasswordPage from "./pages/forgot-password";
 import ProtectedRoute from "./components/auth/protected-route";
@@ -18,6 +19,7 @@ function App() {
       {/* Public routes */}
       <Route path="/" component={LoginPage} />
       <Route path="/login" component={LoginPage} />
+      <Route path="/user-login" component={UserLoginPage} />
       <Route path="/register" component={RegisterPage} />
       <Route path="/forgot-password" component={ForgotPasswordPage} />
       <Route path="/admin" component={Admin} />
