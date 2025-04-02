@@ -60,6 +60,15 @@ export async function updateRegionSummaries() {
   try {
     const db = await getDB();
 
+    // Get all regions and print their actual values for debugging
+    const allRegions = await db.select().from(regions);
+
+    // Debug: Print all flow meter values
+    console.log("Current flow meter values in database:");
+    for (const region of allRegions) {
+      console.log(`Region: ${region.region_name}, Flow Meter: ${region.flow_meter_integrated}, RCA: ${region.rca_integrated}, PT: ${region.pressure_transmitter_integrated}`);
+    }
+
     // Create global_summary table if it doesn't exist
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS global_summary (
@@ -76,19 +85,27 @@ export async function updateRegionSummaries() {
       );
     `);
 
-    // Get all regions - but don't modify them
-    const allRegions = await db.select().from(regions);
+    // Calculate totals from regions table
+    const totals = await db
+      .select({
+        total_schemes_integrated: sql<number>`SUM(${regions.total_schemes_integrated})`,
+        fully_completed_schemes: sql<number>`SUM(${regions.fully_completed_schemes})`,
+        total_villages_integrated: sql<number>`SUM(${regions.total_villages_integrated})`,
+        fully_completed_villages: sql<number>`SUM(${regions.fully_completed_villages})`,
+        total_esr_integrated: sql<number>`SUM(${regions.total_esr_integrated})`,
+        fully_completed_esr: sql<number>`SUM(${regions.fully_completed_esr})`,
+        flow_meter_integrated: sql<number>`SUM(${regions.flow_meter_integrated})`,
+        rca_integrated: sql<number>`SUM(${regions.rca_integrated})`,
+        pressure_transmitter_integrated: sql<number>`SUM(${regions.pressure_transmitter_integrated})`
+      })
+      .from(regions);
+    
+    console.log("Calculated totals from regions table:", totals[0]);
 
-    // Log regions but do not modify their values
-    for (const region of allRegions) {
-      console.log(`Updated summary data for region: ${region.region_name}`);
-    }
-
-    // Update the global summary with the correct totals (the values provided by the user)
-    // Delete any existing data in global_summary
+    // Update the global summary with the dynamic totals from regions table
     await db.execute(sql`DELETE FROM global_summary`);
 
-    // Insert the correct values
+    // Insert the calculated values
     await db.execute(sql`
       INSERT INTO global_summary (
           total_schemes_integrated,
@@ -101,17 +118,21 @@ export async function updateRegionSummaries() {
           rca_integrated,
           pressure_transmitter_integrated
       ) VALUES (
-          64, -- total schemes
-          14, -- fully completed schemes
-          492, -- total villages
-          171, -- fully completed villages
-          626, -- total ESR
-          277, -- fully completed ESR
-          575, -- flow meter integrated
-          503, -- RCA integrated
-          357  -- pressure transmitter integrated
+          ${totals[0].total_schemes_integrated || 0},
+          ${totals[0].fully_completed_schemes || 0},
+          ${totals[0].total_villages_integrated || 0},
+          ${totals[0].fully_completed_villages || 0},
+          ${totals[0].total_esr_integrated || 0},
+          ${totals[0].fully_completed_esr || 0},
+          ${totals[0].flow_meter_integrated || 0},
+          ${totals[0].rca_integrated || 0},
+          ${totals[0].pressure_transmitter_integrated || 0}
       )
     `);
+
+    for (const region of allRegions) {
+      console.log(`Updated summary data for region: ${region.region_name}`);
+    }
 
     console.log("All region summaries updated successfully");
   } catch (error) {
