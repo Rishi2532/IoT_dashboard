@@ -18,14 +18,17 @@ export async function getDB() {
   if (!db) {
     try {
       // Import the pool from CommonJS module
+      // Always use pg-adapter.cjs when DATABASE_URL is available
+      if (process.env.DATABASE_URL) {
+        pool = require("./pg-adapter.cjs");
+        console.log("PostgreSQL pool imported from default adapter with DATABASE_URL");
+      } 
       // Check if this is a local environment (VS Code) by checking for specific folder paths
-      const isLocalEnvironment =
+      else if (
         process.cwd().includes("\\") ||
         process.cwd().includes("OneDrive") ||
-        process.cwd().includes("Users");
-
-      // Use the appropriate adapter based on environment
-      if (isLocalEnvironment) {
+        process.cwd().includes("Users")
+      ) {
         try {
           pool = require("./local-adapter.js");
           console.log("PostgreSQL pool imported from local adapter");
@@ -38,7 +41,7 @@ export async function getDB() {
         }
       } else {
         pool = require("./pg-adapter.cjs");
-        console.log("PostgreSQL pool imported from default adapter");
+        console.log("PostgreSQL pool imported from default adapter without DATABASE_URL");
       }
 
       // Create drizzle instance with the pool

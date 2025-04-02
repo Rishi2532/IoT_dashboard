@@ -488,7 +488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const worksheet = workbook.Sheets[firstSheetName];
       
       // Convert to JSON with header: true to use first row as keys
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      const jsonData = XLSX.utils.sheet_to_json(worksheet) as Record<string, any>[];
       
       log(`Processing ${jsonData.length} rows of region data...`, 'import');
       
@@ -497,17 +497,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const row of jsonData) {
         try {
+          // Filter regions to include only the specified ones
+          const region = String(row['Region Name'] || '').trim();
+          const validRegions = ['Amravati', 'Nashik', 'Nagpur', 'Pune', 'Konkan', 'Chhatrapati Sambhajinagar'];
+          
+          if (!validRegions.includes(region)) {
+            log(`Skipping row - region ${region} is not in the list of valid regions`, 'import');
+            continue;
+          }
+          
           // Map Excel columns to database fields
-          // Adjust column names based on the Excel file structure
+          // Use functional villages instead of fully completed villages
           const regionData = {
-            region_name: row['Region Name'],
+            region_name: region,
             total_esr_integrated: Number(row['Total ESR Integrated'] || 0),
             fully_completed_esr: Number(row['Fully Completed ESR'] || 0),
             partial_esr: Number(row['Partial ESR'] || 0),
             total_villages_integrated: Number(row['Total Villages Integrated'] || 0),
-            fully_completed_villages: Number(row['Fully Completed Villages'] || 0),
+            fully_completed_villages: Number(row['Functional Villages'] || 0), // Changed from Fully Completed Villages
             total_schemes_integrated: Number(row['Total Schemes Integrated'] || 0),
-            fully_completed_schemes: Number(row['Fully Completed Schemes'] || 0)
+            fully_completed_schemes: Number(row['Fully Completed Schemes'] || 0),
+            flow_meter_integrated: Number(row['Flow Meter Integrated'] || 0),
+            rca_integrated: Number(row['RCA Integrated'] || 0), // RCA is Residual Chlorine Analyzer
+            pressure_transmitter_integrated: Number(row['Pressure Transmitter Integrated'] || 0)
           };
           
           if (!regionData.region_name) {
@@ -579,7 +591,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const worksheet = workbook.Sheets[firstSheetName];
       
       // Convert to JSON with header: true to use first row as keys
-      const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      const jsonData = XLSX.utils.sheet_to_json(worksheet) as Record<string, any>[];
       
       log(`Processing ${jsonData.length} rows of scheme data...`, 'import');
       
@@ -588,31 +600,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       for (const row of jsonData) {
         try {
-          // Map Excel columns to database fields
-          // Adjust property names based on actual Excel column names
+          // Skip rows that don't have the required regions
+          const region = String(row['Region Name'] || '').trim();
+          const validRegions = ['Amravati', 'Nashik', 'Nagpur', 'Pune', 'Konkan', 'Chhatrapati Sambhajinagar'];
+          
+          if (!validRegions.includes(region)) {
+            log(`Skipping row - region ${region} is not in the list of valid regions`, 'import');
+            continue;
+          }
+          
+          // Map Excel columns to database fields - use functional villages instead of fully completed
           const schemeData = {
-            // Using optional chaining to safely access potentially undefined properties
             scheme_id: Number(row['Scheme ID'] || 0),
-            scheme_name: row['Scheme Name'],
-            region_name: row['Region Name'],
-            agency: row['Agency'] || null,
+            scheme_name: String(row['Scheme Name'] || ''),
+            region_name: region,
+            agency: row['Agency'] ? String(row['Agency']) : null,
             total_villages_in_scheme: Number(row['Total Villages In Scheme'] || 0),
             total_esr_in_scheme: Number(row['Total ESR In Scheme'] || 0),
             villages_integrated_on_iot: Number(row['Villages Integrated on IoT'] || 0),
-            fully_completed_villages: Number(row['Fully Completed Villages'] || 0),
+            fully_completed_villages: Number(row['Functional Villages'] || 0), // Changed from Fully Completed Villages
             esr_request_received: Number(row['ESR Request Received'] || 0),
             esr_integrated_on_iot: Number(row['ESR Integrated on IoT'] || 0),
             fully_completed_esr: Number(row['Fully Completed ESR'] || 0),
             balance_for_fully_completion: Number(row['Balance For Fully Completion'] || 0),
             fm_integrated: Number(row['FM Integrated'] || 0),
-            rca_integrated: Number(row['RCA Integrated'] || 0),
+            rca_integrated: Number(row['RCA Integrated'] || 0), // RCA is Residual Chlorine Analyzer
             pt_integrated: Number(row['PT Integrated'] || 0),
-            scheme_completion_status: row['Scheme Completion Status'] || 'Not-Connected'
+            scheme_completion_status: String(row['Scheme Completion Status'] || 'Not-Connected')
           };
           
           // Ensure required fields are present
-          if (!schemeData.scheme_name || !schemeData.region_name) {
-            log(`Skipping row - missing scheme name or region name`, 'import');
+          if (!schemeData.scheme_name) {
+            log(`Skipping row - missing scheme name`, 'import');
             continue;
           }
           
@@ -620,7 +639,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (isNaN(schemeData.scheme_id) || schemeData.scheme_id <= 0) {
             log(`Warning: Invalid scheme_id for ${schemeData.scheme_name}, generating a new ID...`, 'import');
             // For missing or invalid IDs, we'll need to query an existing one or generate a new one
-            // This is just a placeholder approach
             const allSchemes = await storage.getAllSchemes();
             const maxId = allSchemes.reduce((max, scheme) => Math.max(max, scheme.scheme_id), 0);
             schemeData.scheme_id = maxId + 1;

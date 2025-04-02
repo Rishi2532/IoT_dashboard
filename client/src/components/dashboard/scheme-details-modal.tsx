@@ -18,7 +18,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
     scheme.total_villages_in_scheme
   );
 
-  const fullyCompletedVillagesPercent = calculatePercentage(
+  const functionalVillagesPercent = calculatePercentage(
     scheme.fully_completed_villages,
     scheme.total_villages_in_scheme
   );
@@ -98,7 +98,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 </div>
                 
                 <div className="flex justify-between mb-2 mt-4">
-                  <span className="text-xs text-neutral-500">Fully completed villages</span>
+                  <span className="text-xs text-neutral-500">Functional villages</span>
                   <span className="text-xs font-semibold text-neutral-700">
                     {scheme.fully_completed_villages || 0} / {scheme.total_villages_in_scheme || 0}
                   </span>
@@ -106,11 +106,11 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                   <div 
                     className="bg-green-600 h-2.5 rounded-full transition-all duration-300" 
-                    style={{ width: `${fullyCompletedVillagesPercent}%` }}
+                    style={{ width: `${functionalVillagesPercent}%` }}
                   ></div>
                 </div>
                 <div className="text-xs text-right mt-1 text-green-700">
-                  {fullyCompletedVillagesPercent}%
+                  {functionalVillagesPercent}%
                 </div>
               </div>
             </div>

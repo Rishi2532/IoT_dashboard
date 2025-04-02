@@ -32,6 +32,7 @@ if (!password || typeof password !== 'string') {
 
 // Create pool using DATABASE_URL or fallback to explicit parameters
 let pool;
+// Always prefer DATABASE_URL for Replit environment
 if (process.env.DATABASE_URL) {
   console.log('Using DATABASE_URL for PostgreSQL connection');
   pool = new Pool({
@@ -53,10 +54,10 @@ if (process.env.DATABASE_URL) {
     port: parseInt(process.env.PGPORT || '5432'),
     max: 10,
     idleTimeoutMillis: 30000,
-    ssl: {
+    ssl: process.env.NODE_ENV === 'production' ? {
       require: true,
-      rejectUnauthorized: false // This is needed for self-signed certificates
-    }
+      rejectUnauthorized: false
+    } : false
   });
 }
 

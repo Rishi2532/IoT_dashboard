@@ -51,26 +51,25 @@ export type Region = typeof regions.$inferSelect;
 
 // SchemeStatus table - using the correct table name "scheme_status" instead of "scheme_statuses"
 export const schemeStatuses = pgTable("scheme_status", {
-  scheme_id: serial("scheme_id").primaryKey(),
+  scheme_id: integer("scheme_id").primaryKey(), // Changed from serial to integer to support importing scheme IDs
   scheme_name: text("scheme_name").notNull(),
   region_name: text("region_name"),
-  // agency column removed - now determined by region_name
+  agency: text("agency"), // Added back the agency field
   total_villages_in_scheme: integer("total_villages_in_scheme"),
   total_esr_in_scheme: integer("total_esr_in_scheme"),
   villages_integrated_on_iot: integer("villages_integrated_on_iot"),
-  fully_completed_villages: integer("fully_completed_villages"),
+  fully_completed_villages: integer("fully_completed_villages"), // This field now stores "Functional Villages" data
   esr_request_received: integer("esr_request_received"),
   esr_integrated_on_iot: integer("esr_integrated_on_iot"),
   fully_completed_esr: integer("fully_completed_esr"),
   balance_for_fully_completion: integer("balance_for_fully_completion"),
   fm_integrated: integer("fm_integrated"),
-  rca_integrated: integer("rca_integrated"),
+  rca_integrated: integer("rca_integrated"), // Residual Chlorine Analyzer
   pt_integrated: integer("pt_integrated"),
   scheme_completion_status: text("scheme_completion_status"),
 });
 
-export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses)
-  .omit({ scheme_id: true });
+export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses);
 
 export type InsertSchemeStatus = z.infer<typeof insertSchemeStatusSchema>;
 export type SchemeStatus = typeof schemeStatuses.$inferSelect;
