@@ -179,7 +179,9 @@ export async function initializeDatabase() {
       .execute()
       .then((result: any) => Number(result[0]?.count) || 0);
 
-    console.log(`Found ${regionsCount} regions and ${usersCount} users in database`);
+    console.log(
+      `Found ${regionsCount} regions and ${usersCount} users in database`,
+    );
 
     // Create default admin user if no users exist
     if (usersCount === 0) {
@@ -188,7 +190,7 @@ export async function initializeDatabase() {
         username: "admin",
         password: "admin123",
         name: "Administrator",
-        role: "admin"
+        role: "admin",
       });
       console.log("Default admin user created successfully");
     }
