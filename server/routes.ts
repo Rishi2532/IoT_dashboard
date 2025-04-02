@@ -550,7 +550,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               total_villages_integrated: regionData.total_villages_integrated,
               fully_completed_villages: regionData.fully_completed_villages,
               total_schemes_integrated: regionData.total_schemes_integrated,
-              fully_completed_schemes: regionData.fully_completed_schemes
+              fully_completed_schemes: regionData.fully_completed_schemes,
+              flow_meter_integrated: regionData.flow_meter_integrated,
+              rca_integrated: regionData.rca_integrated,
+              pressure_transmitter_integrated: regionData.pressure_transmitter_integrated
             };
             
             await storage.createRegion(newRegion);
