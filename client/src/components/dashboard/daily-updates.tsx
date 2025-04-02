@@ -164,20 +164,20 @@ export default function DailyUpdates({ isLoading }: DailyUpdatesProps) {
   }
 
   return (
-    <div className="bg-white border shadow-sm mb-4 sm:mb-6 h-12 rounded-md overflow-hidden">
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 shadow-sm mb-4 sm:mb-6 h-12 rounded-md overflow-hidden">
       {isLoadingUpdates ? (
         <div className="flex items-center h-full">
-          <div className="bg-blue-50 border-r border-blue-100 h-full flex items-center justify-center px-3">
+          <div className="bg-blue-100 border-r border-blue-200 h-full flex items-center justify-center px-3">
             <Skeleton className="h-4 w-16" />
           </div>
           <Skeleton className="h-4 w-full mx-3" />
         </div>
       ) : (
         <div className="flex items-center h-full">
-          <div className="bg-blue-50 border-r border-blue-100 h-full flex items-center justify-center px-3">
-            <Badge className="bg-blue-600" variant="default">
+          <div className="bg-gradient-to-r from-blue-500 to-indigo-600 border-r border-blue-300 h-full flex items-center justify-center px-3">
+            <Badge className="bg-white/20 backdrop-blur-sm" variant="default">
               <Calendar className="h-3.5 w-3.5 mr-1 text-white" />
-              <span className="text-xs font-medium">TODAY</span>
+              <span className="text-xs font-medium text-white">TODAY</span>
             </Badge>
           </div>
           
@@ -198,8 +198,20 @@ export default function DailyUpdates({ isLoading }: DailyUpdatesProps) {
                     {getItemIcon(item.type)}
                   </span>
                   <span 
-                    className={`text-sm whitespace-nowrap ${
-                      item.status === 'completed' ? 'text-green-700 font-medium' : 'text-neutral-700'
+                    className={`text-sm whitespace-nowrap font-medium ${
+                      item.status === 'completed' 
+                        ? 'text-green-600' 
+                        : item.type === 'village' 
+                          ? 'text-amber-600'
+                          : item.type === 'esr'
+                            ? 'text-purple-600'
+                            : item.type === 'scheme'
+                              ? 'text-blue-600'
+                              : item.type === 'flow_meter'
+                                ? 'text-emerald-600'
+                                : item.type === 'rca'
+                                  ? 'text-cyan-600'
+                                  : 'text-indigo-600'
                     }`}
                   >
                     {formatUpdateText(item)}
@@ -217,8 +229,8 @@ export default function DailyUpdates({ isLoading }: DailyUpdatesProps) {
                 <button
                   key={idx}
                   onClick={() => setActiveIndex(idx)}
-                  className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                    activeIndex === idx ? 'bg-blue-500' : 'bg-gray-300'
+                  className={`w-2 h-2 rounded-full transition-colors ${
+                    activeIndex === idx ? 'bg-indigo-500' : 'bg-blue-200'
                   }`}
                   aria-label={`Show update ${idx + 1}`}
                 />
