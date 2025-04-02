@@ -289,6 +289,25 @@ export class PostgresStorage implements IStorage {
     return true;
   }
   
+  private static prevTotals: {
+    villages: number;
+    esr: number;
+    completedSchemes: number;
+    flowMeters: number;
+    rca: number;
+    pt: number;
+  } = {
+    villages: 0,
+    esr: 0,
+    completedSchemes: 0,
+    flowMeters: 0,
+    rca: 0,
+    pt: 0
+  };
+  
+  private static lastUpdateTime: Date | null = null;
+  private static todayUpdates: any[] = [];
+  
   async getTodayUpdates(): Promise<any[]> {
     const db = await this.ensureInitialized();
     console.log("Fetching today's updates");
@@ -297,62 +316,104 @@ export class PostgresStorage implements IStorage {
       // Get current regions data
       const regionsData = await db.select().from(regions);
       const allSchemes = await this.getAllSchemes();
-            
-      // Process results and create updates array based on the actual data
+      
+      // Get current totals
+      const currentTotals = {
+        villages: regionsData.reduce((sum: number, region: any) => sum + (region.total_villages_integrated || 0), 0),
+        esr: regionsData.reduce((sum: number, region: any) => sum + (region.total_esr_integrated || 0), 0),
+        completedSchemes: allSchemes.filter(scheme => scheme.scheme_completion_status === 'Fully-Completed').length,
+        flowMeters: regionsData.reduce((sum: number, region: any) => sum + (region.flow_meter_integrated || 0), 0),
+        rca: regionsData.reduce((sum: number, region: any) => sum + (region.rca_integrated || 0), 0),
+        pt: regionsData.reduce((sum: number, region: any) => sum + (region.pressure_transmitter_integrated || 0), 0)
+      };
+      
+      // Check if this is the first time running or if it's a new day
+      const now = new Date();
+      const isNewDay = !PostgresStorage.lastUpdateTime || 
+                       now.getDate() !== PostgresStorage.lastUpdateTime.getDate() ||
+                       now.getMonth() !== PostgresStorage.lastUpdateTime.getMonth() ||
+                       now.getFullYear() !== PostgresStorage.lastUpdateTime.getFullYear();
+      
+      // If it's a new day or first time running, reset the updates
+      if (isNewDay) {
+        PostgresStorage.todayUpdates = [];
+        PostgresStorage.prevTotals = { ...currentTotals };
+      }
+      
+      // Calculate differences since last check
       const updates: any[] = [];
       
-      // Check for village updates - any updates from the admin console will be reflected here
-      const totalVillages = regionsData.reduce((sum: number, region: any) => sum + (region.total_villages_integrated || 0), 0);
-      if (totalVillages > 0) {
+      // Check for NEW village updates since last check
+      const newVillages = currentTotals.villages - PostgresStorage.prevTotals.villages;
+      if (newVillages > 0) {
         updates.push({ 
           type: 'village', 
-          count: Math.min(10, totalVillages), // Limit to a reasonable number for display
+          count: newVillages,
           status: 'new' 
         });
       }
       
-      // Check for ESR updates
-      const totalESR = regionsData.reduce((sum: number, region: any) => sum + (region.total_esr_integrated || 0), 0);
-      if (totalESR > 0) {
+      // Check for NEW ESR updates since last check
+      const newESR = currentTotals.esr - PostgresStorage.prevTotals.esr;
+      if (newESR > 0) {
         updates.push({ 
           type: 'esr', 
-          count: Math.min(5, totalESR), // Limit to a reasonable number for display
+          count: newESR,
           status: 'new' 
         });
       }
       
-      // Add scheme updates
-      const completedSchemes = allSchemes.filter(scheme => scheme.scheme_completion_status === 'Fully-Completed');
-      if (completedSchemes.length > 0) {
+      // Check for NEW completed schemes since last check
+      const newCompletedSchemes = currentTotals.completedSchemes - PostgresStorage.prevTotals.completedSchemes;
+      if (newCompletedSchemes > 0) {
         updates.push({
           type: 'scheme',
-          count: completedSchemes.length,
+          count: newCompletedSchemes,
           status: 'completed'
         });
       }
       
-      // Add flow meter updates
-      const totalFlowMeters = regionsData.reduce((sum: number, region: any) => sum + (region.flow_meter_integrated || 0), 0);
-      if (totalFlowMeters > 0) {
+      // Check for NEW flow meters since last check
+      const newFlowMeters = currentTotals.flowMeters - PostgresStorage.prevTotals.flowMeters;
+      if (newFlowMeters > 0) {
         updates.push({
           type: 'flow_meter',
-          count: Math.min(8, totalFlowMeters),
+          count: newFlowMeters,
           status: 'new'
         });
       }
       
-      // Add RCA updates (chlorine analyzers)
-      const totalRCA = regionsData.reduce((sum: number, region: any) => sum + (region.rca_integrated || 0), 0);
-      if (totalRCA > 0) {
+      // Check for NEW RCAs since last check
+      const newRCA = currentTotals.rca - PostgresStorage.prevTotals.rca;
+      if (newRCA > 0) {
         updates.push({
           type: 'rca',
-          count: Math.min(6, totalRCA),
+          count: newRCA,
           status: 'new'
         });
       }
       
-      // Return updates - even if empty, the UI will handle it
-      return updates;
+      // Check for NEW pressure transmitters since last check
+      const newPT = currentTotals.pt - PostgresStorage.prevTotals.pt;
+      if (newPT > 0) {
+        updates.push({
+          type: 'pressure_transmitter',
+          count: newPT,
+          status: 'new'
+        });
+      }
+      
+      // Update previous totals and last update time
+      PostgresStorage.prevTotals = { ...currentTotals };
+      PostgresStorage.lastUpdateTime = now;
+      
+      // Add new updates to today's updates
+      if (updates.length > 0) {
+        PostgresStorage.todayUpdates = [...updates, ...PostgresStorage.todayUpdates];
+      }
+      
+      // Return updates for today
+      return PostgresStorage.todayUpdates;
     } catch (error) {
       console.error("Error fetching today's updates:", error);
       throw error;
