@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { 
-  Card, 
-  CardContent, 
-  CardFooter
+  Card
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,95 +18,75 @@ import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowLeft } from 'lucide-react';
 import { Link, useLocation } from 'wouter';
 
-// Login form schema
-const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
+// Registration form schema
+const registerSchema = z.object({
+  username: z.string().min(3, 'Username must be at least 3 characters'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+  name: z.string().min(2, 'Name is required'),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
-type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
 
-// Auth status response type
-interface AuthStatusResponse {
-  isLoggedIn: boolean;
-  isAdmin: boolean;
-}
-
-export default function LoginPage() {
+export default function RegisterPage() {
   const { toast } = useToast();
-  const [loginError, setLoginError] = useState<string | null>(null);
-  // Get the location object for navigation
-  const [, setLocation] = useLocation();
+  const [registerError, setRegisterError] = useState<string | null>(null);
+  const [, navigate] = useLocation();
   
-  // Check if user is already logged in
-  const authStatusQuery = useQuery<AuthStatusResponse>({
-    queryKey: ['/api/auth/status'],
-    refetchOnWindowFocus: false,
-  });
-  
-  // Redirect to dashboard if already logged in
-  if (authStatusQuery.data?.isLoggedIn) {
-    if (authStatusQuery.data.isAdmin) {
-      setLocation('/admin/dashboard');
-    } else {
-      setLocation('/dashboard');
-    }
-    return null;
-  }
-
-  // Login form setup
-  const form = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
+  // Registration form setup
+  const form = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
     defaultValues: {
       username: '',
       password: '',
+      confirmPassword: '',
+      name: '',
     }
   });
 
-  // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: async (credentials: LoginFormValues) => {
-      const response = await fetch('/api/auth/login', {
+  // Registration mutation
+  const registerMutation = useMutation({
+    mutationFn: async (userData: RegisterFormValues) => {
+      const response = await fetch('/api/auth/register', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(credentials),
+        body: JSON.stringify(userData),
       });
       
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+        throw new Error(errorData.message || 'Registration failed');
       }
       
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: () => {
       toast({
-        title: 'Login successful',
-        description: `Welcome back, ${data.name || data.username}`,
+        title: 'Registration successful',
+        description: 'Your account has been created. You can now log in.',
+        variant: 'default',
       });
-      setLoginError(null);
-      
-      // Redirect based on role
-      if (data.isAdmin) {
-        setLocation('/admin/dashboard');
-      } else {
-        setLocation('/dashboard');
-      }
+      setRegisterError(null);
+      // Navigate to login
+      navigate('/login');
     },
     onError: (error: Error) => {
-      setLoginError(error.message);
-      console.error('Login error:', error);
+      setRegisterError(error.message);
+      console.error('Registration error:', error);
     }
   });
 
   // Form submission handler
-  const onSubmit = (data: LoginFormValues) => {
-    loginMutation.mutate(data);
+  const onSubmit = (data: RegisterFormValues) => {
+    registerMutation.mutate(data);
   };
 
   return (
@@ -127,14 +105,14 @@ export default function LoginPage() {
         <Card className="w-full max-w-sm shadow-xl border-0 bg-white rounded-lg overflow-hidden">
           <div className="p-6 pb-4">
             <h1 className="text-xl font-bold text-center text-blue-900 mb-6">
-              Admin Login · User
+              Create an Account
             </h1>
             
-            {loginError && (
+            {registerError && (
               <Alert variant="destructive" className="mb-4">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>Authentication Failed</AlertTitle>
-                <AlertDescription>{loginError}</AlertDescription>
+                <AlertTitle>Registration Failed</AlertTitle>
+                <AlertDescription>{registerError}</AlertDescription>
               </Alert>
             )}
             
@@ -148,7 +126,25 @@ export default function LoginPage() {
                       <FormLabel className="text-gray-800 font-medium">Username</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Username" 
+                          placeholder="Choose a username" 
+                          {...field} 
+                          className="border-gray-300 focus-visible:ring-blue-500"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-800 font-medium">Full Name</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Enter your full name" 
                           {...field} 
                           className="border-gray-300 focus-visible:ring-blue-500"
                         />
@@ -167,7 +163,26 @@ export default function LoginPage() {
                       <FormControl>
                         <Input 
                           type="password" 
-                          placeholder="Password" 
+                          placeholder="Create a password (min. 6 characters)" 
+                          {...field} 
+                          className="border-gray-300 focus-visible:ring-blue-500"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
+                  name="confirmPassword"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-800 font-medium">Confirm Password</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="password" 
+                          placeholder="Confirm your password" 
                           {...field} 
                           className="border-gray-300 focus-visible:ring-blue-500"
                         />
@@ -180,22 +195,18 @@ export default function LoginPage() {
                 <Button 
                   type="submit" 
                   className="w-full bg-blue-900 hover:bg-blue-800 py-6 mt-2"
-                  disabled={loginMutation.isPending}
+                  disabled={registerMutation.isPending}
                 >
-                  {loginMutation.isPending ? "Signing in..." : "Sign In"}
+                  {registerMutation.isPending ? "Creating Account..." : "Create Account"}
                 </Button>
               </form>
             </Form>
             
             <div className="mt-4 text-sm text-center">
               <div className="mt-2">
-                <Link href="/register" className="text-blue-600 hover:underline">
-                  Don't have an account? Register
-                </Link>
-              </div>
-              <div className="mt-2">
-                <Link href="/forgot-password" className="text-blue-600 hover:underline">
-                  Forgot password?
+                <Link href="/login" className="text-blue-600 hover:underline flex items-center justify-center">
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Back to Login
                 </Link>
               </div>
             </div>
