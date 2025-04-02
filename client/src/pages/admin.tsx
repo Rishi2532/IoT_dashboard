@@ -104,13 +104,27 @@ export default function AdminPage() {
   };
 
   return (
-    <DashboardLayout>
-      <div className="flex items-center justify-center py-12">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-100 to-blue-50">
+      <div className="absolute top-10 left-10">
+        <div className="flex items-center text-blue-800">
+          <div className="flex items-center">
+            <svg className="w-12 h-12 text-blue-700" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3L1 9L5 11.18V17.18L12 21L19 17.18V11.18L21 10.09V17H23V9L12 3Z" />
+            </svg>
+            <div className="ml-3">
+              <h1 className="text-3xl font-bold text-blue-900">Jal Jeevan</h1>
+              <h2 className="text-2xl font-bold text-blue-700">Mission</h2>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex-1 flex items-center justify-center">
         <Card className="w-full max-w-md shadow-lg border-blue-100">
           <CardHeader className="space-y-1 bg-gradient-to-r from-blue-50 to-blue-100/50">
             <div className="flex items-center justify-center mb-2">
-              <div className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center">
-                <LockIcon className="w-6 h-6 text-white" />
+              <div className="w-16 h-16 rounded-full bg-blue-900 flex items-center justify-center">
+                <LockIcon className="w-8 h-8 text-white" />
               </div>
             </div>
             <CardTitle className="text-2xl font-bold text-center text-blue-900">Admin Login</CardTitle>
@@ -136,7 +150,7 @@ export default function AdminPage() {
                       <FormLabel className="text-blue-800">Username</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Enter your username" 
+                          placeholder="Enter your admin username" 
                           {...field} 
                           className="border-blue-200 focus-visible:ring-blue-500"
                         />
@@ -165,21 +179,21 @@ export default function AdminPage() {
                 />
                 <Button 
                   type="submit" 
-                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  className="w-full bg-blue-900 hover:bg-blue-800 py-5 text-lg mt-2"
                   disabled={loginMutation.isPending}
                 >
                   {loginMutation.isPending ? (
-                    <div className="flex items-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <div className="flex items-center justify-center">
+                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                         <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                         <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                       </svg>
                       Logging in...
                     </div>
                   ) : (
-                    <div className="flex items-center">
-                      <LogIn className="mr-2 h-4 w-4" />
-                      Login
+                    <div className="flex items-center justify-center">
+                      <LogIn className="mr-2 h-5 w-5" />
+                      Login to Admin Panel
                     </div>
                   )}
                 </Button>
@@ -187,12 +201,20 @@ export default function AdminPage() {
             </Form>
           </CardContent>
           <CardFooter className="bg-gray-50 border-t border-blue-100 py-3 flex justify-center">
-            <p className="text-sm text-blue-700">
-              Only authorized administrators can access this page
-            </p>
+            <div className="flex flex-col items-center">
+              <p className="text-sm text-blue-700 mb-2">
+                Only authorized administrators can access this page
+              </p>
+              <a href="/" className="text-sm text-blue-600 hover:underline flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                </svg>
+                Back to Login Selection
+              </a>
+            </div>
           </CardFooter>
         </Card>
       </div>
-    </DashboardLayout>
+    </div>
   );
 }
