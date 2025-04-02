@@ -90,21 +90,25 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-cover bg-center" 
-         style={{ backgroundImage: "url('/images/jal-jeevan-mission.png')" }}>
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-100 to-blue-50">
       <div className="absolute top-10 left-10">
         <div className="flex items-center text-blue-800">
-          <div className="ml-3">
-            <h1 className="text-3xl font-bold text-white">Jal Jeevan</h1>
-            <h2 className="text-2xl font-bold text-white">Mission</h2>
+          <div className="flex items-center">
+            <svg className="w-12 h-12 text-blue-700" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 3L1 9L5 11.18V17.18L12 21L19 17.18V11.18L21 10.09V17H23V9L12 3Z" />
+            </svg>
+            <div className="ml-3">
+              <h1 className="text-3xl font-bold text-blue-900">Jal Jeevan</h1>
+              <h2 className="text-2xl font-bold text-blue-700">Mission</h2>
+            </div>
           </div>
         </div>
       </div>
       
-      <div className="flex-1 flex items-center justify-end px-12">
-        <Card className="w-full max-w-sm shadow-xl border-0 bg-white rounded-lg overflow-hidden">
-          <div className="p-6 pb-4">
-            <h1 className="text-xl font-bold text-center text-blue-900 mb-6">
+      <div className="flex-1 flex items-center justify-center">
+        <Card className="w-full max-w-md shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden">
+          <div className="p-8">
+            <h1 className="text-2xl font-bold text-center text-blue-900 mb-6">
               Create an Account
             </h1>
             
