@@ -78,7 +78,7 @@ export default function SchemeImporter() {
               <li>The file must contain columns for scheme details</li>
               <li>Columns must include: Scheme ID, Scheme Name, Region Name, Agency, etc.</li>
               <li><strong>Region Name</strong> should be one of: Amravati, Nashik, Nagpur, Pune, Konkan, or Chhatrapati Sambhajinagar</li>
-              <li>Include <strong>Functional Villages</strong> column instead of "Fully Completed Villages"</li>
+              <li>Include <strong>Fully Completed Villages</strong> column</li>
               <li>Include <strong>RCA Integrated</strong> column for Residual Chlorine Analyzer data</li>
               <li>Data must begin from row 2 (row 1 is assumed to be headers)</li>
               <li>Each scheme should have a unique ID for proper updating</li>

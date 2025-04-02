@@ -77,7 +77,7 @@ export default function RegionImporter() {
             <ul className="list-disc pl-5 text-sm space-y-1">
               <li>The file must contain columns for region details</li>
               <li><strong>Region Name</strong> should be one of: Amravati, Nashik, Nagpur, Pune, Konkan, or Chhatrapati Sambhajinagar</li>
-              <li>Include <strong>Functional Villages</strong> column instead of "Fully Completed Villages"</li>
+              <li>Include <strong>Fully Completed Villages</strong> column</li>
               <li>Include columns for <strong>Flow Meter Integrated</strong>, <strong>RCA Integrated</strong> (Residual Chlorine Analyzer), and <strong>Pressure Transmitter Integrated</strong></li>
               <li>Columns must include: Total ESR Integrated, Fully Completed ESR, Partial ESR, etc.</li>
               <li>Data must begin from row 2 (row 1 is assumed to be headers)</li>

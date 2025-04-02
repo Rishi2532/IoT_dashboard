@@ -507,14 +507,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           
           // Map Excel columns to database fields
-          // Use functional villages instead of fully completed villages
           const regionData = {
             region_name: region,
             total_esr_integrated: Number(row['Total ESR Integrated'] || 0),
             fully_completed_esr: Number(row['Fully Completed ESR'] || 0),
             partial_esr: Number(row['Partial ESR'] || 0),
             total_villages_integrated: Number(row['Total Villages Integrated'] || 0),
-            fully_completed_villages: Number(row['Functional Villages'] || 0), // Changed from Fully Completed Villages
+            fully_completed_villages: Number(row['Fully Completed Villages'] || 0),
             total_schemes_integrated: Number(row['Total Schemes Integrated'] || 0),
             fully_completed_schemes: Number(row['Fully Completed Schemes'] || 0),
             flow_meter_integrated: Number(row['Flow Meter Integrated'] || 0),
@@ -612,7 +611,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
           
-          // Map Excel columns to database fields - use functional villages instead of fully completed
+          // Map Excel columns to database fields
           const schemeData = {
             scheme_id: Number(row['Scheme ID'] || 0),
             scheme_name: String(row['Scheme Name'] || ''),
@@ -621,7 +620,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             total_villages_in_scheme: Number(row['Total Villages In Scheme'] || 0),
             total_esr_in_scheme: Number(row['Total ESR In Scheme'] || 0),
             villages_integrated_on_iot: Number(row['Villages Integrated on IoT'] || 0),
-            fully_completed_villages: Number(row['Functional Villages'] || 0), // Changed from Fully Completed Villages
+            fully_completed_villages: Number(row['Fully Completed Villages'] || 0),
             esr_request_received: Number(row['ESR Request Received'] || 0),
             esr_integrated_on_iot: Number(row['ESR Integrated on IoT'] || 0),
             fully_completed_esr: Number(row['Fully Completed ESR'] || 0),
