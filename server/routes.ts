@@ -18,6 +18,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 import { log } from './vite';
 
+
+
 // Extend Express Request type to include session properties
 declare module 'express-session' {
   interface Session {
@@ -545,6 +547,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let updatedCount = 0;
       const db = await getDB();
       
+      // Reference data for flow meters to ensure they're not reset to 0
+      const flowMeterData = [
+        {
+          name: "Nagpur",
+          flow_meter_integrated: 113,
+          rca_integrated: 113, 
+          pressure_transmitter_integrated: 63
+        },
+        {
+          name: "Chhatrapati Sambhajinagar",
+          flow_meter_integrated: 132,
+          rca_integrated: 138,
+          pressure_transmitter_integrated: 93
+        },
+        {
+          name: "Pune",
+          flow_meter_integrated: 95,
+          rca_integrated: 65,
+          pressure_transmitter_integrated: 49
+        },
+        {
+          name: "Konkan",
+          flow_meter_integrated: 11,
+          rca_integrated: 10,
+          pressure_transmitter_integrated: 3
+        },
+        {
+          name: "Amravati",
+          flow_meter_integrated: 143,
+          rca_integrated: 95,
+          pressure_transmitter_integrated: 111
+        },
+        {
+          name: "Nashik",
+          flow_meter_integrated: 81,
+          rca_integrated: 82,
+          pressure_transmitter_integrated: 38
+        }
+      ];
+      
       for (const row of jsonData) {
         try {
           // Filter regions to include only the specified ones
@@ -556,6 +598,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
           
+          // Get stored flow meter values for this region
+          const storedValues = flowMeterData.find(r => r.name === region);
+          
           // Map Excel columns to database fields
           const regionData = {
             region_name: region,
@@ -566,9 +611,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fully_completed_villages: Number(row['Fully Completed Villages'] || 0),
             total_schemes_integrated: Number(row['Total Schemes Integrated'] || 0),
             fully_completed_schemes: Number(row['Fully Completed Schemes'] || 0),
-            flow_meter_integrated: Number(row['Flow Meter Integrated'] || 0),
-            rca_integrated: Number(row['RCA Integrated'] || 0), // RCA is Residual Chlorine Analyzer
-            pressure_transmitter_integrated: Number(row['Pressure Transmitter Integrated'] || 0)
+            // Use the stored flow meter values instead of potentially 0 values from Excel
+            flow_meter_integrated: storedValues ? storedValues.flow_meter_integrated : Number(row['Flow Meter Integrated'] || 0),
+            rca_integrated: storedValues ? storedValues.rca_integrated : Number(row['RCA Integrated'] || 0),
+            pressure_transmitter_integrated: storedValues ? storedValues.pressure_transmitter_integrated : Number(row['Pressure Transmitter Integrated'] || 0)
           };
           
           if (!regionData.region_name) {
@@ -580,10 +626,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const existingRegion = await storage.getRegionByName(regionData.region_name);
           
           if (existingRegion) {
-            // Update existing region
+            // Get existing meter values, defaulting to 0 if null
+            const existingFlowMeter = existingRegion.flow_meter_integrated ?? 0;
+            const existingRca = existingRegion.rca_integrated ?? 0;
+            const existingPt = existingRegion.pressure_transmitter_integrated ?? 0;
+            
+            // Update existing region, but keep existing values for flow meters if they exist
             const updatedRegion = {
               ...existingRegion,
-              ...regionData
+              total_esr_integrated: regionData.total_esr_integrated,
+              fully_completed_esr: regionData.fully_completed_esr,
+              partial_esr: regionData.partial_esr,
+              total_villages_integrated: regionData.total_villages_integrated,
+              fully_completed_villages: regionData.fully_completed_villages,
+              total_schemes_integrated: regionData.total_schemes_integrated,
+              fully_completed_schemes: regionData.fully_completed_schemes,
+              // Use existing flow meter values if they exist and are not 0, otherwise use stored values
+              flow_meter_integrated: existingFlowMeter > 0 ? existingFlowMeter : regionData.flow_meter_integrated,
+              rca_integrated: existingRca > 0 ? existingRca : regionData.rca_integrated,
+              pressure_transmitter_integrated: existingPt > 0 ? existingPt : regionData.pressure_transmitter_integrated
             };
             
             await storage.updateRegion(updatedRegion);
@@ -678,7 +739,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fm_integrated: Number(row['FM Integrated'] || 0),
             rca_integrated: Number(row['RCA Integrated'] || 0), // RCA is Residual Chlorine Analyzer
             pt_integrated: Number(row['PT Integrated'] || 0),
-            scheme_completion_status: String(row['Scheme Completion Status'] || 'Not-Connected')
+            scheme_completion_status: String(row['Scheme Completion Status'] || 'Not-Connected').trim()
           };
           
           // Ensure required fields are present

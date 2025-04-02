@@ -31,13 +31,20 @@ export function getStatusColorClass(status: SchemeCompletionStatus): string {
 }
 
 export function getStatusDisplayName(status: SchemeCompletionStatus): string {
-  switch (status) {
+  if (!status) return 'Unknown';
+  
+  // Handle potential whitespace issues
+  const cleanStatus = status.toString().trim();
+  
+  switch (cleanStatus) {
     case 'Fully-Completed':
       return 'Fully Completed';
     case 'Not-Connected':
       return 'Not Connected';
+    case 'Partial':
+      return 'Partial';
     default:
-      return status;
+      return cleanStatus;
   }
 }
 
