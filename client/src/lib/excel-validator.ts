@@ -8,6 +8,7 @@ interface ValidationResult {
     schemeIdColumnPresent: boolean;
     requiredColumnsPresent: boolean;
     schemesFound: number;
+    regionsFound: string[];
   };
 }
 
@@ -22,84 +23,155 @@ export async function validateExcelFile(fileBuffer: ArrayBuffer): Promise<Valida
     // Read the Excel file
     const workbook = read(fileBuffer, { type: 'array' });
     
-    // Expected sheets should include at least one region
-    const expectedRegions = ['Amravati', 'Nashik', 'Nagpur', 'Pune', 'Konkan', 'CS', 'Sambhajinagar'];
+    // Region name patterns for detection
+    const REGION_PATTERNS = [
+      { pattern: /\bamravati\b/i, name: 'Amravati' },
+      { pattern: /\bnashik\b/i, name: 'Nashik' },
+      { pattern: /\bnagpur\b/i, name: 'Nagpur' },
+      { pattern: /\bpune\b/i, name: 'Pune' },
+      { pattern: /\bkonkan\b/i, name: 'Konkan' },
+      { pattern: /\bcs\b/i, name: 'Chhatrapati Sambhajinagar' },
+      { pattern: /\bsambhajinagar\b/i, name: 'Chhatrapati Sambhajinagar' },
+      { pattern: /\bchhatrapati\b/i, name: 'Chhatrapati Sambhajinagar' }
+    ];
+    
+    // Column patterns by field
+    const COLUMN_PATTERNS = {
+      // Scheme identification
+      schemeId: [
+        'Scheme ID', 'Scheme Id', 'scheme_id', 'SchemeId', 'SCHEME ID',
+        'Scheme_Id', 'Scheme Code', 'SchemeID'
+      ],
+      
+      // Villages related fields
+      villages: [
+        'Number of Village', 'No. of Village', 'Total Villages', 
+        'Number of Villages', 'Villages', 'Total Villages Integrated',
+        'Villages Integrated', 'Fully Completed Villages',
+        'No. of Functional Village', 'Functional Villages'
+      ],
+      
+      // ESR related fields
+      esr: [
+        'Total Number of ESR', 'Total ESR', 'ESR Total',
+        'Total ESR Integrated', 'ESR Integrated',
+        'No. Fully Completed ESR', 'Fully Completed ESR',
+        'ESR Fully Completed'
+      ],
+      
+      // Component related fields
+      components: [
+        'Flow Meters Connected', ' Flow Meters Connected', 'Flow Meters Conneted',
+        'Flow Meter Connected', 'Flow Meters', 'FM Connected',
+        'Pressure Transmitter Connected', 'Pressure Transmitters Connected',
+        'Pressure Transmitter Conneted', 'PT Connected', 'Pressure Transmitters',
+        'Residual Chlorine Connected', 'Residual Chlorine Analyzer Connected',
+        'Residual Chlorine Conneted', 'RCA Connected', 'Residual Chlorine',
+        'Residual Chlorine Analyzers'
+      ],
+      
+      // Status fields
+      status: [
+        'Fully completion Scheme Status', 'Scheme Status', 'Status',
+        'Scheme status', ' Scheme Status', 'Scheme Functional Status',
+        'Functional Status'
+      ]
+    };
+    
     const foundRegionSheets: string[] = [];
+    const foundRegions: string[] = [];
     
     // Track if required columns are present
     let schemeIdColumnPresent = false;
     let requiredDataColumns = false;
     let schemesFound = 0;
     
-    // Function to check if a sheet name contains a region
-    const isRegionSheet = (sheetName: string): boolean => {
-      const sheetNameLower = sheetName.toLowerCase();
-      return expectedRegions.some(region => 
-        sheetNameLower.includes(region.toLowerCase())
-      );
+    // Detect region from sheet name
+    const detectRegionFromSheetName = (sheetName: string): string | null => {
+      for (const { pattern, name } of REGION_PATTERNS) {
+        if (pattern.test(sheetName)) {
+          return name;
+        }
+      }
+      return null;
     };
-    
-    // Valid columns that should be checked
-    const validColumns = [
-      // Primary columns from Region sheets
-      'Total Villages Integrated',
-      'Fully Completed Villages',
-      'Total ESR Integrated',
-      'No. Fully Completed ESR',
-      'Flow Meters Connected',
-      ' Flow Meters Connected', // Note space in front
-      'Residual Chlorine Analyzer Connected',
-      'Pressure Transmitter Connected',
-      'Fully completion Scheme Status',
-      
-      // Alternative versions
-      'Total Villages',
-      'Villages Integrated',
-      'Functional Villages',
-      'ESR Integrated',
-      'ESR Fully Completed',
-      'Residual Chlorine',
-      'Residual Chlorine Analyzers',
-      'PT Connected',
-      'Pressure Transmitters',
-      'Flow Meters',
-      'FM Connected',
-      'Status',
-      'Scheme Status',
-      'Scheme status'
-    ];
     
     // Analyze each sheet in the workbook
     for (const sheetName of workbook.SheetNames) {
-      // Check if this sheet name contains a region name using the function we defined
-      if (isRegionSheet(sheetName)) {
+      // Detect region from sheet name
+      const regionName = detectRegionFromSheetName(sheetName);
+      
+      if (regionName) {
         foundRegionSheets.push(sheetName);
+        if (!foundRegions.includes(regionName)) {
+          foundRegions.push(regionName);
+        }
         
         // Check sheet contents
         const sheet = workbook.Sheets[sheetName];
-        const data = utils.sheet_to_json(sheet) as Record<string, any>[];
+        const data = utils.sheet_to_json(sheet, { defval: null }) as Record<string, any>[];
         
         if (data && data.length > 0) {
-          // Check for scheme ID column
+          // Check each row for scheme ID and required columns
           for (const row of data) {
-            const hasSchemeId = row['Scheme ID'] !== undefined || 
-                              row['Scheme Id'] !== undefined || 
-                              row['scheme_id'] !== undefined ||
-                              row['SchemeId'] !== undefined || 
-                              row['SCHEME ID'] !== undefined || 
-                              row['Scheme_Id'] !== undefined ||
-                              row['Scheme Code'] !== undefined || 
-                              row['Scheme Id.'] !== undefined;
+            let hasSchemeId = false;
             
-            if (hasSchemeId) {
-              schemeIdColumnPresent = true;
-              schemesFound++;
+            // Check for scheme ID using patterns
+            for (const pattern of COLUMN_PATTERNS.schemeId) {
+              if (row[pattern] !== undefined && row[pattern] !== null) {
+                hasSchemeId = true;
+                schemeIdColumnPresent = true;
+                break;
+              }
             }
             
-            // Check if any of the required data columns are present
-            const hasAnyRequiredColumn = validColumns.some(col => row[col] !== undefined);
-            if (hasAnyRequiredColumn) {
-              requiredDataColumns = true;
+            if (hasSchemeId) {
+              schemesFound++;
+              
+              // Check for any required data column
+              let hasRequiredDataColumn = false;
+              
+              // Check villages data
+              for (const pattern of COLUMN_PATTERNS.villages) {
+                if (row[pattern] !== undefined && row[pattern] !== null) {
+                  hasRequiredDataColumn = true;
+                  break;
+                }
+              }
+              
+              // Check ESR data
+              if (!hasRequiredDataColumn) {
+                for (const pattern of COLUMN_PATTERNS.esr) {
+                  if (row[pattern] !== undefined && row[pattern] !== null) {
+                    hasRequiredDataColumn = true;
+                    break;
+                  }
+                }
+              }
+              
+              // Check component data
+              if (!hasRequiredDataColumn) {
+                for (const pattern of COLUMN_PATTERNS.components) {
+                  if (row[pattern] !== undefined && row[pattern] !== null) {
+                    hasRequiredDataColumn = true;
+                    break;
+                  }
+                }
+              }
+              
+              // Check status data
+              if (!hasRequiredDataColumn) {
+                for (const pattern of COLUMN_PATTERNS.status) {
+                  if (row[pattern] !== undefined && row[pattern] !== null) {
+                    hasRequiredDataColumn = true;
+                    break;
+                  }
+                }
+              }
+              
+              if (hasRequiredDataColumn) {
+                requiredDataColumns = true;
+              }
             }
           }
         }
@@ -115,7 +187,8 @@ export async function validateExcelFile(fileBuffer: ArrayBuffer): Promise<Valida
           sheets: workbook.SheetNames,
           schemeIdColumnPresent,
           requiredColumnsPresent: requiredDataColumns,
-          schemesFound
+          schemesFound,
+          regionsFound: foundRegions
         }
       };
     }
@@ -128,7 +201,8 @@ export async function validateExcelFile(fileBuffer: ArrayBuffer): Promise<Valida
           sheets: foundRegionSheets,
           schemeIdColumnPresent,
           requiredColumnsPresent: requiredDataColumns,
-          schemesFound
+          schemesFound,
+          regionsFound: foundRegions
         }
       };
     }
@@ -141,7 +215,8 @@ export async function validateExcelFile(fileBuffer: ArrayBuffer): Promise<Valida
           sheets: foundRegionSheets,
           schemeIdColumnPresent,
           requiredColumnsPresent: requiredDataColumns,
-          schemesFound
+          schemesFound,
+          regionsFound: foundRegions
         }
       };
     }
@@ -154,7 +229,8 @@ export async function validateExcelFile(fileBuffer: ArrayBuffer): Promise<Valida
           sheets: foundRegionSheets,
           schemeIdColumnPresent,
           requiredColumnsPresent: requiredDataColumns,
-          schemesFound
+          schemesFound,
+          regionsFound: foundRegions
         }
       };
     }
@@ -162,12 +238,13 @@ export async function validateExcelFile(fileBuffer: ArrayBuffer): Promise<Valida
     // All validation passed
     return {
       isValid: true,
-      message: `Excel file valid. Found ${schemesFound} schemes across ${foundRegionSheets.length} region sheets.`,
+      message: `Excel file valid. Found ${schemesFound} schemes across ${foundRegionSheets.length} region sheets (${foundRegions.join(', ')}).`,
       details: {
         sheets: foundRegionSheets,
         schemeIdColumnPresent,
         requiredColumnsPresent: requiredDataColumns,
-        schemesFound
+        schemesFound,
+        regionsFound: foundRegions
       }
     };
     

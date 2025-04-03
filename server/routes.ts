@@ -6,7 +6,8 @@ import {
   insertSchemeStatusSchema, 
   regions, 
   loginSchema,
-  registerUserSchema
+  registerUserSchema,
+  InsertSchemeStatus
 } from "@shared/schema";
 import { z } from "zod";
 import { updateRegionSummaries, resetRegionData, getDB } from "./db";
@@ -978,180 +979,351 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileBuffer = req.file.buffer;
       const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
       
-      // Column mappings
-      const COLUMN_MAPPINGS = {
-        // Primary columns from Region sheets
-        'Total Villages Integrated': 'villages_integrated',
-        'Fully Completed Villages': 'fully_completed_villages',
-        'Total ESR Integrated': 'esr_integrated_on_iot',
-        'No. Fully Completed ESR': 'fully_completed_esr',
-        ' Flow Meters Connected': 'flow_meters_connected', // Note the space in the column name
-        'Residual Chlorine Analyzer Connected': 'residual_chlorine_connected',
-        'Pressure Transmitter Connected': 'pressure_transmitters_connected',
-        'Fully completion Scheme Status': 'scheme_status',
+      // Define column patterns to search for in headers
+      const COLUMN_PATTERNS = {
+        // Scheme identification
+        scheme_id: [
+          'Scheme ID', 'Scheme Id', 'scheme_id', 'SchemeId', 'SCHEME ID',
+          'Scheme_Id', 'Scheme Code', 'SchemeID'
+        ],
+        scheme_name: [
+          'Scheme Name', 'SchemeName', 'scheme_name', 'SCHEME NAME'
+        ],
         
-        // Alternative versions for consistency
-        'Flow Meters Connected': 'flow_meters_connected',
-        'No. of Functional Village': 'fully_completed_villages',
-        'No. of Fully Completed ESR': 'fully_completed_esr',
-        'Flow Meter Connected': 'flow_meters_connected',
-        'RCA Connected': 'residual_chlorine_connected',
-        'Pressure Transmitter': 'pressure_transmitters_connected',
-        'Scheme Status': 'scheme_status',
-        'Scheme status': 'scheme_status',
+        // Villages related fields
+        total_villages: [
+          'Number of Village', 'No. of Village', 'Total Villages', 
+          'Number of Villages', 'Villages'
+        ],
+        fully_completed_villages: [
+          'Fully completed Villages', 'Fully Completed Villages', 
+          'No. of Functional Village', 'Functional Villages'
+        ],
+        villages_integrated: [
+          'Total Villages Integrated', 'Villages Integrated'
+        ],
+        partial_villages: [
+          'No. of Partial Village', 'Partial Villages', 'Partial Village'
+        ],
+        non_functional_villages: [
+          'No. of Non- Functional Village', 'No. of Non-Functional Village',
+          'Non-Functional Villages', 'Non Functional Villages'
+        ],
         
-        // Additional alternate column names from actual Excel files
-        'Total Villages': 'villages_integrated',
-        'Villages Integrated': 'villages_integrated',
-        'Functional Villages': 'fully_completed_villages',
-        'ESR Integrated': 'esr_integrated_on_iot',
-        'ESR Fully Completed': 'fully_completed_esr',
-        'Residual Chlorine': 'residual_chlorine_connected',
-        'Residual Chlorine Analyzers': 'residual_chlorine_connected', 
-        'PT Connected': 'pressure_transmitters_connected',
-        'Pressure Transmitters': 'pressure_transmitters_connected',
-        'Flow Meters': 'flow_meters_connected',
-        'FM Connected': 'flow_meters_connected',
-        'Status': 'scheme_status',
+        // ESR related fields
+        total_esr: [
+          'Total Number of ESR', 'Total ESR', 'ESR Total'
+        ],
+        esr_integrated_on_iot: [
+          'Total ESR Integrated', 'ESR Integrated', 'Total Number of ESR Integrated'
+        ],
+        fully_completed_esr: [
+          'No. Fully Completed ESR', 'Fully Completed ESR', 'No. of Fully Completed ESR',
+          'ESR Fully Completed'
+        ],
+        balance_esr: [
+          'Balance to Complete ESR', 'Balance ESR'
+        ],
         
-        // Handle alternative column names from datalink sheets
-        'villages_integrated': 'villages_integrated',
-        'fully_completed_villages': 'fully_completed_villages',
-        'esr_integrated': 'esr_integrated_on_iot',
-        'fully_completed_esr': 'fully_completed_esr',
-        'flow_meters': 'flow_meters_connected',
-        'residual_chlorine': 'residual_chlorine_connected',
-        'pressure_transmitters': 'pressure_transmitters_connected',
-        'scheme_status': 'scheme_status',
+        // Component related fields
+        flow_meters_connected: [
+          'Flow Meters Connected', ' Flow Meters Connected', 'Flow Meters Conneted',
+          'Flow Meter Connected', 'Flow Meters', 'FM Connected'
+        ],
+        pressure_transmitters_connected: [
+          'Pressure Transmitter Connected', 'Pressure Transmitters Connected',
+          'Pressure Transmitter Conneted', 'PT Connected', 'Pressure Transmitters'
+        ],
+        residual_chlorine_connected: [
+          'Residual Chlorine Connected', 'Residual Chlorine Analyzer Connected',
+          'Residual Chlorine Conneted', 'RCA Connected', 'Residual Chlorine',
+          'Residual Chlorine Analyzers'
+        ],
+        
+        // Status fields
+        scheme_status: [
+          'Fully completion Scheme Status', 'Scheme Status', 'Status',
+          'Scheme status', ' Scheme Status'
+        ],
+        scheme_functional_status: [
+          'Scheme Functional Status', 'Functional Status'
+        ]
       };
       
-      // Region name mapping - exact matches for known sheet names
-      const REGION_SHEET_MAPPING: Record<string, string> = {
-        'Region - Amravati': 'Amravati',
-        'Region - CS': 'Chhatrapati Sambhajinagar',
-        'Region - Konkan': 'Konkan',
-        'Region - Nagpur': 'Nagpur',
-        'Region - Nashik': 'Nashik',
-        'Region - Pune': 'Pune',
-        'Amravati Datalink': 'Amravati',
-        'CS Datalink': 'Chhatrapati Sambhajinagar',
-        'Konkan Datalink': 'Konkan',
-        'Nagpur Datalink': 'Nagpur',
-        'Nashik Datalink': 'Nashik',
-        'Pune Datalink': 'Pune',
-      };
+      // Region name patterns for detection
+      const REGION_PATTERNS = [
+        { pattern: /\bamravati\b/i, name: 'Amravati' },
+        { pattern: /\bnashik\b/i, name: 'Nashik' },
+        { pattern: /\bnagpur\b/i, name: 'Nagpur' },
+        { pattern: /\bpune\b/i, name: 'Pune' },
+        { pattern: /\bkonkan\b/i, name: 'Konkan' },
+        { pattern: /\bcs\b/i, name: 'Chhatrapati Sambhajinagar' },
+        { pattern: /\bsambhajinagar\b/i, name: 'Chhatrapati Sambhajinagar' },
+        { pattern: /\bchhatrapati\b/i, name: 'Chhatrapati Sambhajinagar' }
+      ];
       
-      // Function to determine region from sheet name for flexible matching
-      const getRegionFromSheetName = (sheetName: string): string | null => {
-        // First check for exact matches
-        if (Object.prototype.hasOwnProperty.call(REGION_SHEET_MAPPING, sheetName)) {
-          return REGION_SHEET_MAPPING[sheetName as keyof typeof REGION_SHEET_MAPPING];
+      // Helper functions - extracted to avoid TypeScript strict mode errors
+      // Detect region from sheet name
+      const detectRegionFromSheetName = (sheetName: string): string | null => {
+        for (const { pattern, name } of REGION_PATTERNS) {
+          if (pattern.test(sheetName)) {
+            return name;
+          }
         }
-        
-        // Otherwise, try pattern matching
-        const sheetNameLower = sheetName.toLowerCase();
-        
-        if (sheetNameLower.includes('amravati')) return 'Amravati';
-        if (sheetNameLower.includes('cs') || sheetNameLower.includes('sambhajinagar')) return 'Chhatrapati Sambhajinagar';
-        if (sheetNameLower.includes('konkan')) return 'Konkan';
-        if (sheetNameLower.includes('nagpur')) return 'Nagpur';
-        if (sheetNameLower.includes('nashik')) return 'Nashik';
-        if (sheetNameLower.includes('pune')) return 'Pune';
-        
         return null;
       };
       
-      let totalUpdated = 0;
-      let schemasProcessed: any[] = [];
+      // Get the corresponding field name for a column header
+      const getFieldForColumn = (header: string): string | null => {
+        for (const [field, patterns] of Object.entries(COLUMN_PATTERNS)) {
+          for (const pattern of patterns) {
+            if (header === pattern || 
+                header.toLowerCase() === pattern.toLowerCase() ||
+                header.toLowerCase().includes(pattern.toLowerCase())) {
+              return field;
+            }
+          }
+        }
+        return null;
+      };
       
-      // Process each sheet with region data
+      // Create a mapping of column headers to database fields
+      const createColumnMapping = (headers: Record<string, any>): Record<string, string> => {
+        const mapping: Record<string, string> = {};
+        
+        for (const header of Object.keys(headers)) {
+          const field = getFieldForColumn(header);
+          if (field) {
+            mapping[header] = field;
+          }
+        }
+        
+        return mapping;
+      };
+      
+      // Process the value according to the field type
+      const processValue = (field: string, value: any): any => {
+        if (value === null || value === undefined) {
+          return null;
+        }
+        
+        // Numeric fields - convert to numbers
+        const numericFields = [
+          'total_villages', 'fully_completed_villages', 'villages_integrated',
+          'partial_villages', 'non_functional_villages', 'total_esr',
+          'esr_integrated_on_iot', 'fully_completed_esr', 'balance_esr',
+          'flow_meters_connected', 'pressure_transmitters_connected', 
+          'residual_chlorine_connected'
+        ];
+        
+        if (numericFields.includes(field)) {
+          const num = Number(value);
+          return isNaN(num) ? 0 : num;
+        }
+        
+        // Status field - standardize values
+        if (field === 'scheme_status') {
+          const status = String(value).trim().toLowerCase();
+          if (status === 'completed' || status === 'complete' || status === 'fully completed') {
+            return 'Completed';
+          } else if (status === 'in progress' || status === 'in-progress' || status === 'partial') {
+            return 'In Progress';
+          } else if (status === 'not connected' || status === 'not-connected') {
+            return 'Not-Connected';
+          }
+          // Return capitalized version or as is
+          return value;
+        }
+        
+        // Text fields - ensure they're properly formatted
+        if (field === 'scheme_id') {
+          return String(value).trim();
+        }
+        
+        return value;
+      };
+      
+      // Determine the agency based on region
+      const getAgencyByRegion = (regionName: string): string => {
+        const regionMap: Record<string, string> = {
+          'Amravati': 'MJP Amravati',
+          'Nashik': 'MJP Nashik',
+          'Nagpur': 'MJP Nagpur',
+          'Pune': 'MJP Pune',
+          'Konkan': 'MJP Konkan',
+          'Chhatrapati Sambhajinagar': 'MJP Chhatrapati Sambhajinagar'
+        };
+        
+        return regionMap[regionName] || `MJP ${regionName}`;
+      };
+      
+      let totalUpdated = 0;
+      let totalCreated = 0;
+      const processedSchemes: string[] = [];
+      
+      // Process each sheet
       for (const sheetName of workbook.SheetNames) {
-        // Determine region from sheet name
-        const regionName = getRegionFromSheetName(sheetName);
+        // Detect region from sheet name
+        const regionName = detectRegionFromSheetName(sheetName);
         
         if (!regionName) {
-          log(`Skipping sheet: ${sheetName} (not a recognized region sheet)`, 'import');
+          log(`Skipping sheet: ${sheetName} - not a recognized region`, 'import');
           continue;
         }
+        
         log(`Processing sheet: ${sheetName} for region: ${regionName}`, 'import');
         
+        // Convert sheet to JSON
         const sheet = workbook.Sheets[sheetName];
-        const data = XLSX.utils.sheet_to_json(sheet);
+        const data = XLSX.utils.sheet_to_json(sheet, { defval: null });
         
         if (!data || data.length === 0) {
           log(`No data found in sheet: ${sheetName}`, 'import');
           continue;
         }
         
-        log(`Found ${data.length} rows in ${sheetName}`, 'import');
+        // Look for data rows (skip header rows)
+        let hasFoundDataRows = false;
+        const agency = getAgencyByRegion(regionName);
         
-        // Process each row in the sheet
         for (const row of data) {
           try {
-            // Cast row to the appropriate type
+            // Create column mapping based on the first row that has scheme ID
+            const columnMapping = createColumnMapping(row as Record<string, any>);
             const typedRow = row as Record<string, any>;
             
-            // Find the scheme by scheme_id - check all possible column name variations
-            const schemeId = typedRow['Scheme ID'] || typedRow['Scheme Id'] || typedRow['scheme_id'] ||
-                            typedRow['SchemeId'] || typedRow['SCHEME ID'] || typedRow['Scheme_Id'] ||
-                            typedRow['Scheme Code'] || typedRow['Scheme Id.'] || typedRow['Sl.No.'];
+            // Find scheme ID with various possible column names
+            let schemeIdCell = '';
             
-            if (!schemeId) {
-              log('Row missing scheme ID, skipping:', 'import');
-              continue;
+            // First check using our mapping
+            for (const [header, field] of Object.entries(columnMapping)) {
+              if (field === 'scheme_id' && typedRow[header]) {
+                schemeIdCell = header;
+                break;
+              }
             }
             
-            // Ensure schemeId is treated as a string
-            const schemeIdString = String(schemeId).trim();
-            
-            // Prepare the data to update
-            const updateData: Record<string, any> = {
-              region_name: regionName
-            };
-            
-            // Map columns according to the mappings
-            for (const [excelCol, dbCol] of Object.entries(COLUMN_MAPPINGS)) {
-              if (typedRow[excelCol] !== undefined) {
-                // For numeric columns, convert to number
-                if (typeof typedRow[excelCol] === 'string' && !isNaN(parseFloat(typedRow[excelCol]))) {
-                  updateData[dbCol] = parseInt(typedRow[excelCol], 10);
-                } else {
-                  updateData[dbCol] = typedRow[excelCol];
+            // If not found, try more direct approaches
+            if (!schemeIdCell) {
+              for (const pattern of COLUMN_PATTERNS.scheme_id) {
+                if (typedRow[pattern]) {
+                  schemeIdCell = pattern;
+                  break;
                 }
               }
             }
             
-            // Handle special case for scheme_status
-            if (updateData.scheme_status === 'Partial') {
-              updateData.scheme_status = 'In Progress';
-            }
-            
-            // Skip if no data to update
-            if (Object.keys(updateData).length <= 1) { // Only has region_name
-              log(`No valid data to update for scheme ${schemeIdString}`, 'import');
+            if (!schemeIdCell || !typedRow[schemeIdCell]) {
+              // This row doesn't have a scheme ID
               continue;
             }
             
-            // Check if the scheme exists
-            const existingScheme = await storage.getSchemeById(schemeIdString);
+            // Extract and sanitize the scheme ID
+            const schemeId = String(typedRow[schemeIdCell]).trim();
+            
+            // Now we've found a valid data row
+            hasFoundDataRows = true;
+            
+            // Create record with region and agency
+            const record: Record<string, any> = {
+              region_name: regionName,
+              agency: agency,
+              scheme_id: schemeId
+            };
+            
+            // Process each column based on the mapping
+            for (const [header, field] of Object.entries(columnMapping)) {
+              if (typedRow[header] !== null && typedRow[header] !== undefined) {
+                record[field] = processValue(field, typedRow[header]);
+              }
+            }
+            
+            // Look up scheme name if it's not in the current row but we have a valid scheme ID
+            if (!record.scheme_name) {
+              // Try to find a scheme name from column headers/patterns
+              for (const [header, content] of Object.entries(typedRow)) {
+                if (COLUMN_PATTERNS.scheme_name.some(pattern => 
+                    header === pattern || 
+                    header.toLowerCase() === pattern.toLowerCase() || 
+                    header.toLowerCase().includes(pattern.toLowerCase())
+                )) {
+                  if (content) {
+                    record.scheme_name = String(content).trim();
+                    break;
+                  }
+                }
+              }
+            }
+            
+            // Check if scheme exists
+            const existingScheme = await storage.getSchemeById(schemeId);
             
             if (existingScheme) {
-              // Update existing scheme
-              const updatedScheme = await storage.updateScheme({
-                ...existingScheme,
-                ...updateData
-              });
-              
-              log(`Updated scheme: ${schemeIdString}`, 'import');
-              totalUpdated++;
-              schemasProcessed.push(schemeIdString);
+              // Update existing scheme with new data
+              try {
+                // Apply special status mapping (Partial → In Progress)
+                if (record.scheme_status === 'Partial') {
+                  record.scheme_status = 'In Progress';
+                }
+                
+                const updatedScheme = await storage.updateScheme({
+                  ...existingScheme,
+                  ...record
+                });
+                
+                log(`Updated scheme: ${schemeId}`, 'import');
+                totalUpdated++;
+                processedSchemes.push(schemeId);
+              } catch (updateError) {
+                console.error(`Error updating scheme ${schemeId}:`, updateError);
+              }
+            } else if (record.scheme_name) {
+              // Create a new scheme if we have a name
+              try {
+                // Apply special status mapping (Partial → In Progress)
+                if (record.scheme_status === 'Partial') {
+                  record.scheme_status = 'In Progress';
+                }
+                
+                // Create a properly typed object with scheme_name as a required field
+                const schemeData: InsertSchemeStatus = {
+                  scheme_name: record.scheme_name || `Scheme ${schemeId}`, // Default name if missing
+                  scheme_id: record.scheme_id,
+                  region_name: record.region_name,
+                  agency: record.agency,
+                  total_villages: record.total_villages as number | undefined,
+                  villages_integrated: record.villages_integrated as number | undefined,
+                  fully_completed_villages: record.fully_completed_villages as number | undefined,
+                  partial_villages: record.partial_villages as number | undefined,
+                  non_functional_villages: record.non_functional_villages as number | undefined,
+                  total_esr: record.total_esr as number | undefined,
+                  esr_integrated_on_iot: record.esr_integrated_on_iot as number | undefined,
+                  fully_completed_esr: record.fully_completed_esr as number | undefined,
+                  balance_esr: record.balance_esr as number | undefined,
+                  flow_meters_connected: record.flow_meters_connected as number | undefined,
+                  pressure_transmitters_connected: record.pressure_transmitters_connected as number | undefined,
+                  residual_chlorine_connected: record.residual_chlorine_connected as number | undefined,
+                  scheme_status: record.scheme_status as string | undefined,
+                  scheme_functional_status: record.scheme_functional_status as string | undefined
+                };
+                
+                const newScheme = await storage.createScheme(schemeData);
+                log(`Created new scheme: ${schemeId}`, 'import');
+                totalCreated++;
+                processedSchemes.push(schemeId);
+              } catch (createError) {
+                console.error(`Error creating scheme ${schemeId}:`, createError);
+              }
             } else {
-              log(`Scheme with ID ${schemeIdString} not found, skipping`, 'import');
+              log(`Scheme with ID ${schemeId} not found and missing scheme_name, skipping`, 'import');
             }
           } catch (rowError) {
-            console.error(`Error processing row:`, row, rowError);
-            // Continue with next row
+            console.error(`Error processing row in ${sheetName}:`, rowError);
           }
+        }
+        
+        if (!hasFoundDataRows) {
+          log(`No scheme data rows found in sheet: ${sheetName}`, 'import');
         }
       }
       
@@ -1159,9 +1331,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       await updateRegionSummaries();
       
       res.json({ 
-        message: `Excel data imported successfully. ${totalUpdated} schemes updated across ${schemasProcessed.length} sheets.`,
+        message: `Excel data imported successfully. ${totalUpdated} schemes updated and ${totalCreated} new schemes created.`,
         updatedCount: totalUpdated,
-        schemasProcessed
+        createdCount: totalCreated,
+        processedSchemes
       });
     } catch (error) {
       console.error("Error importing Excel data:", error);
