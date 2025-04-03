@@ -56,7 +56,11 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
           {/* Scheme Info */}
           <div className="bg-white p-3 rounded-lg shadow-sm border border-neutral-200 mb-3">
             <h4 className="text-xs font-medium text-neutral-700 mb-2">Scheme Information</h4>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Scheme ID</h4>
+                <p className="text-xs text-neutral-900 bg-gray-100 rounded px-2 py-1 mt-1 inline-block font-mono">{scheme.scheme_id || 'N/A'}</p>
+              </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Region</h4>
                 <p className="text-xs text-neutral-900">{scheme.region_name || 'N/A'}</p>

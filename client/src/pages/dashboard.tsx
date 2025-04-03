@@ -124,6 +124,7 @@ export default function Dashboard() {
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(
         allFilteredSchemes.map((scheme: SchemeStatus) => ({
+          "Scheme ID": scheme.scheme_id,
           "Scheme Name": scheme.scheme_name,
           Region: scheme.region_name,
           Agency: scheme.agency,

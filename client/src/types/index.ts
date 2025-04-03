@@ -16,7 +16,7 @@ export interface Region {
 
 // Define scheme status types
 export interface SchemeStatus {
-  scheme_id: number;
+  scheme_id: string;
   scheme_name: string;
   region_name: string;
   agency: string | null;

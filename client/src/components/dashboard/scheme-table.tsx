@@ -40,6 +40,7 @@ export default function SchemeTable({
   onStatusFilterChange
 }: SchemeTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
+  const [schemeIdSearch, setSchemeIdSearch] = useState("");
   const [localStatusFilter, setLocalStatusFilter] = useState<string>(statusFilter);
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -52,12 +53,15 @@ export default function SchemeTable({
   // Ensure schemes is an array before filtering
   const schemesArray = Array.isArray(schemes) ? schemes : [];
   
-  // Filter schemes only by search (status is now filtered server-side)
+  // Filter schemes by scheme name and scheme ID
   const filteredSchemes = schemesArray.filter(scheme => {
-    const matchesSearch = searchTerm === "" || 
+    const matchesNameSearch = searchTerm === "" || 
       scheme.scheme_name.toLowerCase().includes(searchTerm.toLowerCase());
     
-    return matchesSearch;
+    const matchesIdSearch = schemeIdSearch === "" || 
+      (scheme.scheme_id && scheme.scheme_id.toLowerCase().includes(schemeIdSearch.toLowerCase()));
+    
+    return matchesNameSearch && matchesIdSearch;
   });
   
   const totalPages = Math.ceil(filteredSchemes.length / itemsPerPage);
@@ -79,16 +83,29 @@ export default function SchemeTable({
           </CardDescription>
         </div>
         <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
-          <div className="relative w-full sm:w-64 xl:w-80">
-            <Search className="absolute left-2.5 top-2.5 h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-400" />
-            <Input
-              id="schemeSearch"
-              placeholder="Search schemes..."
-              className="pl-7 sm:pl-8 lg:pl-10 w-full text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10 xl:h-11"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
+          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full">
+            <div className="relative w-full sm:w-64 xl:w-60">
+              <Search className="absolute left-2.5 top-2.5 h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-400" />
+              <Input
+                id="schemeSearch"
+                placeholder="Search scheme name..."
+                className="pl-7 sm:pl-8 lg:pl-10 w-full text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10 xl:h-11"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+            
+            <div className="relative w-full sm:w-36 xl:w-40">
+              <Input
+                id="schemeIdSearch"
+                placeholder="Scheme ID..."
+                className="w-full text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10 xl:h-11 font-mono"
+                value={schemeIdSearch}
+                onChange={(e) => setSchemeIdSearch(e.target.value)}
+              />
+            </div>
           </div>
+          
           <Select 
             value={localStatusFilter} 
             onValueChange={(value) => {
@@ -116,7 +133,8 @@ export default function SchemeTable({
             <Table>
               <TableHeader className="bg-blue-50">
                 <TableRow>
-                  <TableHead className="w-[35%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">Scheme Name</TableHead>
+                  <TableHead className="w-[15%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">Scheme ID</TableHead>
+                  <TableHead className="w-[30%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">Scheme Name</TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">Region</TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">Functional Villages</TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">ESR</TableHead>
@@ -128,20 +146,25 @@ export default function SchemeTable({
                 {isLoading ? (
                   [...Array(5)].map((_, index) => (
                     <TableRow key={index}>
-                      <TableCell colSpan={6}>
+                      <TableCell colSpan={7}>
                         <div className="animate-pulse h-4 sm:h-6 lg:h-8 bg-gray-200 rounded"></div>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : currentItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-4 sm:py-6 lg:py-8 text-xs sm:text-sm lg:text-base text-neutral-500">
+                    <TableCell colSpan={7} className="text-center py-4 sm:py-6 lg:py-8 text-xs sm:text-sm lg:text-base text-neutral-500">
                       No schemes found matching your criteria
                     </TableCell>
                   </TableRow>
                 ) : (
                   currentItems.map((scheme) => (
                     <TableRow key={scheme.scheme_id} className="hover:bg-blue-50 transition-colors duration-150">
+                      <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100">
+                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-mono">
+                          {scheme.scheme_id}
+                        </span>
+                      </TableCell>
                       <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100">
                         {scheme.scheme_name}
                       </TableCell>
