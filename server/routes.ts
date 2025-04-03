@@ -976,8 +976,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
+      log(`File upload received: ${req.file.originalname}, size: ${req.file.size} bytes`, 'import');
       const fileBuffer = req.file.buffer;
-      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+      
+      // Try reading with options for better compatibility
+      let workbook;
+      try {
+        // First try to get the column data directly from the raw Excel
+        // This helps bypass some of the library's higher-level parsing
+        const raw = new Uint8Array(fileBuffer);
+        
+        // Read with all options for maximum compatibility
+        workbook = XLSX.read(raw, { 
+          type: 'array',          // Use array mode for better binary handling
+          cellFormula: false,     // Don't parse formulas
+          cellHTML: false,        // Don't parse HTML
+          cellText: true,         // Force text mode for cells
+          cellDates: true,        // Parse dates
+          cellNF: false,          // Don't parse number formats
+          WTF: true,              // Show detailed warnings
+          cellStyles: false,      // Don't parse styles
+          bookVBA: false,         // Don't parse VBA code
+          dateNF: 'yyyy-mm-dd',   // Date format
+          raw: true,              // Raw parsing
+          blankrows: false        // Skip blank rows
+        });
+        
+        // Examine workbook to see important info about the file
+        log(`Workbook file info:`, 'import');
+        for (const sheetName of workbook.SheetNames) {
+          const sheet = workbook.Sheets[sheetName];
+          
+          // Try to access column G explicitly (user mentioned Scheme ID is in column G)
+          // This uses A1 notation for columns where G is column 7
+          const gCells = [];
+          if (sheet['!ref']) {
+            const range = XLSX.utils.decode_range(sheet['!ref']);
+            // Check the first 10 rows for column G
+            for (let r = 0; r <= Math.min(10, range.e.r); r++) {
+              const cellRef = 'G' + (r+1); // G1, G2, G3, etc.
+              if (sheet[cellRef]) {
+                gCells.push(`G${r+1}: ${sheet[cellRef].v}`);
+              } else {
+                gCells.push(`G${r+1}: <empty>`);
+              }
+            }
+          }
+          
+          log(`Sheet: ${sheetName}, Column G (first 10 rows): ${gCells.join(' | ')}`, 'import');
+        }
+        
+        log(`Excel file successfully loaded. Found ${workbook.SheetNames.length} sheets: ${workbook.SheetNames.join(', ')}`, 'import');
+      } catch (error) {
+        const xlsxError = error as Error;
+        console.error('Error reading Excel file:', xlsxError);
+        return res.status(400).json({ message: `Unable to read Excel file: ${xlsxError.message}` });
+      }
       
       // Define column patterns to search for in headers
       const COLUMN_PATTERNS = {
@@ -1284,12 +1338,48 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Convert sheet to JSON
         const sheet = workbook.Sheets[sheetName];
-        const data = XLSX.utils.sheet_to_json(sheet, { defval: null });
+        
+        // Log raw sheet info to help debugging
+        log(`Sheet ${sheetName} raw data:`, 'import');
+        // Get the range of the sheet
+        const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:A1');
+        log(`Sheet range: ${sheet['!ref']}`, 'import');
+        
+        // Get column G values specifically (this is where Scheme ID should be according to user)
+        let columnGValues = [];
+        for (let r = range.s.r; r <= range.e.r; r++) {
+          const cellAddress = XLSX.utils.encode_cell({r: r, c: 6}); // column G (index 6)
+          const cell = sheet[cellAddress];
+          if (cell) {
+            const value = cell.v || '';
+            columnGValues.push(`Row ${r+1}: ${value}`);
+          }
+        }
+        log(`Column G (Scheme ID) values: ${columnGValues.slice(0, 5).join(', ')}...`, 'import');
+        
+        // Convert to JSON in a way that preserves position information better
+        const data = XLSX.utils.sheet_to_json(sheet, { 
+          defval: null,
+          raw: true,
+          rawNumbers: true,
+          header: 'A'  // Use A,B,C as header names to ensure we get position-based mapping
+        });
         
         if (!data || data.length === 0) {
           log(`No data found in sheet: ${sheetName}`, 'import');
           continue;
         }
+        
+        // Log the number of rows found
+        log(`Found ${data.length} rows in sheet ${sheetName}`, 'import');
+        
+        // Convert header-letter-based data to regular column-header-based 
+        // This ensures we get data with proper column positions
+        const headerRow = data[0] as Record<string, any>;
+        const columnPositions: Record<string, number> = {};
+        
+        // Log the header row
+        log(`First row (headers): ${JSON.stringify(headerRow)}`, 'import');
         
         // Look for data rows (skip header rows)
         let hasFoundDataRows = false;
@@ -1327,19 +1417,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // If still not found, try common column index positions (common position for Scheme ID in the user's Excel)
             if (!schemeIdCell) {
-              // Look at specific indices where Scheme ID might be
-              const possibleIndices = [6, 5, 7]; // Common positions for Scheme ID column
+              // Specifically focus on column G (index 6) first - the user confirmed this is where Scheme ID is in their Excel
               const headers = Object.keys(typedRow);
               
-              for (const index of possibleIndices) {
-                if (index < headers.length && typedRow[headers[index]]) {
-                  schemeIdCell = headers[index];
-                  schemeId = String(typedRow[schemeIdCell]).trim();
-                  
-                  // If this looks like a Scheme ID (has alphanumeric characters), use it
-                  if (/^[a-z0-9_\-/]+$/i.test(schemeId)) {
-                    log(`Found Scheme ID at position ${index}: ${schemeId}`, 'import');
-                    break;
+              // First prioritize index 6 (column G) where Scheme ID should be
+              if (headers.length > 6 && typedRow[headers[6]]) {
+                schemeIdCell = headers[6];
+                schemeId = String(typedRow[schemeIdCell]).trim();
+                log(`Attempting to get Scheme ID from column G (index 6): "${schemeId}"`, 'import');
+                
+                // Extra verification that this looks like a Scheme ID
+                if (/^[a-z0-9_\-/]+$/i.test(schemeId)) {
+                  log(`Found Scheme ID at column G (index 6): ${schemeId}`, 'import');
+                }
+              }
+              
+              // If still not found, try other nearby positions
+              if (!schemeId) {
+                const possibleIndices = [5, 7]; // Try columns F and H
+                
+                for (const index of possibleIndices) {
+                  if (index < headers.length && typedRow[headers[index]]) {
+                    schemeIdCell = headers[index];
+                    schemeId = String(typedRow[schemeIdCell]).trim();
+                    
+                    // If this looks like a Scheme ID (has alphanumeric characters), use it
+                    if (/^[a-z0-9_\-/]+$/i.test(schemeId)) {
+                      log(`Found Scheme ID at position ${index}: ${schemeId}`, 'import');
+                      break;
+                    }
                   }
                 }
               }
