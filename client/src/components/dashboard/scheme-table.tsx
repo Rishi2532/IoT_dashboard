@@ -73,6 +73,12 @@ export default function SchemeTable({
     setCurrentPage(pageNumber);
   };
   
+  // Helper function to calculate percentage
+  const calcPercentage = (value: number | undefined | null, total: number | undefined | null): number => {
+    if (!value || !total || total === 0) return 0;
+    return Number(((value / total) * 100).toFixed(2));
+  };
+  
   return (
     <Card className="bg-white shadow mb-8">
       <CardHeader className="px-3 py-3 sm:px-4 sm:py-5 lg:px-6 lg:py-6 xl:px-8 xl:py-6 flex flex-col sm:flex-row justify-between items-start space-y-3 sm:space-y-0 sm:space-x-4">
@@ -182,8 +188,7 @@ export default function SchemeTable({
                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                           <div 
                             className="bg-blue-600 h-1.5 rounded-full" 
-                            style={{ width: `${(scheme.total_villages || scheme.total_villages_in_scheme) ? 
-                              Math.round((scheme.fully_completed_villages || 0) / (scheme.total_villages || scheme.total_villages_in_scheme) * 100) : 0}%` }}
+                            style={{ width: `${calcPercentage(scheme.fully_completed_villages, scheme.total_villages || scheme.total_villages_in_scheme)}%` }}
                           ></div>
                         </div>
                       </TableCell>
@@ -196,8 +201,7 @@ export default function SchemeTable({
                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                           <div 
                             className="bg-purple-500 h-1.5 rounded-full" 
-                            style={{ width: `${(scheme.total_esr || scheme.total_esr_in_scheme) ? 
-                              Math.round((scheme.fully_completed_esr || 0) / (scheme.total_esr || scheme.total_esr_in_scheme) * 100) : 0}%` }}
+                            style={{ width: `${calcPercentage(scheme.fully_completed_esr, scheme.total_esr || scheme.total_esr_in_scheme)}%` }}
                           ></div>
                         </div>
                       </TableCell>

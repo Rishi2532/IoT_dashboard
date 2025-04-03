@@ -74,16 +74,17 @@ function mapHeadersToFields(headers) {
     // Component related fields
     flow_meters_connected: [
       'Flow Meters Connected', ' Flow Meters Connected', 'Flow Meters Conneted',
-      'Flow Meter Connected', 'Flow Meters', 'FM Connected'
+      'Flow Meter Connected', 'Flow Meters', 'FM Connected', 'FM Integrated'
     ],
     pressure_transmitters_connected: [
       'Pressure Transmitter Connected', 'Pressure Transmitters Connected',
-      'Pressure Transmitter Conneted', 'PT Connected', 'Pressure Transmitters'
+      'Pressure Transmitter Conneted', 'PT Connected', 'Pressure Transmitters',
+      'PT Integrated'
     ],
     residual_chlorine_connected: [
       'Residual Chlorine Connected', 'Residual Chlorine Analyzer Connected',
       'Residual Chlorine Conneted', 'RCA Connected', 'Residual Chlorine',
-      'Residual Chlorine Analyzers'
+      'Residual Chlorine Analyzers', 'RCA Integrated'
     ],
     
     // Status fields
@@ -112,7 +113,7 @@ function mapHeadersToFields(headers) {
       'Block', 'block', 'BLOCK'
     ],
     sr_no: [
-      'Sr. No.', 'Sr.No.', 'SR NO', 'sr_no'
+      'Sr No.', 'Sr. No.', 'Sr.No.', 'SR NO', 'sr_no'
     ]
   };
   
