@@ -60,9 +60,8 @@ export type Region = typeof regions.$inferSelect;
 
 // SchemeStatus table - using the correct table name "scheme_status" instead of "scheme_statuses"
 export const schemeStatuses = pgTable("scheme_status", {
-  sr_no: serial("sr_no").primaryKey(), // Serial number for row identification
+  scheme_id: text("scheme_id").primaryKey(), // Scheme ID as primary key
   region_name: text("region_name"), // Region
-  scheme_id: text("scheme_id"), // Scheme ID
   scheme_name: text("scheme_name").notNull(), // Scheme Name
   total_villages: integer("total_villages"), // No. of Village
   functional_villages: integer("functional_villages"), // No. of Functional Village
@@ -79,10 +78,9 @@ export const schemeStatuses = pgTable("scheme_status", {
   pressure_transmitters_connected: integer("pressure_transmitters_connected"), // Pressure Transmitter Connected
   residual_chlorine_connected: integer("residual_chlorine_connected"), // Residual Chlorine Connected
   scheme_status: text("scheme_status"), // Scheme Status
-  agency: text("agency"), // Keep agency field from previous schema
 });
 
-export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses).omit({ sr_no: true });
+export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses);
 
 export type InsertSchemeStatus = z.infer<typeof insertSchemeStatusSchema>;
 export type SchemeStatus = typeof schemeStatuses.$inferSelect;

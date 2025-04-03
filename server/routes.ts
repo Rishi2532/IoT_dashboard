@@ -816,7 +816,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
             scheme_id: String(row['Scheme ID'] || '0'),
             scheme_name: String(row['Scheme Name'] || ''),
             region_name: region,
-            agency: row['Agency'] ? String(row['Agency']) : null,
             total_villages_in_scheme: Number(row['Total Villages In Scheme'] || 0),
             total_esr_in_scheme: Number(row['Total ESR In Scheme'] || 0),
             villages_integrated_on_iot: Number(row['Villages Integrated on IoT'] || 0),
@@ -1305,19 +1304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return value;
       };
       
-      // Determine the agency based on region
-      const getAgencyByRegion = (regionName: string): string => {
-        const regionMap: Record<string, string> = {
-          'Amravati': 'MJP Amravati',
-          'Nashik': 'MJP Nashik',
-          'Nagpur': 'MJP Nagpur',
-          'Pune': 'MJP Pune',
-          'Konkan': 'MJP Konkan',
-          'Chhatrapati Sambhajinagar': 'MJP Chhatrapati Sambhajinagar'
-        };
-        
-        return regionMap[regionName] || `MJP ${regionName}`;
-      };
+      // We've removed the agency mapping as it's no longer needed
       
       let totalUpdated = 0;
       let totalCreated = 0;
@@ -1391,7 +1378,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Look for data rows (skip header rows)
         let hasFoundDataRows = false;
-        const agency = getAgencyByRegion(regionName);
         
         for (const row of data) {
           try {
@@ -1506,10 +1492,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Now we've found a valid data row
             hasFoundDataRows = true;
             
-            // Create record with region and agency
+            // Create record with region
             const record: Record<string, any> = {
               region_name: regionName,
-              agency: agency,
               scheme_id: schemeId
             };
             
@@ -1594,7 +1579,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   scheme_name: record.scheme_name || `Scheme ${schemeId}`, // Default name if missing
                   scheme_id: record.scheme_id,
                   region_name: record.region_name,
-                  agency: record.agency,
                   total_villages: record.total_villages as number | undefined,
                   villages_integrated: record.villages_integrated as number | undefined,
                   fully_completed_villages: record.fully_completed_villages as number | undefined,

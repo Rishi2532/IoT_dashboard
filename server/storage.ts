@@ -282,14 +282,14 @@ export class PostgresStorage implements IStorage {
       .set({
         scheme_name: scheme.scheme_name,
         region_name: scheme.region_name,
-        scheme_id: scheme.scheme_id,
-        agency: scheme.agency,
         total_villages: scheme.total_villages,
         functional_villages: scheme.functional_villages,
         partial_villages: scheme.partial_villages,
         non_functional_villages: scheme.non_functional_villages,
         fully_completed_villages: scheme.fully_completed_villages,
+        villages_integrated: scheme.villages_integrated,
         total_esr: scheme.total_esr,
+        esr_integrated_on_iot: scheme.esr_integrated_on_iot,
         scheme_functional_status: scheme.scheme_functional_status,
         fully_completed_esr: scheme.fully_completed_esr,
         balance_esr: scheme.balance_esr,
@@ -298,7 +298,7 @@ export class PostgresStorage implements IStorage {
         residual_chlorine_connected: scheme.residual_chlorine_connected,
         scheme_status: scheme.scheme_status
       })
-      .where(eq(schemeStatuses.sr_no, scheme.sr_no));
+      .where(eq(schemeStatuses.scheme_id, scheme.scheme_id));
 
     return scheme;
   }
