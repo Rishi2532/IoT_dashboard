@@ -42,7 +42,7 @@ export function getStatusDisplayName(status: SchemeCompletionStatus): string {
     case 'Not-Connected':
       return 'Not Connected';
     case 'Partial':
-      return 'Partial';
+      return 'In Progress';
     default:
       return cleanStatus;
   }

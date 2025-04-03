@@ -23,11 +23,6 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
     scheme.total_villages_in_scheme
   );
 
-  const esrRequestReceivedPercent = calculatePercentage(
-    scheme.esr_request_received,
-    scheme.total_esr
-  );
-
   const esrIntegratedPercent = calculatePercentage(
     scheme.esr_integrated_on_iot,
     scheme.total_esr
@@ -126,23 +121,6 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
             <div className="bg-white p-2 rounded-lg shadow-sm border border-neutral-200">
               <h4 className="text-xs font-medium text-neutral-700 mb-1">ESR Integration</h4>
               <div className="bg-neutral-50 rounded-lg p-2">
-                {/* ESR requests */}
-                <div className="flex justify-between mb-1">
-                  <span className="text-xs text-neutral-500">ESR requests received</span>
-                  <span className="text-xs font-semibold text-neutral-700">
-                    {scheme.esr_request_received || 0} / {scheme.total_esr || 0}
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-purple-500 h-2 rounded-full" 
-                    style={{ width: `${esrRequestReceivedPercent}%` }}
-                  ></div>
-                </div>
-                <div className="text-xs text-right text-purple-700">
-                  {esrRequestReceivedPercent}%
-                </div>
-                
                 {/* ESR integrated */}
                 <div className="flex justify-between mb-1 mt-2">
                   <span className="text-xs text-neutral-500">ESR integrated</span>
@@ -202,7 +180,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                     </span>
                   ) : (scheme.flow_meters_connected || 0) > 0 ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-yellow-100 text-yellow-800">
-                      Partial
+                      In Progress
                     </span>
                   ) : (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-red-100 text-red-800">
@@ -223,7 +201,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                     </span>
                   ) : (scheme.pressure_transmitters_connected || 0) > 0 ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-yellow-100 text-yellow-800">
-                      Partial
+                      In Progress
                     </span>
                   ) : (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-red-100 text-red-800">
@@ -244,7 +222,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                     </span>
                   ) : (scheme.residual_chlorine_connected || 0) > 0 ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-yellow-100 text-yellow-800">
-                      Partial
+                      In Progress
                     </span>
                   ) : (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-red-100 text-red-800">

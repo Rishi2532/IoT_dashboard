@@ -9,11 +9,12 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, FileSpreadsheet, Info, Upload } from 'lucide-react';
+import { AlertCircle, CheckCircle, FileSpreadsheet, Info, Loader2, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { validateExcelFile } from '@/lib/excel-validator';
 
 export default function SchemeImporter() {
   const { toast } = useToast();
@@ -70,6 +71,9 @@ export default function SchemeImporter() {
     }
   };
 
+  const [validating, setValidating] = useState(false);
+  const [validationDetails, setValidationDetails] = useState<any>(null);
+
   const handleUpload = async () => {
     if (!file) {
       toast({
@@ -90,8 +94,42 @@ export default function SchemeImporter() {
       });
       return;
     }
-    
-    await importMutation.mutate(file);
+
+    // Validate Excel structure before uploading
+    try {
+      setValidating(true);
+      setValidationDetails(null);
+      
+      // Read the file as ArrayBuffer
+      const fileBuffer = await file.arrayBuffer();
+      
+      // Validate the Excel file structure
+      const validationResult = await validateExcelFile(fileBuffer);
+      setValidationDetails(validationResult);
+      
+      if (!validationResult.isValid) {
+        setUploadError(validationResult.message);
+        toast({
+          title: 'Invalid Excel File',
+          description: validationResult.message,
+          variant: 'destructive',
+        });
+        setValidating(false);
+        return;
+      }
+      
+      // Continue with upload if validation passes
+      setValidating(false);
+      await importMutation.mutate(file);
+    } catch (error) {
+      setValidating(false);
+      setUploadError(`Error validating Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      toast({
+        title: 'Validation Error',
+        description: `Could not validate Excel file: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -112,15 +150,15 @@ export default function SchemeImporter() {
           <AlertDescription className="text-blue-700">
             <p className="mb-2">The Excel file should contain the following:</p>
             <ul className="list-disc pl-5 text-sm space-y-1">
-              <li>6 sheets with region names (Amravati, Nashik, Nagpur, Pune, Konkan, and CS for Chhatrapati Sambhajinagar)</li>
-              <li>Must contain <strong>Scheme Id</strong> column for identifying schemes</li>
-              <li>Required data columns:
+              <li>Multiple sheets with region names (Amravati, Nashik, Nagpur, Pune, Konkan, and CS for Chhatrapati Sambhajinagar)</li>
+              <li>Must contain <strong>Scheme ID</strong> column for identifying schemes</li>
+              <li>Required data columns (one or more of the following):
                 <ul className="list-disc pl-5 mt-1">
                   <li><strong>Total Villages Integrated</strong></li>
                   <li><strong>Fully Completed Villages</strong></li>
                   <li><strong>Total ESR Integrated</strong></li>
                   <li><strong>No. Fully Completed ESR</strong></li>
-                  <li><strong>Flow Meters Connected</strong></li>
+                  <li><strong>Flow Meters Connected</strong> or <strong> Flow Meters Connected</strong> (note the space)</li>
                   <li><strong>Residual Chlorine Analyzer Connected</strong></li>
                   <li><strong>Pressure Transmitter Connected</strong></li>
                   <li><strong>Fully completion Scheme Status</strong> (values will be automatically adjusted: "Partial" → "In Progress")</li>
@@ -157,7 +195,7 @@ export default function SchemeImporter() {
 
           <Button
             onClick={handleUpload}
-            disabled={!file || importMutation.isPending}
+            disabled={!file || importMutation.isPending || validating}
             className="w-full sm:w-auto"
           >
             {importMutation.isPending ? (
@@ -168,6 +206,11 @@ export default function SchemeImporter() {
                 </svg>
                 Uploading...
               </>
+            ) : validating ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Validating Excel...
+              </>
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
@@ -175,6 +218,16 @@ export default function SchemeImporter() {
               </>
             )}
           </Button>
+          
+          {validationDetails && validationDetails.isValid && !uploadSuccess && !uploadError && (
+            <Alert className="bg-green-50 border-green-200">
+              <CheckCircle className="h-4 w-4 text-green-500" />
+              <AlertTitle className="text-green-800">Excel File Validated</AlertTitle>
+              <AlertDescription className="text-green-700 text-sm">
+                {validationDetails.message}
+              </AlertDescription>
+            </Alert>
+          )}
           
           {uploadError && (
             <Alert variant="destructive">
