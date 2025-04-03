@@ -998,8 +998,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           cellStyles: false,      // Don't parse styles
           bookVBA: false,         // Don't parse VBA code
           dateNF: 'yyyy-mm-dd',   // Date format
-          raw: true,              // Raw parsing
-          blankrows: false        // Skip blank rows
+          raw: true               // Raw parsing
         });
         
         // Examine workbook to see important info about the file
@@ -1345,17 +1344,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const range = XLSX.utils.decode_range(sheet['!ref'] || 'A1:A1');
         log(`Sheet range: ${sheet['!ref']}`, 'import');
         
-        // Get column G values specifically (this is where Scheme ID should be according to user)
-        let columnGValues = [];
-        for (let r = range.s.r; r <= range.e.r; r++) {
+        // Get column G values (Scheme ID) and store them directly for later use
+        // We'll use this to bypass the regular JSON conversion which might be causing issues
+        const directColumnGValues = new Map<number, string>();
+        
+        // Loop through all rows and extract column G values directly
+        for (let r = range.s.r; r <= Math.min(range.e.r, range.s.r + 100); r++) {  // Limit to first 100 rows for performance
           const cellAddress = XLSX.utils.encode_cell({r: r, c: 6}); // column G (index 6)
           const cell = sheet[cellAddress];
-          if (cell) {
-            const value = cell.v || '';
-            columnGValues.push(`Row ${r+1}: ${value}`);
+          if (cell && cell.v) {
+            const value = String(cell.v).trim();
+            directColumnGValues.set(r, value);
+            // Log first 10 row values for debugging
+            if (r < range.s.r + 10) {
+              log(`Row ${r+1} (cell ${cellAddress}): Column G (Scheme ID) = "${value}"`, 'import');
+            }
           }
         }
-        log(`Column G (Scheme ID) values: ${columnGValues.slice(0, 5).join(', ')}...`, 'import');
+        
+        // Store scheme ID values directly in the sheet object for later use
+        sheet['__directSchemeIDs'] = directColumnGValues;
         
         // Convert to JSON in a way that preserves position information better
         const data = XLSX.utils.sheet_to_json(sheet, { 
@@ -1451,10 +1459,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
             }
             
+            // Use our direct column G values if available
+            if (!schemeIdCell && sheet['__directSchemeIDs']) {
+              const directSchemeIDs = sheet['__directSchemeIDs'] as Map<number, string>;
+              
+              // Try to find the row index for this data row
+              let rowIndex = -1;
+              
+              // First find which row number this is in the data array
+              const dataIndex = data.indexOf(row);
+              if (dataIndex >= 0) {
+                // Add the sheet's starting row to get the actual row in the spreadsheet
+                rowIndex = range.s.r + dataIndex;
+                log(`Looking up scheme ID for data row ${dataIndex} (Excel row ${rowIndex + 1})`, 'import');
+                
+                // Get scheme ID from our direct mapping
+                if (directSchemeIDs.has(rowIndex)) {
+                  schemeId = directSchemeIDs.get(rowIndex) || '';
+                  schemeIdCell = 'G';  // Mark that we found it in column G
+                  log(`Using direct scheme ID from column G, row ${rowIndex + 1}: "${schemeId}"`, 'import');
+                }
+              }
+            }
+            
             // Last resort: look through all columns for something that looks like a scheme ID
             if (!schemeIdCell) {
               for (const [header, value] of Object.entries(typedRow)) {
-                if (value && typeof value === 'string' || typeof value === 'number') {
+                if (value && (typeof value === 'string' || typeof value === 'number')) {
                   const strValue = String(value).trim();
                   // Check if it looks like a scheme ID pattern
                   if (/^[a-z0-9_\-/]+$/i.test(strValue) && strValue.length > 3 && strValue.length < 30) {
