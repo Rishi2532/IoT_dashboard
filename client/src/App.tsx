@@ -6,6 +6,7 @@ import Reports from "./pages/reports";
 import Settings from "./pages/settings";
 import Admin from "./pages/admin";
 import AdminDashboard from "./pages/admin/dashboard";
+import ImportDataPage from "./pages/import-data";
 import NotFound from "./pages/not-found";
 import LoginPage from "./pages/login";
 import UserLoginPage from "./pages/user-login";
@@ -55,6 +56,12 @@ function App() {
       <Route path="/admin/dashboard">
         <ProtectedRoute>
           <AdminDashboard />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/admin/import-data">
+        <ProtectedRoute>
+          <ImportDataPage />
         </ProtectedRoute>
       </Route>
       

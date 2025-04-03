@@ -15,7 +15,7 @@ import { eq, sql } from "drizzle-orm";
 // Declare global variables for storing updates data
 declare global {
   var todayUpdates: any[];
-  var lastUpdateDay: string;
+  var lastUpdateDay: string | null;
   var prevTotals: {
     villages: number;
     esr: number;
@@ -23,7 +23,7 @@ declare global {
     flowMeters: number;
     rca: number;
     pt: number;
-  };
+  } | null;
 }
 
 // Interface for storage operations
@@ -48,10 +48,10 @@ export interface IStorage {
     statusFilter?: string,
     schemeId?: string,
   ): Promise<SchemeStatus[]>;
-  getSchemeById(schemeId: number): Promise<SchemeStatus | undefined>;
+  getSchemeById(schemeId: string): Promise<SchemeStatus | undefined>;
   createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus>;
   updateScheme(scheme: SchemeStatus): Promise<SchemeStatus>;
-  deleteScheme(schemeId: number): Promise<boolean>;
+  deleteScheme(schemeId: string): Promise<boolean>;
   
   // Updates operations
   getTodayUpdates(): Promise<any[]>;
@@ -260,12 +260,12 @@ export class PostgresStorage implements IStorage {
     return query.orderBy(schemeStatuses.scheme_name);
   }
 
-  async getSchemeById(schemeId: number): Promise<SchemeStatus | undefined> {
+  async getSchemeById(schemeId: string): Promise<SchemeStatus | undefined> {
     const db = await this.ensureInitialized();
     const result = await db
       .select()
       .from(schemeStatuses)
-      .where(eq(schemeStatuses.sr_no, schemeId));
+      .where(eq(schemeStatuses.scheme_id, schemeId));
     return result.length > 0 ? result[0] : undefined;
   }
 
@@ -303,11 +303,11 @@ export class PostgresStorage implements IStorage {
     return scheme;
   }
 
-  async deleteScheme(schemeId: number): Promise<boolean> {
+  async deleteScheme(schemeId: string): Promise<boolean> {
     const db = await this.ensureInitialized();
     const result = await db
       .delete(schemeStatuses)
-      .where(eq(schemeStatuses.sr_no, schemeId));
+      .where(eq(schemeStatuses.scheme_id, schemeId));
     return true;
   }
   

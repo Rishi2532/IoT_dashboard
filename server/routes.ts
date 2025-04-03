@@ -501,13 +501,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const regionData = {
           region_name: region.region_name,
           flow_meter_integrated: regionSchemes.reduce(
-            (sum, scheme) => sum + (scheme.fm_integrated || 0), 0
+            (sum, scheme) => sum + (scheme.flow_meters_connected || 0), 0
           ),
           rca_integrated: regionSchemes.reduce(
-            (sum, scheme) => sum + (scheme.rca_integrated || 0), 0
+            (sum, scheme) => sum + (scheme.residual_chlorine_connected || 0), 0
           ),
           pressure_transmitter_integrated: regionSchemes.reduce(
-            (sum, scheme) => sum + (scheme.pt_integrated || 0), 0
+            (sum, scheme) => sum + (scheme.pressure_transmitters_connected || 0), 0
           )
         };
         
@@ -812,7 +812,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Map Excel columns to database fields
           const schemeData = {
-            scheme_id: Number(row['Scheme ID'] || 0),
+            scheme_id: String(row['Scheme ID'] || '0'),
             scheme_name: String(row['Scheme Name'] || ''),
             region_name: region,
             agency: row['Agency'] ? String(row['Agency']) : null,
@@ -824,10 +824,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             esr_integrated_on_iot: Number(row['ESR Integrated on IoT'] || 0),
             fully_completed_esr: Number(row['Fully Completed ESR'] || 0),
             balance_for_fully_completion: Number(row['Balance For Fully Completion'] || 0),
-            fm_integrated: Number(row['FM Integrated'] || 0),
-            rca_integrated: Number(row['RCA Integrated'] || 0), // RCA is Residual Chlorine Analyzer
-            pt_integrated: Number(row['PT Integrated'] || 0),
-            scheme_completion_status: String(row['Scheme Completion Status'] || 'Not-Connected').trim()
+            flow_meters_connected: Number(row['FM Integrated'] || 0),
+            residual_chlorine_connected: Number(row['RCA Integrated'] || 0), // RCA is Residual Chlorine Analyzer
+            pressure_transmitters_connected: Number(row['PT Integrated'] || 0),
+            scheme_status: String(row['Scheme Completion Status'] || 'Not-Connected').trim()
           };
           
           // Ensure required fields are present
@@ -836,13 +836,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
             continue;
           }
           
-          // Handle potential integer conversion issues
-          if (isNaN(schemeData.scheme_id) || schemeData.scheme_id <= 0) {
+          // Handle potential string ID conversion issues
+          if (!schemeData.scheme_id || schemeData.scheme_id === '0') {
             log(`Warning: Invalid scheme_id for ${schemeData.scheme_name}, generating a new ID...`, 'import');
             // For missing or invalid IDs, we'll need to query an existing one or generate a new one
             const allSchemes = await storage.getAllSchemes();
-            const maxId = allSchemes.reduce((max, scheme) => Math.max(max, scheme.scheme_id), 0);
-            schemeData.scheme_id = maxId + 1;
+            // Find the maximum numeric ID and add 1, then convert back to string
+            const maxId = allSchemes.reduce((max, scheme) => {
+              const id = parseInt(scheme.scheme_id || '0');
+              return isNaN(id) ? max : Math.max(max, id);
+            }, 0);
+            schemeData.scheme_id = String(maxId + 1);
           }
           
           // Check if scheme exists
@@ -850,13 +854,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (existingScheme) {
             // Check if there are any changes in the key metrics to log in today's updates
-            const existingFmCount = existingScheme.fm_integrated ?? 0;
-            const existingRcaCount = existingScheme.rca_integrated ?? 0;
-            const existingPtCount = existingScheme.pt_integrated ?? 0;
+            const existingFmCount = existingScheme.flow_meters_connected ?? 0;
+            const existingRcaCount = existingScheme.residual_chlorine_connected ?? 0;
+            const existingPtCount = existingScheme.pressure_transmitters_connected ?? 0;
             
-            const newFmCount = schemeData.fm_integrated - existingFmCount;
-            const newRcaCount = schemeData.rca_integrated - existingRcaCount;
-            const newPtCount = schemeData.pt_integrated - existingPtCount;
+            const newFmCount = Number(schemeData.flow_meters_connected) - Number(existingFmCount);
+            const newRcaCount = Number(schemeData.residual_chlorine_connected) - Number(existingRcaCount);
+            const newPtCount = Number(schemeData.pressure_transmitters_connected) - Number(existingPtCount);
             
             // Collect all updates in an array
             const schemeUpdates = [];
@@ -963,6 +967,140 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // No AI Image Generation endpoint needed for this project
+
+  // New Excel Import for updated data format
+  app.post("/api/admin/import-excel", requireAdmin, upload.single('excelFile'), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+      
+      const fileBuffer = req.file.buffer;
+      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+      
+      // Column mappings
+      const COLUMN_MAPPINGS = {
+        'Total Villages Integrated': 'villages_integrated_on_iot',
+        'Fully Completed Villages': 'fully_completed_villages',
+        'Total ESR Integrated': 'esr_integrated_on_iot',
+        'No. Fully Completed ESR': 'fully_completed_esr',
+        'Flow Meters Connected': 'flow_meters_connected',
+        'Residual Chlorine Analyzer Connected': 'residual_chlorine_connected',
+        'Pressure Transmitter Connected': 'pressure_transmitters_connected',
+        'Fully completion Scheme Status': 'scheme_status',
+      };
+      
+      // Region name mapping
+      const REGION_SHEET_MAPPING: Record<string, string> = {
+        'Region - Amravati': 'Amravati',
+        'Region - CS': 'Chhatrapati Sambhajinagar',
+        'Region - Konkan': 'Konkan',
+        'Region - Nagpur': 'Nagpur',
+        'Region - Nashik': 'Nashik',
+        'Region - Pune': 'Pune',
+      };
+      
+      let totalUpdated = 0;
+      let schemasProcessed: any[] = [];
+      
+      // Process each sheet with region data
+      for (const sheetName of workbook.SheetNames) {
+        // Skip sheets that don't match our expected region sheets
+        if (!Object.prototype.hasOwnProperty.call(REGION_SHEET_MAPPING, sheetName)) {
+          log(`Skipping sheet: ${sheetName} (not a recognized region sheet)`, 'import');
+          continue;
+        }
+        
+        const regionName = REGION_SHEET_MAPPING[sheetName as keyof typeof REGION_SHEET_MAPPING];
+        log(`Processing sheet: ${sheetName} for region: ${regionName}`, 'import');
+        
+        const sheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(sheet);
+        
+        if (!data || data.length === 0) {
+          log(`No data found in sheet: ${sheetName}`, 'import');
+          continue;
+        }
+        
+        log(`Found ${data.length} rows in ${sheetName}`, 'import');
+        
+        // Process each row in the sheet
+        for (const row of data) {
+          try {
+            // Cast row to the appropriate type
+            const typedRow = row as Record<string, any>;
+            
+            // Find the scheme by scheme_id
+            const schemeId = typedRow['Scheme Id'] || typedRow['Scheme ID'] || typedRow['scheme_id'];
+            if (!schemeId) {
+              log('Row missing scheme ID, skipping:', 'import');
+              continue;
+            }
+            
+            // Prepare the data to update
+            const updateData: Record<string, any> = {
+              region_name: regionName
+            };
+            
+            // Map columns according to the mappings
+            for (const [excelCol, dbCol] of Object.entries(COLUMN_MAPPINGS)) {
+              if (typedRow[excelCol] !== undefined) {
+                // For numeric columns, convert to number
+                if (typeof typedRow[excelCol] === 'string' && !isNaN(parseFloat(typedRow[excelCol]))) {
+                  updateData[dbCol] = parseInt(typedRow[excelCol], 10);
+                } else {
+                  updateData[dbCol] = typedRow[excelCol];
+                }
+              }
+            }
+            
+            // Handle special case for scheme_status
+            if (updateData.scheme_status === 'Partial') {
+              updateData.scheme_status = 'In Progress';
+            }
+            
+            // Skip if no data to update
+            if (Object.keys(updateData).length <= 1) { // Only has region_name
+              log(`No valid data to update for scheme ${schemeId}`, 'import');
+              continue;
+            }
+            
+            // Check if the scheme exists
+            const existingScheme = await storage.getSchemeById(schemeId.toString());
+            
+            if (existingScheme) {
+              // Update existing scheme
+              const updatedScheme = await storage.updateScheme({
+                ...existingScheme,
+                ...updateData
+              });
+              
+              log(`Updated scheme: ${schemeId}`, 'import');
+              totalUpdated++;
+              schemasProcessed.push(schemeId);
+            } else {
+              log(`Scheme with ID ${schemeId} not found, skipping`, 'import');
+            }
+          } catch (rowError) {
+            console.error(`Error processing row:`, row, rowError);
+            // Continue with next row
+          }
+        }
+      }
+      
+      // Update region summaries after import
+      await updateRegionSummaries();
+      
+      res.json({ 
+        message: `Excel data imported successfully. ${totalUpdated} schemes updated across ${schemasProcessed.length} sheets.`,
+        updatedCount: totalUpdated,
+        schemasProcessed
+      });
+    } catch (error) {
+      console.error("Error importing Excel data:", error);
+      res.status(500).json({ message: "Failed to import Excel data" });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
