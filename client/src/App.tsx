@@ -11,6 +11,7 @@ import LoginPage from "./pages/login";
 import UserLoginPage from "./pages/user-login";
 import RegisterPage from "./pages/register";
 import ForgotPasswordPage from "./pages/forgot-password";
+import AiImageGenerator from "./pages/ai-image-generator";
 import ProtectedRoute from "./components/auth/protected-route";
 
 function App() {
@@ -48,6 +49,12 @@ function App() {
       <Route path="/settings">
         <ProtectedRoute>
           <Settings />
+        </ProtectedRoute>
+      </Route>
+      
+      <Route path="/ai-image-generator">
+        <ProtectedRoute>
+          <AiImageGenerator />
         </ProtectedRoute>
       </Route>
       

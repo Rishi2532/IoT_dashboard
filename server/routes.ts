@@ -17,6 +17,7 @@ import * as XLSX from 'xlsx';
 import * as path from 'path';
 import * as fs from 'fs';
 import { log } from './vite';
+import OpenAI from 'openai';
 
 
 
@@ -792,6 +793,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error importing scheme data:", error);
       res.status(500).json({ message: "Failed to import scheme data" });
+    }
+  });
+
+  // Initialize OpenAI client
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
+  // AI Image Generation endpoint
+  app.post("/api/ai/generate-image", requireAuth, async (req, res) => {
+    try {
+      const { prompt, size = "1024x1024", style = "vivid" } = req.body;
+      
+      if (!prompt) {
+        return res.status(400).json({ message: "Prompt is required" });
+      }
+      
+      // Validate size
+      const validSizes = ["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"];
+      if (!validSizes.includes(size)) {
+        return res.status(400).json({ 
+          message: "Invalid size. Must be one of: 256x256, 512x512, 1024x1024, 1792x1024, 1024x1792" 
+        });
+      }
+      
+      // Validate style
+      const validStyles = ["vivid", "natural"];
+      if (!validStyles.includes(style)) {
+        return res.status(400).json({ 
+          message: "Invalid style. Must be one of: vivid, natural" 
+        });
+      }
+      
+      // Call OpenAI API to generate image
+      const response = await openai.images.generate({
+        model: "dall-e-3",
+        prompt,
+        n: 1,
+        size: size as any,
+        style: style as any,
+      });
+      
+      // Return the generated image URL
+      res.json({
+        imageUrl: response.data[0].url,
+        revisedPrompt: response.data[0].revised_prompt
+      });
+    } catch (error) {
+      console.error("Error generating AI image:", error);
+      res.status(500).json({ 
+        message: "Failed to generate AI image", 
+        error: error instanceof Error ? error.message : String(error) 
+      });
     }
   });
 
