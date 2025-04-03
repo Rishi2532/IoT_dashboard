@@ -12,6 +12,20 @@ import {
 import { getDB, initializeDatabase } from "./db";
 import { eq, sql } from "drizzle-orm";
 
+// Declare global variables for storing updates data
+declare global {
+  var todayUpdates: any[];
+  var lastUpdateDay: string;
+  var prevTotals: {
+    villages: number;
+    esr: number;
+    completedSchemes: number;
+    flowMeters: number;
+    rca: number;
+    pt: number;
+  };
+}
+
 // Interface for storage operations
 export interface IStorage {
   // User operations
@@ -289,30 +303,32 @@ export class PostgresStorage implements IStorage {
     return true;
   }
   
-  private static prevTotals: {
-    villages: number;
-    esr: number;
-    completedSchemes: number;
-    flowMeters: number;
-    rca: number;
-    pt: number;
-  } = {
-    villages: 0,
-    esr: 0,
-    completedSchemes: 0,
-    flowMeters: 0,
-    rca: 0,
-    pt: 0
-  };
-  
-  private static lastUpdateTime: Date | null = null;
-  private static todayUpdates: any[] = [];
+  // We're now using global variables instead of static class variables
+  // This makes the data accessible across different instances and module reloads
   
   async getTodayUpdates(): Promise<any[]> {
     const db = await this.ensureInitialized();
     console.log("Fetching today's updates");
     
     try {
+      // Initialize global variable to store today's updates if it doesn't exist
+      if (!(global as any).todayUpdates) {
+        (global as any).todayUpdates = [];
+      }
+      
+      // Check if this is the first time running or if it's a new day
+      const now = new Date();
+      if (!(global as any).lastUpdateDay) {
+        (global as any).lastUpdateDay = now.toISOString().split('T')[0]; // Store just the date part
+      } else {
+        const today = now.toISOString().split('T')[0];
+        if (today !== (global as any).lastUpdateDay) {
+          // It's a new day, reset updates
+          (global as any).todayUpdates = [];
+          (global as any).lastUpdateDay = today;
+        }
+      }
+      
       // Get current regions data
       const regionsData = await db.select().from(regions);
       const allSchemes = await this.getAllSchemes();
@@ -327,103 +343,98 @@ export class PostgresStorage implements IStorage {
         pt: regionsData.reduce((sum: number, region: any) => sum + (region.pressure_transmitter_integrated || 0), 0)
       };
       
-      // Check if this is the first time running or if it's a new day
-      const now = new Date();
-      const isNewDay = !PostgresStorage.lastUpdateTime || 
-                       now.getDate() !== PostgresStorage.lastUpdateTime.getDate() ||
-                       now.getMonth() !== PostgresStorage.lastUpdateTime.getMonth() ||
-                       now.getFullYear() !== PostgresStorage.lastUpdateTime.getFullYear();
-      
-      // If it's a new day or first time running, reset the updates
-      if (isNewDay) {
-        PostgresStorage.todayUpdates = [];
-        PostgresStorage.prevTotals = { ...currentTotals };
+      // Store previous totals
+      if (!(global as any).prevTotals) {
+        (global as any).prevTotals = { ...currentTotals };
       }
       
       // Calculate differences since last check
       const updates: any[] = [];
       
       // Check for NEW village updates since last check
-      const newVillages = currentTotals.villages - PostgresStorage.prevTotals.villages;
+      const newVillages = currentTotals.villages - (global as any).prevTotals.villages;
       if (newVillages > 0) {
         updates.push({ 
           type: 'village', 
           count: newVillages,
-          status: 'new' 
+          status: 'new',
+          timestamp: new Date().toISOString()
         });
       }
       
       // Check for NEW ESR updates since last check
-      const newESR = currentTotals.esr - PostgresStorage.prevTotals.esr;
+      const newESR = currentTotals.esr - (global as any).prevTotals.esr;
       if (newESR > 0) {
         updates.push({ 
           type: 'esr', 
           count: newESR,
-          status: 'new' 
+          status: 'new',
+          timestamp: new Date().toISOString()
         });
       }
       
       // Check for NEW completed schemes since last check
-      const newCompletedSchemes = currentTotals.completedSchemes - PostgresStorage.prevTotals.completedSchemes;
+      const newCompletedSchemes = currentTotals.completedSchemes - (global as any).prevTotals.completedSchemes;
       if (newCompletedSchemes > 0) {
         updates.push({
           type: 'scheme',
           count: newCompletedSchemes,
-          status: 'completed'
+          status: 'completed',
+          timestamp: new Date().toISOString()
         });
       }
       
       // Check for NEW flow meters since last check
-      const newFlowMeters = currentTotals.flowMeters - PostgresStorage.prevTotals.flowMeters;
+      const newFlowMeters = currentTotals.flowMeters - (global as any).prevTotals.flowMeters;
       if (newFlowMeters > 0) {
         updates.push({
           type: 'flow_meter',
           count: newFlowMeters,
-          status: 'new'
+          status: 'new',
+          timestamp: new Date().toISOString()
         });
       }
       
       // Check for NEW RCAs since last check
-      const newRCA = currentTotals.rca - PostgresStorage.prevTotals.rca;
+      const newRCA = currentTotals.rca - (global as any).prevTotals.rca;
       if (newRCA > 0) {
         updates.push({
           type: 'rca',
           count: newRCA,
-          status: 'new'
+          status: 'new',
+          timestamp: new Date().toISOString()
         });
       }
       
       // Check for NEW pressure transmitters since last check
-      const newPT = currentTotals.pt - PostgresStorage.prevTotals.pt;
+      const newPT = currentTotals.pt - (global as any).prevTotals.pt;
       if (newPT > 0) {
         updates.push({
           type: 'pressure_transmitter',
           count: newPT,
-          status: 'new'
+          status: 'new',
+          timestamp: new Date().toISOString()
         });
       }
       
-      // Update previous totals and last update time
-      PostgresStorage.prevTotals = { ...currentTotals };
-      PostgresStorage.lastUpdateTime = now;
+      // Update previous totals
+      (global as any).prevTotals = { ...currentTotals };
       
       // Add new updates to today's updates
       if (updates.length > 0) {
         // Enrich updates with region info for better display
         const enrichedUpdates = updates.map(update => {
-          // For demonstration, we'll just add the dynamic region info
-          // In a production app, you'd probably want to get the real region
           return {
             ...update,
             region: "All Regions" // Default to all regions for system-generated updates
           };
         });
         
-        PostgresStorage.todayUpdates = [...enrichedUpdates, ...PostgresStorage.todayUpdates];
+        (global as any).todayUpdates = [...enrichedUpdates, ...(global as any).todayUpdates];
       }
       
       // Return updates for today
-      return PostgresStorage.todayUpdates;
+      return (global as any).todayUpdates;
     } catch (error) {
       console.error("Error fetching today's updates:", error);
       throw error;

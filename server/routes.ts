@@ -638,31 +638,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const newEsrCount = regionData.total_esr_integrated - existingEsrCount;
             const newVillageCount = regionData.total_villages_integrated - existingVillageCount;
             
+            // Collect all updates in an array
+            const newUpdates = [];
+            
             // Add to today's updates if there are new additions
             if (newEsrCount > 0) {
               console.log(`Adding ${newEsrCount} new ESRs to today's updates for ${regionData.region_name}`);
-              const updatesObj = {
+              newUpdates.push({
                 type: 'esr',
                 count: newEsrCount,
                 status: 'new',
-                region: regionData.region_name
-              };
-              // Get today's updates to add the new updates
-              const todayUpdates = await storage.getTodayUpdates();
-              todayUpdates.unshift(updatesObj);
+                region: regionData.region_name,
+                timestamp: new Date().toISOString()
+              });
             }
             
             if (newVillageCount > 0) {
               console.log(`Adding ${newVillageCount} new villages to today's updates for ${regionData.region_name}`);
-              const updatesObj = {
+              newUpdates.push({
                 type: 'village',
                 count: newVillageCount,
                 status: 'new',
-                region: regionData.region_name
-              };
-              // Get today's updates to add the new updates
-              const todayUpdates = await storage.getTodayUpdates();
-              todayUpdates.unshift(updatesObj);
+                region: regionData.region_name,
+                timestamp: new Date().toISOString()
+              });
             }
             
             // Track flow meter updates if there are any changes
@@ -673,43 +672,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Add to today's updates if there are new flow meter additions
             if (newFlowMeters > 0) {
               console.log(`Adding ${newFlowMeters} new flow meters to today's updates for ${regionData.region_name}`);
-              const updatesObj = {
+              newUpdates.push({
                 type: 'flow_meter',
                 count: newFlowMeters,
                 status: 'new',
-                region: regionData.region_name
-              };
-              // Get today's updates to add the new updates
-              const todayUpdates = await storage.getTodayUpdates();
-              todayUpdates.unshift(updatesObj);
+                region: regionData.region_name,
+                timestamp: new Date().toISOString()
+              });
             }
             
             // Add to today's updates if there are new RCA additions
             if (newRcas > 0) {
               console.log(`Adding ${newRcas} new RCAs to today's updates for ${regionData.region_name}`);
-              const updatesObj = {
+              newUpdates.push({
                 type: 'rca',
                 count: newRcas,
                 status: 'new',
-                region: regionData.region_name
-              };
-              // Get today's updates to add the new updates
-              const todayUpdates = await storage.getTodayUpdates();
-              todayUpdates.unshift(updatesObj);
+                region: regionData.region_name,
+                timestamp: new Date().toISOString()
+              });
             }
             
             // Add to today's updates if there are new pressure transmitter additions
             if (newPts > 0) {
               console.log(`Adding ${newPts} new pressure transmitters to today's updates for ${regionData.region_name}`);
-              const updatesObj = {
+              newUpdates.push({
                 type: 'pressure_transmitter',
                 count: newPts,
                 status: 'new',
-                region: regionData.region_name
-              };
-              // Get today's updates to add the new updates
-              const todayUpdates = await storage.getTodayUpdates();
-              todayUpdates.unshift(updatesObj);
+                region: regionData.region_name,
+                timestamp: new Date().toISOString()
+              });
+            }
+            
+            // Add all updates to the global updates array in one go
+            if (newUpdates.length > 0) {
+              // Initialize global.todayUpdates if it doesn't exist
+              if (!(global as any).todayUpdates) {
+                (global as any).todayUpdates = [];
+              }
+              
+              // Add all new updates at the beginning of the existing updates
+              (global as any).todayUpdates = [...newUpdates, ...(global as any).todayUpdates];
+              
+              console.log(`Added ${newUpdates.length} updates to today's updates for ${regionData.region_name}`);
             }
             
             // Update existing region, using the new flow meter values from Excel
@@ -851,43 +857,58 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const newRcaCount = schemeData.rca_integrated - existingRcaCount;
             const newPtCount = schemeData.pt_integrated - existingPtCount;
             
+            // Collect all updates in an array
+            const schemeUpdates = [];
+            
             // Track new flow meter additions
             if (newFmCount > 0) {
               console.log(`Adding ${newFmCount} new Flow Meters to today's updates for ${schemeData.scheme_name}`);
-              const todayUpdates = await storage.getTodayUpdates();
-              todayUpdates.unshift({
+              schemeUpdates.push({
                 type: 'flow_meter',
                 count: newFmCount,
                 status: 'new',
                 region: schemeData.region_name,
-                scheme: schemeData.scheme_name
+                scheme: schemeData.scheme_name,
+                timestamp: new Date().toISOString()
               });
             }
             
             // Track new RCA additions
             if (newRcaCount > 0) {
               console.log(`Adding ${newRcaCount} new RCAs to today's updates for ${schemeData.scheme_name}`);
-              const todayUpdates = await storage.getTodayUpdates();
-              todayUpdates.unshift({
+              schemeUpdates.push({
                 type: 'rca',
                 count: newRcaCount,
                 status: 'new',
                 region: schemeData.region_name,
-                scheme: schemeData.scheme_name
+                scheme: schemeData.scheme_name,
+                timestamp: new Date().toISOString()
               });
             }
             
             // Track new Pressure Transmitter additions
             if (newPtCount > 0) {
               console.log(`Adding ${newPtCount} new Pressure Transmitters to today's updates for ${schemeData.scheme_name}`);
-              const todayUpdates = await storage.getTodayUpdates();
-              todayUpdates.unshift({
+              schemeUpdates.push({
                 type: 'pressure_transmitter',
                 count: newPtCount,
                 status: 'new',
                 region: schemeData.region_name,
-                scheme: schemeData.scheme_name
+                scheme: schemeData.scheme_name,
+                timestamp: new Date().toISOString()
               });
+            }
+            
+            // Add all updates to global storage
+            if (schemeUpdates.length > 0) {
+              // Initialize global todayUpdates if needed
+              if (!(global as any).todayUpdates) {
+                (global as any).todayUpdates = [];
+              }
+              
+              // Add new updates at the beginning
+              (global as any).todayUpdates = [...schemeUpdates, ...(global as any).todayUpdates];
+              console.log(`Added ${schemeUpdates.length} updates for scheme ${schemeData.scheme_name}`);
             }
             
             // Update existing scheme
@@ -904,13 +925,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             await storage.createScheme(schemeData);
             
             // Add the new scheme to today's updates
-            const todayUpdates = await storage.getTodayUpdates();
-            todayUpdates.unshift({
+            if (!(global as any).todayUpdates) {
+              (global as any).todayUpdates = [];
+            }
+            
+            // Add new scheme update at the beginning
+            (global as any).todayUpdates.unshift({
               type: 'scheme',
               count: 1,
               status: 'new',
               region: schemeData.region_name,
-              scheme: schemeData.scheme_name
+              scheme: schemeData.scheme_name,
+              timestamp: new Date().toISOString()
             });
             
             updatedCount++;
