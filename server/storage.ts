@@ -42,10 +42,11 @@ export interface IStorage {
   updateRegion(region: Region): Promise<Region>;
 
   // Scheme operations
-  getAllSchemes(statusFilter?: string): Promise<SchemeStatus[]>;
+  getAllSchemes(statusFilter?: string, schemeId?: string): Promise<SchemeStatus[]>;
   getSchemesByRegion(
     regionName: string,
     statusFilter?: string,
+    schemeId?: string,
   ): Promise<SchemeStatus[]>;
   getSchemeById(schemeId: number): Promise<SchemeStatus | undefined>;
   createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus>;
@@ -212,46 +213,51 @@ export class PostgresStorage implements IStorage {
   }
 
   // Scheme methods
-  async getAllSchemes(statusFilter?: string): Promise<SchemeStatus[]> {
+  async getAllSchemes(statusFilter?: string, schemeId?: string): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
-
-    if (statusFilter && statusFilter !== "all") {
-      return db
-        .select()
-        .from(schemeStatuses)
-        .where(
-          sql`${schemeStatuses.scheme_status} = ${statusFilter}`,
-        )
-        .orderBy(schemeStatuses.region_name, schemeStatuses.scheme_name);
+    
+    // Start with the basic query
+    let query = db.select().from(schemeStatuses);
+    
+    // Apply scheme_id filter if provided
+    if (schemeId) {
+      query = query.where(eq(schemeStatuses.scheme_id, schemeId));
     }
-
-    return db
-      .select()
-      .from(schemeStatuses)
-      .orderBy(schemeStatuses.region_name, schemeStatuses.scheme_name);
+    
+    // Apply status filter if provided and scheme_id was already applied
+    if (statusFilter && statusFilter !== "all" && schemeId) {
+      query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+    } 
+    // Apply just the status filter if it's the only one
+    else if (statusFilter && statusFilter !== "all") {
+      query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+    }
+    
+    return query.orderBy(schemeStatuses.region_name, schemeStatuses.scheme_name);
   }
 
   async getSchemesByRegion(
     regionName: string,
     statusFilter?: string,
+    schemeId?: string
   ): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
-
-    if (statusFilter && statusFilter !== "all") {
-      return db
-        .select()
-        .from(schemeStatuses)
-        .where(
-          sql`${schemeStatuses.region_name} = ${regionName} AND ${schemeStatuses.scheme_status} = ${statusFilter}`,
-        )
-        .orderBy(schemeStatuses.scheme_name);
+    
+    // Start with the basic region filter
+    let query = db.select().from(schemeStatuses)
+                 .where(eq(schemeStatuses.region_name, regionName));
+    
+    // Apply scheme_id filter if provided
+    if (schemeId) {
+      query = query.where(eq(schemeStatuses.scheme_id, schemeId));
     }
-
-    return db
-      .select()
-      .from(schemeStatuses)
-      .where(eq(schemeStatuses.region_name, regionName))
-      .orderBy(schemeStatuses.scheme_name);
+    
+    // Apply status filter if provided
+    if (statusFilter && statusFilter !== "all") {
+      query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+    }
+    
+    return query.orderBy(schemeStatuses.scheme_name);
   }
 
   async getSchemeById(schemeId: number): Promise<SchemeStatus | undefined> {

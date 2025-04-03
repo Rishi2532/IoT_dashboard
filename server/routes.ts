@@ -248,20 +248,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get all schemes with optional region and status filters
+  // Get all schemes with optional region, status, and scheme_id filters
   app.get("/api/schemes", async (req, res) => {
     try {
       const regionName = req.query.region as string;
       const status = req.query.status as string;
+      const schemeId = req.query.scheme_id as string;
       
       let schemes;
       
       if (regionName && regionName !== "all") {
-        // Pass the status filter to storage method for database filtering
-        schemes = await storage.getSchemesByRegion(regionName, status);
+        // Pass the filters to storage method for database filtering
+        schemes = await storage.getSchemesByRegion(regionName, status, schemeId);
       } else {
-        // Pass the status filter to storage method for database filtering
-        schemes = await storage.getAllSchemes(status);
+        // Pass the filters to storage method for database filtering
+        schemes = await storage.getAllSchemes(status, schemeId);
       }
       
       res.json(schemes);
