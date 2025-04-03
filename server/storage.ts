@@ -226,11 +226,21 @@ export class PostgresStorage implements IStorage {
     
     // Apply status filter if provided and scheme_id was already applied
     if (statusFilter && statusFilter !== "all" && schemeId) {
-      query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+      // Handle both "Partial" and "In Progress" as the same filter
+      if (statusFilter === "In Progress") {
+        query = query.where(sql`${schemeStatuses.scheme_status} IN ('Partial', 'In Progress')`);
+      } else {
+        query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+      }
     } 
     // Apply just the status filter if it's the only one
     else if (statusFilter && statusFilter !== "all") {
-      query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+      // Handle both "Partial" and "In Progress" as the same filter
+      if (statusFilter === "In Progress") {
+        query = query.where(sql`${schemeStatuses.scheme_status} IN ('Partial', 'In Progress')`);
+      } else {
+        query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+      }
     }
     
     return query.orderBy(schemeStatuses.region_name, schemeStatuses.scheme_name);
@@ -254,7 +264,12 @@ export class PostgresStorage implements IStorage {
     
     // Apply status filter if provided
     if (statusFilter && statusFilter !== "all") {
-      query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+      // Handle both "Partial" and "In Progress" as the same filter
+      if (statusFilter === "In Progress") {
+        query = query.where(sql`${schemeStatuses.scheme_status} IN ('Partial', 'In Progress')`);
+      } else {
+        query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+      }
     }
     
     return query.orderBy(schemeStatuses.scheme_name);

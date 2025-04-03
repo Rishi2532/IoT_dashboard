@@ -134,7 +134,7 @@ export default function Dashboard() {
           "Total ESR": scheme.total_esr_in_scheme,
           "ESR Integrated": scheme.esr_integrated_on_iot,
           "ESR Completed": scheme.fully_completed_esr,
-          Status: scheme.scheme_completion_status,
+          Status: scheme.scheme_status || scheme.scheme_completion_status || 'Not-Connected',
         })),
       );
 

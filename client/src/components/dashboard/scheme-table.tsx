@@ -121,7 +121,7 @@ export default function SchemeTable({
             <SelectContent className="text-xs sm:text-sm lg:text-base">
               <SelectItem value="all">All Status</SelectItem>
               <SelectItem value="Fully-Completed">Fully Completed</SelectItem>
-              <SelectItem value="Partial">Partial</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
               <SelectItem value="Not-Connected">Not Connected</SelectItem>
             </SelectContent>
           </Select>
@@ -200,8 +200,8 @@ export default function SchemeTable({
                         </div>
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
-                        <span className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${getStatusColorClass(scheme.scheme_completion_status as SchemeCompletionStatus)}`}>
-                          {getStatusDisplayName(scheme.scheme_completion_status as SchemeCompletionStatus)}
+                        <span className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${getStatusColorClass((scheme.scheme_status || scheme.scheme_completion_status || 'Not-Connected') as SchemeCompletionStatus)}`}>
+                          {getStatusDisplayName((scheme.scheme_status || scheme.scheme_completion_status || 'Not-Connected') as SchemeCompletionStatus)}
                         </span>
                       </TableCell>
                       <TableCell className="text-center p-1 sm:p-3 lg:p-4 xl:p-5 border-b border-gray-100">
