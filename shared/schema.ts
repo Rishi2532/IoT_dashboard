@@ -60,7 +60,7 @@ export type Region = typeof regions.$inferSelect;
 
 // SchemeStatus table - using the correct table name "scheme_status" instead of "scheme_statuses"
 export const schemeStatuses = pgTable("scheme_status", {
-  scheme_id: integer("scheme_id").primaryKey(), // Changed from serial to integer to support importing scheme IDs
+  scheme_id: serial("scheme_id").primaryKey(), // Changed back to serial to use auto-incrementing IDs
   scheme_name: text("scheme_name").notNull(),
   region_name: text("region_name"),
   agency: text("agency"), // Added back the agency field
@@ -78,7 +78,7 @@ export const schemeStatuses = pgTable("scheme_status", {
   scheme_completion_status: text("scheme_completion_status"),
 });
 
-export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses);
+export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses).omit({ scheme_id: true });
 
 export type InsertSchemeStatus = z.infer<typeof insertSchemeStatusSchema>;
 export type SchemeStatus = typeof schemeStatuses.$inferSelect;
