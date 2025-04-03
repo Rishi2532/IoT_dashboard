@@ -60,25 +60,27 @@ export type Region = typeof regions.$inferSelect;
 
 // SchemeStatus table - using the correct table name "scheme_status" instead of "scheme_statuses"
 export const schemeStatuses = pgTable("scheme_status", {
-  scheme_id: serial("scheme_id").primaryKey(), // Changed back to serial to use auto-incrementing IDs
-  scheme_name: text("scheme_name").notNull(),
-  region_name: text("region_name"),
-  agency: text("agency"), // Added back the agency field
-  total_villages_in_scheme: integer("total_villages_in_scheme"),
-  total_esr_in_scheme: integer("total_esr_in_scheme"),
-  villages_integrated_on_iot: integer("villages_integrated_on_iot"),
-  fully_completed_villages: integer("fully_completed_villages"), // This field now stores "Functional Villages" data
-  esr_request_received: integer("esr_request_received"),
-  esr_integrated_on_iot: integer("esr_integrated_on_iot"),
-  fully_completed_esr: integer("fully_completed_esr"),
-  balance_for_fully_completion: integer("balance_for_fully_completion"),
-  fm_integrated: integer("fm_integrated"),
-  rca_integrated: integer("rca_integrated"), // Residual Chlorine Analyzer
-  pt_integrated: integer("pt_integrated"),
-  scheme_completion_status: text("scheme_completion_status"),
+  sr_no: serial("sr_no").primaryKey(), // Serial number for row identification
+  region_name: text("region_name"), // Region
+  scheme_id: text("scheme_id"), // Scheme ID
+  scheme_name: text("scheme_name").notNull(), // Scheme Name
+  total_villages: integer("total_villages"), // No. of Village
+  functional_villages: integer("functional_villages"), // No. of Functional Village
+  partial_villages: integer("partial_villages"), // No. of Partial Village
+  non_functional_villages: integer("non_functional_villages"), // No. of Non-Functional Village
+  fully_completed_villages: integer("fully_completed_villages"), // Fully completed Villages
+  total_esr: integer("total_esr"), // Total Number of ESR
+  scheme_functional_status: text("scheme_functional_status"), // Scheme Functional Status
+  fully_completed_esr: integer("fully_completed_esr"), // No. Fully Completed ESR
+  balance_esr: integer("balance_esr"), // Balance to Complete ESR
+  flow_meters_connected: integer("flow_meters_connected"), // Flow Meters Connected
+  pressure_transmitters_connected: integer("pressure_transmitters_connected"), // Pressure Transmitter Connected
+  residual_chlorine_connected: integer("residual_chlorine_connected"), // Residual Chlorine Connected
+  scheme_status: text("scheme_status"), // Scheme Status
+  agency: text("agency"), // Keep agency field from previous schema
 });
 
-export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses).omit({ scheme_id: true });
+export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses).omit({ sr_no: true });
 
 export type InsertSchemeStatus = z.infer<typeof insertSchemeStatusSchema>;
 export type SchemeStatus = typeof schemeStatuses.$inferSelect;

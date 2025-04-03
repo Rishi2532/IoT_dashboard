@@ -163,22 +163,24 @@ export async function initializeDatabase() {
       );
 
       CREATE TABLE IF NOT EXISTS "scheme_status" (
-        "scheme_id" SERIAL PRIMARY KEY,
-        "scheme_name" TEXT NOT NULL,
+        "sr_no" SERIAL PRIMARY KEY,
         "region_name" TEXT,
-        "agency" TEXT,
-        "total_villages_in_scheme" INTEGER,
-        "total_esr_in_scheme" INTEGER,
-        "villages_integrated_on_iot" INTEGER,
+        "scheme_id" TEXT, 
+        "scheme_name" TEXT NOT NULL,
+        "total_villages" INTEGER,
+        "functional_villages" INTEGER,
+        "partial_villages" INTEGER,
+        "non_functional_villages" INTEGER,
         "fully_completed_villages" INTEGER,
-        "esr_request_received" INTEGER,
-        "esr_integrated_on_iot" INTEGER,
+        "total_esr" INTEGER,
+        "scheme_functional_status" TEXT,
         "fully_completed_esr" INTEGER,
-        "balance_for_fully_completion" INTEGER,
-        "fm_integrated" INTEGER,
-        "rca_integrated" INTEGER,
-        "pt_integrated" INTEGER,
-        "scheme_completion_status" TEXT
+        "balance_esr" INTEGER,
+        "flow_meters_connected" INTEGER,
+        "pressure_transmitters_connected" INTEGER,
+        "residual_chlorine_connected" INTEGER,
+        "scheme_status" TEXT,
+        "agency" TEXT
       );
 
       CREATE TABLE IF NOT EXISTS "users" (
@@ -219,8 +221,8 @@ export async function initializeDatabase() {
       console.log("Default admin user created successfully");
     }
 
-    // Only insert data if there are no regions
-    if (regionsCount === 0) {
+    // Skip sample data insertion for schema update
+    if (false && regionsCount === 0) {
       console.log("Initializing database with sample data...");
 
       // Insert region data
@@ -305,24 +307,26 @@ export async function initializeDatabase() {
         },
       ]);
 
-      // Insert scheme data for Nashik (21 schemes)
+      // Insert scheme data for Nashik (21 schemes) - Updated with new schema
       await db.insert(schemeStatuses).values([
         {
-          scheme_name: "Retro. Bargaonpimpri & 6 VRWSS Tal Sinnar",
           region_name: "Nashik",
-          agency: "M/S Ceinsys",
-          total_villages_in_scheme: 7,
-          total_esr_in_scheme: 16,
-          villages_integrated_on_iot: 5,
+          scheme_id: "NS-001",
+          scheme_name: "Retro. Bargaonpimpri & 6 VRWSS Tal Sinnar",
+          total_villages: 7,
+          functional_villages: 5,
+          partial_villages: 2,
+          non_functional_villages: 0,
           fully_completed_villages: 0,
-          esr_request_received: 16,
-          esr_integrated_on_iot: 11,
+          total_esr: 16,
+          scheme_functional_status: "Functional",
           fully_completed_esr: 0,
-          balance_for_fully_completion: 16,
-          fm_integrated: 7,
-          rca_integrated: 11,
-          pt_integrated: 0,
-          scheme_completion_status: "Partial",
+          balance_esr: 16,
+          flow_meters_connected: 7,
+          residual_chlorine_connected: 11,
+          pressure_transmitters_connected: 0,
+          scheme_status: "Partial",
+          agency: "M/S Ceinsys",
         },
         {
           scheme_name: "Nirhale-Fatehpur and 5 villages, Tal. Sinnar",

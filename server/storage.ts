@@ -220,7 +220,7 @@ export class PostgresStorage implements IStorage {
         .select()
         .from(schemeStatuses)
         .where(
-          sql`${schemeStatuses.scheme_completion_status} = ${statusFilter}`,
+          sql`${schemeStatuses.scheme_status} = ${statusFilter}`,
         )
         .orderBy(schemeStatuses.region_name, schemeStatuses.scheme_name);
     }
@@ -242,7 +242,7 @@ export class PostgresStorage implements IStorage {
         .select()
         .from(schemeStatuses)
         .where(
-          sql`${schemeStatuses.region_name} = ${regionName} AND ${schemeStatuses.scheme_completion_status} = ${statusFilter}`,
+          sql`${schemeStatuses.region_name} = ${regionName} AND ${schemeStatuses.scheme_status} = ${statusFilter}`,
         )
         .orderBy(schemeStatuses.scheme_name);
     }
@@ -259,7 +259,7 @@ export class PostgresStorage implements IStorage {
     const result = await db
       .select()
       .from(schemeStatuses)
-      .where(eq(schemeStatuses.scheme_id, schemeId));
+      .where(eq(schemeStatuses.sr_no, schemeId));
     return result.length > 0 ? result[0] : undefined;
   }
 
@@ -276,21 +276,23 @@ export class PostgresStorage implements IStorage {
       .set({
         scheme_name: scheme.scheme_name,
         region_name: scheme.region_name,
-        // agency property has been removed from the schema
-        total_villages_in_scheme: scheme.total_villages_in_scheme,
-        total_esr_in_scheme: scheme.total_esr_in_scheme,
-        villages_integrated_on_iot: scheme.villages_integrated_on_iot,
+        scheme_id: scheme.scheme_id,
+        agency: scheme.agency,
+        total_villages: scheme.total_villages,
+        functional_villages: scheme.functional_villages,
+        partial_villages: scheme.partial_villages,
+        non_functional_villages: scheme.non_functional_villages,
         fully_completed_villages: scheme.fully_completed_villages,
-        esr_request_received: scheme.esr_request_received,
-        esr_integrated_on_iot: scheme.esr_integrated_on_iot,
+        total_esr: scheme.total_esr,
+        scheme_functional_status: scheme.scheme_functional_status,
         fully_completed_esr: scheme.fully_completed_esr,
-        balance_for_fully_completion: scheme.balance_for_fully_completion,
-        fm_integrated: scheme.fm_integrated,
-        rca_integrated: scheme.rca_integrated,
-        pt_integrated: scheme.pt_integrated,
-        scheme_completion_status: scheme.scheme_completion_status,
+        balance_esr: scheme.balance_esr,
+        flow_meters_connected: scheme.flow_meters_connected,
+        pressure_transmitters_connected: scheme.pressure_transmitters_connected,
+        residual_chlorine_connected: scheme.residual_chlorine_connected,
+        scheme_status: scheme.scheme_status
       })
-      .where(eq(schemeStatuses.scheme_id, scheme.scheme_id));
+      .where(eq(schemeStatuses.sr_no, scheme.sr_no));
 
     return scheme;
   }
@@ -299,7 +301,7 @@ export class PostgresStorage implements IStorage {
     const db = await this.ensureInitialized();
     const result = await db
       .delete(schemeStatuses)
-      .where(eq(schemeStatuses.scheme_id, schemeId));
+      .where(eq(schemeStatuses.sr_no, schemeId));
     return true;
   }
   
@@ -337,7 +339,7 @@ export class PostgresStorage implements IStorage {
       const currentTotals = {
         villages: regionsData.reduce((sum: number, region: any) => sum + (region.total_villages_integrated || 0), 0),
         esr: regionsData.reduce((sum: number, region: any) => sum + (region.total_esr_integrated || 0), 0),
-        completedSchemes: allSchemes.filter(scheme => scheme.scheme_completion_status === 'Fully-Completed').length,
+        completedSchemes: allSchemes.filter(scheme => scheme.scheme_status === 'Fully-Completed').length,
         flowMeters: regionsData.reduce((sum: number, region: any) => sum + (region.flow_meter_integrated || 0), 0),
         rca: regionsData.reduce((sum: number, region: any) => sum + (region.rca_integrated || 0), 0),
         pt: regionsData.reduce((sum: number, region: any) => sum + (region.pressure_transmitter_integrated || 0), 0)
