@@ -11,7 +11,6 @@ import LoginPage from "./pages/login";
 import UserLoginPage from "./pages/user-login";
 import RegisterPage from "./pages/register";
 import ForgotPasswordPage from "./pages/forgot-password";
-import AiImageGenerator from "./pages/ai-image-generator";
 import ProtectedRoute from "./components/auth/protected-route";
 
 function App() {
@@ -52,15 +51,9 @@ function App() {
         </ProtectedRoute>
       </Route>
       
-      <Route path="/ai-image-generator">
-        <ProtectedRoute>
-          <AiImageGenerator />
-        </ProtectedRoute>
-      </Route>
-      
       {/* Admin protected routes */}
       <Route path="/admin/dashboard">
-        <ProtectedRoute requireAdmin={true} redirectTo="/login">
+        <ProtectedRoute>
           <AdminDashboard />
         </ProtectedRoute>
       </Route>

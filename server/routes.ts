@@ -632,7 +632,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const existingRca = existingRegion.rca_integrated ?? 0;
             const existingPt = existingRegion.pressure_transmitter_integrated ?? 0;
             
-            // Update existing region, but keep existing values for flow meters if they exist
+            // Detect if there are new additions to track in today's updates
+            const existingEsrCount = existingRegion.total_esr_integrated ?? 0;
+            const existingVillageCount = existingRegion.total_villages_integrated ?? 0;
+            const newEsrCount = regionData.total_esr_integrated - existingEsrCount;
+            const newVillageCount = regionData.total_villages_integrated - existingVillageCount;
+            
+            // Add to today's updates if there are new additions
+            if (newEsrCount > 0) {
+              console.log(`Adding ${newEsrCount} new ESRs to today's updates for ${regionData.region_name}`);
+              const updatesObj = {
+                type: 'esr',
+                count: newEsrCount,
+                status: 'new',
+                region: regionData.region_name
+              };
+              // Get today's updates to add the new updates
+              const todayUpdates = await storage.getTodayUpdates();
+              todayUpdates.unshift(updatesObj);
+            }
+            
+            if (newVillageCount > 0) {
+              console.log(`Adding ${newVillageCount} new villages to today's updates for ${regionData.region_name}`);
+              const updatesObj = {
+                type: 'village',
+                count: newVillageCount,
+                status: 'new',
+                region: regionData.region_name
+              };
+              // Get today's updates to add the new updates
+              const todayUpdates = await storage.getTodayUpdates();
+              todayUpdates.unshift(updatesObj);
+            }
+            
+            // Update existing region, preserving the flow meter values
             const updatedRegion = {
               ...existingRegion,
               total_esr_integrated: regionData.total_esr_integrated,
@@ -642,10 +675,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               fully_completed_villages: regionData.fully_completed_villages,
               total_schemes_integrated: regionData.total_schemes_integrated,
               fully_completed_schemes: regionData.fully_completed_schemes,
-              // Use existing flow meter values if they exist and are not 0, otherwise use stored values
-              flow_meter_integrated: existingFlowMeter > 0 ? existingFlowMeter : regionData.flow_meter_integrated,
-              rca_integrated: existingRca > 0 ? existingRca : regionData.rca_integrated,
-              pressure_transmitter_integrated: existingPt > 0 ? existingPt : regionData.pressure_transmitter_integrated
+              // Use the existing flow meter values from the database
+              flow_meter_integrated: existingRegion.flow_meter_integrated,
+              rca_integrated: existingRegion.rca_integrated,
+              pressure_transmitter_integrated: existingRegion.pressure_transmitter_integrated
             };
             
             await storage.updateRegion(updatedRegion);
@@ -762,6 +795,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const existingScheme = await storage.getSchemeById(schemeData.scheme_id);
           
           if (existingScheme) {
+            // Check if there are any changes in the key metrics to log in today's updates
+            const existingFmCount = existingScheme.fm_integrated ?? 0;
+            const existingRcaCount = existingScheme.rca_integrated ?? 0;
+            const existingPtCount = existingScheme.pt_integrated ?? 0;
+            
+            const newFmCount = schemeData.fm_integrated - existingFmCount;
+            const newRcaCount = schemeData.rca_integrated - existingRcaCount;
+            const newPtCount = schemeData.pt_integrated - existingPtCount;
+            
+            // Track new flow meter additions
+            if (newFmCount > 0) {
+              console.log(`Adding ${newFmCount} new Flow Meters to today's updates for ${schemeData.scheme_name}`);
+              const todayUpdates = await storage.getTodayUpdates();
+              todayUpdates.unshift({
+                type: 'flow_meter',
+                count: newFmCount,
+                status: 'new',
+                region: schemeData.region_name,
+                scheme: schemeData.scheme_name
+              });
+            }
+            
+            // Track new RCA additions
+            if (newRcaCount > 0) {
+              console.log(`Adding ${newRcaCount} new RCAs to today's updates for ${schemeData.scheme_name}`);
+              const todayUpdates = await storage.getTodayUpdates();
+              todayUpdates.unshift({
+                type: 'rca',
+                count: newRcaCount,
+                status: 'new',
+                region: schemeData.region_name,
+                scheme: schemeData.scheme_name
+              });
+            }
+            
+            // Track new Pressure Transmitter additions
+            if (newPtCount > 0) {
+              console.log(`Adding ${newPtCount} new Pressure Transmitters to today's updates for ${schemeData.scheme_name}`);
+              const todayUpdates = await storage.getTodayUpdates();
+              todayUpdates.unshift({
+                type: 'pressure_transmitter',
+                count: newPtCount,
+                status: 'new',
+                region: schemeData.region_name,
+                scheme: schemeData.scheme_name
+              });
+            }
+            
             // Update existing scheme
             const updatedScheme = {
               ...existingScheme,
@@ -772,8 +853,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
             updatedCount++;
             log(`Updated scheme: ${schemeData.scheme_name} (ID: ${schemeData.scheme_id})`, 'import');
           } else {
-            // Create new scheme
+            // Create new scheme and log it as a new addition
             await storage.createScheme(schemeData);
+            
+            // Add the new scheme to today's updates
+            const todayUpdates = await storage.getTodayUpdates();
+            todayUpdates.unshift({
+              type: 'scheme',
+              count: 1,
+              status: 'new',
+              region: schemeData.region_name,
+              scheme: schemeData.scheme_name
+            });
+            
             updatedCount++;
             log(`Created new scheme: ${schemeData.scheme_name} (ID: ${schemeData.scheme_id})`, 'import');
           }

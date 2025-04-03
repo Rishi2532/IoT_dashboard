@@ -409,7 +409,17 @@ export class PostgresStorage implements IStorage {
       
       // Add new updates to today's updates
       if (updates.length > 0) {
-        PostgresStorage.todayUpdates = [...updates, ...PostgresStorage.todayUpdates];
+        // Enrich updates with region info for better display
+        const enrichedUpdates = updates.map(update => {
+          // For demonstration, we'll just add the dynamic region info
+          // In a production app, you'd probably want to get the real region
+          return {
+            ...update,
+            region: "All Regions" // Default to all regions for system-generated updates
+          };
+        });
+        
+        PostgresStorage.todayUpdates = [...enrichedUpdates, ...PostgresStorage.todayUpdates];
       }
       
       // Return updates for today

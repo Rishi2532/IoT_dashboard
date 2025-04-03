@@ -11,6 +11,8 @@ interface DailyUpdateItem {
   count: number;
   name?: string; // Only for completed items that have a name
   status: 'new' | 'completed';
+  region?: string; // Region name for the update
+  scheme?: string; // Scheme name for component updates (flow meters, RCA, etc.)
 }
 
 interface DailyUpdatesProps {
@@ -69,41 +71,43 @@ export default function DailyUpdates({ isLoading }: DailyUpdatesProps) {
   // Helper function to format the update text
   const formatUpdateText = (item: DailyUpdateItem) => {
     const countText = formatNumber(item.count);
+    const regionInfo = item.region ? ` in ${item.region}` : '';
+    const schemeInfo = item.scheme ? ` for ${item.scheme}` : '';
     
     if (item.status === 'new') {
       switch (item.type) {
         case 'village':
-          return `${countText} new ${item.count === 1 ? 'village' : 'villages'} added`;
+          return `${countText} new ${item.count === 1 ? 'village' : 'villages'} added${regionInfo}`;
         case 'esr':
-          return `${countText} new ${item.count === 1 ? 'ESR' : 'ESRs'} added`;
+          return `${countText} new ${item.count === 1 ? 'ESR' : 'ESRs'} added${regionInfo}`;
         case 'scheme':
-          return `${countText} new ${item.count === 1 ? 'scheme' : 'schemes'} added`;
+          return `${countText} new ${item.count === 1 ? 'scheme' : 'schemes'} added${regionInfo}`;
         case 'flow_meter':
-          return `${countText} new flow ${item.count === 1 ? 'meter' : 'meters'} added`;
+          return `${countText} new flow ${item.count === 1 ? 'meter' : 'meters'} added${schemeInfo}${regionInfo}`;
         case 'rca':
-          return `${countText} new chlorine ${item.count === 1 ? 'analyzer' : 'analyzers'} added`;
+          return `${countText} new chlorine ${item.count === 1 ? 'analyzer' : 'analyzers'} added${schemeInfo}${regionInfo}`;
         case 'pressure_transmitter':
-          return `${countText} new pressure ${item.count === 1 ? 'transmitter' : 'transmitters'} added`;
+          return `${countText} new pressure ${item.count === 1 ? 'transmitter' : 'transmitters'} added${schemeInfo}${regionInfo}`;
         default:
-          return `${countText} new ${item.type} added`;
+          return `${countText} new ${item.type} added${regionInfo}`;
       }
     } else {
       // For completed items
       switch (item.type) {
         case 'village':
           return item.name 
-            ? `Village "${item.name}" fully completed` 
-            : `${countText} ${item.count === 1 ? 'village' : 'villages'} fully completed`;
+            ? `Village "${item.name}" fully completed${regionInfo}` 
+            : `${countText} ${item.count === 1 ? 'village' : 'villages'} fully completed${regionInfo}`;
         case 'esr':
           return item.name 
-            ? `ESR "${item.name}" fully completed` 
-            : `${countText} ${item.count === 1 ? 'ESR' : 'ESRs'} fully completed`;
+            ? `ESR "${item.name}" fully completed${regionInfo}` 
+            : `${countText} ${item.count === 1 ? 'ESR' : 'ESRs'} fully completed${regionInfo}`;
         case 'scheme':
           return item.name 
-            ? `Scheme "${item.name}" fully completed` 
-            : `${countText} ${item.count === 1 ? 'scheme' : 'schemes'} fully completed`;
+            ? `Scheme "${item.name}" fully completed${regionInfo}` 
+            : `${countText} ${item.count === 1 ? 'scheme' : 'schemes'} fully completed${regionInfo}`;
         default:
-          return `${countText} ${item.type} ${item.count === 1 ? 'is' : 'are'} now operational`;
+          return `${countText} ${item.type} ${item.count === 1 ? 'is' : 'are'} now operational${schemeInfo}${regionInfo}`;
       }
     }
   };

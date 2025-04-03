@@ -1,17 +1,17 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Home, GitBranchPlus, MapPin, BarChart2, Settings, ShieldCheck, Menu, X, Image } from "lucide-react";
+import { Home, GitBranchPlus, MapPin, BarChart2, Settings, ShieldCheck, Menu, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useQuery } from "@tanstack/react-query";
 
 const navigationItems = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Schemes", href: "/schemes", icon: GitBranchPlus },
   { name: "Regions", href: "/regions", icon: MapPin },
   { name: "Reports", href: "/reports", icon: BarChart2 },
-  { name: "AI Image Generator", href: "/ai-image-generator", icon: Image },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
