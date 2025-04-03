@@ -90,8 +90,8 @@ export default function UserLoginPage() {
         description: 'You are now logged in',
       });
       setLoginError(null);
-      // Redirect to dashboard
-      window.location.href = '/dashboard';
+      // Redirect to schemes page
+      window.location.href = '/schemes';
     },
     onError: (error: Error) => {
       setLoginError(error.message);
@@ -125,7 +125,7 @@ export default function UserLoginPage() {
             </div>
             <CardTitle className="text-2xl font-bold text-center text-blue-700">User Login</CardTitle>
             <CardDescription className="text-center text-blue-600">
-              Enter your credentials to access the dashboard
+              Enter your credentials to access the water infrastructure portal
             </CardDescription>
           </CardHeader>
           <CardContent className="pt-6">
@@ -189,7 +189,7 @@ export default function UserLoginPage() {
                   ) : (
                     <div className="flex items-center justify-center">
                       <LogIn className="mr-2 h-5 w-5" />
-                      Login to Dashboard
+                      Login to System
                     </div>
                   )}
                 </Button>

@@ -17,7 +17,7 @@ import * as XLSX from 'xlsx';
 import * as path from 'path';
 import * as fs from 'fs';
 import { log } from './vite';
-import OpenAI from 'openai';
+
 
 
 
@@ -612,10 +612,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             fully_completed_villages: Number(row['Fully Completed Villages'] || 0),
             total_schemes_integrated: Number(row['Total Schemes Integrated'] || 0),
             fully_completed_schemes: Number(row['Fully Completed Schemes'] || 0),
-            // Use the stored flow meter values instead of potentially 0 values from Excel
-            flow_meter_integrated: storedValues ? storedValues.flow_meter_integrated : Number(row['Flow Meter Integrated'] || 0),
-            rca_integrated: storedValues ? storedValues.rca_integrated : Number(row['RCA Integrated'] || 0),
-            pressure_transmitter_integrated: storedValues ? storedValues.pressure_transmitter_integrated : Number(row['Pressure Transmitter Integrated'] || 0)
+            // Get flow meter values from Excel or use stored values as fallback
+            flow_meter_integrated: Number(row['Flow Meter Integrated']) || (storedValues ? storedValues.flow_meter_integrated : 0),
+            rca_integrated: Number(row['RCA Integrated']) || (storedValues ? storedValues.rca_integrated : 0),
+            pressure_transmitter_integrated: Number(row['Pressure Transmitter Integrated']) || (storedValues ? storedValues.pressure_transmitter_integrated : 0)
           };
           
           if (!regionData.region_name) {
@@ -665,7 +665,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
               todayUpdates.unshift(updatesObj);
             }
             
-            // Update existing region, preserving the flow meter values
+            // Track flow meter updates if there are any changes
+            const newFlowMeters = regionData.flow_meter_integrated - existingFlowMeter;
+            const newRcas = regionData.rca_integrated - existingRca;
+            const newPts = regionData.pressure_transmitter_integrated - existingPt;
+            
+            // Add to today's updates if there are new flow meter additions
+            if (newFlowMeters > 0) {
+              console.log(`Adding ${newFlowMeters} new flow meters to today's updates for ${regionData.region_name}`);
+              const updatesObj = {
+                type: 'flow_meter',
+                count: newFlowMeters,
+                status: 'new',
+                region: regionData.region_name
+              };
+              // Get today's updates to add the new updates
+              const todayUpdates = await storage.getTodayUpdates();
+              todayUpdates.unshift(updatesObj);
+            }
+            
+            // Add to today's updates if there are new RCA additions
+            if (newRcas > 0) {
+              console.log(`Adding ${newRcas} new RCAs to today's updates for ${regionData.region_name}`);
+              const updatesObj = {
+                type: 'rca',
+                count: newRcas,
+                status: 'new',
+                region: regionData.region_name
+              };
+              // Get today's updates to add the new updates
+              const todayUpdates = await storage.getTodayUpdates();
+              todayUpdates.unshift(updatesObj);
+            }
+            
+            // Add to today's updates if there are new pressure transmitter additions
+            if (newPts > 0) {
+              console.log(`Adding ${newPts} new pressure transmitters to today's updates for ${regionData.region_name}`);
+              const updatesObj = {
+                type: 'pressure_transmitter',
+                count: newPts,
+                status: 'new',
+                region: regionData.region_name
+              };
+              // Get today's updates to add the new updates
+              const todayUpdates = await storage.getTodayUpdates();
+              todayUpdates.unshift(updatesObj);
+            }
+            
+            // Update existing region, using the new flow meter values from Excel
             const updatedRegion = {
               ...existingRegion,
               total_esr_integrated: regionData.total_esr_integrated,
@@ -675,10 +722,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
               fully_completed_villages: regionData.fully_completed_villages,
               total_schemes_integrated: regionData.total_schemes_integrated,
               fully_completed_schemes: regionData.fully_completed_schemes,
-              // Use the existing flow meter values from the database
-              flow_meter_integrated: existingRegion.flow_meter_integrated,
-              rca_integrated: existingRegion.rca_integrated,
-              pressure_transmitter_integrated: existingRegion.pressure_transmitter_integrated
+              // Use the new flow meter values from Excel
+              flow_meter_integrated: regionData.flow_meter_integrated,
+              rca_integrated: regionData.rca_integrated,
+              pressure_transmitter_integrated: regionData.pressure_transmitter_integrated
             };
             
             await storage.updateRegion(updatedRegion);
@@ -888,58 +935,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Initialize OpenAI client
-  const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
-  });
-
-  // AI Image Generation endpoint
-  app.post("/api/ai/generate-image", requireAuth, async (req, res) => {
-    try {
-      const { prompt, size = "1024x1024", style = "vivid" } = req.body;
-      
-      if (!prompt) {
-        return res.status(400).json({ message: "Prompt is required" });
-      }
-      
-      // Validate size
-      const validSizes = ["256x256", "512x512", "1024x1024", "1792x1024", "1024x1792"];
-      if (!validSizes.includes(size)) {
-        return res.status(400).json({ 
-          message: "Invalid size. Must be one of: 256x256, 512x512, 1024x1024, 1792x1024, 1024x1792" 
-        });
-      }
-      
-      // Validate style
-      const validStyles = ["vivid", "natural"];
-      if (!validStyles.includes(style)) {
-        return res.status(400).json({ 
-          message: "Invalid style. Must be one of: vivid, natural" 
-        });
-      }
-      
-      // Call OpenAI API to generate image
-      const response = await openai.images.generate({
-        model: "dall-e-3",
-        prompt,
-        n: 1,
-        size: size as any,
-        style: style as any,
-      });
-      
-      // Return the generated image URL
-      res.json({
-        imageUrl: response.data[0].url,
-        revisedPrompt: response.data[0].revised_prompt
-      });
-    } catch (error) {
-      console.error("Error generating AI image:", error);
-      res.status(500).json({ 
-        message: "Failed to generate AI image", 
-        error: error instanceof Error ? error.message : String(error) 
-      });
-    }
-  });
+  // No AI Image Generation endpoint needed for this project
 
   const httpServer = createServer(app);
   return httpServer;

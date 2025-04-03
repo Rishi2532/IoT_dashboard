@@ -97,7 +97,7 @@ export default function LoginPage() {
       if (data.isAdmin) {
         setLocation('/admin/dashboard');
       } else {
-        setLocation('/dashboard');
+        setLocation('/schemes');
       }
     },
     onError: (error: Error) => {
