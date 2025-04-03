@@ -16,12 +16,18 @@ export interface Region {
 
 // Define scheme status types
 export interface SchemeStatus {
+  sr_no?: number | null;
   scheme_id: string;
   scheme_name: string;
   region_name: string;
+  circle?: string | null;
+  division?: string | null;
+  sub_division?: string | null;
+  block?: string | null;
   
   // Villages data
   total_villages: number | null;
+  villages_integrated: number | null;
   functional_villages: number | null;
   partial_villages: number | null;
   non_functional_villages: number | null;
@@ -31,10 +37,10 @@ export interface SchemeStatus {
   
   // ESR data
   total_esr: number | null;
-  esr_request_received?: number | null; // For backwards compatibility
   esr_integrated_on_iot: number | null;
   fully_completed_esr: number | null;
   balance_esr: number | null;
+  esr_request_received?: number | null; // For backwards compatibility
   total_esr_in_scheme?: number | null; // For backwards compatibility
   balance_for_fully_completion?: number | null; // For backwards compatibility
   
@@ -42,9 +48,6 @@ export interface SchemeStatus {
   flow_meters_connected: number | null;
   pressure_transmitters_connected: number | null;
   residual_chlorine_connected: number | null;
-  
-  // Computed total for backwards compatibility
-  villages_integrated: number | null;
   
   // Legacy component data for backwards compatibility
   fm_integrated?: number | null;

@@ -58,26 +58,31 @@ export const insertRegionSchema = createInsertSchema(regions)
 export type InsertRegion = z.infer<typeof insertRegionSchema>;
 export type Region = typeof regions.$inferSelect;
 
-// SchemeStatus table - using the correct table name "scheme_status" instead of "scheme_statuses"
+// SchemeStatus table - with updated structure as per requirements
 export const schemeStatuses = pgTable("scheme_status", {
+  sr_no: integer("sr_no"), // Serial number
   scheme_id: text("scheme_id").primaryKey(), // Scheme ID as primary key
-  region_name: text("region_name"), // Region
+  region_name: text("region_name"), // Region name
+  circle: text("circle"), // Circle
+  division: text("division"), // Division
+  sub_division: text("sub_division"), // Sub Division
+  block: text("block"), // Block
   scheme_name: text("scheme_name").notNull(), // Scheme Name
-  total_villages: integer("total_villages"), // No. of Village
+  total_villages: integer("total_villages"), // Number of village
+  villages_integrated: integer("villages_integrated"), // Total Villages Integrated
   functional_villages: integer("functional_villages"), // No. of Functional Village
   partial_villages: integer("partial_villages"), // No. of Partial Village
   non_functional_villages: integer("non_functional_villages"), // No. of Non-Functional Village
   fully_completed_villages: integer("fully_completed_villages"), // Fully completed Villages
-  villages_integrated: integer("villages_integrated"), // Total Villages Integrated
   total_esr: integer("total_esr"), // Total Number of ESR
-  esr_integrated_on_iot: integer("esr_integrated_on_iot"), // Total ESR Integrated on IoT
   scheme_functional_status: text("scheme_functional_status"), // Scheme Functional Status
+  esr_integrated_on_iot: integer("esr_integrated_on_iot"), // Total ESR Integrated on IoT
   fully_completed_esr: integer("fully_completed_esr"), // No. Fully Completed ESR
   balance_esr: integer("balance_esr"), // Balance to Complete ESR
   flow_meters_connected: integer("flow_meters_connected"), // Flow Meters Connected
   pressure_transmitters_connected: integer("pressure_transmitters_connected"), // Pressure Transmitter Connected
-  residual_chlorine_connected: integer("residual_chlorine_connected"), // Residual Chlorine Connected
-  scheme_status: text("scheme_status"), // Scheme Status
+  residual_chlorine_connected: integer("residual_chlorine_connected"), // Residual Chlorine Analyzer Connected
+  scheme_status: text("scheme_status"), // Scheme Status (Fully Completion Scheme Status)
 });
 
 export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses);

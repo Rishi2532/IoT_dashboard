@@ -95,9 +95,24 @@ function mapHeadersToFields(headers) {
       'Scheme Functional Status', 'Functional Status'
     ],
     
-    // Region identification
+    // Region and location identification
     region_name: [
-      'Region', 'RegionName', 'Region Name'
+      'Region', 'RegionName', 'Region Name', 'region'
+    ],
+    circle: [
+      'Circle', 'circle', 'CIRCLE'
+    ],
+    division: [
+      'Division', 'division', 'DIVISION'
+    ],
+    sub_division: [
+      'Sub Division', 'sub_division', 'SUB DIVISION', 'SubDivision'
+    ],
+    block: [
+      'Block', 'block', 'BLOCK'
+    ],
+    sr_no: [
+      'Sr. No.', 'Sr.No.', 'SR NO', 'sr_no'
     ]
   };
   
@@ -147,6 +162,9 @@ function extractValue(row, field, mapping) {
   // Handle data type conversions
   if (field === 'scheme_id') {
     return String(value || '').trim();
+  } else if (field === 'sr_no') {
+    // Convert to number, but allow null if not provided
+    return value ? Number(value) : null;
   } else if ([
     'total_villages',
     'fully_completed_villages',
@@ -364,9 +382,14 @@ async function processExcelFile(filePath) {
         try {
           // Extract values for the scheme using our mapping
           const schemeData = {
+            sr_no: extractValue(row, 'sr_no', columnMapping),
             scheme_id: extractValue(row, 'scheme_id', columnMapping),
             scheme_name: extractValue(row, 'scheme_name', columnMapping),
             region_name: regionName,
+            circle: extractValue(row, 'circle', columnMapping),
+            division: extractValue(row, 'division', columnMapping),
+            sub_division: extractValue(row, 'sub_division', columnMapping),
+            block: extractValue(row, 'block', columnMapping),
             total_villages: extractValue(row, 'total_villages', columnMapping),
             functional_villages: extractValue(row, 'fully_completed_villages', columnMapping), // Function villages maps to fully completed
             partial_villages: extractValue(row, 'partial_villages', columnMapping),
@@ -420,27 +443,37 @@ async function processExcelFile(filePath) {
             // Update existing scheme
             await pool.query(`
               UPDATE scheme_status SET
-                scheme_name = $1,
-                region_name = $2,
-                total_villages = $3,
-                functional_villages = $4,
-                partial_villages = $5,
-                non_functional_villages = $6,
-                villages_integrated = $7,
-                fully_completed_villages = $8,
-                total_esr = $9,
-                esr_integrated_on_iot = $10,
-                scheme_functional_status = $11,
-                fully_completed_esr = $12,
-                balance_esr = $13,
-                flow_meters_connected = $14,
-                pressure_transmitters_connected = $15,
-                residual_chlorine_connected = $16,
-                scheme_status = $17
-              WHERE scheme_id = $18
+                sr_no = $1,
+                scheme_name = $2,
+                region_name = $3,
+                circle = $4,
+                division = $5,
+                sub_division = $6,
+                block = $7,
+                total_villages = $8,
+                functional_villages = $9,
+                partial_villages = $10,
+                non_functional_villages = $11,
+                villages_integrated = $12,
+                fully_completed_villages = $13,
+                total_esr = $14,
+                esr_integrated_on_iot = $15,
+                scheme_functional_status = $16,
+                fully_completed_esr = $17,
+                balance_esr = $18,
+                flow_meters_connected = $19,
+                pressure_transmitters_connected = $20,
+                residual_chlorine_connected = $21,
+                scheme_status = $22
+              WHERE scheme_id = $23
             `, [
+              schemeData.sr_no,
               schemeData.scheme_name,
               schemeData.region_name,
+              schemeData.circle,
+              schemeData.division,
+              schemeData.sub_division,
+              schemeData.block,
               schemeData.total_villages,
               schemeData.functional_villages,
               schemeData.partial_villages,
@@ -465,9 +498,14 @@ async function processExcelFile(filePath) {
             // Create new scheme
             await pool.query(`
               INSERT INTO scheme_status (
+                sr_no,
                 scheme_id,
                 scheme_name,
                 region_name,
+                circle,
+                division,
+                sub_division,
+                block,
                 total_villages,
                 functional_villages,
                 partial_villages,
@@ -483,11 +521,16 @@ async function processExcelFile(filePath) {
                 pressure_transmitters_connected,
                 residual_chlorine_connected,
                 scheme_status
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
             `, [
+              schemeData.sr_no,
               schemeData.scheme_id,
               schemeData.scheme_name,
               schemeData.region_name,
+              schemeData.circle,
+              schemeData.division,
+              schemeData.sub_division,
+              schemeData.block,
               schemeData.total_villages,
               schemeData.functional_villages,
               schemeData.partial_villages,
@@ -626,5 +669,11 @@ async function main() {
   }
 }
 
-// Run the main function
-main();
+// Export functions for testing
+export { processExcelFile, updateRegionSummaries };
+
+// Check if this file is being run directly
+if (import.meta.url === `file://${process.argv[1]}`) {
+  // Run the main function
+  main();
+}

@@ -177,12 +177,13 @@ export default function SchemeTable({
                         <div className="flex items-center justify-center">
                           <span className="font-medium">{scheme.fully_completed_villages || 0}</span>
                           <span className="text-neutral-400 mx-1">/</span>
-                          <span>{scheme.total_villages_in_scheme || 0}</span>
+                          <span>{scheme.total_villages || scheme.total_villages_in_scheme || 0}</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                           <div 
                             className="bg-blue-600 h-1.5 rounded-full" 
-                            style={{ width: `${scheme.total_villages_in_scheme ? Math.round((scheme.fully_completed_villages || 0) / scheme.total_villages_in_scheme * 100) : 0}%` }}
+                            style={{ width: `${(scheme.total_villages || scheme.total_villages_in_scheme) ? 
+                              Math.round((scheme.fully_completed_villages || 0) / (scheme.total_villages || scheme.total_villages_in_scheme) * 100) : 0}%` }}
                           ></div>
                         </div>
                       </TableCell>
@@ -190,12 +191,13 @@ export default function SchemeTable({
                         <div className="flex items-center justify-center">
                           <span className="font-medium">{scheme.fully_completed_esr || 0}</span>
                           <span className="text-neutral-400 mx-1">/</span>
-                          <span className="text-purple-600 font-medium">{scheme.total_esr_in_scheme || 0}</span>
+                          <span className="text-purple-600 font-medium">{scheme.total_esr || scheme.total_esr_in_scheme || 0}</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1">
                           <div 
                             className="bg-purple-500 h-1.5 rounded-full" 
-                            style={{ width: `${scheme.total_esr_in_scheme ? Math.round((scheme.fully_completed_esr || 0) / scheme.total_esr_in_scheme * 100) : 0}%` }}
+                            style={{ width: `${(scheme.total_esr || scheme.total_esr_in_scheme) ? 
+                              Math.round((scheme.fully_completed_esr || 0) / (scheme.total_esr || scheme.total_esr_in_scheme) * 100) : 0}%` }}
                           ></div>
                         </div>
                       </TableCell>

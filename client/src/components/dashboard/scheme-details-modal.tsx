@@ -13,24 +13,30 @@ interface SchemeDetailsModalProps {
 export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDetailsModalProps) {
   if (!scheme) return null;
 
+  // Handle both old and new field names for backward compatibility
+  const totalVillages = scheme.total_villages || scheme.total_villages_in_scheme || 0;
+  const villagesIntegrated = scheme.villages_integrated || scheme.villages_integrated_on_iot || 0;
+  const totalEsr = scheme.total_esr || 0;
+  const esrIntegrated = scheme.esr_integrated_on_iot || 0;
+
   const villagesIntegratedPercent = calculatePercentage(
-    scheme.villages_integrated_on_iot,
-    scheme.total_villages_in_scheme
+    villagesIntegrated,
+    totalVillages
   );
 
   const fullyCompletedVillagesPercent = calculatePercentage(
     scheme.fully_completed_villages,
-    scheme.total_villages_in_scheme
+    totalVillages
   );
 
   const esrIntegratedPercent = calculatePercentage(
-    scheme.esr_integrated_on_iot,
-    scheme.total_esr
+    esrIntegrated,
+    totalEsr
   );
 
   const fullyCompletedEsrPercent = calculatePercentage(
     scheme.fully_completed_esr,
-    scheme.total_esr
+    totalEsr
   );
 
   return (
@@ -51,14 +57,14 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
           {/* Scheme Info */}
           <div className="bg-white p-3 rounded-lg shadow-sm border border-neutral-200 mb-3">
             <h4 className="text-xs font-medium text-neutral-700 mb-2">Scheme Information</h4>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-5">
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Scheme ID</h4>
                 <p className="text-xs text-neutral-900 bg-gray-100 rounded px-2 py-1 mt-1 inline-block font-mono">{scheme.scheme_id || 'N/A'}</p>
               </div>
               <div>
-                <h4 className="text-xs font-medium text-neutral-500">Region</h4>
-                <p className="text-xs text-neutral-900">{scheme.region_name || 'N/A'}</p>
+                <h4 className="text-xs font-medium text-neutral-500">Sr. No.</h4>
+                <p className="text-xs text-neutral-900">{scheme.sr_no || 'N/A'}</p>
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Agency</h4>
@@ -66,11 +72,67 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Total Villages</h4>
-                <p className="text-xs text-neutral-900">{scheme.total_villages_in_scheme || 0}</p>
+                <p className="text-xs text-neutral-900">{scheme.total_villages || scheme.total_villages_in_scheme || 0}</p>
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Total ESR</h4>
                 <p className="text-xs text-neutral-900">{scheme.total_esr || 0}</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Location Info */}
+          <div className="bg-white p-3 rounded-lg shadow-sm border border-neutral-200 mb-3">
+            <h4 className="text-xs font-medium text-neutral-700 mb-2">Location Information</h4>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Region</h4>
+                <p className="text-xs text-neutral-900">{scheme.region_name || 'N/A'}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Circle</h4>
+                <p className="text-xs text-neutral-900">{scheme.circle || 'N/A'}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Division</h4>
+                <p className="text-xs text-neutral-900">{scheme.division || 'N/A'}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Sub Division</h4>
+                <p className="text-xs text-neutral-900">{scheme.sub_division || 'N/A'}</p>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Block</h4>
+                <p className="text-xs text-neutral-900">{scheme.block || 'N/A'}</p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Status Info */}
+          <div className="bg-white p-3 rounded-lg shadow-sm border border-neutral-200 mb-3">
+            <h4 className="text-xs font-medium text-neutral-700 mb-2">Status Information</h4>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-2">
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Integration Status</h4>
+                <p className="mt-1">
+                  <span className={`px-2 py-1 inline-flex items-center justify-center text-xs font-medium rounded-md ${getStatusColorClass((scheme.scheme_status || 'Not-Connected') as SchemeCompletionStatus)}`}>
+                    {getStatusDisplayName((scheme.scheme_status || 'Not-Connected') as SchemeCompletionStatus)}
+                  </span>
+                </p>
+              </div>
+              <div>
+                <h4 className="text-xs font-medium text-neutral-500">Functional Status</h4>
+                <p className="mt-1">
+                  <span className={`px-2 py-1 inline-flex items-center justify-center text-xs font-medium rounded-md ${
+                    scheme.scheme_functional_status === 'Functional' 
+                      ? 'bg-green-100 text-green-800' 
+                      : scheme.scheme_functional_status === 'Partial' || scheme.scheme_functional_status === 'In Progress'
+                        ? 'bg-yellow-100 text-yellow-800' 
+                        : 'bg-red-100 text-red-800'
+                  }`}>
+                    {scheme.scheme_functional_status || 'Unknown'}
+                  </span>
+                </p>
               </div>
             </div>
           </div>
@@ -85,7 +147,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 <div className="flex justify-between mb-1">
                   <span className="text-xs text-neutral-500">Villages integrated</span>
                   <span className="text-xs font-semibold text-neutral-700">
-                    {scheme.villages_integrated_on_iot || 0} / {scheme.total_villages_in_scheme || 0}
+                    {villagesIntegrated} / {totalVillages}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -102,7 +164,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 <div className="flex justify-between mb-1 mt-2">
                   <span className="text-xs text-neutral-500">Fully completed villages</span>
                   <span className="text-xs font-semibold text-neutral-700">
-                    {scheme.fully_completed_villages || 0} / {scheme.total_villages_in_scheme || 0}
+                    {scheme.fully_completed_villages || 0} / {totalVillages}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -125,7 +187,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 <div className="flex justify-between mb-1 mt-2">
                   <span className="text-xs text-neutral-500">ESR integrated</span>
                   <span className="text-xs font-semibold text-neutral-700">
-                    {scheme.esr_integrated_on_iot || 0} / {scheme.total_esr || 0}
+                    {esrIntegrated} / {totalEsr}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -142,7 +204,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 <div className="flex justify-between mb-1 mt-2">
                   <span className="text-xs text-neutral-500">Fully completed ESR</span>
                   <span className="text-xs font-semibold text-neutral-700">
-                    {scheme.fully_completed_esr || 0} / {scheme.total_esr || 0}
+                    {scheme.fully_completed_esr || 0} / {totalEsr}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -171,14 +233,14 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               
               <div className="grid grid-cols-4 border-b border-neutral-200 bg-white">
                 <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">Flow Meter</div>
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.flow_meters_connected || 0}</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.flow_meters_connected || scheme.fm_integrated || 0}</div>
                 <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.total_esr || 0}</div>
                 <div className="py-1 px-2">
-                  {(scheme.flow_meters_connected || 0) === (scheme.total_esr || 0) ? (
+                  {(scheme.flow_meters_connected || scheme.fm_integrated || 0) === (scheme.total_esr || 0) ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-green-100 text-green-800">
                       Complete
                     </span>
-                  ) : (scheme.flow_meters_connected || 0) > 0 ? (
+                  ) : (scheme.flow_meters_connected || scheme.fm_integrated || 0) > 0 ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-yellow-100 text-yellow-800">
                       In Progress
                     </span>
@@ -192,14 +254,14 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               
               <div className="grid grid-cols-4 border-b border-neutral-200 bg-white">
                 <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">Pressure Transmitter</div>
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.pressure_transmitters_connected || 0}</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.pressure_transmitters_connected || scheme.pt_integrated || 0}</div>
                 <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.total_esr || 0}</div>
                 <div className="py-1 px-2">
-                  {(scheme.pressure_transmitters_connected || 0) === (scheme.total_esr || 0) ? (
+                  {(scheme.pressure_transmitters_connected || scheme.pt_integrated || 0) === (scheme.total_esr || 0) ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-green-100 text-green-800">
                       Complete
                     </span>
-                  ) : (scheme.pressure_transmitters_connected || 0) > 0 ? (
+                  ) : (scheme.pressure_transmitters_connected || scheme.pt_integrated || 0) > 0 ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-yellow-100 text-yellow-800">
                       In Progress
                     </span>
@@ -213,14 +275,14 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               
               <div className="grid grid-cols-4 bg-white">
                 <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">Residual Chlorine</div>
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.residual_chlorine_connected || 0}</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.residual_chlorine_connected || scheme.rca_integrated || 0}</div>
                 <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.total_esr || 0}</div>
                 <div className="py-1 px-2">
-                  {(scheme.residual_chlorine_connected || 0) === (scheme.total_esr || 0) ? (
+                  {(scheme.residual_chlorine_connected || scheme.rca_integrated || 0) === (scheme.total_esr || 0) ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-green-100 text-green-800">
                       Complete
                     </span>
-                  ) : (scheme.residual_chlorine_connected || 0) > 0 ? (
+                  ) : (scheme.residual_chlorine_connected || scheme.rca_integrated || 0) > 0 ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-yellow-100 text-yellow-800">
                       In Progress
                     </span>
