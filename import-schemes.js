@@ -19,27 +19,6 @@ const dbConfig = {
   }
 };
 
-// Map region names to their standardized format
-const regionMapping = {
-  'Nagpur': 'Nagpur',
-  'Amravati': 'Amravati',
-  'Nashik': 'Nashik',
-  'Pune': 'Pune',
-  'Konkan': 'Konkan',
-  'CS': 'Chhatrapati Sambhajinagar',
-  'Chhatrapati Sambhajinagar': 'Chhatrapati Sambhajinagar'
-};
-
-// Map region to prefix for scheme_id generation
-const regionPrefixes = {
-  'Nagpur': 'NG',
-  'Amravati': 'AM',
-  'Nashik': 'NS',
-  'Pune': 'PN',
-  'Konkan': 'KK',
-  'Chhatrapati Sambhajinagar': 'CS'
-};
-
 // Read the JSON file
 async function readJsonFile(filePath) {
   try {
@@ -53,74 +32,35 @@ async function readJsonFile(filePath) {
 
 // Map scheme data from JSON to our database schema
 function mapSchemeData(item, region) {
-  // Extract the data using the appropriate keys based on the region
-  let schemeName, totalVillages, functionalVillages, partialVillages;
-  let nonFunctionalVillages, fullyCompletedVillages, totalESR, schemeFunctionalStatus;
-  let fullyCompletedESR, balanceESR, flowMeters, pressureTransmitters, residualChlorine, schemeStatus;
-  let schemeId;
-
-  if (region === 'Nagpur') {
-    // Nagpur has a different structure with direct keys
-    schemeName = item['Scheme Name'] || '';
-    totalVillages = parseInt(item['Number of Village'] || 0);
-    functionalVillages = parseInt(item['No. of Functional Village'] || 0);
-    partialVillages = parseInt(item['No. of Partial Village'] || 0);
-    nonFunctionalVillages = parseInt(item['No. of Non- Functional Village'] || 0);
-    fullyCompletedVillages = parseInt(item['Fully completed Villages'] || 0);
-    totalESR = parseInt(item['Total Number of ESR'] || 0);
-    schemeFunctionalStatus = item['Scheme Functional Status'] || 'Partial';
-    fullyCompletedESR = parseInt(item['No. Fully Completed ESR'] || 0);
-    balanceESR = parseInt(item['Balance to Complete ESR'] || 0);
-    flowMeters = parseInt(item[' Flow Meters Conneted'] || 0);
-    pressureTransmitters = parseInt(item['Pressure Transmitter Conneted'] || 0);
-    residualChlorine = parseInt(item['Residual Chlorine Conneted'] || 0);
-    schemeStatus = item['Fully completion Scheme Status'] || 'In Progress';
-    schemeId = item['Scheme ID'] || '';
-  } else {
-    // Other regions have a column-based structure
-    schemeName = item['Column8'] || '';
-    totalVillages = parseInt(item['Column9'] || 0);
-    functionalVillages = parseInt(item['Column10'] || 0);
-    partialVillages = parseInt(item['Column11'] || 0);
-    nonFunctionalVillages = parseInt(item['Column12'] || 0);
-    fullyCompletedVillages = parseInt(item['Column13'] || 0);
-    totalESR = parseInt(item['Column14'] || 0);
-    schemeFunctionalStatus = item['Column15'] || 'Partial';
-    fullyCompletedESR = parseInt(item['Column16'] || 0);
-    balanceESR = parseInt(item['Column17'] || 0);
-    flowMeters = parseInt(item['Column18'] || 0);
-    pressureTransmitters = parseInt(item['Column19'] || 0);
-    residualChlorine = parseInt(item['Column20'] || 0);
-    schemeStatus = item['Column21'] || 'In Progress';
-    schemeId = item['Column7'] || '';
-  }
-
-  // Determine the appropriate scheme completion status
+  // Determine scheme completion status
   let schemeCompletionStatus = 'Partial';
-  if (schemeStatus === 'Completed' || schemeFunctionalStatus === 'Functional') {
+  if (item.scheme_status === 'Completed' || item.scheme_functional_status === 'Functional') {
     schemeCompletionStatus = 'Fully-Completed';
-  } else if (schemeFunctionalStatus === 'Non-Functional') {
+  } else if (item.scheme_functional_status === 'Non-Functional') {
     schemeCompletionStatus = 'Not-Connected';
   }
 
+  // Create agency value
+  const agency = getAgencyByRegion(item.region);
+
   return {
-    originalSchemeId: schemeId,
-    scheme_name: schemeName,
-    region_name: region,
-    total_villages: totalVillages,
-    functional_villages: functionalVillages,
-    partial_villages: partialVillages,
-    non_functional_villages: nonFunctionalVillages,
-    fully_completed_villages: fullyCompletedVillages,
-    total_esr: totalESR,
-    scheme_functional_status: schemeFunctionalStatus,
-    fully_completed_esr: fullyCompletedESR,
-    balance_esr: balanceESR,
-    flow_meters_connected: flowMeters,
-    pressure_transmitters_connected: pressureTransmitters,
-    residual_chlorine_connected: residualChlorine,
+    scheme_id: String(item.scheme_id),
+    scheme_name: String(item.scheme_name),
+    region_name: item.region,
+    total_villages: item.number_of_village || 0,
+    functional_villages: item.functional_villages || 0,
+    partial_villages: item.partial_villages || 0,
+    non_functional_villages: item.non_functional_villages || 0,
+    fully_completed_villages: item.fully_completed_villages || 0,
+    total_esr: item.total_esr || 0,
+    scheme_functional_status: item.scheme_functional_status || 'Partial',
+    fully_completed_esr: item.fully_completed_esr || 0,
+    balance_esr: item.balance_esr || 0,
+    flow_meters_connected: item.flow_meters_connected || 0,
+    pressure_transmitters_connected: item.pressure_transmitters_connected || 0,
+    residual_chlorine_connected: item.residual_chlorine_connected || 0,
     scheme_status: schemeCompletionStatus,
-    agency: getAgencyByRegion(region)
+    agency: agency
   };
 }
 
@@ -154,191 +94,66 @@ async function schemeExists(schemeId) {
 
 // Import data from JSON to database
 async function importData(data) {
+  if (!data || !data.schemes || !Array.isArray(data.schemes)) {
+    console.error('Invalid data format');
+    return false;
+  }
+
   const pool = new pg.Pool(dbConfig);
   
   try {
-    // Get existing scheme IDs
-    const existingSchemes = await pool.query('SELECT scheme_id, scheme_name, region_name FROM scheme_status');
-    const existingIds = existingSchemes.rows.map(row => row.scheme_id);
-    const existingSchemesMap = {};
+    console.log(`Importing ${data.schemes.length} schemes...`);
     
-    existingSchemes.rows.forEach(scheme => {
-      const key = `${scheme.region_name}:${scheme.scheme_name}`;
-      existingSchemesMap[key] = scheme.scheme_id;
-    });
+    // Clear existing schemes
+    await pool.query('DELETE FROM scheme_status');
+    console.log('Cleared existing schemes from database');
     
-    console.log(`Found ${existingIds.length} existing scheme IDs in database`);
-    
-    // Track scheme IDs per region for new schemes
-    const regionCounters = {};
-    
-    // Process each region
-    for (const regionKey in data) {
-      // Extract region name from the key (e.g., "Region - Nagpur" -> "Nagpur")
-      let regionName = regionKey.replace('Region - ', '').trim();
-      
-      // Normalize region name
-      for (const [key, value] of Object.entries(regionMapping)) {
-        if (regionName.includes(key)) {
-          regionName = value;
-          break;
-        }
-      }
-      
-      console.log(`\nProcessing region: ${regionName}`);
-      
-      // Initialize counter for this region if not exists
-      if (!regionCounters[regionName]) {
-        // Find the highest existing scheme number for this region
-        const regionPrefix = regionPrefixes[regionName] || 'XX';
-        const existingRegionSchemes = existingSchemes.rows
-          .filter(scheme => scheme.scheme_id.startsWith(regionPrefix))
-          .map(scheme => {
-            const match = scheme.scheme_id.match(/-(\d+)$/);
-            return match ? parseInt(match[1], 10) : 0;
-          });
-          
-        regionCounters[regionName] = existingRegionSchemes.length > 0 
-          ? Math.max(...existingRegionSchemes) + 1 
-          : 1;
-      }
-      
-      // Get the region data
-      const regionData = data[regionKey];
-      
-      if (!Array.isArray(regionData) || regionData.length === 0) {
-        console.log(`No data found for region ${regionName}, skipping`);
-        continue;
-      }
-      
-      console.log(`Found ${regionData.length} items in region ${regionName}`);
-      
-      // Skip the header rows (if any)
-      const itemsToProcess = regionData.filter(item => {
-        if (!item) return false;
+    // Import each scheme
+    for (const item of data.schemes) {
+      try {
+        const schemeData = mapSchemeData(item, item.region);
         
-        // Skip header rows
-        if (regionName === 'Nagpur') {
-          return item['Sr No.'] !== 'Sr No.' && item['Sr No.'] !== undefined;
-        } else {
-          return item['Column1'] !== 'Sr No.' && item['Column1'] !== undefined;
-        }
-      });
-      
-      console.log(`Processing ${itemsToProcess.length} schemes for region ${regionName}`);
-      
-      // Process each scheme
-      for (const item of itemsToProcess) {
-        try {
-          // Map the data
-          const schemeData = mapSchemeData(item, regionName);
-          
-          // Skip items without a scheme name
-          if (!schemeData.scheme_name) {
-            console.log("Skipping item without scheme name");
-            continue;
-          }
-          
-          console.log(`Processing scheme: ${schemeData.scheme_name}`);
-          
-          // Check if scheme already exists by name and region
-          const schemeKey = `${regionName}:${schemeData.scheme_name}`;
-          let schemeId = existingSchemesMap[schemeKey];
-          
-          // If scheme doesn't exist, generate a new ID
-          if (!schemeId) {
-            const prefix = regionPrefixes[regionName] || 'XX';
-            schemeId = `${prefix}-${regionCounters[regionName].toString().padStart(3, '0')}`;
-            regionCounters[regionName]++;
-            existingSchemesMap[schemeKey] = schemeId;
-            console.log(`Generated new scheme ID: ${schemeId} for scheme: ${schemeData.scheme_name}`);
-          } else {
-            console.log(`Found existing scheme ID: ${schemeId} for scheme: ${schemeData.scheme_name}`);
-          }
-          
-          // Set the scheme ID
-          schemeData.scheme_id = schemeId;
-          
-          // Check if scheme exists in database
-          const schemeExists = await pool.query('SELECT * FROM scheme_status WHERE scheme_id = $1', [schemeId]);
-          
-          if (schemeExists.rows.length === 0) {
-            // Insert new scheme
-            await pool.query(
-              `INSERT INTO scheme_status (
-                scheme_id, scheme_name, region_name, total_villages, functional_villages,
-                partial_villages, non_functional_villages, fully_completed_villages,
-                total_esr, scheme_functional_status, fully_completed_esr, balance_esr,
-                flow_meters_connected, pressure_transmitters_connected, residual_chlorine_connected,
-                scheme_status, agency
-              ) VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
-              )`,
-              [
-                schemeData.scheme_id, schemeData.scheme_name, schemeData.region_name,
-                schemeData.total_villages, schemeData.functional_villages,
-                schemeData.partial_villages, schemeData.non_functional_villages,
-                schemeData.fully_completed_villages, schemeData.total_esr,
-                schemeData.scheme_functional_status, schemeData.fully_completed_esr,
-                schemeData.balance_esr, schemeData.flow_meters_connected,
-                schemeData.pressure_transmitters_connected, schemeData.residual_chlorine_connected,
-                schemeData.scheme_status, schemeData.agency
-              ]
-            );
-            console.log(`Inserted new scheme: ${schemeData.scheme_name} with ID ${schemeId}`);
-          } else {
-            // Update existing scheme
-            await pool.query(
-              `UPDATE scheme_status SET
-                scheme_name = $1,
-                total_villages = $2,
-                functional_villages = $3,
-                partial_villages = $4,
-                non_functional_villages = $5,
-                fully_completed_villages = $6,
-                total_esr = $7,
-                scheme_functional_status = $8,
-                fully_completed_esr = $9,
-                balance_esr = $10,
-                flow_meters_connected = $11,
-                pressure_transmitters_connected = $12,
-                residual_chlorine_connected = $13,
-                scheme_status = $14,
-                agency = $15
-              WHERE scheme_id = $16`,
-              [
-                schemeData.scheme_name,
-                schemeData.total_villages, schemeData.functional_villages,
-                schemeData.partial_villages, schemeData.non_functional_villages,
-                schemeData.fully_completed_villages, schemeData.total_esr,
-                schemeData.scheme_functional_status, schemeData.fully_completed_esr,
-                schemeData.balance_esr, schemeData.flow_meters_connected,
-                schemeData.pressure_transmitters_connected, schemeData.residual_chlorine_connected,
-                schemeData.scheme_status, schemeData.agency, schemeData.scheme_id
-              ]
-            );
-            console.log(`Updated existing scheme: ${schemeData.scheme_name} with ID ${schemeId}`);
-          }
-        } catch (error) {
-          console.error(`Error processing scheme:`, error);
-        }
+        await pool.query(
+          `INSERT INTO scheme_status (
+            scheme_id, scheme_name, region_name, total_villages, functional_villages,
+            partial_villages, non_functional_villages, fully_completed_villages,
+            total_esr, scheme_functional_status, fully_completed_esr, balance_esr,
+            flow_meters_connected, pressure_transmitters_connected, residual_chlorine_connected,
+            scheme_status, agency
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+          )`,
+          [
+            schemeData.scheme_id, schemeData.scheme_name, schemeData.region_name,
+            schemeData.total_villages, schemeData.functional_villages,
+            schemeData.partial_villages, schemeData.non_functional_villages,
+            schemeData.fully_completed_villages, schemeData.total_esr,
+            schemeData.scheme_functional_status, schemeData.fully_completed_esr,
+            schemeData.balance_esr, schemeData.flow_meters_connected,
+            schemeData.pressure_transmitters_connected, schemeData.residual_chlorine_connected,
+            schemeData.scheme_status, schemeData.agency
+          ]
+        );
+        console.log(`Imported scheme: ${schemeData.scheme_id} - ${schemeData.scheme_name}`);
+      } catch (error) {
+        console.error(`Error importing scheme ${item.scheme_id}:`, error);
       }
     }
     
     // Update region summaries
     await updateRegionSummaries(pool);
     
-    console.log("\nImport completed successfully!");
+    console.log('Import completed successfully!');
     return true;
   } catch (error) {
-    console.error("Error importing data:", error);
+    console.error('Error importing data:', error);
     return false;
   } finally {
     await pool.end();
   }
 }
 
-// Function to update region summaries
+// Update region summaries
 async function updateRegionSummaries(pool) {
   console.log("Updating region summaries...");
   
@@ -410,7 +225,7 @@ async function updateRegionSummaries(pool) {
 async function main() {
   try {
     // Path to the JSON file
-    const jsonFilePath = path.join(__dirname, 'attached_assets', 'scheme_status_table (2).json');
+    const jsonFilePath = path.join(__dirname, 'scheme_status_data.json');
     console.log(`Reading JSON data from: ${jsonFilePath}`);
     
     // Read the JSON data
@@ -418,7 +233,7 @@ async function main() {
     
     if (!data) {
       console.error("Failed to read JSON data");
-      return;
+      process.exit(1);
     }
     
     // Import the data
@@ -426,11 +241,14 @@ async function main() {
     
     if (success) {
       console.log("Data import completed successfully");
+      process.exit(0);
     } else {
       console.error("Data import failed");
+      process.exit(1);
     }
   } catch (error) {
     console.error("Unhandled error:", error);
+    process.exit(1);
   }
 }
 
