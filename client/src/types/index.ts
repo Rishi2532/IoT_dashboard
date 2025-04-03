@@ -16,22 +16,47 @@ export interface Region {
 
 // Define scheme status types
 export interface SchemeStatus {
+  sr_no: number;
   scheme_id: string;
   scheme_name: string;
   region_name: string;
   agency: string | null;
-  total_villages_in_scheme: number;
-  total_esr_in_scheme: number;
-  villages_integrated_on_iot: number | null;
-  fully_completed_villages: number | null;
-  esr_request_received: number | null;
-  esr_integrated_on_iot: number | null;
-  fully_completed_esr: number | null;
-  balance_for_fully_completion: number | null;
+  
+  // Villages data
+  total_villages: number;
+  functional_villages: number;
+  partial_villages: number;
+  non_functional_villages: number;
+  fully_completed_villages: number;
+  villages_integrated_on_iot: number | null; // For backwards compatibility
+  total_villages_in_scheme: number; // For backwards compatibility
+  
+  // ESR data
+  total_esr: number;
+  esr_request_received: number | null; // For backwards compatibility
+  esr_integrated_on_iot: number | null; // For backwards compatibility
+  fully_completed_esr: number;
+  balance_esr: number;
+  total_esr_in_scheme: number; // For backwards compatibility
+  balance_for_fully_completion: number | null; // For backwards compatibility
+  
+  // Component data
+  flow_meters_connected: number;
+  pressure_transmitters_connected: number;
+  residual_chlorine_connected: number;
+  
+  // Computed total for backwards compatibility
+  villages_integrated: number; // Total of functional + partial villages
+  
+  // Legacy component data for backwards compatibility
   fm_integrated: number | null;
   rca_integrated: number | null;
   pt_integrated: number | null;
-  scheme_completion_status: string;
+  
+  // Status
+  scheme_status: string;
+  scheme_functional_status: string;
+  scheme_completion_status: string; // For backwards compatibility
 }
 
 // Aggregate summary of region stats (can be filtered by region)

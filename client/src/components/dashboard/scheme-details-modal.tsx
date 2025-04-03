@@ -25,17 +25,17 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
 
   const esrRequestReceivedPercent = calculatePercentage(
     scheme.esr_request_received,
-    scheme.total_esr_in_scheme
+    scheme.total_esr
   );
 
   const esrIntegratedPercent = calculatePercentage(
     scheme.esr_integrated_on_iot,
-    scheme.total_esr_in_scheme
+    scheme.total_esr
   );
 
   const fullyCompletedEsrPercent = calculatePercentage(
     scheme.fully_completed_esr,
-    scheme.total_esr_in_scheme
+    scheme.total_esr
   );
 
   return (
@@ -75,7 +75,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Total ESR</h4>
-                <p className="text-xs text-neutral-900">{scheme.total_esr_in_scheme || 0}</p>
+                <p className="text-xs text-neutral-900">{scheme.total_esr || 0}</p>
               </div>
             </div>
           </div>
@@ -130,7 +130,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 <div className="flex justify-between mb-1">
                   <span className="text-xs text-neutral-500">ESR requests received</span>
                   <span className="text-xs font-semibold text-neutral-700">
-                    {scheme.esr_request_received || 0} / {scheme.total_esr_in_scheme || 0}
+                    {scheme.esr_request_received || 0} / {scheme.total_esr || 0}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -147,7 +147,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 <div className="flex justify-between mb-1 mt-2">
                   <span className="text-xs text-neutral-500">ESR integrated</span>
                   <span className="text-xs font-semibold text-neutral-700">
-                    {scheme.esr_integrated_on_iot || 0} / {scheme.total_esr_in_scheme || 0}
+                    {scheme.esr_integrated_on_iot || 0} / {scheme.total_esr || 0}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -164,7 +164,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 <div className="flex justify-between mb-1 mt-2">
                   <span className="text-xs text-neutral-500">Fully completed ESR</span>
                   <span className="text-xs font-semibold text-neutral-700">
-                    {scheme.fully_completed_esr || 0} / {scheme.total_esr_in_scheme || 0}
+                    {scheme.fully_completed_esr || 0} / {scheme.total_esr || 0}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
@@ -193,14 +193,14 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               
               <div className="grid grid-cols-4 border-b border-neutral-200 bg-white">
                 <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">Flow Meter</div>
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.fm_integrated || 0}</div>
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.total_esr_in_scheme || 0}</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.flow_meters_connected || 0}</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.total_esr || 0}</div>
                 <div className="py-1 px-2">
-                  {(scheme.fm_integrated || 0) === (scheme.total_esr_in_scheme || 0) ? (
+                  {(scheme.flow_meters_connected || 0) === (scheme.total_esr || 0) ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-green-100 text-green-800">
                       Complete
                     </span>
-                  ) : (scheme.fm_integrated || 0) > 0 ? (
+                  ) : (scheme.flow_meters_connected || 0) > 0 ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-yellow-100 text-yellow-800">
                       Partial
                     </span>
@@ -213,15 +213,15 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               </div>
               
               <div className="grid grid-cols-4 border-b border-neutral-200 bg-white">
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">RCA</div>
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.rca_integrated || 0}</div>
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.total_esr_in_scheme || 0}</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">Pressure Transmitter</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.pressure_transmitters_connected || 0}</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.total_esr || 0}</div>
                 <div className="py-1 px-2">
-                  {(scheme.rca_integrated || 0) === (scheme.total_esr_in_scheme || 0) ? (
+                  {(scheme.pressure_transmitters_connected || 0) === (scheme.total_esr || 0) ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-green-100 text-green-800">
                       Complete
                     </span>
-                  ) : (scheme.rca_integrated || 0) > 0 ? (
+                  ) : (scheme.pressure_transmitters_connected || 0) > 0 ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-yellow-100 text-yellow-800">
                       Partial
                     </span>
@@ -234,15 +234,15 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               </div>
               
               <div className="grid grid-cols-4 bg-white">
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">Pressure Trans.</div>
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.pt_integrated || 0}</div>
-                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.total_esr_in_scheme || 0}</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">Residual Chlorine</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.residual_chlorine_connected || 0}</div>
+                <div className="py-1 px-2 text-xs text-neutral-700 border-r border-neutral-200">{scheme.total_esr || 0}</div>
                 <div className="py-1 px-2">
-                  {(scheme.pt_integrated || 0) === (scheme.total_esr_in_scheme || 0) ? (
+                  {(scheme.residual_chlorine_connected || 0) === (scheme.total_esr || 0) ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-green-100 text-green-800">
                       Complete
                     </span>
-                  ) : (scheme.pt_integrated || 0) > 0 ? (
+                  ) : (scheme.residual_chlorine_connected || 0) > 0 ? (
                     <span className="px-1 inline-flex text-xs leading-5 font-medium rounded-full bg-yellow-100 text-yellow-800">
                       Partial
                     </span>
