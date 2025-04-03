@@ -1,4 +1,3 @@
-import XLSX from 'xlsx';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -8,7 +7,7 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
-// Get the current directory name
+// Get current directory name
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -20,282 +19,108 @@ const dbConfig = {
   }
 };
 
-// Map region names to their standardized format
-const regionMapping = {
-  'Nagpur': 'Nagpur',
-  'Amravati': 'Amravati',
-  'Nashik': 'Nashik',
-  'Pune': 'Pune',
-  'Konkan': 'Konkan',
-  'CS': 'Chhatrapati Sambhajinagar',
-  'Chhatrapati Sambhajinagar': 'Chhatrapati Sambhajinagar'
-};
-
-async function processExcelFile(filePath) {
-  const pool = new pg.Pool(dbConfig);
-  
+// Process and map JSON scheme data
+async function processJsonFile(filePath) {
   try {
-    console.log(`Processing Excel file: ${filePath}`);
+    console.log(`Reading JSON file from: ${filePath}`);
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    const jsonData = JSON.parse(fileContent);
     
-    // Read the Excel file
-    const workbook = XLSX.readFile(filePath, { cellDates: true });
-    console.log(`Successfully read Excel file with ${workbook.SheetNames.length} sheets`);
+    const allSchemes = [];
     
-    // Process each sheet
-    for (const sheetName of workbook.SheetNames) {
-      console.log(`\nProcessing sheet: ${sheetName}`);
+    // Process each region
+    for (const regionKey of Object.keys(jsonData)) {
+      console.log(`Processing region: ${regionKey}`);
       
-      // Get sheet data
-      const worksheet = workbook.Sheets[sheetName];
-      const data = XLSX.utils.sheet_to_json(worksheet);
+      const regionData = jsonData[regionKey];
+      let regionName = '';
       
-      if (!data || data.length === 0) {
-        console.log(`No data found in sheet ${sheetName}, skipping`);
-        continue;
+      // Extract region name from key (e.g., "Region - Amravati" -> "Amravati")
+      if (regionKey.includes('-')) {
+        regionName = regionKey.split('-')[1].trim();
+      } else {
+        regionName = regionKey.replace('Region', '').trim();
       }
       
-      console.log(`Found ${data.length} rows in this sheet`);
-      
-      // Identify column headers
-      const firstRow = data[0];
-      const headers = Object.keys(firstRow);
-      
-      // Print headers for debugging
-      console.log("Headers found:", headers);
-      
-      // Try to identify the region
-      let regionName = null;
-      
-      // First look in the sheet name
-      for (const [key, value] of Object.entries(regionMapping)) {
-        if (sheetName.includes(key)) {
-          regionName = value;
-          break;
-        }
-      }
-      
-      // If not found in sheet name, try to find it in the data
-      if (!regionName) {
-        for (const row of data) {
-          for (const header of headers) {
-            if (row[header] && typeof row[header] === 'string') {
-              for (const [key, value] of Object.entries(regionMapping)) {
-                if (row[header].includes(key)) {
-                  regionName = value;
-                  break;
-                }
-              }
-              if (regionName) break;
-            }
+      // Skip header rows and process each scheme in the region
+      for (const item of regionData) {
+        // Skip null items or headers
+        if (!item || typeof item !== 'object') continue;
+        
+        // Skip header rows (those with column definitions)
+        if (item.Column1 === 'Sr No.' || item.Column1 === "Sr No." || item["Sr No."] === 'Sr No.') continue;
+        
+        try {
+          // Extract scheme data
+          const schemeId = item.Column7 || item["Scheme ID"] || '';
+          if (!schemeId) continue; // Skip if no scheme ID
+          
+          const schemeName = item.Column8 || item["Scheme Name"] || '';
+          const totalVillages = getNumber(item.Column9 || item["Number of Village"]);
+          const functionalVillages = getNumber(item.Column10 || item["No. of Functional Village"]);
+          const partialVillages = getNumber(item.Column11 || item["No. of Partial Village"]);
+          const nonFunctionalVillages = getNumber(item.Column12 || item["No. of Non- Functional Village"]);
+          const fullyCompletedVillages = getNumber(item.Column13 || item["Fully completed Villages"]);
+          const totalESR = getNumber(item.Column14 || item["Total Number of ESR"]);
+          const schemeFunctionalStatus = item.Column15 || item["Scheme Functional Status"] || 'Partial';
+          const fullyCompletedESR = getNumber(item.Column16 || item["No. Fully Completed ESR"]);
+          const balanceESR = getNumber(item.Column17 || item["Balance to Complete ESR"]);
+          const flowMeters = getNumber(item.Column18 || item[" Flow Meters Conneted"]);
+          const pressureTransmitters = getNumber(item.Column19 || item["Pressure Transmitter Conneted"]);
+          const residualChlorine = getNumber(item.Column20 || item["Residual Chlorine Conneted"]);
+          const schemeStatus = item.Column21 || item["Fully completion Scheme Status"] || 'In Progress';
+          
+          // Determine scheme completion status
+          let schemeCompletionStatus = 'Partial';
+          if (schemeStatus === 'Completed' || schemeFunctionalStatus === 'Functional') {
+            schemeCompletionStatus = 'Fully-Completed';
+          } else if (schemeFunctionalStatus === 'Non-Functional') {
+            schemeCompletionStatus = 'Not-Connected';
           }
-          if (regionName) break;
-        }
-      }
-      
-      if (!regionName) {
-        console.log(`Could not identify region for sheet ${sheetName}, skipping`);
-        continue;
-      }
-      
-      console.log(`Identified region: ${regionName}`);
-      
-      // Find the scheme ID, name, and other required columns
-      let schemeIdCol = findColumnByHeaderNames(headers, ['Scheme ID', 'SchemeID', 'Scheme Id', 'ID', 'scheme_id']);
-      let schemeNameCol = findColumnByHeaderNames(headers, ['Scheme Name', 'SchemeName', 'Name', 'scheme_name']);
-      let totalVillagesCol = findColumnByHeaderNames(headers, ['Number of Village', 'No. of Village', 'Total Villages', 'Villages', 'Number of Villages']);
-      let functionalVillagesCol = findColumnByHeaderNames(headers, ['No. of Functional Village', 'Functional Villages', 'Functional Village']);
-      let partialVillagesCol = findColumnByHeaderNames(headers, ['No. of Partial Village', 'Partial Villages', 'Partial Village']);
-      let nonFunctionalVillagesCol = findColumnByHeaderNames(headers, ['No. of Non- Functional Village', 'Non Functional Villages', 'Non-Functional Village']);
-      let fullyCompletedVillagesCol = findColumnByHeaderNames(headers, ['Fully completed Villages', 'Completed Villages', 'Fully Completed Villages']);
-      let totalESRCol = findColumnByHeaderNames(headers, ['Total Number of ESR', 'ESR', 'Total ESR', 'Total Number of ESR']);
-      let schemeFunctionalStatusCol = findColumnByHeaderNames(headers, ['Scheme Functional Status', 'Functional Status', 'Scheme Status']);
-      let fullyCompletedESRCol = findColumnByHeaderNames(headers, ['No. Fully Completed ESR', 'Completed ESR', 'Fully Completed ESR']);
-      let balanceESRCol = findColumnByHeaderNames(headers, ['Balance to Complete ESR', 'Balance ESR', 'Balance']);
-      let flowMetersCol = findColumnByHeaderNames(headers, ['Flow Meters Conneted', 'Flow Meters', 'Flow Meter Connected']);
-      let pressureTransmittersCol = findColumnByHeaderNames(headers, ['Pressure Transmitter Conneted', 'Pressure Transmitters', 'PT']);
-      let residualChlorineCol = findColumnByHeaderNames(headers, ['Residual Chlorine Conneted', 'RCA', 'Chlorine', 'Residual Chlorine']);
-      let schemeStatusCol = findColumnByHeaderNames(headers, ['Fully completion Scheme Status', 'Scheme Status', 'Status', 'Scheme Completion Status']);
-      
-      // If we couldn't find the key columns, try to use numerical patterns
-      if (!schemeIdCol && headers.length > 6) schemeIdCol = headers[6]; // Usually 7th column
-      if (!schemeNameCol && headers.length > 7) schemeNameCol = headers[7]; // Usually 8th column
-      if (!totalVillagesCol && headers.length > 8) totalVillagesCol = headers[8]; // Usually 9th column
-      
-      console.log("Column mapping:");
-      console.log(`  Scheme ID: ${schemeIdCol}`);
-      console.log(`  Scheme Name: ${schemeNameCol}`);
-      console.log(`  Total Villages: ${totalVillagesCol}`);
-      console.log(`  Functional Villages: ${functionalVillagesCol}`);
-      console.log(`  Scheme Status: ${schemeStatusCol}`);
-      
-      // Process each row for this region
-      for (let i = 0; i < data.length; i++) {
-        const row = data[i];
-        
-        // Skip rows without essential data
-        if (!row[schemeIdCol] || !row[schemeNameCol]) {
-          console.log(`Skipping row ${i + 1} - missing scheme ID or name`);
-          continue;
-        }
-        
-        // Extract data from row
-        const schemeId = String(row[schemeIdCol]);
-        const schemeName = String(row[schemeNameCol]);
-        
-        // Skip header rows
-        if (schemeId === 'Scheme ID' || schemeName === 'Scheme Name' ||
-            schemeId.toLowerCase().includes('sr') || schemeId.toLowerCase().includes('scheme id')) {
-          console.log(`Skipping header row: ${schemeId} - ${schemeName}`);
-          continue;
-        }
-        
-        console.log(`Processing scheme: ${schemeId} - ${schemeName}`);
-        
-        // Extract all data
-        const totalVillages = getNumericValue(row[totalVillagesCol]);
-        const functionalVillages = getNumericValue(row[functionalVillagesCol]);
-        const partialVillages = getNumericValue(row[partialVillagesCol]);
-        const nonFunctionalVillages = getNumericValue(row[nonFunctionalVillagesCol]);
-        const fullyCompletedVillages = getNumericValue(row[fullyCompletedVillagesCol]);
-        const totalESR = getNumericValue(row[totalESRCol]);
-        const schemeFunctionalStatus = row[schemeFunctionalStatusCol] || 'Partial';
-        const fullyCompletedESR = getNumericValue(row[fullyCompletedESRCol]);
-        const balanceESR = getNumericValue(row[balanceESRCol]);
-        const flowMeters = getNumericValue(row[flowMetersCol]);
-        const pressureTransmitters = getNumericValue(row[pressureTransmittersCol]);
-        const residualChlorine = getNumericValue(row[residualChlorineCol]);
-        const rawSchemeStatus = row[schemeStatusCol] || 'In Progress';
-        
-        // Determine scheme completion status
-        let schemeCompletionStatus = 'Partial';
-        if (rawSchemeStatus === 'Completed' || schemeFunctionalStatus === 'Functional') {
-          schemeCompletionStatus = 'Fully-Completed';
-        } else if (schemeFunctionalStatus === 'Non-Functional') {
-          schemeCompletionStatus = 'Not-Connected';
-        }
-        
-        // Get agency based on region
-        const agency = getAgencyByRegion(regionName);
-        
-        // Check if this scheme already exists in the database
-        const existingScheme = await pool.query(
-          'SELECT * FROM scheme_status WHERE scheme_id = $1',
-          [schemeId]
-        );
-        
-        const schemeData = {
-          scheme_id: schemeId,
-          scheme_name: schemeName,
-          region_name: regionName,
-          total_villages: totalVillages,
-          functional_villages: functionalVillages,
-          partial_villages: partialVillages,
-          non_functional_villages: nonFunctionalVillages,
-          fully_completed_villages: fullyCompletedVillages,
-          total_esr: totalESR,
-          scheme_functional_status: schemeFunctionalStatus,
-          fully_completed_esr: fullyCompletedESR,
-          balance_esr: balanceESR || (totalESR - fullyCompletedESR),
-          flow_meters_connected: flowMeters,
-          pressure_transmitters_connected: pressureTransmitters,
-          residual_chlorine_connected: residualChlorine,
-          scheme_status: schemeCompletionStatus,
-          agency: agency
-        };
-        
-        if (existingScheme.rows.length === 0) {
-          // Insert new scheme
-          await pool.query(
-            `INSERT INTO scheme_status (
-              scheme_id, scheme_name, region_name, total_villages, functional_villages,
-              partial_villages, non_functional_villages, fully_completed_villages,
-              total_esr, scheme_functional_status, fully_completed_esr, balance_esr,
-              flow_meters_connected, pressure_transmitters_connected, residual_chlorine_connected,
-              scheme_status, agency
-            ) VALUES (
-              $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
-            )`,
-            [
-              schemeData.scheme_id, schemeData.scheme_name, schemeData.region_name,
-              schemeData.total_villages, schemeData.functional_villages,
-              schemeData.partial_villages, schemeData.non_functional_villages,
-              schemeData.fully_completed_villages, schemeData.total_esr,
-              schemeData.scheme_functional_status, schemeData.fully_completed_esr,
-              schemeData.balance_esr, schemeData.flow_meters_connected,
-              schemeData.pressure_transmitters_connected, schemeData.residual_chlorine_connected,
-              schemeData.scheme_status, schemeData.agency
-            ]
-          );
-          console.log(`Inserted new scheme: ${schemeId} - ${schemeName}`);
-        } else {
-          // Update existing scheme
-          await pool.query(
-            `UPDATE scheme_status SET
-              scheme_name = $1,
-              region_name = $2,
-              total_villages = $3,
-              functional_villages = $4,
-              partial_villages = $5,
-              non_functional_villages = $6,
-              fully_completed_villages = $7,
-              total_esr = $8,
-              scheme_functional_status = $9,
-              fully_completed_esr = $10,
-              balance_esr = $11,
-              flow_meters_connected = $12,
-              pressure_transmitters_connected = $13,
-              residual_chlorine_connected = $14,
-              scheme_status = $15,
-              agency = $16
-            WHERE scheme_id = $17`,
-            [
-              schemeData.scheme_name, schemeData.region_name,
-              schemeData.total_villages, schemeData.functional_villages,
-              schemeData.partial_villages, schemeData.non_functional_villages,
-              schemeData.fully_completed_villages, schemeData.total_esr,
-              schemeData.scheme_functional_status, schemeData.fully_completed_esr,
-              schemeData.balance_esr, schemeData.flow_meters_connected,
-              schemeData.pressure_transmitters_connected, schemeData.residual_chlorine_connected,
-              schemeData.scheme_status, schemeData.agency, schemeData.scheme_id
-            ]
-          );
-          console.log(`Updated existing scheme: ${schemeId} - ${schemeName}`);
+          
+          // Add to schemes array
+          allSchemes.push({
+            scheme_id: String(schemeId),
+            scheme_name: String(schemeName),
+            region_name: regionName,
+            total_villages: totalVillages,
+            functional_villages: functionalVillages,
+            partial_villages: partialVillages,
+            non_functional_villages: nonFunctionalVillages,
+            fully_completed_villages: fullyCompletedVillages,
+            total_esr: totalESR,
+            scheme_functional_status: schemeFunctionalStatus,
+            fully_completed_esr: fullyCompletedESR,
+            balance_esr: balanceESR,
+            flow_meters_connected: flowMeters,
+            pressure_transmitters_connected: pressureTransmitters,
+            residual_chlorine_connected: residualChlorine,
+            scheme_status: schemeCompletionStatus,
+            agency: getAgencyByRegion(regionName)
+          });
+          
+          console.log(`Processed scheme: ${schemeId} - ${schemeName}`);
+        } catch (error) {
+          console.error('Error processing scheme item:', error);
         }
       }
     }
     
-    // Update region summaries
-    await updateRegionSummaries(pool);
-    
-    console.log("Excel import completed successfully");
-    return true;
+    console.log(`Successfully processed ${allSchemes.length} schemes from JSON file`);
+    return allSchemes;
   } catch (error) {
-    console.error("Error processing Excel file:", error);
-    return false;
-  } finally {
-    await pool.end();
+    console.error('Error processing JSON file:', error);
+    return [];
   }
-}
-
-// Helper function to find column by possible header names
-function findColumnByHeaderNames(headers, possibleNames) {
-  for (const header of headers) {
-    for (const possibleName of possibleNames) {
-      if (header.toLowerCase().includes(possibleName.toLowerCase())) {
-        return header;
-      }
-    }
-  }
-  return null;
 }
 
 // Helper function to get numeric value
-function getNumericValue(value) {
+function getNumber(value) {
   if (value === undefined || value === null) return 0;
   if (typeof value === 'number') return value;
   if (typeof value === 'string') {
-    const parsed = parseInt(value.replace(/[^0-9.-]+/g, ''));
-    return isNaN(parsed) ? 0 : parsed;
+    const numStr = value.replace(/[^0-9.-]/g, '');
+    return numStr ? parseInt(numStr) : 0;
   }
   return 0;
 }
@@ -312,6 +137,67 @@ function getAgencyByRegion(regionName) {
   };
   
   return agencies[regionName] || 'M/S Tata Consultancy Services';
+}
+
+// Import schemes to database
+async function importSchemesToDatabase(schemes) {
+  if (!schemes || schemes.length === 0) {
+    console.error('No schemes to import');
+    return false;
+  }
+
+  const pool = new pg.Pool(dbConfig);
+  
+  try {
+    console.log(`Importing ${schemes.length} schemes to database...`);
+    
+    // Clear existing schemes
+    await pool.query('DELETE FROM scheme_status');
+    console.log('Cleared existing schemes from database');
+    
+    // Create a single prepared statement for better performance
+    const insertStmt = `
+      INSERT INTO scheme_status (
+        scheme_id, scheme_name, region_name, total_villages, functional_villages,
+        partial_villages, non_functional_villages, fully_completed_villages,
+        total_esr, scheme_functional_status, fully_completed_esr, balance_esr,
+        flow_meters_connected, pressure_transmitters_connected, residual_chlorine_connected,
+        scheme_status, agency
+      ) VALUES (
+        $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+      )
+    `;
+    
+    // Process each scheme
+    for (const scheme of schemes) {
+      try {
+        await pool.query(insertStmt, [
+          scheme.scheme_id, scheme.scheme_name, scheme.region_name,
+          scheme.total_villages, scheme.functional_villages,
+          scheme.partial_villages, scheme.non_functional_villages,
+          scheme.fully_completed_villages, scheme.total_esr,
+          scheme.scheme_functional_status, scheme.fully_completed_esr,
+          scheme.balance_esr, scheme.flow_meters_connected,
+          scheme.pressure_transmitters_connected, scheme.residual_chlorine_connected,
+          scheme.scheme_status, scheme.agency
+        ]);
+        console.log(`Imported scheme: ${scheme.scheme_id} - ${scheme.scheme_name}`);
+      } catch (error) {
+        console.error(`Error importing scheme ${scheme.scheme_id}:`, error);
+      }
+    }
+    
+    // Update region summaries
+    await updateRegionSummaries(pool);
+    
+    console.log('All schemes imported successfully!');
+    return true;
+  } catch (error) {
+    console.error('Error importing schemes to database:', error);
+    return false;
+  } finally {
+    await pool.end();
+  }
 }
 
 // Update region summaries
@@ -382,21 +268,37 @@ async function updateRegionSummaries(pool) {
   }
 }
 
-// Run the import function
-const filePath = path.join(__dirname, 'attached_assets', 'scheme_status_table.xlsx');
-console.log(`Starting import process for Excel file: ${filePath}`);
-
-processExcelFile(filePath)
-  .then(success => {
-    if (success) {
-      console.log("Excel data import completed successfully");
-      process.exit(0);
-    } else {
-      console.error("Excel data import failed");
+// Main function
+async function main() {
+  try {
+    // Path to the JSON file
+    const jsonFilePath = path.join(__dirname, 'attached_assets', 'scheme_status_table (2).json');
+    
+    // Process JSON file
+    const schemes = await processJsonFile(jsonFilePath);
+    
+    if (schemes.length === 0) {
+      console.error("No schemes found in the JSON file");
       process.exit(1);
     }
-  })
-  .catch(error => {
-    console.error("Unhandled error in import script:", error);
+    
+    console.log(`Found ${schemes.length} schemes in JSON file`);
+    
+    // Import schemes to database
+    const success = await importSchemesToDatabase(schemes);
+    
+    if (success) {
+      console.log("Data import completed successfully");
+      process.exit(0);
+    } else {
+      console.error("Data import failed");
+      process.exit(1);
+    }
+  } catch (error) {
+    console.error("Unhandled error:", error);
     process.exit(1);
-  });
+  }
+}
+
+// Run the main function
+main();
