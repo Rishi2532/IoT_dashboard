@@ -90,8 +90,8 @@ export default function UserLoginPage() {
         description: 'You are now logged in',
       });
       setLoginError(null);
-      // Redirect to schemes page
-      window.location.href = '/schemes';
+      // Redirect to dashboard
+      window.location.href = '/dashboard';
     },
     onError: (error: Error) => {
       setLoginError(error.message);
