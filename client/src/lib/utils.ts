@@ -15,12 +15,13 @@ export function calculatePercentage(value: number | undefined | null, total: num
   return Number(((value / total) * 100).toFixed(2));
 }
 
-export type SchemeCompletionStatus = 'Fully-Completed' | 'Partial' | 'Not-Connected';
+export type SchemeCompletionStatus = 'Fully-Completed' | 'In Progress' | 'Partial' | 'Not-Connected';
 
 export function getStatusColorClass(status: SchemeCompletionStatus): string {
   switch (status) {
     case 'Fully-Completed':
       return 'bg-green-100 text-green-800';
+    case 'In Progress':
     case 'Partial':
       return 'bg-yellow-100 text-yellow-800';
     case 'Not-Connected':
@@ -42,6 +43,7 @@ export function getStatusDisplayName(status: SchemeCompletionStatus): string {
     case 'Not-Connected':
       return 'Not Connected';
     case 'Partial':
+    case 'In Progress':
       return 'In Progress';
     default:
       return cleanStatus;

@@ -171,9 +171,9 @@ function extractValue(row, field, mapping) {
     
     // Map status values to standardized format
     if (status.toLowerCase().includes('full')) return 'Fully-Completed';
-    if (status.toLowerCase().includes('partial')) return 'Partial';
-    if (status.toLowerCase().includes('progress')) return 'Partial';
-    if (status.toLowerCase().includes('function')) return 'Partial';
+    if (status.toLowerCase().includes('partial')) return 'In Progress';
+    if (status.toLowerCase().includes('progress')) return 'In Progress';
+    if (status.toLowerCase().includes('function')) return 'In Progress';
     
     return status;
   }
