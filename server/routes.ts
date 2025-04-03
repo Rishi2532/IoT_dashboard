@@ -1096,12 +1096,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const createColumnMapping = (headers: Record<string, any>): Record<string, string> => {
         const mapping: Record<string, string> = {};
         
+        // Map for common indices to field names (based on actual excel structure)
+        const commonIndexMapping: Record<number, string> = {
+          6: 'scheme_id',          // Scheme ID is often in column 7 (index 6)
+          7: 'scheme_name',        // Scheme Name is often in column 8 (index 7)
+          9: 'villages_integrated', // Total Villages Integrated is in column 10 (index 9)
+          10: 'fully_completed_villages', // Fully Completed Villages is in column 11 (index 10)
+          11: 'esr_integrated_on_iot', // Total ESR Integrated is in column 12 (index 11)
+          12: 'fully_completed_esr', // No. Fully Completed ESR is in column 13 (index 12)
+          13: 'flow_meters_connected', // Flow Meters Connected is in column 14 (index 13)
+          14: 'residual_chlorine_connected', // Residual Chlorine Analyzer Connected is in column 15 (index 14)
+          15: 'pressure_transmitters_connected', // Pressure Transmitter Connected is in column 16 (index 15)
+          16: 'scheme_status' // Fully completion Scheme Status is in column 17 (index 16)
+        };
+        
+        // First map by column header matching
         for (const header of Object.keys(headers)) {
           const field = getFieldForColumn(header);
           if (field) {
             mapping[header] = field;
           }
         }
+        
+        // Then try to map by column position for common columns
+        const keys = Object.keys(headers);
+        for (const [indexStr, fieldName] of Object.entries(commonIndexMapping)) {
+          const index = parseInt(indexStr);
+          if (index < keys.length && !mapping[keys[index]]) {
+            // Only set if not already mapped and column exists
+            mapping[keys[index]] = fieldName;
+          }
+        }
+        
+        // For debugging
+        log(`Column mapping created: ${JSON.stringify(mapping)}`, 'import');
         
         return mapping;
       };
@@ -1110,6 +1138,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const processValue = (field: string, value: any): any => {
         if (value === null || value === undefined) {
           return null;
+        }
+        
+        // Log raw values for debugging
+        if (field === 'fully_completed_villages' || 
+            field === 'villages_integrated' || 
+            field === 'scheme_status' ||
+            field === 'esr_integrated_on_iot' ||
+            field === 'residual_chlorine_connected' ||
+            field === 'pressure_transmitters_connected' ||
+            field === 'flow_meters_connected' ||
+            field === 'fully_completed_esr') {
+          log(`Raw value for ${field}: ${value} (type: ${typeof value})`, 'import');
         }
         
         // Numeric fields - convert to numbers
@@ -1129,27 +1169,66 @@ export async function registerRoutes(app: Express): Promise<Server> {
             numValue = value.replace(/[^\d.-]/g, '');
           }
           const num = Number(numValue);
-          return isNaN(num) ? 0 : num;
+          const result = isNaN(num) ? 0 : num;
+          
+          // Log numeric conversions for debugging
+          if (field === 'fully_completed_villages' || 
+              field === 'villages_integrated' || 
+              field === 'esr_integrated_on_iot' ||
+              field === 'residual_chlorine_connected' ||
+              field === 'pressure_transmitters_connected' ||
+              field === 'flow_meters_connected' ||
+              field === 'fully_completed_esr') {
+            log(`Converted ${field} value: ${value} → ${result}`, 'import');
+          }
+          
+          return result;
         }
         
         // Status field - standardize values
         if (field === 'scheme_status') {
+          log(`Processing scheme_status value: "${value}"`, 'import');
           const status = String(value).trim().toLowerCase();
-          if (status === 'completed' || status === 'complete' || status === 'fully completed') {
+          
+          // Direct mapping to "Fully-Completed"
+          if (status === 'completed' || 
+              status === 'complete' || 
+              status === 'fully completed' || 
+              status === 'fully-completed') {
+            log(`Mapped status "${value}" to "Fully-Completed"`, 'import');
             return 'Fully-Completed';
-          } else if (status === 'in progress' || status === 'in-progress' || status === 'partial') {
-            return 'Partial';
-          } else if (status === 'not connected' || status === 'not-connected') {
+          } 
+          // Direct mapping to "In Progress"
+          else if (status === 'in progress' || 
+                  status === 'in-progress' || 
+                  status === 'partial' || 
+                  status === 'progress') {
+            log(`Mapped status "${value}" to "In Progress"`, 'import');
+            return 'In Progress';
+          } 
+          // Direct mapping to "Not-Connected"
+          else if (status === 'not connected' || 
+                  status === 'not-connected' || 
+                  status === 'notconnected') {
+            log(`Mapped status "${value}" to "Not-Connected"`, 'import');
             return 'Not-Connected';
           }
           
-          // Use Direct mapping for exact matches
-          if (status === 'completed') {
+          // Try pattern matching for better accuracy
+          if (status.includes('complet')) {
+            log(`Pattern matched status "${value}" to "Fully-Completed"`, 'import');
             return 'Fully-Completed';
+          } else if (status.includes('progress') || status.includes('partial')) {
+            log(`Pattern matched status "${value}" to "In Progress"`, 'import');
+            return 'In Progress';
           }
           
-          // Return original value if no match
-          return value;
+          // Return capitalized version if no match
+          const words = status.split(' ');
+          const capitalizedWords = words.map(word => word.charAt(0).toUpperCase() + word.slice(1));
+          const result = capitalizedWords.join(' ');
+          log(`No match for status "${value}", returning as "${result}"`, 'import');
+          return result;
         }
         
         // Map functional status values
@@ -1222,34 +1301,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
             const columnMapping = createColumnMapping(row as Record<string, any>);
             const typedRow = row as Record<string, any>;
             
-            // Find scheme ID with various possible column names
+            // Find scheme ID with various possible column names or positions
             let schemeIdCell = '';
+            let schemeId = '';
             
             // First check using our mapping
             for (const [header, field] of Object.entries(columnMapping)) {
               if (field === 'scheme_id' && typedRow[header]) {
                 schemeIdCell = header;
+                schemeId = String(typedRow[schemeIdCell]).trim();
                 break;
               }
             }
             
-            // If not found, try more direct approaches
+            // If not found, try direct pattern approaches
             if (!schemeIdCell) {
               for (const pattern of COLUMN_PATTERNS.scheme_id) {
                 if (typedRow[pattern]) {
                   schemeIdCell = pattern;
+                  schemeId = String(typedRow[schemeIdCell]).trim();
                   break;
                 }
               }
             }
             
-            if (!schemeIdCell || !typedRow[schemeIdCell]) {
+            // If still not found, try common column index positions (common position for Scheme ID in the user's Excel)
+            if (!schemeIdCell) {
+              // Look at specific indices where Scheme ID might be
+              const possibleIndices = [6, 5, 7]; // Common positions for Scheme ID column
+              const headers = Object.keys(typedRow);
+              
+              for (const index of possibleIndices) {
+                if (index < headers.length && typedRow[headers[index]]) {
+                  schemeIdCell = headers[index];
+                  schemeId = String(typedRow[schemeIdCell]).trim();
+                  
+                  // If this looks like a Scheme ID (has alphanumeric characters), use it
+                  if (/^[a-z0-9_\-/]+$/i.test(schemeId)) {
+                    log(`Found Scheme ID at position ${index}: ${schemeId}`, 'import');
+                    break;
+                  }
+                }
+              }
+            }
+            
+            // Last resort: look through all columns for something that looks like a scheme ID
+            if (!schemeIdCell) {
+              for (const [header, value] of Object.entries(typedRow)) {
+                if (value && typeof value === 'string' || typeof value === 'number') {
+                  const strValue = String(value).trim();
+                  // Check if it looks like a scheme ID pattern
+                  if (/^[a-z0-9_\-/]+$/i.test(strValue) && strValue.length > 3 && strValue.length < 30) {
+                    schemeIdCell = header;
+                    schemeId = strValue;
+                    log(`Found potential Scheme ID by pattern matching: ${schemeId} in column ${header}`, 'import');
+                    break;
+                  }
+                }
+              }
+            }
+            
+            if (!schemeId) {
               // This row doesn't have a scheme ID
               continue;
             }
-            
-            // Extract and sanitize the scheme ID
-            const schemeId = String(typedRow[schemeIdCell]).trim();
             
             // Now we've found a valid data row
             hasFoundDataRows = true;
