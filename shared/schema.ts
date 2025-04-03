@@ -69,7 +69,9 @@ export const schemeStatuses = pgTable("scheme_status", {
   partial_villages: integer("partial_villages"), // No. of Partial Village
   non_functional_villages: integer("non_functional_villages"), // No. of Non-Functional Village
   fully_completed_villages: integer("fully_completed_villages"), // Fully completed Villages
+  villages_integrated: integer("villages_integrated"), // Total Villages Integrated
   total_esr: integer("total_esr"), // Total Number of ESR
+  esr_integrated_on_iot: integer("esr_integrated_on_iot"), // Total ESR Integrated on IoT
   scheme_functional_status: text("scheme_functional_status"), // Scheme Functional Status
   fully_completed_esr: integer("fully_completed_esr"), // No. Fully Completed ESR
   balance_esr: integer("balance_esr"), // Balance to Complete ESR

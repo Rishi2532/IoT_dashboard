@@ -72,9 +72,14 @@ export async function validateExcelFile(fileBuffer: ArrayBuffer): Promise<Valida
       
       // Status fields
       status: [
-        'Fully completion Scheme Status', 'Scheme Status', 'Status',
-        'Scheme status', ' Scheme Status', 'Scheme Functional Status',
-        'Functional Status'
+        'Fully completion Scheme Status', 'Fully Completion Scheme Status',
+        'Scheme Status', 'Status', 'Scheme status', ' Scheme Status', 
+        'Scheme Functional Status', 'Functional Status'
+      ],
+      
+      // Region field
+      region: [
+        'Region', 'Region Name', 'RegionName'
       ]
     };
     

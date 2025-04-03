@@ -1047,6 +1047,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ],
         scheme_functional_status: [
           'Scheme Functional Status', 'Functional Status'
+        ],
+        
+        // Region identification
+        region_name: [
+          'Region', 'RegionName', 'Region Name'
         ]
       };
       
@@ -1117,7 +1122,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ];
         
         if (numericFields.includes(field)) {
-          const num = Number(value);
+          // Make sure we handle string numbers correctly
+          let numValue = value;
+          if (typeof value === 'string') {
+            // Remove any non-numeric characters except decimal point
+            numValue = value.replace(/[^\d.-]/g, '');
+          }
+          const num = Number(numValue);
           return isNaN(num) ? 0 : num;
         }
         
@@ -1125,13 +1136,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (field === 'scheme_status') {
           const status = String(value).trim().toLowerCase();
           if (status === 'completed' || status === 'complete' || status === 'fully completed') {
-            return 'Completed';
+            return 'Fully-Completed';
           } else if (status === 'in progress' || status === 'in-progress' || status === 'partial') {
-            return 'In Progress';
+            return 'Partial';
           } else if (status === 'not connected' || status === 'not-connected') {
             return 'Not-Connected';
           }
-          // Return capitalized version or as is
+          
+          // Use Direct mapping for exact matches
+          if (status === 'completed') {
+            return 'Fully-Completed';
+          }
+          
+          // Return original value if no match
+          return value;
+        }
+        
+        // Map functional status values
+        if (field === 'scheme_functional_status') {
+          const status = String(value).trim().toLowerCase();
+          if (status === 'functional') {
+            return 'Functional';
+          } else if (status === 'partial') {
+            return 'Partial';
+          } else if (status === 'non-functional') {
+            return 'Non-Functional';
+          }
           return value;
         }
         
@@ -1266,6 +1296,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   record.scheme_status = 'In Progress';
                 }
                 
+                // Set villages_integrated field if not explicitly provided
+                if (record.fully_completed_villages !== undefined && record.partial_villages !== undefined) {
+                  const completed = typeof record.fully_completed_villages === 'number' ? record.fully_completed_villages : 0;
+                  const partial = typeof record.partial_villages === 'number' ? record.partial_villages : 0;
+                  
+                  // Calculate villages_integrated as sum of fully_completed_villages and partial_villages
+                  if (!record.villages_integrated) {
+                    record.villages_integrated = completed + partial;
+                  }
+                }
+                
                 const updatedScheme = await storage.updateScheme({
                   ...existingScheme,
                   ...record
@@ -1286,6 +1327,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 }
                 
                 // Create a properly typed object with scheme_name as a required field
+                // Set villages_integrated field if not explicitly provided
+                if (record.fully_completed_villages !== undefined && record.partial_villages !== undefined) {
+                  const completed = typeof record.fully_completed_villages === 'number' ? record.fully_completed_villages : 0;
+                  const partial = typeof record.partial_villages === 'number' ? record.partial_villages : 0;
+                  
+                  // Calculate villages_integrated as sum of fully_completed_villages and partial_villages
+                  if (!record.villages_integrated) {
+                    record.villages_integrated = completed + partial;
+                  }
+                }
+                
                 const schemeData: InsertSchemeStatus = {
                   scheme_name: record.scheme_name || `Scheme ${schemeId}`, // Default name if missing
                   scheme_id: record.scheme_id,
@@ -1304,7 +1356,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   pressure_transmitters_connected: record.pressure_transmitters_connected as number | undefined,
                   residual_chlorine_connected: record.residual_chlorine_connected as number | undefined,
                   scheme_status: record.scheme_status as string | undefined,
-                  scheme_functional_status: record.scheme_functional_status as string | undefined
+                  scheme_functional_status: record.scheme_functional_status as string | undefined,
+                  functional_villages: record.functional_villages as number | undefined
                 };
                 
                 const newScheme = await storage.createScheme(schemeData);
