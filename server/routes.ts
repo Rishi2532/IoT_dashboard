@@ -1442,9 +1442,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Process each sheet
       for (const sheetName of workbook.SheetNames) {
         // Detect region from sheet name
-        const regionName = detectRegionFromSheetName(sheetName);
+        let regionName = detectRegionFromSheetName(sheetName);
         
-        if (!regionName) {
+        // Special handling for "Scheme_Status" sheet - consider as a multi-region sheet
+        if (!regionName && (sheetName === 'Scheme_Status' || sheetName.toLowerCase().includes('scheme'))) {
+          log(`Sheet ${sheetName} doesn't match a region pattern, but will process it as a multi-region sheet`, 'import');
+          // We'll extract region from each row instead of assuming a sheet-wide region
+          regionName = 'EXTRACT_FROM_ROW';
+        } else if (!regionName) {
           log(`Skipping sheet: ${sheetName} - not a recognized region`, 'import');
           continue;
         }
@@ -1623,9 +1628,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             // Create record with region
             const record: Record<string, any> = {
-              region_name: regionName,
               scheme_id: schemeId
             };
+            
+            // If this is a multi-region sheet where we need to extract region from each row
+            if (regionName === 'EXTRACT_FROM_ROW') {
+              // Try to find region in the row data
+              let extractedRegion = null;
+              
+              // First check column mapping for region name field
+              for (const [header, field] of Object.entries(columnMapping)) {
+                if (field === 'region_name' && typedRow[header]) {
+                  const regionValue = String(typedRow[header]).trim();
+                  log(`Found potential region in row: ${regionValue}`, 'import');
+                  
+                  // Check if it matches our known regions
+                  for (const { pattern, name } of REGION_PATTERNS) {
+                    if (pattern.test(regionValue)) {
+                      extractedRegion = name;
+                      log(`Matched region name ${regionValue} to known region: ${extractedRegion}`, 'import');
+                      break;
+                    }
+                  }
+                  
+                  // If we matched a region, use it
+                  if (extractedRegion) {
+                    break;
+                  }
+                }
+              }
+              
+              // If region still not found, fall back to a default
+              if (!extractedRegion) {
+                // Try to get region from an existing scheme with this ID
+                try {
+                  const existingScheme = await storage.getSchemeById(schemeId);
+                  if (existingScheme && existingScheme.region_name) {
+                    extractedRegion = existingScheme.region_name;
+                    log(`Using region from existing scheme: ${extractedRegion}`, 'import');
+                  }
+                } catch (e) {
+                  // Ignore errors and use default
+                }
+              }
+              
+              // If still no region, use default
+              if (!extractedRegion) {
+                // Use a default region if we can't determine one
+                extractedRegion = 'Nagpur'; // Default to Nagpur if we can't determine region
+                log(`Using default region (${extractedRegion}) for scheme ID: ${schemeId}`, 'import');
+              }
+              
+              record.region_name = extractedRegion;
+            } else {
+              // Use the region from the sheet name
+              record.region_name = regionName;
+            }
             
             // Process each column based on the mapping
             for (const [header, field] of Object.entries(columnMapping)) {
