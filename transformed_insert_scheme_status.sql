@@ -1,11 +1,4 @@
-INSERT INTO scheme_status (
-    Sr_No, Region, Circle, Division, Sub_Division, Block, Scheme_ID, Scheme_Name, 
-    Number_of_Village, Total_Villages_Integrated, No_of_Functional_Village, 
-    No_of_Partial_Village, No_of_Non_Functional_Village, Fully_Completed_Villages, 
-    Total_Number_of_ESR, Scheme_Functional_Status, Total_ESR_Integrated, No_Fully_Completed_ESR, 
-    Balance_to_Complete_ESR, Flow_Meters_Connected, Pressure_Transmitter_Connected, 
-    Residual_Chlorine_Analyzer_Connected, Fully_completion_Scheme_Status
-) VALUES
+INSERT INTO scheme_status (sr_no, region_name, circle, division, sub_division, block, scheme_id, scheme_name, total_villages, villages_integrated, functional_villages, partial_villages, non_functional_villages, fully_completed_villages, total_esr, scheme_functional_status, esr_integrated_on_iot, fully_completed_esr, balance_esr, flow_meters_connected, pressure_transmitters_connected, residual_chlorine_connected, scheme_status) VALUES
 (1, 'Amravati', 'Amravati', 'Amravati', 'Achalpur', 'Chandur Bazar', 7945938, '83 Village RRWS Scheme MJP RR (C 39)', 30, 24, 9, 8, 13, 0, 63, 'Partial', 66, 17, 46, 27, 24, 27, 'In Progress'),
 (2, 'Amravati', 'Amravati', 'Yavatmal', 'Pusad', 'Pusad', 20028563, 'Malpathar 28 Villages, (Reju.)', 30, 9, 2, 7, 21, 0, 62, 'Partial', 18, 0, 62, 8, 10, 0, 'In Progress'),
 (3, 'Amravati', 'Amravati', 'Amravati W.M', 'W.M.Amravati - 2', 'Achalpur', 20003791, '105 Villages RRWSS', 10, 42, 2, 5, 3, 0, 20, 'Partial', 99, 0, 20, 66, 55, 24, 'In Progress'),

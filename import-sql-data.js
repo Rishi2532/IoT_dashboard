@@ -1,9 +1,10 @@
-// This script inserts data from SQL file into the scheme_status table
+// This script for importing data from the transformed SQL file
 import 'dotenv/config';
 import pg from 'pg';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 
 const { Pool } = pg;
 
@@ -16,7 +17,11 @@ const pool = new Pool({
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-async function executeSqlInsert() {
+async function importSqlData() {
+  // First, run the transform script to ensure we have the latest transformation
+  console.log('Transforming SQL file...');
+  execSync('node transform-sql-file.js', { stdio: 'inherit' });
+  
   const client = await pool.connect();
   
   try {
@@ -25,50 +30,39 @@ async function executeSqlInsert() {
     // Start a transaction
     await client.query('BEGIN');
     
-    // Read the SQL file content
-    const sqlFilePath = path.join(__dirname, 'attached_assets', 'insert_scheme_status.sql');
-    const originalSql = fs.readFileSync(sqlFilePath, 'utf8');
+    // Read the transformed SQL file
+    const sqlFilePath = path.join(__dirname, 'transformed_insert_scheme_status.sql');
+    const sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
     
-    // Parse scheme IDs from the SQL content
-    console.log('Extracting Scheme IDs from SQL file...');
+    // Extract scheme IDs from the SQL for smart deletion
+    console.log('Extracting scheme IDs from the transformed SQL...');
     const schemeIds = [];
-    const rows = originalSql.match(/\([^)]+\)/g) || [];
+    const rows = sqlContent.match(/\([^)]+\)/g) || [];
     
     for (const row of rows) {
-      // Each row is in the format: (1, 'Amravati', ..., 7945938, '83 Village...', ...)
-      // We need to extract the scheme ID which is the 7th element (index 6)
       const values = row.slice(1, -1).split(',').map(v => v.trim());
       if (values.length >= 7) {
-        const schemeId = values[6].replace(/'/g, ''); // Remove quotes if present
+        // scheme_id is the 7th item (index 6)
+        const schemeId = values[6].replace(/'/g, '');
         schemeIds.push(schemeId);
       }
     }
     
-    // If there are scheme_ids to process, delete existing records first
+    // Delete existing records with the same scheme IDs
     if (schemeIds.length > 0) {
       const uniqueSchemeIds = [...new Set(schemeIds)];
-      console.log(`Found ${uniqueSchemeIds.length} unique scheme_ids in the SQL file`);
+      console.log(`Found ${uniqueSchemeIds.length} unique scheme IDs to process`);
       
-      console.log('Deleting existing records with the same scheme_ids...');
+      console.log('Deleting existing records with the same scheme IDs...');
       for (const schemeId of uniqueSchemeIds) {
         await client.query('DELETE FROM scheme_status WHERE scheme_id = $1', [schemeId]);
       }
       console.log('Deletion completed');
     }
     
-    // Create a modified SQL statement that maps the columns correctly
-    const modifiedSql = originalSql
-      .replace(
-        'INSERT INTO scheme_status (', 
-        'INSERT INTO scheme_status ('
-      )
-      .replace(
-        'Sr_No, Region, Circle, Division, Sub_Division, Block, Scheme_ID, Scheme_Name, Number_of_Village, Total_Villages_Integrated, No_of_Functional_Village, No_of_Partial_Village, No_of_Non_Functional_Village, Fully_Completed_Villages, Total_Number_of_ESR, Scheme_Functional_Status, Total_ESR_Integrated, No_Fully_Completed_ESR, Balance_to_Complete_ESR, Flow_Meters_Connected, Pressure_Transmitter_Connected, Residual_Chlorine_Analyzer_Connected, Fully_completion_Scheme_Status',
-        'sr_no, region_name, circle, division, sub_division, block, scheme_id, scheme_name, total_villages, villages_integrated, functional_villages, partial_villages, non_functional_villages, fully_completed_villages, total_esr, scheme_functional_status, esr_integrated_on_iot, fully_completed_esr, balance_esr, flow_meters_connected, pressure_transmitters_connected, residual_chlorine_connected, scheme_status'
-      );
-    
-    console.log('Executing modified SQL insert statements...');
-    await client.query(modifiedSql);
+    // Execute the transformed SQL insert statements
+    console.log('Executing transformed SQL insert statements...');
+    await client.query(sqlContent);
     
     // Commit the transaction
     await client.query('COMMIT');
@@ -79,11 +73,12 @@ async function executeSqlInsert() {
     await updateRegionSummaries(client);
     console.log('Region summaries updated');
     
+    return { success: true, message: 'SQL data imported successfully', schemeCount: schemeIds.length };
   } catch (error) {
     // Rollback in case of error
     await client.query('ROLLBACK');
-    console.error('Error inserting data:', error);
-    throw error; // Re-throw to propagate to the catch block below
+    console.error('Error importing SQL data:', error);
+    return { success: false, message: `Error: ${error.message}` };
   } finally {
     // Release the client back to the pool
     client.release();
@@ -153,13 +148,18 @@ async function updateRegionSummaries(client) {
   }
 }
 
-// Execute the function
-executeSqlInsert()
-  .then(() => {
-    console.log('Script execution completed');
-    process.exit(0);
-  })
-  .catch(err => {
-    console.error('Script execution failed:', err);
-    process.exit(1);
-  });
+// Execute the function if this script is run directly
+if (require.main === module) {
+  importSqlData()
+    .then((result) => {
+      console.log('Import result:', result);
+      process.exit(result.success ? 0 : 1);
+    })
+    .catch((err) => {
+      console.error('Script execution failed:', err);
+      process.exit(1);
+    });
+}
+
+// Export for use in other modules
+export { importSqlData };

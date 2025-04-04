@@ -16,12 +16,14 @@ import {
   FileUp, 
   LogOut, 
   RefreshCw,
-  Database 
+  Database,
+  FileText
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
 import ProtectedRoute from '@/components/auth/protected-route';
 import RegionImporter from '@/components/admin/region-importer';
 import SchemeImporter from '@/components/admin/scheme-importer';
+import SqlImporter from '@/components/admin/sql-importer';
 
 export default function AdminDashboard() {
   const { toast } = useToast();
@@ -150,14 +152,18 @@ export default function AdminDashboard() {
 
         <div className="px-6">
           <Tabs defaultValue="region-import" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="region-import" className="flex items-center">
                 <Database className="h-4 w-4 mr-2" />
                 Import Region Data
               </TabsTrigger>
               <TabsTrigger value="scheme-import" className="flex items-center">
                 <FileUp className="h-4 w-4 mr-2" />
-                Import Scheme Data
+                Import Scheme Excel
+              </TabsTrigger>
+              <TabsTrigger value="sql-import" className="flex items-center">
+                <FileText className="h-4 w-4 mr-2" />
+                Import SQL Data
               </TabsTrigger>
             </TabsList>
             
@@ -167,6 +173,10 @@ export default function AdminDashboard() {
             
             <TabsContent value="scheme-import" className="mt-0">
               <SchemeImporter />
+            </TabsContent>
+            
+            <TabsContent value="sql-import" className="mt-0">
+              <SqlImporter />
             </TabsContent>
           </Tabs>
         </div>

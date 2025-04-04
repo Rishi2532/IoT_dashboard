@@ -18,7 +18,15 @@ import * as XLSX from 'xlsx';
 import * as path from 'path';
 import * as fs from 'fs';
 import { log } from './vite';
+import { fileURLToPath } from 'url';
+import * as cp from 'child_process';
+import { promisify } from 'util';
 
+const exec = promisify(cp.exec);
+
+// Get current file directory
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 
 
@@ -526,6 +534,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const upload = multer({
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
+  });
+  
+  // Import scheme data from SQL file
+  app.post("/api/admin/import/sql", requireAdmin, async (req, res) => {
+    try {
+      log('Starting SQL import process...', 'import');
+      
+      // Run the import-sql-data.js script
+      const scriptPath = path.join(__dirname, '..', 'import-sql-data.js');
+      
+      // Execute the script as a child process
+      log(`Executing script: ${scriptPath}`, 'import');
+      const { stdout, stderr } = await exec(`node ${scriptPath}`);
+      
+      // Log the output
+      if (stdout) {
+        log(`Import SQL output: ${stdout}`, 'import');
+      }
+      
+      if (stderr) {
+        log(`Import SQL error: ${stderr}`, 'import');
+        return res.status(500).json({ 
+          message: 'Error importing SQL data',
+          error: stderr
+        });
+      }
+      
+      // Send a success response
+      res.json({ 
+        message: 'SQL data imported successfully',
+        details: stdout
+      });
+    } catch (error) {
+      const err = error as Error;
+      console.error('Error running SQL import:', err);
+      res.status(500).json({ 
+        message: 'Failed to import SQL data',
+        error: err.message
+      });
+    }
   });
   
   // Import region data from Excel
