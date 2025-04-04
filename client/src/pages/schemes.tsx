@@ -7,7 +7,7 @@ import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import { SchemeStatus } from "@/types";
 
 export default function Schemes() {
-  const [selectedRegion, setSelectedRegion] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState("all");
   const [selectedScheme, setSelectedScheme] = useState<SchemeStatus | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
