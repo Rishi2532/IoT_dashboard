@@ -362,14 +362,29 @@ export class PostgresStorage implements IStorage {
       // Check if we have stored updates for today
       if (storedUpdatesQuery.rows.length > 0) {
         try {
-          const storedData = JSON.parse(storedUpdatesQuery.rows[0].value);
+          // Handle the case where value might be an object and not a JSON string
+          const storedValue = storedUpdatesQuery.rows[0].value;
+          let storedData;
+          
+          if (typeof storedValue === 'string') {
+            storedData = JSON.parse(storedValue);
+          } else if (typeof storedValue === 'object' && storedValue !== null) {
+            storedData = storedValue;
+          } else {
+            // Default to an empty structure if the value is neither string nor object
+            storedData = { updates: [], prevTotals: null, lastUpdateDay: today };
+          }
+          
           todayUpdates = storedData.updates || [];
           prevTotals = storedData.prevTotals || null;
           lastUpdateDay = storedData.lastUpdateDay || today;
           console.log(`Loaded ${todayUpdates.length} stored updates for today (${today})`);
         } catch (parseError) {
           console.error("Error parsing stored updates:", parseError);
-          // Continue with empty updates if there's a parse error
+          // Initialize with empty values since there was a parse error
+          todayUpdates = [];
+          prevTotals = null;
+          lastUpdateDay = today;
         }
       } else {
         console.log(`No updates found for today (${today}), creating new record`);

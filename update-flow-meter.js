@@ -54,8 +54,8 @@ async function updateRegionValues() {
         },
         {
           name: "Nashik",
-          flow_meter_integrated: 81,
-          rca_integrated: 82,
+          flow_meter_integrated: 89,
+          rca_integrated: 91,
           pressure_transmitter_integrated: 38
         }
       ];
