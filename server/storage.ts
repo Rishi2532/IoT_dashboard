@@ -224,25 +224,12 @@ export class PostgresStorage implements IStorage {
       query = query.where(eq(schemeStatuses.scheme_id, schemeId));
     }
     
-    // Apply status filter if provided and scheme_id was already applied
-    if (statusFilter && statusFilter !== "all" && schemeId) {
+    // Apply status filter if provided
+    if (statusFilter && statusFilter !== "all") {
       // Handle both "Partial" and "In Progress" as the same filter
       if (statusFilter === "In Progress") {
         query = query.where(sql`${schemeStatuses.scheme_status} IN ('Partial', 'In Progress')`);
       } 
-      // Handle Fully Completed status including "completed" and "Completed" values
-      else if (statusFilter === "Fully Completed") {
-        query = query.where(sql`LOWER(${schemeStatuses.scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);
-      } else {
-        query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
-      }
-    } 
-    // Apply just the status filter if it's the only one
-    else if (statusFilter && statusFilter !== "all") {
-      // Handle both "Partial" and "In Progress" as the same filter
-      if (statusFilter === "In Progress") {
-        query = query.where(sql`${schemeStatuses.scheme_status} IN ('Partial', 'In Progress')`);
-      }
       // Handle Fully Completed status including "completed" and "Completed" values
       else if (statusFilter === "Fully Completed") {
         query = query.where(sql`LOWER(${schemeStatuses.scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);

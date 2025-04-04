@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/dashboard/dashboard-layout";
 import RegionFilter from "@/components/dashboard/region-filter";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
-import { SchemeStatus } from "@/types";
+import { SchemeStatus, Region } from "@/types";
 
 export default function Schemes() {
   const [selectedRegion, setSelectedRegion] = useState("all");
@@ -13,7 +13,7 @@ export default function Schemes() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // Fetch regions data
-  const { data: regions, isLoading: isRegionsLoading } = useQuery({
+  const { data: regions, isLoading: isRegionsLoading } = useQuery<Region[]>({
     queryKey: ['/api/regions'],
   });
 
