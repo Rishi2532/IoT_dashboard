@@ -70,12 +70,18 @@ async function transformSqlFile() {
       `INSERT INTO scheme_status (${newColumnNames})`
     );
     
+    // Process "Completed" values for scheme_status
+    // To correctly handle them when imported into database (handles case insensitivity)
+    const completedRegex = /('completed'|'Completed')/gi;
+    sqlContent = sqlContent.replace(completedRegex, (match) => match); // Keep as is for proper handling by utils.getStatusDisplayName
+    
     // Write the transformed SQL to the output file
     fs.writeFileSync(outputFilePath, sqlContent);
     
     console.log(`Transformed SQL file written to ${outputFilePath}`);
     console.log('Original columns:', originalColumns.join(', '));
     console.log('Mapped columns:', mappedColumns.join(', '));
+    console.log('Note: "Completed" values are preserved for proper status display.');
     
   } catch (error) {
     console.error('Error transforming SQL file:', error);

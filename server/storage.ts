@@ -229,6 +229,10 @@ export class PostgresStorage implements IStorage {
       // Handle both "Partial" and "In Progress" as the same filter
       if (statusFilter === "In Progress") {
         query = query.where(sql`${schemeStatuses.scheme_status} IN ('Partial', 'In Progress')`);
+      } 
+      // Handle Fully Completed status including "completed" and "Completed" values
+      else if (statusFilter === "Fully Completed") {
+        query = query.where(sql`LOWER(${schemeStatuses.scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);
       } else {
         query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
       }
@@ -238,6 +242,10 @@ export class PostgresStorage implements IStorage {
       // Handle both "Partial" and "In Progress" as the same filter
       if (statusFilter === "In Progress") {
         query = query.where(sql`${schemeStatuses.scheme_status} IN ('Partial', 'In Progress')`);
+      }
+      // Handle Fully Completed status including "completed" and "Completed" values
+      else if (statusFilter === "Fully Completed") {
+        query = query.where(sql`LOWER(${schemeStatuses.scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);
       } else {
         query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
       }
@@ -267,6 +275,10 @@ export class PostgresStorage implements IStorage {
       // Handle both "Partial" and "In Progress" as the same filter
       if (statusFilter === "In Progress") {
         query = query.where(sql`${schemeStatuses.scheme_status} IN ('Partial', 'In Progress')`);
+      }
+      // Handle Fully Completed status including "completed" and "Completed" values
+      else if (statusFilter === "Fully Completed") {
+        query = query.where(sql`LOWER(${schemeStatuses.scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);
       } else {
         query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
       }
@@ -360,7 +372,10 @@ export class PostgresStorage implements IStorage {
       const currentTotals = {
         villages: regionsData.reduce((sum: number, region: any) => sum + (region.total_villages_integrated || 0), 0),
         esr: regionsData.reduce((sum: number, region: any) => sum + (region.total_esr_integrated || 0), 0),
-        completedSchemes: allSchemes.filter(scheme => scheme.scheme_status === 'Fully-Completed').length,
+        completedSchemes: allSchemes.filter(scheme => {
+          const status = scheme.scheme_status?.toLowerCase() || '';
+          return status === 'fully-completed' || status === 'completed' || status === 'fully completed';
+        }).length,
         flowMeters: regionsData.reduce((sum: number, region: any) => sum + (region.flow_meter_integrated || 0), 0),
         rca: regionsData.reduce((sum: number, region: any) => sum + (region.rca_integrated || 0), 0),
         pt: regionsData.reduce((sum: number, region: any) => sum + (region.pressure_transmitter_integrated || 0), 0)

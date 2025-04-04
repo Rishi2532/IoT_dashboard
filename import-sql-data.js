@@ -97,7 +97,7 @@ async function updateRegionSummaries(client) {
       const schemeStats = await client.query(`
         SELECT 
           COUNT(*) as total_schemes,
-          SUM(CASE WHEN scheme_status = 'Completed' THEN 1 ELSE 0 END) as completed_schemes,
+          SUM(CASE WHEN LOWER(scheme_status) IN ('completed', 'fully-completed', 'fully completed') THEN 1 ELSE 0 END) as completed_schemes,
           SUM(villages_integrated) as total_villages,
           SUM(fully_completed_villages) as completed_villages,
           SUM(esr_integrated_on_iot) as total_esr,
@@ -148,18 +148,16 @@ async function updateRegionSummaries(client) {
   }
 }
 
-// Execute the function if this script is run directly
-if (require.main === module) {
-  importSqlData()
-    .then((result) => {
-      console.log('Import result:', result);
-      process.exit(result.success ? 0 : 1);
-    })
-    .catch((err) => {
-      console.error('Script execution failed:', err);
-      process.exit(1);
-    });
-}
+// Execute the function directly
+importSqlData()
+  .then((result) => {
+    console.log('Import result:', result);
+    process.exit(result.success ? 0 : 1);
+  })
+  .catch((err) => {
+    console.error('Script execution failed:', err);
+    process.exit(1);
+  });
 
 // Export for use in other modules
 export { importSqlData };

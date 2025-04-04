@@ -48,8 +48,8 @@ export default function AdminDashboard() {
         title: 'Logged out',
         description: 'You have been successfully logged out',
       });
-      // Redirect to the root login selection page
-      window.location.href = '/';
+      // Redirect to the login page
+      window.location.href = '/login';
     },
     onError: (error: Error) => {
       toast({

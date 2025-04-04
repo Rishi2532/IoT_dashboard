@@ -31,8 +31,8 @@ export default function Header() {
       return response.json();
     },
     onSuccess: () => {
-      // Redirect to the root login selection page after logout
-      setLocation('/');
+      // Redirect to the login page after logout
+      window.location.href = '/login';
     },
   });
   
