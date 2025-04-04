@@ -148,23 +148,57 @@ export default function SchemeImporter() {
           <Info className="h-4 w-4 text-blue-500" />
           <AlertTitle className="text-blue-800">Excel Format Requirements</AlertTitle>
           <AlertDescription className="text-blue-700">
-            <p className="mb-2">The Excel file should contain the following:</p>
+            <p className="mb-2">The Excel file should match the standard template with these columns:</p>
             <ul className="list-disc pl-5 text-sm space-y-1">
-              <li>Multiple sheets with region names (Amravati, Nashik, Nagpur, Pune, Konkan, and CS for Chhatrapati Sambhajinagar)</li>
-              <li>Must contain <strong>Scheme ID</strong> column for identifying schemes</li>
-              <li>Required data columns (one or more of the following):
+              <li>Basic information:
                 <ul className="list-disc pl-5 mt-1">
-                  <li><strong>Total Villages Integrated</strong></li>
-                  <li><strong>Fully Completed Villages</strong></li>
-                  <li><strong>Total ESR Integrated</strong></li>
-                  <li><strong>No. Fully Completed ESR</strong></li>
-                  <li><strong>Flow Meters Connected</strong> or <strong> Flow Meters Connected</strong> (note the space)</li>
-                  <li><strong>Residual Chlorine Analyzer Connected</strong></li>
-                  <li><strong>Pressure Transmitter Connected</strong></li>
-                  <li><strong>Fully completion Scheme Status</strong> (values will be automatically adjusted: "Partial" → "In Progress")</li>
+                  <li><strong>Sr No.</strong> - Serial number</li>
+                  <li><strong>Scheme ID</strong> - Required for identifying schemes</li>
+                  <li><strong>Scheme Name</strong> - Name of the water scheme</li>
+                </ul>
+              </li>
+              <li>Location hierarchy:
+                <ul className="list-disc pl-5 mt-1">
+                  <li><strong>Region</strong> - Main region (Amravati, Nashik, Nagpur, Pune, etc.)</li>
+                  <li><strong>Circle</strong> - Administrative circle</li>
+                  <li><strong>Division</strong> - Administrative division</li>
+                  <li><strong>Sub Division</strong> - Administrative sub-division</li>
+                  <li><strong>Block</strong> - Administrative block</li>
+                </ul>
+              </li>
+              <li>Village statistics:
+                <ul className="list-disc pl-5 mt-1">
+                  <li><strong>Number of Village</strong> - Total villages in scheme</li>
+                  <li><strong>Total Villages Integrated</strong> - Villages integrated with IoT</li>
+                  <li><strong>No. of Functional Village</strong> - Count of functional villages</li>
+                  <li><strong>No. of Partial Village</strong> - Count of partially functional villages</li>
+                  <li><strong>No. of Non- Functional Village</strong> - Count of non-functional villages</li>
+                  <li><strong>Fully Completed Villages</strong> - Villages with full completion</li>
+                </ul>
+              </li>
+              <li>ESR statistics:
+                <ul className="list-disc pl-5 mt-1">
+                  <li><strong>Total Number of ESR</strong> - Total ESRs in scheme</li>
+                  <li><strong>Total ESR Integrated</strong> - ESRs integrated with IoT</li>
+                  <li><strong>No. Fully Completed ESR</strong> - ESRs with full completion</li>
+                  <li><strong>Balance to Complete ESR</strong> - Remaining ESRs to complete</li>
+                </ul>
+              </li>
+              <li>Component statistics:
+                <ul className="list-disc pl-5 mt-1">
+                  <li><strong>Flow Meters Connected</strong> - Count of flow meters</li>
+                  <li><strong>Pressure Transmitter Connected</strong> - Count of pressure transmitters</li>
+                  <li><strong>Residual Chlorine Analyzer Connected</strong> - Count of RCAs</li>
+                </ul>
+              </li>
+              <li>Status information:
+                <ul className="list-disc pl-5 mt-1">
+                  <li><strong>Scheme Functional Status</strong> - Functional state (Functional, Partial, Non-Functional)</li>
+                  <li><strong>Fully completion Scheme Status</strong> - Overall status (values will be automatically adjusted: "Partial" → "In Progress")</li>
                 </ul>
               </li>
             </ul>
+            <p className="mt-2 text-xs italic">Note: You can have one sheet with all regions or separate sheets with region names (Amravati, Nashik, Nagpur, Pune, Konkan, CS, etc.)</p>
           </AlertDescription>
         </Alert>
         

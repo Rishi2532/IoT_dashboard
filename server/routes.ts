@@ -1031,9 +1031,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: `Unable to read Excel file: ${xlsxError.message}` });
       }
       
-      // Define column patterns to search for in headers
+      // Define column patterns to search for in headers - exactly matching template headers
       const COLUMN_PATTERNS = {
-        // Scheme identification
+        // Basic fields
+        sr_no: [
+          'Sr No.', 'SR No', 'sr_no', 'Serial Number'
+        ],
         scheme_id: [
           'Scheme ID', 'Scheme Id', 'scheme_id', 'SchemeId', 'SCHEME ID',
           'Scheme_Id', 'Scheme Code', 'SchemeID'
@@ -1042,68 +1045,92 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Scheme Name', 'SchemeName', 'scheme_name', 'SCHEME NAME'
         ],
         
-        // Villages related fields
+        // Location hierarchy
+        region_name: [
+          'Region', 'RegionName', 'Region Name', 'region_name'
+        ],
+        circle: [
+          'Circle', 'circle'
+        ],
+        division: [
+          'Division', 'division'
+        ],
+        sub_division: [
+          'Sub Division', 'sub_division', 'SubDivision'
+        ],
+        block: [
+          'Block', 'block', 'Block Name'
+        ],
+        
+        // Villages related fields - exact matches from template
         total_villages: [
           'Number of Village', 'No. of Village', 'Total Villages', 
-          'Number of Villages', 'Villages'
-        ],
-        fully_completed_villages: [
-          'Fully completed Villages', 'Fully Completed Villages', 
-          'No. of Functional Village', 'Functional Villages'
+          'Number of Villages', 'Villages', 'total_villages'
         ],
         villages_integrated: [
-          'Total Villages Integrated', 'Villages Integrated'
+          'Total Villages Integrated', 'Villages Integrated',
+          'villages_integrated', 'total_villages_integrated'
+        ],
+        functional_villages: [
+          'No. of Functional Village', 'Functional Villages',
+          'functional_villages'
         ],
         partial_villages: [
-          'No. of Partial Village', 'Partial Villages', 'Partial Village'
+          'No. of Partial Village', 'Partial Villages', 'Partial Village',
+          'partial_villages'
         ],
         non_functional_villages: [
           'No. of Non- Functional Village', 'No. of Non-Functional Village',
-          'Non-Functional Villages', 'Non Functional Villages'
+          'Non-Functional Villages', 'Non Functional Villages',
+          'non_functional_villages'
+        ],
+        fully_completed_villages: [
+          'Fully Completed Villages', 'Fully completed Villages', 
+          'fully_completed_villages'
         ],
         
         // ESR related fields
         total_esr: [
-          'Total Number of ESR', 'Total ESR', 'ESR Total'
+          'Total Number of ESR', 'Total ESR', 'ESR Total',
+          'total_esr'
         ],
         esr_integrated_on_iot: [
-          'Total ESR Integrated', 'ESR Integrated', 'Total Number of ESR Integrated'
+          'Total ESR Integrated', 'ESR Integrated', 'Total Number of ESR Integrated',
+          'esr_integrated_on_iot', 'total_esr_integrated'
         ],
         fully_completed_esr: [
           'No. Fully Completed ESR', 'Fully Completed ESR', 'No. of Fully Completed ESR',
-          'ESR Fully Completed'
+          'ESR Fully Completed', 'fully_completed_esr', 'no_fully_completed_esr'
         ],
         balance_esr: [
-          'Balance to Complete ESR', 'Balance ESR'
+          'Balance to Complete ESR', 'Balance ESR',
+          'balance_esr'
         ],
         
         // Component related fields
         flow_meters_connected: [
-          'Flow Meters Connected', ' Flow Meters Connected', 'Flow Meters Conneted',
-          'Flow Meter Connected', 'Flow Meters', 'FM Connected'
+          'Flow Meters Connected', 'Flow Meter Connected', 'Flow Meters', 'FM Connected',
+          'flow_meters_connected'
         ],
         pressure_transmitters_connected: [
           'Pressure Transmitter Connected', 'Pressure Transmitters Connected',
-          'Pressure Transmitter Conneted', 'PT Connected', 'Pressure Transmitters'
+          'PT Connected', 'Pressure Transmitters',
+          'pressure_transmitter_connected', 'pressure_transmitters_connected'
         ],
         residual_chlorine_connected: [
-          'Residual Chlorine Connected', 'Residual Chlorine Analyzer Connected',
-          'Residual Chlorine Conneted', 'RCA Connected', 'Residual Chlorine',
-          'Residual Chlorine Analyzers'
+          'Residual Chlorine Analyzer Connected', 'Residual Chlorine Connected',
+          'RCA Connected', 'Residual Chlorine', 'Residual Chlorine Analyzers',
+          'residual_chlorine_connected', 'residual_chlorine_analyzer_connected'
         ],
         
         // Status fields
         scheme_status: [
           'Fully completion Scheme Status', 'Scheme Status', 'Status',
-          'Scheme status', ' Scheme Status'
+          'Scheme status', 'scheme_status', 'fully_completion_scheme_status'
         ],
         scheme_functional_status: [
-          'Scheme Functional Status', 'Functional Status'
-        ],
-        
-        // Region identification
-        region_name: [
-          'Region', 'RegionName', 'Region Name'
+          'Scheme Functional Status', 'Functional Status',
+          'scheme_functional_status'
         ]
       };
       
@@ -1148,18 +1175,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const createColumnMapping = (headers: Record<string, any>): Record<string, string> => {
         const mapping: Record<string, string> = {};
         
-        // Map for common indices to field names (based on actual excel structure)
+        // Map for common indices to field names (based on the standard template structure)
         const commonIndexMapping: Record<number, string> = {
-          6: 'scheme_id',          // Scheme ID is often in column 7 (index 6)
-          7: 'scheme_name',        // Scheme Name is often in column 8 (index 7)
-          9: 'villages_integrated', // Total Villages Integrated is in column 10 (index 9)
-          10: 'fully_completed_villages', // Fully Completed Villages is in column 11 (index 10)
-          11: 'esr_integrated_on_iot', // Total ESR Integrated is in column 12 (index 11)
-          12: 'fully_completed_esr', // No. Fully Completed ESR is in column 13 (index 12)
-          13: 'flow_meters_connected', // Flow Meters Connected is in column 14 (index 13)
-          14: 'residual_chlorine_connected', // Residual Chlorine Analyzer Connected is in column 15 (index 14)
-          15: 'pressure_transmitters_connected', // Pressure Transmitter Connected is in column 16 (index 15)
-          16: 'scheme_status' // Fully completion Scheme Status is in column 17 (index 16)
+          0: 'sr_no',                         // Sr No. is in column 1 (index 0)
+          1: 'region_name',                   // Region is in column 2 (index 1)
+          2: 'circle',                        // Circle is in column 3 (index 2)
+          3: 'division',                      // Division is in column 4 (index 3)
+          4: 'sub_division',                  // Sub Division is in column 5 (index 4)
+          5: 'block',                         // Block is in column 6 (index 5)
+          6: 'scheme_id',                     // Scheme ID is in column 7 (index 6)
+          7: 'scheme_name',                   // Scheme Name is in column 8 (index 7)
+          8: 'total_villages',                // Number of Village is in column 9 (index 8)
+          9: 'villages_integrated',           // Total Villages Integrated is in column 10 (index 9)
+          10: 'functional_villages',          // No. of Functional Village is in column 11 (index 10)
+          11: 'partial_villages',             // No. of Partial Village is in column 12 (index 11)
+          12: 'non_functional_villages',      // No. of Non- Functional Village is in column 13 (index 12)
+          13: 'fully_completed_villages',     // Fully Completed Villages is in column 14 (index 13)
+          14: 'total_esr',                    // Total Number of ESR is in column 15 (index 14)
+          15: 'scheme_functional_status',     // Scheme Functional Status is in column 16 (index 15)
+          16: 'esr_integrated_on_iot',        // Total ESR Integrated is in column 17 (index 16)
+          17: 'fully_completed_esr',          // No. Fully Completed ESR is in column 18 (index 17)
+          18: 'balance_esr',                  // Balance to Complete ESR is in column 19 (index 18)
+          19: 'flow_meters_connected',        // Flow Meters Connected is in column 20 (index 19)
+          20: 'pressure_transmitters_connected', // Pressure Transmitter Connected is in column 21 (index 20)
+          21: 'residual_chlorine_connected',  // Residual Chlorine Analyzer Connected is in column 22 (index 21)
+          22: 'scheme_status'                 // Fully completion Scheme Status is in column 23 (index 22)
         };
         
         // First map by column header matching
@@ -1207,10 +1247,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Numeric fields - convert to numbers
         const numericFields = [
           'total_villages', 'fully_completed_villages', 'villages_integrated',
-          'partial_villages', 'non_functional_villages', 'total_esr',
-          'esr_integrated_on_iot', 'fully_completed_esr', 'balance_esr',
+          'partial_villages', 'non_functional_villages', 'functional_villages',
+          'total_esr', 'esr_integrated_on_iot', 'fully_completed_esr', 'balance_esr',
           'flow_meters_connected', 'pressure_transmitters_connected', 
-          'residual_chlorine_connected'
+          'residual_chlorine_connected', 'sr_no'
         ];
         
         if (numericFields.includes(field)) {
