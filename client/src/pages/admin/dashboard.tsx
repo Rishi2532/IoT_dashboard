@@ -46,8 +46,8 @@ export default function AdminDashboard() {
         title: 'Logged out',
         description: 'You have been successfully logged out',
       });
-      // Refresh the page to show login screen
-      window.location.reload();
+      // Redirect to the root login selection page
+      window.location.href = '/';
     },
     onError: (error: Error) => {
       toast({
