@@ -88,19 +88,31 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Circle</h4>
-                <p className="text-xs text-neutral-900">{scheme.circle || 'N/A'}</p>
+                <p className="text-xs text-neutral-900">
+                  {(!scheme.circle || scheme.circle === 'Circle' || scheme.circle === 'N/A') ? 
+                  <span className="text-gray-400 italic">Not specified</span> : scheme.circle}
+                </p>
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Division</h4>
-                <p className="text-xs text-neutral-900">{scheme.division || 'N/A'}</p>
+                <p className="text-xs text-neutral-900">
+                  {(!scheme.division || scheme.division === 'Division' || scheme.division === 'N/A') ? 
+                  <span className="text-gray-400 italic">Not specified</span> : scheme.division}
+                </p>
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Sub Division</h4>
-                <p className="text-xs text-neutral-900">{scheme.sub_division || 'N/A'}</p>
+                <p className="text-xs text-neutral-900">
+                  {(!scheme.sub_division || scheme.sub_division === 'Sub Division' || scheme.sub_division === 'N/A') ? 
+                  <span className="text-gray-400 italic">Not specified</span> : scheme.sub_division}
+                </p>
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Block</h4>
-                <p className="text-xs text-neutral-900">{scheme.block || 'N/A'}</p>
+                <p className="text-xs text-neutral-900">
+                  {(!scheme.block || scheme.block === 'Block' || scheme.block === 'N/A') ? 
+                  <span className="text-gray-400 italic">Not specified</span> : scheme.block}
+                </p>
               </div>
             </div>
           </div>

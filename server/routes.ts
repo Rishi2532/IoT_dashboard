@@ -1404,8 +1404,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return null;
         }
         
-        // Enhanced handling for location fields - properly map Excel to DB fields 
-        // and ensure proper values are returned (never N/A)
+        // Enhanced handling for location fields - properly map Excel to DB fields
+        // and ensure we preserve actual values (not placeholder text)
         if (field === 'circle' || field === 'division' || field === 'sub_division' || field === 'block') {
           // Debug the location field value
           log(`Processing location field ${field} with value: "${value}"`, 'import');
@@ -1413,22 +1413,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Convert to string, handle "" and "N/A" specially
           const strValue = String(value || "").trim();
           
-          // Don't return empty strings or "N/A" values for these fields
-          if (strValue === "" || strValue.toLowerCase() === "n/a" || strValue.toLowerCase() === "na") {
-            // Return the field display name instead of empty/N/A values
-            const fieldDisplayNames = {
-              'circle': 'Circle',
-              'division': 'Division', 
-              'sub_division': 'Sub Division',
-              'block': 'Block'
-            };
+          // If empty or N/A, return null so the frontend can handle it appropriately
+          // This helps distinguish between actual values and placeholder/empty values
+          if (strValue === "" || 
+              strValue.toLowerCase() === "n/a" || 
+              strValue.toLowerCase() === "na" ||
+              strValue === field ||  // Return null if value is same as field name (e.g. "Circle" for circle field)
+              field.toLowerCase() === strValue.toLowerCase()) { // Case insensitive comparison
             
-            const displayValue = fieldDisplayNames[field as keyof typeof fieldDisplayNames] || field;
-            log(`Replaced empty/N/A value for ${field} with "${displayValue}"`, 'import');
-            return displayValue;
+            log(`Returning null for ${field} with empty/N/A value: "${strValue}"`, 'import');
+            return null;
           }
           
-          // Return the actual value
+          // Return the actual value if it seems to be a real location value
           log(`Keeping original value for ${field}: "${strValue}"`, 'import'); 
           return strValue;
         }
@@ -1792,11 +1789,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Create record with scheme ID and ensure we include important location fields
             const record: Record<string, any> = {
               scheme_id: schemeId,
-              // Add default values for location fields - proper values will be filled from Excel row
-              circle: 'Circle',
-              division: 'Division',
-              sub_division: 'Sub Division',
-              block: 'Block'
+              // Initialize location fields as null - actual values will be filled from Excel row if available
+              circle: null,
+              division: null,
+              sub_division: null,
+              block: null
             };
             
             // If this is a multi-region sheet where we need to extract region from each row

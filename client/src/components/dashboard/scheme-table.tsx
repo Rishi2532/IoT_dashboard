@@ -182,7 +182,11 @@ export default function SchemeTable({
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
                         <span className="px-2 py-1 bg-gray-50 text-gray-700 rounded-md">
-                          {scheme.circle || 'Circle'} / {scheme.division || 'Division'}
+                          {(!scheme.circle || scheme.circle === 'Circle' || scheme.circle === 'N/A') ? 
+                            <span className="text-gray-400">-</span> : scheme.circle}
+                          {' / '}
+                          {(!scheme.division || scheme.division === 'Division' || scheme.division === 'N/A') ? 
+                            <span className="text-gray-400">-</span> : scheme.division}
                         </span>
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
