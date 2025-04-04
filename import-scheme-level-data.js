@@ -408,9 +408,29 @@ async function processExcelFile(filePath) {
             scheme_status: extractValue(row, 'scheme_status', columnMapping)
           };
           
-          // Skip if we don't have a scheme name
+          // Skip if we don't have a scheme name or if it looks like a header row
           if (!schemeData.scheme_name) {
             console.log('Skipping row - no scheme name found');
+            continue;
+          }
+          
+          // Skip if the scheme_id or scheme_name looks like a header
+          if (typeof schemeData.scheme_id === 'string' && 
+             (schemeData.scheme_id.includes('Scheme ID') || 
+              schemeData.scheme_id.includes('Scheme Name') ||
+              schemeData.scheme_id.includes('Sr No') ||
+              schemeData.scheme_id.toLowerCase() === 'scheme_id' ||
+              schemeData.scheme_id.toLowerCase() === 'schemeid')) {
+            console.log('Skipping row - scheme_id appears to be a header: ' + schemeData.scheme_id);
+            continue;
+          }
+          
+          if (typeof schemeData.scheme_name === 'string' && 
+             (schemeData.scheme_name.includes('Scheme Name') ||
+              schemeData.scheme_name.includes('Village') ||
+              schemeData.scheme_name.toLowerCase() === 'scheme_name' ||
+              schemeData.scheme_name.toLowerCase() === 'schemename')) {
+            console.log('Skipping row - scheme_name appears to be a header: ' + schemeData.scheme_name);
             continue;
           }
           
