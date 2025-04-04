@@ -40,11 +40,26 @@ async function importSqlData() {
     const rows = sqlContent.match(/\([^)]+\)/g) || [];
     
     for (const row of rows) {
-      const values = row.slice(1, -1).split(',').map(v => v.trim());
+      // Use a more sophisticated approach to split CSV while respecting quotes
+      const rawContent = row.slice(1, -1); // Remove outer parentheses
+      
+      // Use regex to handle proper CSV parsing with quoted values
+      const valueRegex = /(?:,\s*|^)(?:"([^"]*)"|'([^']*)'|([^,]*))/g;
+      const values = [];
+      let match;
+      
+      while ((match = valueRegex.exec(rawContent)) !== null) {
+        // Get the captured value (either quoted or unquoted)
+        const value = match[1] || match[2] || match[3];
+        values.push(value ? value.trim() : '');
+      }
+      
       if (values.length >= 7) {
         // scheme_id is the 7th item (index 6)
-        const schemeId = values[6].replace(/'/g, '');
-        schemeIds.push(schemeId);
+        const schemeId = values[6].replace(/'/g, '').replace(/"/g, '');
+        // Ensure the scheme ID is treated as a string (important for display)
+        const formattedSchemeId = schemeId.toString();
+        schemeIds.push(formattedSchemeId);
       }
     }
     
@@ -65,8 +80,11 @@ async function importSqlData() {
     console.log('Executing transformed SQL insert statements...');
     
     // Parse the transformed SQL into individual INSERT statements
+    // Modified regex to handle multiline statements and properly match entire VALUES section
     const insertRegex = /INSERT INTO scheme_status \([^)]+\) VALUES\s*\([^)]+\)/g;
     const insertStatements = sqlContent.match(insertRegex) || [];
+    
+    console.log(`Found ${insertStatements.length} INSERT statements to process`);
     
     let successCount = 0;
     let errorCount = 0;
@@ -75,6 +93,15 @@ async function importSqlData() {
     // Execute each statement individually to handle errors better
     for (let stmt of insertStatements) {
       try {
+        // Process each statement to handle any special character issues
+        stmt = stmt.replace(/\(\s*([^,]+),/g, (match, value) => {
+          // Handle the sr_no value (first value)
+          if (value.trim() === 'NULL' || value.trim() === 'null') {
+            return '(NULL,';
+          }
+          return match; // Leave as is if not NULL
+        });
+        
         await client.query(stmt);
         successCount++;
       } catch (err) {

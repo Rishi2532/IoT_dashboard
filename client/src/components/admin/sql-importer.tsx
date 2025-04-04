@@ -22,6 +22,11 @@ export default function SqlImporter() {
 
   const importMutation = useMutation({
     mutationFn: async () => {
+      // Reset any previous state
+      setImportSuccess(false);
+      setImportError(null);
+      setImportDetails(null);
+      
       const response = await fetch('/api/admin/import/sql', {
         method: 'POST',
       });
@@ -125,19 +130,40 @@ export default function SqlImporter() {
                   <AlertTitle className="text-green-800">Import Successful</AlertTitle>
                 </div>
                 <AlertDescription>
-                  <p>{importDetails.message}</p>
-                  {importDetails.details && (
+                  <p className="font-medium">{importDetails.message}</p>
+                  
+                  <div className="mt-2 text-sm space-y-1">
+                    <div className="bg-white/70 rounded-md px-3 py-1 border border-green-100 flex justify-between">
+                      <span>Schemes Processed:</span>
+                      <span className="font-semibold">{importDetails.schemeCount || 0}</span>
+                    </div>
+                    
+                    {importDetails.errors && importDetails.errors.length > 0 && (
+                      <Accordion type="single" collapsible className="mt-2">
+                        <AccordionItem value="errors">
+                          <AccordionTrigger className="text-sm font-medium text-amber-700">
+                            Show Errors ({importDetails.errors.length})
+                          </AccordionTrigger>
+                          <AccordionContent>
+                            <div className="text-sm p-2 bg-amber-50 rounded border border-amber-100 text-xs max-h-48 overflow-y-auto">
+                              <pre className="whitespace-pre-wrap">{JSON.stringify(importDetails.errors, null, 2)}</pre>
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    )}
+                    
                     <Accordion type="single" collapsible className="mt-2">
                       <AccordionItem value="details">
-                        <AccordionTrigger className="text-sm font-medium text-green-700">View Details</AccordionTrigger>
+                        <AccordionTrigger className="text-sm font-medium text-green-700">View Import Log</AccordionTrigger>
                         <AccordionContent>
-                          <div className="text-sm p-2 bg-white/50 rounded border border-green-100 text-xs max-h-48 overflow-y-auto">
-                            <pre className="whitespace-pre-wrap">{importDetails.details}</pre>
+                          <div className="text-sm p-2 bg-white/50 rounded border border-green-100 text-xs max-h-48 overflow-y-auto font-mono">
+                            <pre className="whitespace-pre-wrap">{importDetails.details || "No detailed log available"}</pre>
                           </div>
                         </AccordionContent>
                       </AccordionItem>
                     </Accordion>
-                  )}
+                  </div>
                 </AlertDescription>
               </div>
             </Alert>

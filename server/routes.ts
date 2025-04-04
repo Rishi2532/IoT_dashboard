@@ -561,10 +561,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
         });
       }
       
-      // Send a success response
+      // Try to parse the result from stdout to get scheme count and detailed info
+      let schemeCount = 0;
+      let errorMessages = [];
+      
+      try {
+        // Extract scheme count using a regex pattern
+        const schemeCountMatch = stdout.match(/Found (\d+) unique scheme IDs to process/);
+        if (schemeCountMatch && schemeCountMatch[1]) {
+          schemeCount = parseInt(schemeCountMatch[1], 10);
+        }
+        
+        // Extract error messages
+        const errorPattern = /Error with statement: (.+?)(?=\n|$)/g;
+        let match;
+        while ((match = errorPattern.exec(stdout)) !== null) {
+          errorMessages.push(match[1]);
+        }
+      } catch (parseError) {
+        console.error('Error parsing import output:', parseError);
+      }
+      
+      // Send a success response with detailed information
       res.json({ 
         message: 'SQL data imported successfully',
-        details: stdout
+        details: stdout,
+        schemeCount: schemeCount,
+        errors: errorMessages
       });
     } catch (error) {
       const err = error as Error;

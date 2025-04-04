@@ -40,6 +40,19 @@ async function transformSqlFile() {
     const sqlFilePath = path.join(__dirname, 'attached_assets', 'insert_scheme_status.sql');
     const outputFilePath = path.join(__dirname, 'transformed_insert_scheme_status.sql');
     
+    // If the attached_assets file doesn't exist, write the one from the editor to it
+    if (!fs.existsSync(sqlFilePath)) {
+      // Create the attached_assets directory if it doesn't exist
+      const assetsDir = path.join(__dirname, 'attached_assets');
+      if (!fs.existsSync(assetsDir)) {
+        fs.mkdirSync(assetsDir, { recursive: true });
+      }
+      
+      // Write the SQL provided by user to the file
+      fs.writeFileSync(sqlFilePath, fs.readFileSync(path.join(__dirname, 'insert_scheme_status.sql'), 'utf8'));
+      console.log(`SQL file created at ${sqlFilePath}`);
+    }
+    
     let sqlContent = fs.readFileSync(sqlFilePath, 'utf8');
     
     console.log('Transforming SQL file...');
@@ -74,6 +87,21 @@ async function transformSqlFile() {
     // To correctly handle them when imported into database (handles case insensitivity)
     const completedRegex = /('completed'|'Completed')/gi;
     sqlContent = sqlContent.replace(completedRegex, (match) => match); // Keep as is for proper handling by utils.getStatusDisplayName
+    
+    // Ensure scheme IDs are properly quoted to be treated as strings (important for display)
+    // Regex to match any numeric scheme_id values that aren't already quoted
+    const schemeIdRegex = /VALUES\s*\((.*?,.*?,.*?,.*?,.*?,.*?,)(\s*\d+)(,)/g;
+    sqlContent = sqlContent.replace(schemeIdRegex, (match, before, schemeId, after) => {
+      console.log(`Formatting scheme ID: ${schemeId.trim()} to '${schemeId.trim()}'`);
+      return `VALUES (${before} '${schemeId.trim()}'${after}`;
+    });
+    
+    // Fix schema names with special characters (apostrophes, etc.)
+    // Double escape any single quotes in string values to prevent SQL syntax errors
+    const stringFixRegex = /'([^']*)'([^']*)'([^']*)'/g;
+    sqlContent = sqlContent.replace(stringFixRegex, (match, part1, part2, part3) => {
+      return `'${part1}''${part2}''${part3}'`;
+    });
     
     // Write the transformed SQL to the output file
     fs.writeFileSync(outputFilePath, sqlContent);
