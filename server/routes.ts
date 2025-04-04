@@ -1114,9 +1114,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: `Unable to read Excel file: ${xlsxError.message}` });
       }
       
-      // Define column patterns to search for in headers - exactly matching template headers
+      // Define column patterns to search for in headers - using the exact mapping provided by the user
       const COLUMN_PATTERNS = {
-        // Basic fields - exact match from the reference mapping provided by user
+        // Database field names mapped to all possible Excel column headers
         sr_no: [
           'Sr No.', 'Sr_No'
         ],
@@ -1127,7 +1127,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Scheme Name', 'Scheme_Name'
         ],
         
-        // Location hierarchy - exact match from the reference mapping
+        // Location hierarchy - exact match from the user's mapping
         region_name: [
           'Region'
         ],
@@ -1144,7 +1144,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Block'
         ],
         
-        // Villages related fields - exact match from the reference mapping
+        // Villages related fields - exact match from the user's mapping
         total_villages: [
           'Number of Village', 'Number_of_Village'
         ],
@@ -1164,7 +1164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Fully Completed Villages', 'Fully_Completed_Villages'
         ],
         
-        // ESR related fields - exact match from the reference mapping
+        // ESR related fields - exact match from the user's mapping
         total_esr: [
           'Total Number of ESR', 'Total_Number_of_ESR'
         ],
@@ -1181,7 +1181,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Balance to Complete ESR', 'Balance_to_Complete_ESR'
         ],
         
-        // Component related fields - exact match from the reference mapping
+        // Component related fields - exact match from the user's mapping
         flow_meters_connected: [
           'Flow Meters Connected', 'Flow_Meters_Connected'
         ],
@@ -1192,7 +1192,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'Residual Chlorine Analyzer Connected', 'Residual_Chlorine_Analyzer_Connected'
         ],
         
-        // Status fields - exact match from the reference mapping
+        // Status fields - exact match from the user's mapping
         scheme_status: [
           'Fully completion Scheme Status', 'Fully_completion_Scheme_Status'
         ]
@@ -1263,31 +1263,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const mapping: Record<string, string> = {};
         
         // Create a direct lookup table for Excel column header to database field
+        // Exact mapping provided by the user
         const directMapping: Record<string, string> = {
-          'Sr No.': 'sr_no',
-          'Region': 'region_name',
-          'Circle': 'circle',
-          'Division': 'division',
-          'Sub Division': 'sub_division',
-          'Block': 'block',
-          'Scheme ID': 'scheme_id',
-          'Scheme Name': 'scheme_name',
-          'Number of Village': 'total_villages',
-          'Total Villages Integrated': 'villages_integrated',
-          'No. of Functional Village': 'functional_villages',
-          'No. of Partial Village': 'partial_villages',
-          'No. of Non- Functional Village': 'non_functional_villages',
-          'Fully Completed Villages': 'fully_completed_villages',
-          'Total Number of ESR': 'total_esr',
-          'Scheme Functional Status': 'scheme_functional_status',
-          'Total ESR Integrated': 'esr_integrated_on_iot',
-          'No. Fully Completed ESR': 'fully_completed_esr',
-          'Balance to Complete ESR': 'balance_esr',
-          'Flow Meters Connected': 'flow_meters_connected',
-          'Pressure Transmitter Connected': 'pressure_transmitters_connected',
-          'Residual Chlorine Analyzer Connected': 'residual_chlorine_connected',
-          'Fully completion Scheme Status': 'scheme_status'
+          // Database field names <- Excel column names
+          'sr_no': 'Sr No.',
+          'region_name': 'Region',
+          'circle': 'Circle',
+          'division': 'Division',
+          'sub_division': 'Sub Division',
+          'block': 'Block',
+          'scheme_id': 'Scheme ID',
+          'scheme_name': 'Scheme Name',
+          'total_villages': 'Number of Village',
+          'villages_integrated': 'Total Villages Integrated',
+          'functional_villages': 'No. of Functional Village',
+          'partial_villages': 'No. of Partial Village',
+          'non_functional_villages': 'No. of Non- Functional Village',
+          'fully_completed_villages': 'Fully Completed Villages',
+          'total_esr': 'Total Number of ESR',
+          'scheme_functional_status': 'Scheme Functional Status',
+          'esr_integrated_on_iot': 'Total ESR Integrated',
+          'fully_completed_esr': 'No. Fully Completed ESR',
+          'balance_esr': 'Balance to Complete ESR',
+          'flow_meters_connected': 'Flow Meters Connected',
+          'pressure_transmitters_connected': 'Pressure Transmitter Connected',
+          'residual_chlorine_connected': 'Residual Chlorine Analyzer Connected',
+          'scheme_status': 'Fully completion Scheme Status'
         };
+        
+        // Reverse the mapping to be from Excel column names to database field names
+        const columnToFieldMapping: Record<string, string> = {};
+        for (const [field, header] of Object.entries(directMapping)) {
+          columnToFieldMapping[header] = field;
+          
+          // Also map the version with underscores
+          const underscoreVersion = header.replace(/\s+/g, '_');
+          if (underscoreVersion !== header) {
+            columnToFieldMapping[underscoreVersion] = field;
+          }
+        }
         
         // Map for position-based fallback (if header names don't match exactly)
         const commonIndexMapping: Record<number, string> = {
@@ -1318,9 +1332,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // First try direct mapping from Excel column headers to database fields
         for (const header of Object.keys(headers)) {
-          if (directMapping[header]) {
-            mapping[header] = directMapping[header];
-            log(`Direct mapping found for header "${header}" → field "${directMapping[header]}"`, 'import');
+          if (columnToFieldMapping[header]) {
+            mapping[header] = columnToFieldMapping[header];
+            log(`Direct mapping found for header "${header}" → field "${columnToFieldMapping[header]}"`, 'import');
           } else {
             // Fallback to pattern matching
             const field = getFieldForColumn(header);
