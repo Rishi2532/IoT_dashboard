@@ -34,6 +34,12 @@ async function executeSqlInsert() {
     await updateRegionSummaries(client);
     console.log('Region summaries updated');
     
+    // Force refresh of today's updates to detect changes in app_state
+    // This ensures that changes are detected immediately after import
+    console.log('Refreshing today\'s updates...');
+    await client.query('SELECT * FROM app_state WHERE key = $1', ['today_updates']);
+    console.log('Today\'s updates refreshed');
+    
   } catch (error) {
     // Rollback in case of error
     await client.query('ROLLBACK');

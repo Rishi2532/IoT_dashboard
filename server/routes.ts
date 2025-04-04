@@ -390,6 +390,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/update-region-summaries", requireAdmin, async (req, res) => {
     try {
       await updateRegionSummaries();
+      
+      // Force refresh of today's updates to detect changes in app_state
+      // This ensures that changes are detected immediately after summary updates
+      await storage.getTodayUpdates();
+      
       res.status(200).json({ message: "Region summaries updated successfully" });
     } catch (error) {
       console.error("Error updating region summaries:", error);
@@ -401,6 +406,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/admin/reset-region-data", requireAdmin, async (req, res) => {
     try {
       await resetRegionData();
+      
+      // Force refresh of today's updates to detect changes in app_state
+      // This ensures that changes are detected immediately after reset
+      await storage.getTodayUpdates();
+      
       res.status(200).json({ message: "Region data reset successfully" });
     } catch (error) {
       console.error("Error resetting region data:", error);
@@ -496,6 +506,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         return res.status(400).json({ message: "Invalid region name" });
       }
+      
+      // Force refresh of today's updates to detect changes in app_state
+      // This ensures that changes are detected immediately after individual region reset
+      await storage.getTodayUpdates();
       
       res.status(200).json({ message: `${regionName} region data reset successfully` });
     } catch (error) {
@@ -593,6 +607,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } catch (parseError) {
         console.error('Error parsing import output:', parseError);
       }
+      
+      // Force refresh of today's updates to detect changes in app_state
+      // This ensures that changes are detected immediately after SQL import
+      await storage.getTodayUpdates();
       
       // Send a success response with detailed information
       res.json({ 
@@ -851,6 +869,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update region summaries after import
       await updateRegionSummaries();
       
+      // Force refresh of today's updates to detect changes in app_state
+      // This ensures that changes are detected immediately after import
+      await storage.getTodayUpdates();
+      
       res.json({ 
         message: `Region data imported successfully. ${updatedCount} regions updated.`,
         updatedCount 
@@ -1038,6 +1060,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Update region summaries after import
       await updateRegionSummaries();
+      
+      // Force refresh of today's updates to detect changes in app_state
+      // This ensures that changes are detected immediately after import
+      await storage.getTodayUpdates();
       
       res.json({ 
         message: `Scheme data imported successfully. ${updatedCount} schemes updated.`,
@@ -2046,6 +2072,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Update region summaries after import
         await updateRegionSummaries();
         
+        // Force refresh of today's updates to detect changes in app_state
+        // This ensures that changes are detected immediately after import
+        await storage.getTodayUpdates();
+        
         res.json({ 
           message: `Excel data imported successfully. ${totalUpdated} schemes updated, ${totalCreated} new schemes created, and ${deletedCount} schemes deleted.`,
           updatedCount: totalUpdated,
@@ -2058,6 +2088,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Still update region summaries even if deletion fails
         await updateRegionSummaries();
+        
+        // Force refresh of today's updates to detect changes in app_state
+        // This ensures that changes are detected immediately after import
+        await storage.getTodayUpdates();
         
         res.json({ 
           message: `Excel data imported successfully. ${totalUpdated} schemes updated and ${totalCreated} new schemes created. Failed to delete old schemes.`,

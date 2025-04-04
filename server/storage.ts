@@ -486,11 +486,13 @@ export class PostgresStorage implements IStorage {
       };
       
       // Upsert the app_state record using SQL template literal for safety
+      // Store as a proper JSONB object
+      const jsonValue = JSON.stringify(stateToStore);
       await db.execute(sql`
         INSERT INTO app_state (key, value) 
-        VALUES (${updateKey}, ${JSON.stringify(stateToStore)})
+        VALUES (${updateKey}, ${jsonValue}::jsonb)
         ON CONFLICT (key) 
-        DO UPDATE SET value = ${JSON.stringify(stateToStore)}
+        DO UPDATE SET value = ${jsonValue}::jsonb
       `);
       
       // Return updates for today
