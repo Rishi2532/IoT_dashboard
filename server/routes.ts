@@ -1404,6 +1404,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return null;
         }
         
+        // Special handling for location fields to ensure they're never N/A in the display
+        if (field === 'circle' || field === 'division' || field === 'sub_division' || field === 'block') {
+          // Convert to string, handle "" and "N/A" specially
+          const strValue = String(value || "").trim();
+          
+          // Don't return empty strings or "N/A" values for these fields
+          if (strValue === "" || strValue.toLowerCase() === "n/a") {
+            // Return the actual field name as the value instead of N/A
+            const fieldDisplayNames = {
+              'circle': 'Circle',
+              'division': 'Division', 
+              'sub_division': 'Sub Division',
+              'block': 'Block'
+            };
+            return fieldDisplayNames[field as keyof typeof fieldDisplayNames] || strValue;
+          }
+          
+          // Return the actual value
+          return strValue;
+        }
+        
         // Log raw values for debugging
         if (field === 'fully_completed_villages' || 
             field === 'villages_integrated' || 
@@ -1513,16 +1534,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return String(value).trim();
         }
         
-        // Location fields - ensure proper formatting and handle null values
-        if (field === 'circle' || field === 'division' || field === 'sub_division' || field === 'block') {
-          if (!value) return null;
-          const strValue = String(value).trim();
-          // Convert N/A or NA values to null
-          if (strValue.toLowerCase() === 'n/a' || strValue.toLowerCase() === 'na' || strValue === '-') {
-            return null;
-          }
-          return strValue;
-        }
+        // We already have enhanced location field handling above
         
         return value;
       };
