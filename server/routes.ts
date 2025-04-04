@@ -1223,6 +1223,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the corresponding field name for a column header
       const getFieldForColumn = (header: string): string | null => {
+        // Special handling for location fields that are often problematic
+        if (header) {
+          const headerLower = header.toLowerCase();
+          
+          // Check for Circle field
+          if (headerLower === 'circle' || headerLower.includes('circle')) {
+            log(`Special match found for header "${header}" → field "circle"`, 'import');
+            return 'circle';
+          }
+          
+          // Check for Division field
+          if (headerLower === 'division' || headerLower.includes('division')) {
+            log(`Special match found for header "${header}" → field "division"`, 'import');
+            return 'division';
+          }
+          
+          // Check for Sub Division field
+          if (headerLower === 'sub division' || headerLower.includes('sub') && headerLower.includes('division') || 
+              headerLower === 'subdivision' || headerLower === 'sub-division') {
+            log(`Special match found for header "${header}" → field "sub_division"`, 'import');
+            return 'sub_division';
+          }
+          
+          // Check for Block field
+          if (headerLower === 'block' || headerLower.includes('block')) {
+            log(`Special match found for header "${header}" → field "block"`, 'import');
+            return 'block';
+          }
+        }
+        
         // First try for exact matches (case-insensitive)
         for (const [field, patterns] of Object.entries(COLUMN_PATTERNS)) {
           for (const pattern of patterns) {
@@ -1289,6 +1319,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'pressure_transmitters_connected': 'Pressure Transmitter Connected',
           'residual_chlorine_connected': 'Residual Chlorine Analyzer Connected',
           'scheme_status': 'Fully completion Scheme Status'
+        };
+        
+        // Add variant spellings to ensure we catch all possible column headers
+        const variantMappings = {
+          'circle': ['Circle', 'CIRCLE', 'circle'],
+          'division': ['Division', 'DIVISION', 'division'],
+          'sub_division': ['Sub Division', 'SUB DIVISION', 'SubDivision', 'Sub-Division', 'Subdivision'],
+          'block': ['Block', 'BLOCK', 'block']
         };
         
         // Reverse the mapping to be from Excel column names to database field names
@@ -1720,9 +1758,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Now we've found a valid data row
             hasFoundDataRows = true;
             
-            // Create record with region
+            // Create record with scheme ID and ensure we include important location fields
             const record: Record<string, any> = {
-              scheme_id: schemeId
+              scheme_id: schemeId,
+              // Ensure the location fields are captured from the row
+              circle: null,
+              division: null,
+              sub_division: null,
+              block: null
             };
             
             // If this is a multi-region sheet where we need to extract region from each row
@@ -1860,6 +1903,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   scheme_name: record.scheme_name || `Scheme ${schemeId}`, // Default name if missing
                   scheme_id: record.scheme_id,
                   region_name: record.region_name,
+                  // Include location fields
+                  circle: record.circle as string | undefined,
+                  division: record.division as string | undefined,
+                  sub_division: record.sub_division as string | undefined,
+                  block: record.block as string | undefined,
+                  // Include all numeric fields
                   total_villages: record.total_villages as number | undefined,
                   villages_integrated: record.villages_integrated as number | undefined,
                   fully_completed_villages: record.fully_completed_villages as number | undefined,
@@ -1897,15 +1946,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
       
-      // Update region summaries after import
-      await updateRegionSummaries();
-      
-      res.json({ 
-        message: `Excel data imported successfully. ${totalUpdated} schemes updated and ${totalCreated} new schemes created.`,
-        updatedCount: totalUpdated,
-        createdCount: totalCreated,
-        processedSchemes
-      });
+      // Delete all schemes not in the processedSchemes list 
+      // This ensures any schemes not in the Excel file are removed
+      try {
+        const allSchemes = await storage.getAllSchemes();
+        const schemesToDelete = allSchemes.filter(scheme => !processedSchemes.includes(scheme.scheme_id));
+        
+        log(`Deleting ${schemesToDelete.length} schemes not found in the Excel file...`, 'import');
+        let deletedCount = 0;
+        
+        for (const scheme of schemesToDelete) {
+          try {
+            await storage.deleteScheme(scheme.scheme_id);
+            deletedCount++;
+          } catch (deleteErr) {
+            console.error(`Error deleting scheme ${scheme.scheme_id}:`, deleteErr);
+          }
+        }
+        
+        log(`Successfully deleted ${deletedCount} schemes`, 'import');
+        
+        // Update region summaries after import
+        await updateRegionSummaries();
+        
+        res.json({ 
+          message: `Excel data imported successfully. ${totalUpdated} schemes updated, ${totalCreated} new schemes created, and ${deletedCount} schemes deleted.`,
+          updatedCount: totalUpdated,
+          createdCount: totalCreated,
+          deletedCount,
+          processedSchemes
+        });
+      } catch (deleteError) {
+        console.error("Error deleting old schemes:", deleteError);
+        
+        // Still update region summaries even if deletion fails
+        await updateRegionSummaries();
+        
+        res.json({ 
+          message: `Excel data imported successfully. ${totalUpdated} schemes updated and ${totalCreated} new schemes created. Failed to delete old schemes.`,
+          updatedCount: totalUpdated,
+          createdCount: totalCreated,
+          processedSchemes
+        });
+      }
     } catch (error) {
       console.error("Error importing Excel data:", error);
       res.status(500).json({ message: "Failed to import Excel data" });
