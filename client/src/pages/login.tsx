@@ -43,22 +43,6 @@ export default function LoginPage() {
   // Get the location object for navigation
   const [, setLocation] = useLocation();
   
-  // Check if user is already logged in
-  const authStatusQuery = useQuery<AuthStatusResponse>({
-    queryKey: ['/api/auth/status'],
-    refetchOnWindowFocus: false,
-  });
-  
-  // Redirect to dashboard if already logged in
-  if (authStatusQuery.data?.isLoggedIn) {
-    if (authStatusQuery.data.isAdmin) {
-      setLocation('/admin/dashboard');
-    } else {
-      setLocation('/dashboard');
-    }
-    return null;
-  }
-
   // Login form setup
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -103,6 +87,21 @@ export default function LoginPage() {
     onError: (error: Error) => {
       setLoginError(error.message);
       console.error('Login error:', error);
+    }
+  });
+  
+  // Check if user is already logged in
+  const authStatusQuery = useQuery<AuthStatusResponse>({
+    queryKey: ['/api/auth/status'],
+    refetchOnWindowFocus: false,
+    onSuccess: (data) => {
+      if (data.isLoggedIn) {
+        if (data.isAdmin) {
+          setLocation('/admin/dashboard');
+        } else {
+          setLocation('/dashboard');
+        }
+      }
     }
   });
 
