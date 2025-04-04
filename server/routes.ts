@@ -1793,7 +1793,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               circle: null,
               division: null,
               sub_division: null,
-              block: null
+              block: null,
+              // Set agency based on region - this will be preserved during future imports
+              agency: null // Will be set after we determine the region
             };
             
             // If this is a multi-region sheet where we need to extract region from each row
@@ -1845,9 +1847,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               
               record.region_name = extractedRegion;
+              // Set agency based on region name
+              const agencyMapping: Record<string, string> = {
+                'Nagpur': 'M/S Ceinsys',
+                'Amravati': 'M/S Ceinsys',
+                'Nashik': 'M/S Newtek',
+                'Pune': 'M/S Ecotech',
+                'Konkan': 'M/S Ecotech',
+                'Chhatrapati Sambhajinagar': 'M/S Newtek'
+              };
+              record.agency = agencyMapping[extractedRegion] || 'Not Specified';
             } else {
               // Use the region from the sheet name
               record.region_name = regionName;
+              // Set agency based on region name
+              const agencyMapping: Record<string, string> = {
+                'Nagpur': 'M/S Ceinsys',
+                'Amravati': 'M/S Ceinsys',
+                'Nashik': 'M/S Newtek',
+                'Pune': 'M/S Ecotech',
+                'Konkan': 'M/S Ecotech',
+                'Chhatrapati Sambhajinagar': 'M/S Newtek'
+              };
+              record.agency = agencyMapping[regionName] || 'Not Specified';
             }
             
             // Process each column based on the mapping
@@ -1896,9 +1918,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   }
                 }
                 
+                // Preserve static scheme information and location data
+                // Create a filtered record that excludes protected fields
+                const filteredRecord = { ...record };
+                
+                // Fields to preserve during import (won't be updated)
+                const preservedFields = [
+                  'scheme_id', 
+                  'scheme_name',
+                  'agency',
+                  'region_name',
+                  'circle',
+                  'division',
+                  'sub_division',
+                  'block'
+                ];
+                
+                // Remove preserved fields from the update data
+                preservedFields.forEach(field => {
+                  delete filteredRecord[field];
+                });
+                
+                // Log what we're preserving
+                log(`Preserving static fields for scheme ${existingScheme.scheme_id}: ${preservedFields.join(', ')}`, 'import');
+                
+                // Update scheme with filtered record (preserving static fields)
                 const updatedScheme = await storage.updateScheme({
                   ...existingScheme,
-                  ...record
+                  ...filteredRecord
                 });
                 
                 log(`Updated scheme: ${schemeId}`, 'import');
@@ -1931,6 +1978,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   scheme_name: record.scheme_name || `Scheme ${schemeId}`, // Default name if missing
                   scheme_id: record.scheme_id,
                   region_name: record.region_name,
+                  // Include agency
+                  agency: record.agency as string | undefined,
                   // Include location fields
                   circle: record.circle as string | undefined,
                   division: record.division as string | undefined,

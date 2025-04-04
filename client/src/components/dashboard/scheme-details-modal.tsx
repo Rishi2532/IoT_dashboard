@@ -65,7 +65,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               {/* Sr. No. removed as requested */}
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Agency</h4>
-                <p className="text-xs text-neutral-900">{getAgencyByRegion(scheme.region_name)}</p>
+                <p className="text-xs text-neutral-900">{scheme.agency || getAgencyByRegion(scheme.region_name)}</p>
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Total Villages</h4>
