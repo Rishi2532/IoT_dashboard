@@ -126,7 +126,7 @@ export default function SchemeTable({
             </SelectTrigger>
             <SelectContent className="text-xs sm:text-sm lg:text-base">
               <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Fully-Completed">Fully Completed</SelectItem>
+              <SelectItem value="Fully Completed">Fully Completed</SelectItem>
               <SelectItem value="In Progress">In Progress</SelectItem>
               <SelectItem value="Not-Connected">Not Connected</SelectItem>
             </SelectContent>
