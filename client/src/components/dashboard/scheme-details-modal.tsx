@@ -235,7 +235,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               </div>
               
               <div className="bg-white p-2 rounded border border-neutral-100 text-center">
-                <div className="text-xs text-neutral-500 mb-1">Residual Chlorine</div>
+                <div className="text-xs text-neutral-500 mb-1">Residual Chlorine Analyzers</div>
                 <div className="font-semibold text-blue-600">{scheme.residual_chlorine_connected || scheme.rca_integrated || 0}</div>
               </div>
             </div>

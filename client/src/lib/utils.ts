@@ -38,14 +38,15 @@ export function getStatusDisplayName(status: SchemeCompletionStatus): string {
   // Handle potential whitespace issues
   const cleanStatus = status.toString().trim();
   
-  switch (cleanStatus) {
-    case 'Fully-Completed':
-    case 'Completed':
+  switch (cleanStatus.toLowerCase()) {
+    case 'fully-completed':
+    case 'completed':
+    case 'fully completed':
       return 'Fully Completed';
-    case 'Not-Connected':
+    case 'not-connected':
       return 'Not Connected';
-    case 'Partial':
-    case 'In Progress':
+    case 'partial':
+    case 'in progress':
       return 'In Progress';
     default:
       return cleanStatus;
