@@ -1298,10 +1298,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           // Database field names <- Excel column names
           'sr_no': 'Sr No.',
           'region_name': 'Region',
-          'circle': 'Circle',
-          'division': 'Division',
-          'sub_division': 'Sub Division',
-          'block': 'Block',
+          'circle': 'Circle',         // Exact match as needed
+          'division': 'Division',     // Exact match as needed
+          'sub_division': 'Sub Division', // Space instead of underscore
+          'block': 'Block',           // Exact match as needed
           'scheme_id': 'Scheme ID',
           'scheme_name': 'Scheme Name',
           'total_villages': 'Number of Village',
@@ -1511,6 +1511,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Text fields - ensure they're properly formatted
         if (field === 'scheme_id') {
           return String(value).trim();
+        }
+        
+        // Location fields - ensure proper formatting and handle null values
+        if (field === 'circle' || field === 'division' || field === 'sub_division' || field === 'block') {
+          if (!value) return null;
+          const strValue = String(value).trim();
+          // Convert N/A or NA values to null
+          if (strValue.toLowerCase() === 'n/a' || strValue.toLowerCase() === 'na' || strValue === '-') {
+            return null;
+          }
+          return strValue;
         }
         
         return value;

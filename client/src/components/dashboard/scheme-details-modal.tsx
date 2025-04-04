@@ -62,10 +62,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 <h4 className="text-xs font-medium text-neutral-500">Scheme ID</h4>
                 <p className="text-xs text-neutral-900 bg-gray-100 rounded px-2 py-1 mt-1 inline-block font-mono">{scheme.scheme_id || 'N/A'}</p>
               </div>
-              <div>
-                <h4 className="text-xs font-medium text-neutral-500">Sr. No.</h4>
-                <p className="text-xs text-neutral-900">{scheme.sr_no || 'N/A'}</p>
-              </div>
+              {/* Sr. No. removed as requested */}
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Agency</h4>
                 <p className="text-xs text-neutral-900">{getAgencyByRegion(scheme.region_name)}</p>
