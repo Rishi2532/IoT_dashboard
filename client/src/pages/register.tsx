@@ -93,15 +93,7 @@ export default function RegisterPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-100 to-blue-50">
       <div className="absolute top-10 left-10">
         <div className="flex items-center text-blue-800">
-          <div className="flex items-center">
-            <svg className="w-12 h-12 text-blue-700" viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 3L1 9L5 11.18V17.18L12 21L19 17.18V11.18L21 10.09V17H23V9L12 3Z" />
-            </svg>
-            <div className="ml-3">
-              <h1 className="text-3xl font-bold text-blue-900">Jal Jeevan</h1>
-              <h2 className="text-2xl font-bold text-blue-700">Mission</h2>
-            </div>
-          </div>
+          <img src="/images/jal-jeevan-mission-logo.png" alt="Har Ghar Jal - Jal Jeevan Mission" className="h-24" />
         </div>
       </div>
       

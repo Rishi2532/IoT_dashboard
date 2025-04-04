@@ -52,8 +52,8 @@ export default function Header() {
                 <Sidebar />
               </div>
               
-              <div className="bg-white/20 backdrop-blur-sm rounded-full p-2 mr-3 shadow-lg border border-white/20">
-                <Droplet className="h-6 w-6 text-white drop-shadow-md" />
+              <div className="mr-3">
+                <img src="/images/jal-jeevan-mission-logo.png" alt="Jal Jeevan Mission" className="h-10 bg-white/90 rounded-full p-0.5" />
               </div>
               <div>
                 <h1 className="font-bold text-lg sm:text-xl text-white drop-shadow-sm">

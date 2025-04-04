@@ -107,7 +107,7 @@ export default function AdminPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-100 to-blue-50">
       <div className="absolute top-10 left-10">
         <div className="flex items-center text-blue-800">
-          <img src="/attached_assets/image_1743656603642.png" alt="Har Ghar Jal - Jal Jeevan Mission" className="h-24" />
+          <img src="/images/jal-jeevan-mission-logo.png" alt="Har Ghar Jal - Jal Jeevan Mission" className="h-24" />
         </div>
       </div>
       
