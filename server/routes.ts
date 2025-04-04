@@ -1129,19 +1129,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Location hierarchy - exact match from the user's mapping
         region_name: [
-          'Region'
+          'Region', 'region', 'REGION'
         ],
         circle: [
-          'Circle'
+          'Circle', 'circle', 'CIRCLE', 'Circle Name', 'CircleName'
         ],
         division: [
-          'Division'
+          'Division', 'division', 'DIVISION', 'Division Name', 'DivisionName' 
         ],
         sub_division: [
-          'Sub Division', 'Sub_Division'
+          'Sub Division', 'Sub_Division', 'sub_division', 'SUB DIVISION', 'SubDivision', 'Sub-Division', 'Subdivision'
         ],
         block: [
-          'Block'
+          'Block', 'block', 'BLOCK', 'Taluka', 'taluka'
         ],
         
         // Villages related fields - exact match from the user's mapping
@@ -1404,24 +1404,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return null;
         }
         
-        // Special handling for location fields to ensure they're never N/A in the display
+        // Enhanced handling for location fields - properly map Excel to DB fields 
+        // and ensure proper values are returned (never N/A)
         if (field === 'circle' || field === 'division' || field === 'sub_division' || field === 'block') {
+          // Debug the location field value
+          log(`Processing location field ${field} with value: "${value}"`, 'import');
+          
           // Convert to string, handle "" and "N/A" specially
           const strValue = String(value || "").trim();
           
           // Don't return empty strings or "N/A" values for these fields
-          if (strValue === "" || strValue.toLowerCase() === "n/a") {
-            // Return the actual field name as the value instead of N/A
+          if (strValue === "" || strValue.toLowerCase() === "n/a" || strValue.toLowerCase() === "na") {
+            // Return the field display name instead of empty/N/A values
             const fieldDisplayNames = {
               'circle': 'Circle',
               'division': 'Division', 
               'sub_division': 'Sub Division',
               'block': 'Block'
             };
-            return fieldDisplayNames[field as keyof typeof fieldDisplayNames] || strValue;
+            
+            const displayValue = fieldDisplayNames[field as keyof typeof fieldDisplayNames] || field;
+            log(`Replaced empty/N/A value for ${field} with "${displayValue}"`, 'import');
+            return displayValue;
           }
           
           // Return the actual value
+          log(`Keeping original value for ${field}: "${strValue}"`, 'import'); 
           return strValue;
         }
         
@@ -1784,11 +1792,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Create record with scheme ID and ensure we include important location fields
             const record: Record<string, any> = {
               scheme_id: schemeId,
-              // Ensure the location fields are captured from the row
-              circle: null,
-              division: null,
-              sub_division: null,
-              block: null
+              // Add default values for location fields - proper values will be filled from Excel row
+              circle: 'Circle',
+              division: 'Division',
+              sub_division: 'Sub Division',
+              block: 'Block'
             };
             
             // If this is a multi-region sheet where we need to extract region from each row

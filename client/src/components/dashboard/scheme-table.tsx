@@ -139,9 +139,10 @@ export default function SchemeTable({
             <Table>
               <TableHeader className="bg-blue-50">
                 <TableRow>
-                  <TableHead className="w-[15%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">Scheme ID</TableHead>
-                  <TableHead className="w-[30%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">Scheme Name</TableHead>
+                  <TableHead className="w-[12%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">Scheme ID</TableHead>
+                  <TableHead className="w-[25%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">Scheme Name</TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">Region</TableHead>
+                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">Circle/Division</TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">Fully Completed Villages</TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">ESR</TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">Status</TableHead>
@@ -152,14 +153,14 @@ export default function SchemeTable({
                 {isLoading ? (
                   [...Array(5)].map((_, index) => (
                     <TableRow key={index}>
-                      <TableCell colSpan={7}>
+                      <TableCell colSpan={8}>
                         <div className="animate-pulse h-4 sm:h-6 lg:h-8 bg-gray-200 rounded"></div>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : currentItems.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-4 sm:py-6 lg:py-8 text-xs sm:text-sm lg:text-base text-neutral-500">
+                    <TableCell colSpan={8} className="text-center py-4 sm:py-6 lg:py-8 text-xs sm:text-sm lg:text-base text-neutral-500">
                       No schemes found matching your criteria
                     </TableCell>
                   </TableRow>
@@ -177,6 +178,11 @@ export default function SchemeTable({
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
                         <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
                           {scheme.region_name}
+                        </span>
+                      </TableCell>
+                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
+                        <span className="px-2 py-1 bg-gray-50 text-gray-700 rounded-md">
+                          {scheme.circle || 'Circle'} / {scheme.division || 'Division'}
                         </span>
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
