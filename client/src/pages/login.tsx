@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { 
@@ -93,17 +93,19 @@ export default function LoginPage() {
   // Check if user is already logged in
   const authStatusQuery = useQuery<AuthStatusResponse>({
     queryKey: ['/api/auth/status'],
-    refetchOnWindowFocus: false,
-    onSuccess: (data) => {
-      if (data.isLoggedIn) {
-        if (data.isAdmin) {
-          setLocation('/admin/dashboard');
-        } else {
-          setLocation('/dashboard');
-        }
+    refetchOnWindowFocus: false
+  });
+  
+  // Effect to handle redirection if user is logged in
+  useEffect(() => {
+    if (authStatusQuery.data?.isLoggedIn) {
+      if (authStatusQuery.data.isAdmin) {
+        setLocation('/admin/dashboard');
+      } else {
+        setLocation('/dashboard');
       }
     }
-  });
+  }, [authStatusQuery.data, setLocation]);
 
   // Form submission handler
   const onSubmit = (data: LoginFormValues) => {

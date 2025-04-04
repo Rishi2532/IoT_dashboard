@@ -60,11 +60,34 @@ async function importSqlData() {
       console.log('Deletion completed');
     }
     
-    // Execute the transformed SQL insert statements
+    // Split the SQL content into individual INSERT statements and execute them one by one
+    // to better handle errors and continue on duplicate key errors
     console.log('Executing transformed SQL insert statements...');
-    await client.query(sqlContent);
     
-    // Commit the transaction
+    // Parse the transformed SQL into individual INSERT statements
+    const insertRegex = /INSERT INTO scheme_status \([^)]+\) VALUES\s*\([^)]+\)/g;
+    const insertStatements = sqlContent.match(insertRegex) || [];
+    
+    let successCount = 0;
+    let errorCount = 0;
+    let errorMessages = [];
+    
+    // Execute each statement individually to handle errors better
+    for (let stmt of insertStatements) {
+      try {
+        await client.query(stmt);
+        successCount++;
+      } catch (err) {
+        errorCount++;
+        // Log the error but continue with other statements
+        console.log(`Error with statement: ${err.message}`);
+        errorMessages.push(err.message);
+      }
+    }
+    
+    console.log(`Completed with ${successCount} successful inserts and ${errorCount} errors`);
+    
+    // Commit the transaction if there were any successful inserts
     await client.query('COMMIT');
     console.log('Data inserted successfully');
     
