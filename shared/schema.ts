@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -90,3 +90,15 @@ export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses);
 
 export type InsertSchemeStatus = z.infer<typeof insertSchemeStatusSchema>;
 export type SchemeStatus = typeof schemeStatuses.$inferSelect;
+
+// App state table for storing persistent application state
+export const appState = pgTable("app_state", {
+  key: text("key").primaryKey(),
+  value: jsonb("value").notNull(),
+  updated_at: timestamp("updated_at").defaultNow()
+});
+
+export const insertAppStateSchema = createInsertSchema(appState);
+
+export type InsertAppState = z.infer<typeof insertAppStateSchema>;
+export type AppState = typeof appState.$inferSelect;

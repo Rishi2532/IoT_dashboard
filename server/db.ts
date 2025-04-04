@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
-import { sql, eq } from "drizzle-orm";
-import { regions, schemeStatuses, users } from "../shared/schema";
+import { sql, eq, like, and, not } from "drizzle-orm";
+import { regions, schemeStatuses, users, appState } from "../shared/schema";
 import { createRequire } from "module";
 
 // Use createRequire to load CommonJS modules from ESM
@@ -151,39 +151,27 @@ export async function cleanupOldUpdates() {
     const now = new Date();
     const today = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
     
-    // Check if the app_state table exists
-    try {
-      const tableExists = await db.execute(
-        `SELECT EXISTS (
-           SELECT FROM information_schema.tables 
-           WHERE table_name = 'app_state'
-         )`
+    // Create app_state table using SQL if it doesn't exist
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "app_state" (
+        "key" TEXT PRIMARY KEY,
+        "value" JSONB NOT NULL,
+        "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
-      
-      if (!tableExists.rows[0].exists) {
-        console.log("Creating app_state table...");
-        await db.execute(
-          `CREATE TABLE IF NOT EXISTS app_state (
-            key TEXT PRIMARY KEY,
-            value JSONB NOT NULL,
-            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-          )`
-        );
-      }
-      
-      // Delete all daily update records except for today's
-      const deletedRows = await db.execute(
-        `DELETE FROM app_state 
-         WHERE key LIKE 'daily_updates_%' 
-         AND key != $1`,
-        [`daily_updates_${today}`]
-      );
-      
-      console.log(`Cleaned up ${deletedRows.rowCount} old update records`);
-    } catch (error) {
-      console.error("Error checking/creating app_state table:", error);
-    }
+    `);
     
+    // Delete all daily update records except for today's
+    // We need to use raw SQL here because Drizzle doesn't support LIKE operator easily with parameters
+    const updateKey = `daily_updates_${today}`;
+    const pattern = 'daily_updates_%';
+    
+    await db.execute(sql`
+      DELETE FROM app_state 
+      WHERE key LIKE ${pattern} 
+      AND key != ${updateKey}
+    `);
+    
+    console.log("Cleaned up old update records successfully");
   } catch (error) {
     console.error("Error cleaning up old updates:", error);
   }

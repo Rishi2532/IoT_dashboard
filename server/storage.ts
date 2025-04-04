@@ -2,6 +2,7 @@ import {
   users,
   regions,
   schemeStatuses,
+  appState,
   type User,
   type InsertUser,
   type Region,
@@ -339,19 +340,29 @@ export class PostgresStorage implements IStorage {
       
       // First, try to retrieve daily updates from the database
       const updateKey = `daily_updates_${today}`;
-      const storedUpdatesRow = await db.execute(
-        `SELECT value FROM app_state WHERE key = $1`,
-        [updateKey]
-      );
+      
+      // Ensure the app_state table exists
+      await db.execute(sql`
+        CREATE TABLE IF NOT EXISTS "app_state" (
+          "key" TEXT PRIMARY KEY,
+          "value" JSONB NOT NULL,
+          "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+        );
+      `);
+      
+      // Use SQL template to avoid parameter issues
+      const storedUpdatesQuery = await db.execute(sql`
+        SELECT value FROM app_state WHERE key = ${updateKey}
+      `);
       
       let todayUpdates: any[] = [];
       let prevTotals: any = null;
       let lastUpdateDay = null;
       
       // Check if we have stored updates for today
-      if (storedUpdatesRow.rows.length > 0) {
+      if (storedUpdatesQuery.rows.length > 0) {
         try {
-          const storedData = JSON.parse(storedUpdatesRow.rows[0].value);
+          const storedData = JSON.parse(storedUpdatesQuery.rows[0].value);
           todayUpdates = storedData.updates || [];
           prevTotals = storedData.prevTotals || null;
           lastUpdateDay = storedData.lastUpdateDay || today;
@@ -474,13 +485,13 @@ export class PostgresStorage implements IStorage {
         lastUpdateDay: today
       };
       
-      // Upsert the app_state record
-      await db.execute(
-        `INSERT INTO app_state (key, value) VALUES ($1, $2)
-         ON CONFLICT (key) 
-         DO UPDATE SET value = $2`,
-        [updateKey, JSON.stringify(stateToStore)]
-      );
+      // Upsert the app_state record using SQL template literal for safety
+      await db.execute(sql`
+        INSERT INTO app_state (key, value) 
+        VALUES (${updateKey}, ${JSON.stringify(stateToStore)})
+        ON CONFLICT (key) 
+        DO UPDATE SET value = ${JSON.stringify(stateToStore)}
+      `);
       
       // Return updates for today
       return todayUpdates;
