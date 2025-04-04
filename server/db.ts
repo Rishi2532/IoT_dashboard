@@ -141,6 +141,54 @@ export async function updateRegionSummaries() {
 }
 
 // Initialize the database with schema and data
+// Helper function to clean up old update records
+export async function cleanupOldUpdates() {
+  try {
+    console.log("Cleaning up old update records...");
+    const db = await getDB();
+    
+    // Get current date
+    const now = new Date();
+    const today = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    
+    // Check if the app_state table exists
+    try {
+      const tableExists = await db.execute(
+        `SELECT EXISTS (
+           SELECT FROM information_schema.tables 
+           WHERE table_name = 'app_state'
+         )`
+      );
+      
+      if (!tableExists.rows[0].exists) {
+        console.log("Creating app_state table...");
+        await db.execute(
+          `CREATE TABLE IF NOT EXISTS app_state (
+            key TEXT PRIMARY KEY,
+            value JSONB NOT NULL,
+            updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+          )`
+        );
+      }
+      
+      // Delete all daily update records except for today's
+      const deletedRows = await db.execute(
+        `DELETE FROM app_state 
+         WHERE key LIKE 'daily_updates_%' 
+         AND key != $1`,
+        [`daily_updates_${today}`]
+      );
+      
+      console.log(`Cleaned up ${deletedRows.rowCount} old update records`);
+    } catch (error) {
+      console.error("Error checking/creating app_state table:", error);
+    }
+    
+  } catch (error) {
+    console.error("Error cleaning up old updates:", error);
+  }
+}
+
 export async function initializeDatabase() {
   const db = await getDB();
 
@@ -1455,6 +1503,9 @@ export async function initializeDatabase() {
       // We no longer automatically reset region data to allow manual updates to persist
     }
 
+    // Clean up old update records
+    await cleanupOldUpdates();
+    
     // Always update region summaries, whether the database was just initialized or not
     await updateRegionSummaries();
 

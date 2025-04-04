@@ -333,22 +333,35 @@ export class PostgresStorage implements IStorage {
     console.log("Fetching today's updates");
     
     try {
-      // Initialize global variable to store today's updates if it doesn't exist
-      if (!(global as any).todayUpdates) {
-        (global as any).todayUpdates = [];
-      }
-      
-      // Check if this is the first time running or if it's a new day
+      // Get the current date (server's local time)
       const now = new Date();
-      if (!(global as any).lastUpdateDay) {
-        (global as any).lastUpdateDay = now.toISOString().split('T')[0]; // Store just the date part
-      } else {
-        const today = now.toISOString().split('T')[0];
-        if (today !== (global as any).lastUpdateDay) {
-          // It's a new day, reset updates
-          (global as any).todayUpdates = [];
-          (global as any).lastUpdateDay = today;
+      const today = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+      
+      // First, try to retrieve daily updates from the database
+      const updateKey = `daily_updates_${today}`;
+      const storedUpdatesRow = await db.execute(
+        `SELECT value FROM app_state WHERE key = $1`,
+        [updateKey]
+      );
+      
+      let todayUpdates: any[] = [];
+      let prevTotals: any = null;
+      let lastUpdateDay = null;
+      
+      // Check if we have stored updates for today
+      if (storedUpdatesRow.rows.length > 0) {
+        try {
+          const storedData = JSON.parse(storedUpdatesRow.rows[0].value);
+          todayUpdates = storedData.updates || [];
+          prevTotals = storedData.prevTotals || null;
+          lastUpdateDay = storedData.lastUpdateDay || today;
+          console.log(`Loaded ${todayUpdates.length} stored updates for today (${today})`);
+        } catch (parseError) {
+          console.error("Error parsing stored updates:", parseError);
+          // Continue with empty updates if there's a parse error
         }
+      } else {
+        console.log(`No updates found for today (${today}), creating new record`);
       }
       
       // Get current regions data
@@ -368,98 +381,109 @@ export class PostgresStorage implements IStorage {
         pt: regionsData.reduce((sum: number, region: any) => sum + (region.pressure_transmitter_integrated || 0), 0)
       };
       
-      // Store previous totals
-      if (!(global as any).prevTotals) {
-        (global as any).prevTotals = { ...currentTotals };
-      }
-      
-      // Calculate differences since last check
+      // Only detect new changes if we have previous totals
+      // If this is the first run for today, just store the current totals
       const updates: any[] = [];
       
-      // Check for NEW village updates since last check
-      const newVillages = currentTotals.villages - (global as any).prevTotals.villages;
-      if (newVillages > 0) {
-        updates.push({ 
-          type: 'village', 
-          count: newVillages,
-          status: 'new',
-          timestamp: new Date().toISOString()
-        });
+      if (prevTotals) {
+        // Calculate differences since the previous update
+        
+        // Check for NEW village updates since last check
+        const newVillages = currentTotals.villages - prevTotals.villages;
+        if (newVillages > 0) {
+          updates.push({ 
+            type: 'village', 
+            count: newVillages,
+            status: 'new',
+            timestamp: new Date().toISOString(),
+            region: "All Regions"
+          });
+        }
+        
+        // Check for NEW ESR updates since last check
+        const newESR = currentTotals.esr - prevTotals.esr;
+        if (newESR > 0) {
+          updates.push({ 
+            type: 'esr', 
+            count: newESR,
+            status: 'new',
+            timestamp: new Date().toISOString(),
+            region: "All Regions"
+          });
+        }
+        
+        // Check for NEW completed schemes since last check
+        const newCompletedSchemes = currentTotals.completedSchemes - prevTotals.completedSchemes;
+        if (newCompletedSchemes > 0) {
+          updates.push({
+            type: 'scheme',
+            count: newCompletedSchemes,
+            status: 'completed',
+            timestamp: new Date().toISOString(),
+            region: "All Regions"
+          });
+        }
+        
+        // Check for NEW flow meters since last check
+        const newFlowMeters = currentTotals.flowMeters - prevTotals.flowMeters;
+        if (newFlowMeters > 0) {
+          updates.push({
+            type: 'flow_meter',
+            count: newFlowMeters,
+            status: 'new',
+            timestamp: new Date().toISOString(),
+            region: "All Regions"
+          });
+        }
+        
+        // Check for NEW RCAs since last check
+        const newRCA = currentTotals.rca - prevTotals.rca;
+        if (newRCA > 0) {
+          updates.push({
+            type: 'rca',
+            count: newRCA,
+            status: 'new',
+            timestamp: new Date().toISOString(),
+            region: "All Regions"
+          });
+        }
+        
+        // Check for NEW pressure transmitters since last check
+        const newPT = currentTotals.pt - prevTotals.pt;
+        if (newPT > 0) {
+          updates.push({
+            type: 'pressure_transmitter',
+            count: newPT,
+            status: 'new',
+            timestamp: new Date().toISOString(),
+            region: "All Regions"
+          });
+        }
       }
-      
-      // Check for NEW ESR updates since last check
-      const newESR = currentTotals.esr - (global as any).prevTotals.esr;
-      if (newESR > 0) {
-        updates.push({ 
-          type: 'esr', 
-          count: newESR,
-          status: 'new',
-          timestamp: new Date().toISOString()
-        });
-      }
-      
-      // Check for NEW completed schemes since last check
-      const newCompletedSchemes = currentTotals.completedSchemes - (global as any).prevTotals.completedSchemes;
-      if (newCompletedSchemes > 0) {
-        updates.push({
-          type: 'scheme',
-          count: newCompletedSchemes,
-          status: 'completed',
-          timestamp: new Date().toISOString()
-        });
-      }
-      
-      // Check for NEW flow meters since last check
-      const newFlowMeters = currentTotals.flowMeters - (global as any).prevTotals.flowMeters;
-      if (newFlowMeters > 0) {
-        updates.push({
-          type: 'flow_meter',
-          count: newFlowMeters,
-          status: 'new',
-          timestamp: new Date().toISOString()
-        });
-      }
-      
-      // Check for NEW RCAs since last check
-      const newRCA = currentTotals.rca - (global as any).prevTotals.rca;
-      if (newRCA > 0) {
-        updates.push({
-          type: 'rca',
-          count: newRCA,
-          status: 'new',
-          timestamp: new Date().toISOString()
-        });
-      }
-      
-      // Check for NEW pressure transmitters since last check
-      const newPT = currentTotals.pt - (global as any).prevTotals.pt;
-      if (newPT > 0) {
-        updates.push({
-          type: 'pressure_transmitter',
-          count: newPT,
-          status: 'new',
-          timestamp: new Date().toISOString()
-        });
-      }
-      
-      // Update previous totals
-      (global as any).prevTotals = { ...currentTotals };
       
       // Add new updates to today's updates
       if (updates.length > 0) {
-        // Enrich updates with region info for better display
-        const enrichedUpdates = updates.map(update => {
-          return {
-            ...update,
-            region: "All Regions" // Default to all regions for system-generated updates
-          };
-        });
-        
-        (global as any).todayUpdates = [...enrichedUpdates, ...(global as any).todayUpdates];
+        console.log(`Adding ${updates.length} new updates`);
+        todayUpdates = [...updates, ...todayUpdates];
       }
       
+      // Store current state in the database
+      const stateToStore = {
+        updates: todayUpdates,
+        prevTotals: currentTotals,
+        lastUpdateDay: today
+      };
+      
+      // Upsert the app_state record
+      await db.execute(
+        `INSERT INTO app_state (key, value) VALUES ($1, $2)
+         ON CONFLICT (key) 
+         DO UPDATE SET value = $2`,
+        [updateKey, JSON.stringify(stateToStore)]
+      );
+      
       // Return updates for today
-      return (global as any).todayUpdates;
+      return todayUpdates;
     } catch (error) {
       console.error("Error fetching today's updates:", error);
       throw error;
