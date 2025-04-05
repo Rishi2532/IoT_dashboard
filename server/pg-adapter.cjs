@@ -39,10 +39,7 @@ if (process.env.DATABASE_URL) {
     connectionString: process.env.DATABASE_URL,
     max: 10,
     idleTimeoutMillis: 30000,
-    ssl: {
-      require: true,
-      rejectUnauthorized: false // This is needed for self-signed certificates
-    }
+    ssl: false // Replit PostgreSQL doesn't need SSL
   });
 } else {
   console.log('Using explicit parameters for PostgreSQL connection');
