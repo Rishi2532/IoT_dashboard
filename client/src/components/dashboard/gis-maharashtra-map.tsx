@@ -91,10 +91,14 @@ export default function GISMaharashtraMap({
     const map = L.map(mapRef.current, {
       center: [18.5, 76], // Maharashtra's approximate center
       zoom: 7,
-      minZoom: 6,
-      maxZoom: 10,
+      minZoom: 7,   // Increased minZoom to prevent zooming out to all of India
+      maxZoom: 9,   // Adjusted maxZoom for better control
       zoomControl: true,
       attributionControl: false,
+      maxBounds: L.latLngBounds(
+        L.latLng(14.5, 72.5),  // Southwest coordinates
+        L.latLng(22.5, 82.5)   // Northeast coordinates
+      ),  // Set bounds to Maharashtra state area only
     });
     
     // Set light blue tile layer for better visual appeal
@@ -102,15 +106,29 @@ export default function GISMaharashtraMap({
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
     
-    // Add state boundary for Maharashtra with bold black border
+    // Add state boundary for Maharashtra with bold black border and highlighted neighboring state borders
     L.geoJSON(maharashtraGeoJson, {
       style: {
         fillOpacity: 0,
-        weight: 4,
+        weight: 5,              // Increased thickness for more visibility
         color: '#000000',
         opacity: 1,
         lineCap: 'round',
-        lineJoin: 'round'
+        lineJoin: 'round',
+        dashArray: undefined   // Solid line
+      }
+    }).addTo(map);
+    
+    // Add a white outline just outside the black border for better visibility against different backgrounds
+    L.geoJSON(maharashtraGeoJson, {
+      style: {
+        fillOpacity: 0,
+        weight: 7,
+        color: 'rgba(255,255,255,0.8)',
+        opacity: 0.8,
+        lineCap: 'round',
+        lineJoin: 'round',
+        dashArray: undefined
       }
     }).addTo(map);
     
@@ -186,22 +204,16 @@ export default function GISMaharashtraMap({
         const feature = features[0];
         const center = getFeatureCenter(feature);
         
-        // Create custom marker icon with ESR water tank for ESR metric
+        // Create custom marker icon (without ESR water tank per requirement)
         const markerIcon = L.divIcon({
           className: 'custom-marker-icon',
-          html: metric === 'esr' ? `
-            <div class="marker-pin" style="background-color: white; border: 1.5px solid #0A93E2; width: 30px; height: 30px; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-              <div style="width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;">
-                <img src="/images/esr-water-tank.png" alt="ESR" width="26" height="26" />
-              </div>
-            </div>
-          ` : `
+          html: `
             <div class="marker-pin" style="background-color: #2563eb; border: 1.5px solid white; width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">
               <div style="background-color: #3b82f6; width: 6px; height: 6px; border-radius: 50%; position: absolute; top: 5px; left: 5px; border: 0.5px solid white;"></div>
             </div>
           `,
-          iconSize: metric === 'esr' ? [30, 30] : [16, 16],
-          iconAnchor: metric === 'esr' ? [15, 15] : [8, 8]
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
         });
         
         // Add marker
@@ -404,10 +416,10 @@ export default function GISMaharashtraMap({
 
       {isLoading ? (
         <div className="space-y-2 flex-1">
-          <Skeleton className="h-full w-full rounded-md" />
+          <Skeleton className="h-full w-full rounded-md" style={{ minHeight: '650px' }} />
         </div>
       ) : (
-        <div className="relative w-full h-full flex-1" style={{ overflow: 'hidden', minHeight: '600px' }}>
+        <div className="relative w-full h-full flex-1" style={{ overflow: 'hidden', minHeight: '650px', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
           <div 
             ref={mapRef}
             id="maharashtra-gis-map" 
