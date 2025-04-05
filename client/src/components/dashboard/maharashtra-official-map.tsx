@@ -185,66 +185,114 @@ export default function MaharashtraOfficialMap({
           style="cursor: pointer; transition: fill 0.2s, stroke 0.2s"
         />
 
-        <!-- Region Labels -->
+        <!-- District Labels -->
         <g>
-          <text x="430" y="120" text-anchor="middle" style="fill: #ffffff; font-size: 14px; font-weight: bold; pointer-events: none;">Amravati</text>
-          <text x="520" y="150" text-anchor="middle" style="fill: #ffffff; font-size: 14px; font-weight: bold; pointer-events: none;">Nagpur</text>
-          <text x="330" y="245" text-anchor="middle" style="fill: #ffffff; font-size: 14px; font-weight: bold; pointer-events: none;">Chhatrapati Sambhajinagar</text>
-          <text x="230" y="180" text-anchor="middle" style="fill: #ffffff; font-size: 14px; font-weight: bold; pointer-events: none;">Nashik</text>
+          <!-- Amravati Region Districts -->
+          <text x="520" y="120" text-anchor="middle" style="fill: #ffffff; font-size: 14px; font-weight: bold; pointer-events: none;">Amravati</text>
+          <text x="450" y="145" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Akola</text>
+          <text x="485" y="180" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Washim</text>
+          <text x="485" y="230" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Yavatmal</text>
+          <text x="415" y="175" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Buldhana</text>
+          
+          <!-- Nagpur Region Districts -->
+          <text x="610" y="100" text-anchor="middle" style="fill: #ffffff; font-size: 14px; font-weight: bold; pointer-events: none;">Nagpur</text>
+          <text x="675" y="80" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Bhandara</text>
+          <text x="750" y="80" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Gondia</text>
+          <text x="600" y="150" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Wardha</text>
+          <text x="675" y="200" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Chandrapur</text>
+          <text x="750" y="250" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Gadchiroli</text>
+          
+          <!-- Chhatrapati Sambhajinagar Region Districts -->
+          <text x="340" y="220" text-anchor="middle" style="fill: #ffffff; font-size: 14px; font-weight: bold; pointer-events: none;">Chhatrapati Sambhajinagar</text>
+          <text x="375" y="265" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Jalna</text>
+          <text x="425" y="275" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Parbhani</text>
+          <text x="475" y="265" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Hingoli</text>
+          <text x="475" y="325" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Nanded</text>
+          <text x="375" y="315" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Beed</text>
+          <text x="455" y="385" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Latur</text>
+          <text x="385" y="415" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Dharashiv</text>
+          
+          <!-- Nashik Region Districts -->
+          <text x="220" y="170" text-anchor="middle" style="fill: #ffffff; font-size: 14px; font-weight: bold; pointer-events: none;">Nashik</text>
+          <text x="270" y="135" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Dhule</text>
+          <text x="325" y="135" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Jalgaon</text>
+          <text x="245" y="50" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Nandurbar</text>
+          <text x="270" y="235" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Ahmadnagar</text>
+          <text x="175" y="235" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Palghar</text>
+          
+          <!-- Pune Region Districts -->
           <text x="210" y="350" text-anchor="middle" style="fill: #ffffff; font-size: 14px; font-weight: bold; pointer-events: none;">Pune</text>
+          <text x="320" y="415" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Solapur</text>
+          <text x="230" y="490" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Sangli</text>
+          <text x="220" y="550" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Kolhapur</text>
+          <text x="275" y="380" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Satara</text>
+          
+          <!-- Konkan Region Districts -->
           <text x="120" y="430" text-anchor="middle" style="fill: #ffffff; font-size: 14px; font-weight: bold; pointer-events: none;">Konkan</text>
+          <text x="145" y="320" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Mumbai</text>
+          <text x="85" y="240" text-anchor="middle" style="fill: #ffffff; font-size: 11px; pointer-events: none;">Mumbai Suburban</text>
+          <text x="145" y="270" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Thane</text>
+          <text x="130" y="370" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Raigad</text>
+          <text x="135" y="460" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Ratnagiri</text>
+          <text x="135" y="580" text-anchor="middle" style="fill: #ffffff; font-size: 12px; pointer-events: none;">Sindhudurg</text>
         </g>
 
-        <!-- Location pins -->
+        <!-- Location pins - Exactly positioned as in reference image -->
         <g>
-          <circle cx="520" y="120" r="8" fill="#FF4136" stroke="#fff" stroke-width="1" />
-          <path d="M520,120 L520,110 M515,115 L525,115" stroke="#fff" stroke-width="1.5" />
+          <!-- Nagpur pin -->
+          <circle cx="640" y="100" r="8" fill="#FF4136" stroke="#fff" stroke-width="1" />
+          <path d="M640,100 L640,90 M635,95 L645,95" stroke="#fff" stroke-width="1.5" />
           
-          <circle cx="230" y="170" r="8" fill="#FF4136" stroke="#fff" stroke-width="1" />
-          <path d="M230,170 L230,160 M225,165 L235,165" stroke="#fff" stroke-width="1.5" />
+          <!-- Amravati pin -->
+          <circle cx="500" y="100" r="8" fill="#FF4136" stroke="#fff" stroke-width="1" />
+          <path d="M500,100 L500,90 M495,95 L505,95" stroke="#fff" stroke-width="1.5" />
           
-          <circle cx="210" y="350" r="8" fill="#FF4136" stroke="#fff" stroke-width="1" />
-          <path d="M210,350 L210,340 M205,345 L215,345" stroke="#fff" stroke-width="1.5" />
+          <!-- Nashik pin -->
+          <circle cx="225" y="170" r="8" fill="#FF4136" stroke="#fff" stroke-width="1" />
+          <path d="M225,170 L225,160 M220,165 L230,165" stroke="#fff" stroke-width="1.5" />
           
-          <circle cx="120" y="430" r="8" fill="#FF4136" stroke="#fff" stroke-width="1" />
-          <path d="M120,430 L120,420 M115,425 L125,425" stroke="#fff" stroke-width="1.5" />
+          <!-- Pune pin -->
+          <circle cx="215" y="330" r="8" fill="#FF4136" stroke="#fff" stroke-width="1" />
+          <path d="M215,330 L215,320 M210,325 L220,325" stroke="#fff" stroke-width="1.5" />
           
-          <circle cx="328" y="198" r="8" fill="#FF4136" stroke="#fff" stroke-width="1" />
-          <path d="M328,198 L328,188 M323,193 L333,193" stroke="#fff" stroke-width="1.5" />
+          <!-- Konkan pin -->
+          <circle cx="150" y="430" r="8" fill="#FF4136" stroke="#fff" stroke-width="1" />
+          <path d="M150,430 L150,420 M145,425 L155,425" stroke="#fff" stroke-width="1.5" />
         </g>
 
-        <!-- Legend -->
-        <g transform="translate(680, 590)">
-          <text x="0" y="0" style="fill: #ffffff; font-size: 14px; font-weight: bold;">Regions</text>
+        <!-- Legend - Exact match to reference image -->
+        <g transform="translate(720, 590)">
+          <text x="0" y="-5" style="fill: #ffffff; font-size: 13px; font-weight: bold;">Regions</text>
           
-          <rect x="-10" y="10" width="15" height="15" fill="#ffccaa" />
-          <text x="15" y="22" style="fill: #ffffff; font-size: 12px;">Amravati</text>
+          <rect x="-10" y="15" width="15" height="15" fill="#ffccaa" />
+          <text x="15" y="27" style="fill: #ffffff; font-size: 12px;">Amravati</text>
           
-          <rect x="-10" y="30" width="15" height="15" fill="#ffd699" />
-          <text x="15" y="42" style="fill: #ffffff; font-size: 12px;">Nagpur</text>
+          <rect x="-10" y="35" width="15" height="15" fill="#ffd699" />
+          <text x="15" y="47" style="fill: #ffffff; font-size: 12px;">Nagpur</text>
           
-          <rect x="-10" y="50" width="15" height="15" fill="#ccdeff" />
-          <text x="15" y="62" style="fill: #ffffff; font-size: 12px;">Chhatrapati Sambhaji Nagar</text>
+          <rect x="-10" y="55" width="15" height="15" fill="#ccdeff" />
+          <text x="15" y="67" style="fill: #ffffff; font-size: 12px;">Chhatrapati Sambhaji Nagar</text>
           
-          <rect x="-10" y="70" width="15" height="15" fill="#ffeb99" />
-          <text x="15" y="82" style="fill: #ffffff; font-size: 12px;">Nashik</text>
+          <rect x="-10" y="75" width="15" height="15" fill="#ffeb99" />
+          <text x="15" y="87" style="fill: #ffffff; font-size: 12px;">Nashik</text>
           
-          <rect x="-10" y="90" width="15" height="15" fill="#adebad" />
-          <text x="15" y="102" style="fill: #ffffff; font-size: 12px;">Pune</text>
+          <rect x="-10" y="95" width="15" height="15" fill="#adebad" />
+          <text x="15" y="107" style="fill: #ffffff; font-size: 12px;">Pune</text>
           
-          <rect x="-10" y="110" width="15" height="15" fill="#c2c2c2" />
-          <text x="15" y="122" style="fill: #ffffff; font-size: 12px;">Konkan</text>
+          <rect x="-10" y="115" width="15" height="15" fill="#c2c2c2" />
+          <text x="15" y="127" style="fill: #ffffff; font-size: 12px;">Konkan</text>
         </g>
 
-        <!-- Compass Rose -->
-        <g transform="translate(80, 640)">
-          <circle cx="0" cy="0" r="25" fill="none" stroke="#ffffff" stroke-width="1" />
-          <path d="M0,-20 L0,20 M-20,0 L20,0" stroke="#ffffff" stroke-width="1" />
-          <path d="M-14,-14 L14,14 M-14,14 L14,-14" stroke="#ffffff" stroke-width="1" />
-          <text x="0" y="-25" text-anchor="middle" style="fill: #ffffff; font-size: 12px;">N</text>
-          <text x="0" y="35" text-anchor="middle" style="fill: #ffffff; font-size: 12px;">S</text>
-          <text x="-30" y="4" text-anchor="middle" style="fill: #ffffff; font-size: 12px;">W</text>
-          <text x="30" y="4" text-anchor="middle" style="fill: #ffffff; font-size: 12px;">E</text>
+        <!-- Compass Rose - Exact match from reference -->
+        <g transform="translate(75, 640)">
+          <circle cx="0" cy="0" r="22" fill="none" stroke="#ffffff" stroke-width="1" />
+          <path d="M0,-18 L0,18 M-18,0 L18,0" stroke="#ffffff" stroke-width="1" />
+          <path d="M-13,-13 L13,13 M-13,13 L13,-13" stroke="#ffffff" stroke-width="1" />
+          <circle cx="0" cy="0" r="3" fill="#ffffff" stroke="#ffffff" stroke-width="0.5" />
+          <text x="0" y="-25" text-anchor="middle" style="fill: #ffffff; font-size: 10px;">N</text>
+          <text x="0" y="33" text-anchor="middle" style="fill: #ffffff; font-size: 10px;">S</text>
+          <text x="-25" y="4" text-anchor="middle" style="fill: #ffffff; font-size: 10px;">W</text>
+          <text x="25" y="4" text-anchor="middle" style="fill: #ffffff; font-size: 10px;">E</text>
         </g>
         
         <!-- Title -->
