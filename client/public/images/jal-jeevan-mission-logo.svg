@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 360">
+  <defs>
+    <linearGradient id="waterGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0056b3"/>
+      <stop offset="100%" stop-color="#0077cc"/>
+    </linearGradient>
+  </defs>
+  <circle cx="180" cy="180" r="180" fill="#ffffff"/>
+  <g transform="translate(70, 70)">
+    <!-- Water Drop Icon -->
+    <path d="M110,0 C110,0 0,120 0,170 C0,236.27 49.73,290 110,290 C170.27,290 220,236.27 220,170 C220,120 110,0 110,0 Z" fill="url(#waterGradient)"/>
+    
+    <!-- Inner Water Wave -->
+    <path d="M110,50 C110,50 40,130 40,170 C40,214.18 71.63,250 110,250 C148.37,250 180,214.18 180,170 C180,130 110,50 110,50 Z" fill="#ffffff" fill-opacity="0.3"/>
+    
+    <!-- Inner Circle -->
+    <circle cx="110" cy="170" r="50" fill="#ffffff" fill-opacity="0.5"/>
+  </g>
+  
+  <!-- Text for Jal Jeevan Mission -->
+  <text x="180" y="280" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="bold" fill="#0056b3">JAL JEEVAN MISSION</text>
+  <text x="180" y="310" text-anchor="middle" font-family="Arial, sans-serif" font-size="16" fill="#0077cc">हर घर जल</text>
+</svg>

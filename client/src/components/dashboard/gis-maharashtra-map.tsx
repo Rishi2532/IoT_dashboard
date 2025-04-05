@@ -205,15 +205,28 @@ export default function GISMaharashtraMap({
         let labelAnchorX = 60;
         let labelAnchorY = 25;
         
-        // Custom positioning for specific regions to prevent overlap
-        if (regionName === 'Nashik') {
-          labelAnchorX = 30;  // Move Nashik label more to the left
-          labelAnchorY = 15;  // Move it slightly up
-        } else if (regionName === 'Chhatrapati Sambhajinagar') {
+        // Custom positioning for specific regions as requested
+        // Position Chhatrapati Sambhajinagar, Pune, and Nagpur below their markers
+        if (regionName === 'Chhatrapati Sambhajinagar') {
           labelAnchorX = 120; // Move C.S. Nagar label more to the right
-          labelAnchorY = 40;  // Move it more down
+          labelAnchorY = 40;  // Position below marker
+        } else if (regionName === 'Pune') {
+          labelAnchorX = 60;
+          labelAnchorY = 40;  // Position below marker
+        } else if (regionName === 'Nagpur') {
+          labelAnchorX = 60;
+          labelAnchorY = 40;  // Position below marker
+        } 
+        // Position Nashik, Amravati, and Konkan above their markers
+        else if (regionName === 'Nashik') {
+          labelAnchorX = 30;
+          labelAnchorY = -5;  // Position above marker
         } else if (regionName === 'Amravati') {
-          labelAnchorY = 0;   // Move Amravati label up
+          labelAnchorX = 60;
+          labelAnchorY = -5;  // Position above marker
+        } else if (regionName === 'Konkan') {
+          labelAnchorX = 60;
+          labelAnchorY = 25;  // Default position
         }
         
         const labelIcon = L.divIcon({

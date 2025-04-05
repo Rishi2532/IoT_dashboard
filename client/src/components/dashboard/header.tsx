@@ -53,7 +53,7 @@ export default function Header() {
               </div>
               
               <div className="mr-3">
-                <img src="/images/jjm-logo.png" alt="Jal Jeevan Mission" className="h-10 bg-white/90 rounded-full p-0.5" />
+                <img src="/images/jal-jeevan-mission-logo.svg" alt="Jal Jeevan Mission" className="h-10 bg-white/90 rounded-full p-0.5" />
               </div>
               <div>
                 <h1 className="font-bold text-lg sm:text-xl text-white drop-shadow-sm">
