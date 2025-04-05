@@ -102,8 +102,8 @@ export default function GISMaharashtraMap({
       attributionControl: false,
     });
     
-    // Set dark tile layer
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // Set light blue tile layer for better visual appeal
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
     
@@ -119,7 +119,7 @@ export default function GISMaharashtraMap({
           fillColor: getColor(regionName),
           weight: isSelected ? 2 : 1,
           opacity: 1,
-          color: isSelected ? '#ffffff' : 'rgba(255,255,255,0.5)',
+          color: isSelected ? '#2563eb' : 'rgba(0,0,0,0.3)',
           fillOpacity: isSelected ? 0.9 : 0.7
         };
       },
@@ -155,7 +155,7 @@ export default function GISMaharashtraMap({
           mouseover: () => {
             polygonLayer.setStyle({
               weight: 2,
-              color: '#ffffff',
+              color: '#2563eb',
               fillOpacity: 0.9
             });
           },
@@ -184,8 +184,8 @@ export default function GISMaharashtraMap({
         const markerIcon = L.divIcon({
           className: 'custom-marker-icon',
           html: `
-            <div class="marker-pin" style="background-color: #FF4136; border: 1.5px solid white; width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 2px 5px rgba(0,0,0,0.5);">
-              <div style="background-color: #ff6b63; width: 6px; height: 6px; border-radius: 50%; position: absolute; top: 5px; left: 5px; border: 0.5px solid white;"></div>
+            <div class="marker-pin" style="background-color: #2563eb; border: 1.5px solid white; width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">
+              <div style="background-color: #3b82f6; width: 6px; height: 6px; border-radius: 50%; position: absolute; top: 5px; left: 5px; border: 0.5px solid white;"></div>
             </div>
           `,
           iconSize: [16, 16],
@@ -198,7 +198,7 @@ export default function GISMaharashtraMap({
         // Add label
         const labelIcon = L.divIcon({
           className: 'region-label',
-          html: `<div style="color: white; font-weight: bold; text-shadow: 0 1px 3px rgba(0,0,0,0.8); font-size: 14px;">${regionName}</div>`,
+          html: `<div style="color: #333; font-weight: bold; text-shadow: 0 1px 3px rgba(255,255,255,0.8); font-size: 14px;">${regionName}</div>`,
           iconSize: [120, 20],
           iconAnchor: [60, 25]
         });
@@ -216,7 +216,7 @@ export default function GISMaharashtraMap({
           const pulseIcon = L.divIcon({
             className: 'custom-pulse-icon',
             html: `
-              <div class="pulse-circle" style="position: absolute; top: -12px; left: -12px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid white; opacity: 0.7; background: transparent; animation: pulse 1.5s infinite;">
+              <div class="pulse-circle" style="position: absolute; top: -12px; left: -12px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #2563eb; opacity: 0.7; background: transparent; animation: pulse 1.5s infinite;">
               </div>
             `,
             iconSize: [24, 24],
@@ -252,12 +252,12 @@ export default function GISMaharashtraMap({
     const legendControl = new L.Control({ position: 'bottomright' });
     legendControl.onAdd = () => {
       const div = L.DomUtil.create('div', 'info legend');
-      div.style.backgroundColor = 'rgba(10, 16, 51, 0.9)';
+      div.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
       div.style.padding = '10px';
       div.style.borderRadius = '6px';
-      div.style.color = 'white';
+      div.style.color = '#333333';
       div.style.minWidth = '180px';
-      div.style.boxShadow = '0 2px 6px rgba(0,0,0,0.7)';
+      div.style.boxShadow = '0 1px 4px rgba(0,0,0,0.2)';
       
       // Legend title
       div.innerHTML = '<h4 style="margin: 0 0 10px 0; font-size: 14px;">Maharashtra Regions</h4>';
@@ -268,7 +268,7 @@ export default function GISMaharashtraMap({
                         metric === 'flow_meter' ? 'Flow Meter Integration' : 
                         'Scheme Completion';
       
-      div.innerHTML += `<div style="font-size: 10px; margin-bottom: 15px; color: rgba(255,255,255,0.7);">Showing: ${metricTitle}</div>`;
+      div.innerHTML += `<div style="font-size: 10px; margin-bottom: 15px; color: rgba(0,0,0,0.6);">Showing: ${metricTitle}</div>`;
       
       // Region items
       const regionItems = [
@@ -288,7 +288,7 @@ export default function GISMaharashtraMap({
           <div class="legend-item" style="display: flex; align-items: center; margin-bottom: 5px; cursor: pointer;"
             onclick="document.dispatchEvent(new CustomEvent('region-legend-click', {detail: '${displayName}'}))">
             <div style="width: 15px; height: 15px; background-color: ${item.color}; border-radius: 2px; 
-              margin-right: 8px; border: ${isSelected ? '1.5px' : '0.5px'} solid ${isSelected ? '#ffffff' : 'rgba(255,255,255,0.5)'};">
+              margin-right: 8px; border: ${isSelected ? '1.5px' : '0.5px'} solid ${isSelected ? '#2563eb' : 'rgba(0,0,0,0.2)'};">
             </div>
             <span style="font-size: 11px; ${isSelected ? 'font-weight: bold;' : ''}">${item.name}</span>
             <span style="font-size: 10px; margin-left: auto; font-family: monospace;">${getMetricValue(displayName)}</span>
@@ -296,7 +296,7 @@ export default function GISMaharashtraMap({
         `;
       });
       
-      div.innerHTML += `<div style="font-size: 8px; margin-top: 10px; color: rgba(255,255,255,0.6);">Click on a region to filter data</div>`;
+      div.innerHTML += `<div style="font-size: 8px; margin-top: 10px; color: rgba(0,0,0,0.5);">Click on a region to filter data</div>`;
       
       return div;
     };
@@ -313,25 +313,25 @@ export default function GISMaharashtraMap({
       const div = L.DomUtil.create('div', 'compass');
       div.style.width = '50px';
       div.style.height = '50px';
-      div.style.backgroundColor = 'rgba(10, 16, 51, 1)';
+      div.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
       div.style.borderRadius = '50%';
-      div.style.border = '1px solid rgba(255,255,255,0.5)';
+      div.style.border = '1px solid rgba(0,0,0,0.2)';
       div.style.position = 'relative';
       div.style.marginBottom = '20px';
       div.style.marginLeft = '10px';
-      div.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+      div.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)';
       
       div.innerHTML = `
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid white;"></div>
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3);"></div>
-        <div style="position: absolute; top: 6%; left: 50%; transform: translateX(-50%); color: white; font-weight: bold; font-size: 10px;">N</div>
-        <div style="position: absolute; top: 50%; right: 6%; transform: translateY(-50%); color: white; font-weight: bold; font-size: 10px;">E</div>
-        <div style="position: absolute; bottom: 6%; left: 50%; transform: translateX(-50%); color: white; font-weight: bold; font-size: 10px;">S</div>
-        <div style="position: absolute; top: 50%; left: 6%; transform: translateY(-50%); color: white; font-weight: bold; font-size: 10px;">W</div>
-        <div style="position: absolute; top: 50%; left: 50%; width: 44px; height: 1px; background-color: white; transform: translate(-50%, -50%);"></div>
-        <div style="position: absolute; top: 50%; left: 50%; width: 1px; height: 44px; background-color: white; transform: translate(-50%, -50%);"></div>
-        <div style="position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; border-radius: 50%; background-color: rgba(10, 16, 51, 1); border: 1px solid white; transform: translate(-50%, -50%);"></div>
-        <div style="position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; border-radius: 50%; background-color: white; transform: translate(-50%, -50%);"></div>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.4);"></div>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2);"></div>
+        <div style="position: absolute; top: 6%; left: 50%; transform: translateX(-50%); color: #333; font-weight: bold; font-size: 10px;">N</div>
+        <div style="position: absolute; top: 50%; right: 6%; transform: translateY(-50%); color: #333; font-weight: bold; font-size: 10px;">E</div>
+        <div style="position: absolute; bottom: 6%; left: 50%; transform: translateX(-50%); color: #333; font-weight: bold; font-size: 10px;">S</div>
+        <div style="position: absolute; top: 50%; left: 6%; transform: translateY(-50%); color: #333; font-weight: bold; font-size: 10px;">W</div>
+        <div style="position: absolute; top: 50%; left: 50%; width: 44px; height: 1px; background-color: rgba(0,0,0,0.5); transform: translate(-50%, -50%);"></div>
+        <div style="position: absolute; top: 50%; left: 50%; width: 1px; height: 44px; background-color: rgba(0,0,0,0.5); transform: translate(-50%, -50%);"></div>
+        <div style="position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.3); transform: translate(-50%, -50%);"></div>
+        <div style="position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; border-radius: 50%; background-color: #2563eb; transform: translate(-50%, -50%);"></div>
       `;
       
       return div;
@@ -374,7 +374,7 @@ export default function GISMaharashtraMap({
             <div 
               ref={mapRef}
               id="maharashtra-gis-map" 
-              className="h-full w-full bg-[#0a1033]"
+              className="h-full w-full bg-[#f0f8ff]"
             ></div>
           </div>
         )}
