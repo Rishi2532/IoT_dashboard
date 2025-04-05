@@ -137,9 +137,39 @@ async function readExcelAndImportData(filePath) {
         schemeStatus: sampleHeaders.find(h => h.includes('Scheme Status')),
         fullyCompletedESR: sampleHeaders.find(h => h.includes('Fully Completed ESR')),
         balanceESR: sampleHeaders.find(h => h.includes('Balance ESR')),
-        flowMeters: sampleHeaders.find(h => h.includes('Flow') || h.includes('flow')),
-        rca: sampleHeaders.find(h => h.includes('RCA') || h.includes('rca')),
-        pressureTransmitters: sampleHeaders.find(h => h.includes('Pressure') || h.includes('pressure')),
+        flowMeters: sampleHeaders.find(h => 
+          h.includes('Flow Meter') || 
+          h.includes('flow meter') || 
+          h.includes('Flow_Meter') || 
+          h.includes('Flowmeter') || 
+          h.includes('flowmeter') || 
+          h.includes('Flow Meters') || 
+          h.includes('flow meters') ||
+          h.includes('Flow_Meters') ||
+          h.includes('Flow Meters Connected') ||
+          h.includes('Flow_Meters_Connected')),
+        rca: sampleHeaders.find(h => 
+          h.includes('RCA') || 
+          h.includes('rca') || 
+          h.includes('Residual Chlorine') || 
+          h.includes('residual chlorine') || 
+          h.includes('Residual_Chlorine') || 
+          h.includes('Chlorine Analyzer') || 
+          h.includes('chlorine analyzer') ||
+          h.includes('Chlorine_Analyzer') ||
+          h.includes('Residual Chlorine Connected') ||
+          h.includes('Residual_Chlorine_Connected')),
+        pressureTransmitters: sampleHeaders.find(h => 
+          h.includes('Pressure Transmitter') || 
+          h.includes('pressure transmitter') || 
+          h.includes('Pressure_Transmitter') || 
+          h.includes('Pressure Transmitters') || 
+          h.includes('pressure transmitters') ||
+          h.includes('Pressure_Transmitters') ||
+          h.includes('Pressure Transmitters Connected') ||
+          h.includes('Pressure_Transmitters_Connected') ||
+          h.includes('PT') || 
+          h.includes('pressure sensor')),
         agency: sampleHeaders.find(h => h.includes('Agency') || h.includes('agency'))
       };
       

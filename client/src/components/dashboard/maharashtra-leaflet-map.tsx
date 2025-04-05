@@ -234,7 +234,8 @@ export default function MaharashtraLeafletMap({
       
       // Add dark tile layer
       console.log('Adding tile layer...');
-      const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // Changed from dark to light blue styled map for better visual appeal
+      const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
         maxZoom: 18,
         minZoom: 2,
         attribution: '© <a href="https://carto.com/attributions">CARTO</a>',
@@ -322,7 +323,7 @@ export default function MaharashtraLeafletMap({
         L.marker([district.lat, district.lng], {
           icon: L.divIcon({
             className: 'district-label',
-            html: `<div style="color: white; font-size: 10px; white-space: nowrap; text-shadow: 0 0 2px #000;">${district.name}</div>`,
+            html: `<div style="color: #333; font-size: 10px; white-space: nowrap; text-shadow: 0 0 2px #fff; font-weight: bold;">${district.name}</div>`,
             iconSize: [100, 20],
             iconAnchor: [50, 10]
           })
@@ -334,7 +335,7 @@ export default function MaharashtraLeafletMap({
         L.marker([pin.lat, pin.lng], {
           icon: L.divIcon({
             className: 'region-label',
-            html: `<div style="color: white; font-size: 14px; font-weight: bold; white-space: nowrap; text-shadow: 0 0 3px #000; margin-top: 15px;">${pin.name}</div>`,
+            html: `<div style="color: #1e40af; font-size: 14px; font-weight: bold; white-space: nowrap; text-shadow: 0 0 3px #ffffff; margin-top: 15px;">${pin.name}</div>`,
             iconSize: [120, 20],
             iconAnchor: [60, 0]
           })
@@ -345,11 +346,12 @@ export default function MaharashtraLeafletMap({
       const legend = new L.Control({ position: 'bottomright' });
       legend.onAdd = (map: L.Map) => {
         const div = L.DomUtil.create('div', 'info legend');
-        div.style.background = '#0a1033';
-        div.style.color = 'white';
+        div.style.background = '#ffffff';
+        div.style.color = '#333333';
         div.style.padding = '10px';
         div.style.borderRadius = '4px';
-        div.style.border = '1px solid rgba(255,255,255,0.3)';
+        div.style.border = '1px solid rgba(0,0,0,0.1)';
+        div.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
         
         div.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px;">Regions</div>';
         
@@ -379,14 +381,14 @@ export default function MaharashtraLeafletMap({
         const div = L.DomUtil.create('div', 'compass-rose');
         div.innerHTML = `
           <svg width="50" height="50" viewBox="0 0 50 50">
-            <circle cx="25" cy="25" r="22" fill="none" stroke="#ffffff" stroke-width="1" />
-            <path d="M25,7 L25,43 M7,25 L43,25" stroke="#ffffff" stroke-width="1" />
-            <path d="M12,12 L38,38 M12,38 L38,12" stroke="#ffffff" stroke-width="1" />
-            <circle cx="25" cy="25" r="3" fill="#ffffff" stroke="#ffffff" stroke-width="0.5" />
-            <text x="25" y="5" text-anchor="middle" fill="#ffffff" font-size="10px">N</text>
-            <text x="25" y="48" text-anchor="middle" fill="#ffffff" font-size="10px">S</text>
-            <text x="3" y="27" text-anchor="middle" fill="#ffffff" font-size="10px">W</text>
-            <text x="47" y="27" text-anchor="middle" fill="#ffffff" font-size="10px">E</text>
+            <circle cx="25" cy="25" r="22" fill="white" stroke="#2563eb" stroke-width="1.5" />
+            <path d="M25,7 L25,43 M7,25 L43,25" stroke="#2563eb" stroke-width="1" />
+            <path d="M12,12 L38,38 M12,38 L38,12" stroke="#2563eb" stroke-width="1" />
+            <circle cx="25" cy="25" r="3" fill="#2563eb" stroke="#2563eb" stroke-width="0.5" />
+            <text x="25" y="5" text-anchor="middle" fill="#2563eb" font-size="10px" font-weight="bold">N</text>
+            <text x="25" y="48" text-anchor="middle" fill="#2563eb" font-size="10px" font-weight="bold">S</text>
+            <text x="3" y="27" text-anchor="middle" fill="#2563eb" font-size="10px" font-weight="bold">W</text>
+            <text x="47" y="27" text-anchor="middle" fill="#2563eb" font-size="10px" font-weight="bold">E</text>
           </svg>
         `;
         return div;
@@ -397,11 +399,12 @@ export default function MaharashtraLeafletMap({
       const metricLegend = new L.Control({ position: 'bottomleft' });
       metricLegend.onAdd = (map: L.Map) => {
         const div = L.DomUtil.create('div', 'metric-legend');
-        div.style.background = '#0a1033';
-        div.style.color = 'white';
+        div.style.background = '#ffffff';
+        div.style.color = '#333333';
         div.style.padding = '10px';
         div.style.borderRadius = '4px';
-        div.style.border = '1px solid rgba(255,255,255,0.3)';
+        div.style.border = '1px solid rgba(0,0,0,0.1)';
+        div.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)';
         div.style.marginBottom = '60px';
         
         let metricTitle = '';
@@ -486,7 +489,7 @@ export default function MaharashtraLeafletMap({
           </div>
         ) : (
           <div className="relative w-full">
-            <div id="maharashtra-map" style={{ height: '500px', backgroundColor: '#0a1033' }}></div>
+            <div id="maharashtra-map" style={{ height: '500px', backgroundColor: '#f0f8ff' }}></div>
             
             {selectedRegion !== "all" && (
               <div className="mt-4 text-center">
