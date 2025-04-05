@@ -239,25 +239,33 @@ export default function MaharashtraLeafletMap({
     };
   };
 
-  // Initialize map
+  // Initialize map only once and handle updates separately
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     
-    // Clean up previous map instance
-    if (mapInstance) {
-      mapInstance.remove();
-    }
+    let mapRef: L.Map | null = null;
+    let geoJsonLayerRef: L.GeoJSON | null = null;
     
-    // Make sure the container exists before initializing map
-    // Add a small delay to ensure the DOM is fully rendered
-    const timeoutId = setTimeout(() => {
+    // Function to create and initialize the map
+    const initializeMap = () => {
+      // First make sure any existing map is properly removed
+      if (mapInstance) {
+        mapInstance.remove();
+        setMapInstance(null);
+        setGeoJsonLayer(null);
+      }
+      
       // Check if the container exists
       const container = document.getElementById('maharashtra-map');
       if (!container) {
         console.error('Map container not found');
         return;
       }
-    
+      
+      // Need to clean any existing content to avoid conflicts
+      container.innerHTML = '';
+      
       // Create map
       const map = L.map('maharashtra-map', {
         center: [19.7515, 75.7139], // Centered on Maharashtra
@@ -269,6 +277,9 @@ export default function MaharashtraLeafletMap({
         boxZoom: false,
         doubleClickZoom: false
       });
+      
+      // Save reference for cleanup
+      mapRef = map;
       
       // Add dark tile layer
       L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
@@ -305,7 +316,8 @@ export default function MaharashtraLeafletMap({
         }
       }).addTo(map);
       
-      setGeoJsonLayer(geojson);
+      // Save reference for cleanup and updates
+      geoJsonLayerRef = geojson;
       
       // Add pins
       const customIcon = L.divIcon({
@@ -441,17 +453,29 @@ export default function MaharashtraLeafletMap({
       };
       metricLegend.addTo(map);
       
+      // Update state with map instances
       setMapInstance(map);
-    }, 100); // 100ms delay
+      setGeoJsonLayer(geojson);
+    };
     
-    // Cleanup on unmount
+    // Initialize map with a small delay to ensure the DOM is ready
+    const timeoutId = setTimeout(initializeMap, 300);
+    
+    // Cleanup on unmount or re-render
     return () => {
       clearTimeout(timeoutId);
-      if (mapInstance) {
+      
+      // Clean up map if it was created in this effect
+      if (mapRef) {
+        mapRef.remove();
+      }
+      
+      // Also clean up from state if needed
+      if (mapInstance && mapInstance !== mapRef) {
         mapInstance.remove();
       }
     };
-  }, [mapInstance, onRegionClick, metric, style]);
+  }, []); // Only run once on mount
 
   // Update map styles when selectedRegion or metric changes
   useEffect(() => {
@@ -459,7 +483,7 @@ export default function MaharashtraLeafletMap({
       // Need to use any here because of TypeScript limitations with Leaflet
       (geoJsonLayer as any).setStyle(style);
     }
-  }, [selectedRegion, metric, regions, hoveredRegion, style]);
+  }, [geoJsonLayer, selectedRegion, metric, regions, hoveredRegion, style]);
 
   return (
     <Card className={isLoading ? "opacity-50" : ""}>
