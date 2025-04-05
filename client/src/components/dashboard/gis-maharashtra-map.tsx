@@ -100,13 +100,13 @@ export default function GISMaharashtraMap({
     const map = L.map(mapRef.current, {
       center: [18.5, 76], // Maharashtra's approximate center
       zoom: 7,
-      minZoom: 6,   // Allow slightly more zoom out for better context
+      minZoom: 5,   // Lower minimum zoom to allow zooming out further
       maxZoom: 10,  // Allow more zoom in for detailed view
       zoomControl: false, // We'll add custom zoom controls
       attributionControl: false,
       scrollWheelZoom: true, // Explicitly enable scroll wheel zoom
-      wheelDebounceTime: 50, // Make wheel zooming more responsive
-      wheelPxPerZoomLevel: 60, // Adjust scroll sensitivity
+      wheelDebounceTime: 40, // Make wheel zooming more responsive (lower value = faster response)
+      wheelPxPerZoomLevel: 40, // Lower value makes it easier to zoom with mouse wheel
       maxBounds: L.latLngBounds(
         L.latLng(14.5, 72.5),  // Southwest coordinates
         L.latLng(22.5, 82.5)   // Northeast coordinates
@@ -164,10 +164,12 @@ export default function GISMaharashtraMap({
         
         return {
           fillColor: getColor(regionName),
-          weight: 2,  // Thicker borders for all regions like in the reference image
+          weight: 2.5,  // Even thicker borders for all regions like in the reference image
           opacity: 1,
           color: '#000000',  // Black borders for all regions
-          fillOpacity: 0.9  // Solid fill colors for all regions
+          fillOpacity: 1.0,  // Fully opaque fill colors for all regions
+          // Add outer border glow with a drop shadow effect
+          className: 'region-polygon' + (isSelected ? ' region-selected' : '')
         };
       },
       onEachFeature: (feature, layer) => {
@@ -200,9 +202,10 @@ export default function GISMaharashtraMap({
           },
           mouseover: () => {
             polygonLayer.setStyle({
-              weight: 2,
-              color: '#2563eb',
-              fillOpacity: 0.9
+              weight: 3.5, // Make borders even thicker on hover
+              color: '#000000', // Keep black borders
+              fillOpacity: 0.8, // Slightly reduce opacity on hover for contrast
+              dashArray: '3,3' // Add a dashed line effect on hover
             });
           },
           mouseout: () => {
