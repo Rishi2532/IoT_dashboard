@@ -266,30 +266,39 @@ export default function MaharashtraLeafletMap({
       // Need to clean any existing content to avoid conflicts
       container.innerHTML = '';
       
+      console.log('Initializing Leaflet map...');
       // Create map
       const map = L.map('maharashtra-map', {
         center: [19.7515, 75.7139], // Centered on Maharashtra
         zoom: 7,
-        zoomControl: false,
-        attributionControl: false,
-        scrollWheelZoom: false,
-        dragging: false,
-        boxZoom: false,
-        doubleClickZoom: false
+        zoomControl: true, // Enable controls for debugging
+        attributionControl: true,
+        scrollWheelZoom: true, // Allow interaction for debugging
+        dragging: true,
+        boxZoom: true,
+        doubleClickZoom: true
       });
       
+      console.log('Map created:', map);
       // Save reference for cleanup
       mapRef = map;
       
       // Add dark tile layer
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 8,
-      }).addTo(map);
+      console.log('Adding tile layer...');
+      const tileLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 18,
+        minZoom: 2,
+        attribution: '© <a href="https://carto.com/attributions">CARTO</a>',
+      });
+      tileLayer.addTo(map);
+      console.log('Tile layer added');
     
       // Add GeoJSON layer
+      console.log('Adding GeoJSON layer...', maharashtraGeoJson);
       const geojson = L.geoJSON(maharashtraGeoJson as any, {
         style: style,
         onEachFeature: (feature, layer) => {
+          console.log('Feature added:', feature);
           if (feature.properties) {
             const regionId = feature.properties.id;
             
@@ -315,6 +324,7 @@ export default function MaharashtraLeafletMap({
           }
         }
       }).addTo(map);
+      console.log('GeoJSON layer added');
       
       // Save reference for cleanup and updates
       geoJsonLayerRef = geojson;
