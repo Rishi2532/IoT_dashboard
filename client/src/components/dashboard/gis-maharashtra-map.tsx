@@ -18,7 +18,7 @@ interface GISMaharashtraMapProps {
   regions?: Region[];
   selectedRegion: string;
   onRegionClick: (region: string) => void;
-  metric: 'completion' | 'esr' | 'villages' | 'flow_meter';
+  metric: 'completion' | 'esr' | 'villages';
   isLoading?: boolean;
 }
 
@@ -50,9 +50,6 @@ export default function GISMaharashtraMap({
       percentage = region.fully_completed_esr / region.total_esr_integrated * 100 || 0;
     } else if (metric === 'villages') {
       percentage = region.fully_completed_villages / region.total_villages_integrated * 100 || 0;
-    } else if (metric === 'flow_meter') {
-      // Just a simple presence percentage since there's no "completion" concept for flow meters
-      percentage = (region.flow_meter_integrated > 0) ? 100 : 0;
     }
     
     return Math.min(Math.round(percentage), 100);
@@ -71,8 +68,6 @@ export default function GISMaharashtraMap({
       return `${region.fully_completed_esr}/${region.total_esr_integrated}`;
     } else if (metric === 'villages') {
       return `${region.fully_completed_villages}/${region.total_villages_integrated}`;
-    } else if (metric === 'flow_meter') {
-      return `${region.flow_meter_integrated}`;
     }
     
     return '';
@@ -107,6 +102,18 @@ export default function GISMaharashtraMap({
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
     
+    // Add state boundary for Maharashtra
+    L.geoJSON(maharashtraGeoJson, {
+      style: {
+        fillOpacity: 0,
+        weight: 2.5,
+        color: '#0d4c92',
+        dashArray: '3',
+        lineCap: 'round',
+        lineJoin: 'round'
+      }
+    }).addTo(map);
+    
     // Add GeoJSON data
     const geoJsonLayer = L.geoJSON(maharashtraGeoJson, {
       style: (feature) => {
@@ -135,8 +142,7 @@ export default function GISMaharashtraMap({
             <strong>${districtName}</strong><br>
             Region: ${regionName}<br>
             ${metric === 'esr' ? 'ESR Integration' : 
-              metric === 'villages' ? 'Village Completion' :
-              metric === 'flow_meter' ? 'Flow Meter Integration' : 
+              metric === 'villages' ? 'Village Completion' : 
               'Scheme Completion'}: ${getMetricValue(regionName)}
           </div>
         `, {
@@ -195,12 +201,26 @@ export default function GISMaharashtraMap({
         // Add marker
         const marker = L.marker([center[1], center[0]], { icon: markerIcon }).addTo(markersLayer);
         
-        // Add label
+        // Add label with positioning adjustments to prevent overlaps
+        let labelAnchorX = 60;
+        let labelAnchorY = 25;
+        
+        // Custom positioning for specific regions to prevent overlap
+        if (regionName === 'Nashik') {
+          labelAnchorX = 30;  // Move Nashik label more to the left
+          labelAnchorY = 15;  // Move it slightly up
+        } else if (regionName === 'Chhatrapati Sambhajinagar') {
+          labelAnchorX = 120; // Move C.S. Nagar label more to the right
+          labelAnchorY = 40;  // Move it more down
+        } else if (regionName === 'Amravati') {
+          labelAnchorY = 0;   // Move Amravati label up
+        }
+        
         const labelIcon = L.divIcon({
           className: 'region-label',
-          html: `<div style="color: #333; font-weight: bold; text-shadow: 0 1px 3px rgba(255,255,255,0.8); font-size: 14px;">${regionName}</div>`,
+          html: `<div style="color: #333; font-weight: bold; text-shadow: 0 1px 3px rgba(255,255,255,0.8); font-size: 14px; white-space: nowrap;">${regionName}</div>`,
           iconSize: [120, 20],
-          iconAnchor: [60, 25]
+          iconAnchor: [labelAnchorX, labelAnchorY]
         });
         
         L.marker([center[1], center[0]], { icon: labelIcon, interactive: false }).addTo(markersLayer);
@@ -264,15 +284,14 @@ export default function GISMaharashtraMap({
       
       // Metric type
       const metricTitle = metric === 'esr' ? 'ESR Integration' : 
-                        metric === 'villages' ? 'Village Completion' :
-                        metric === 'flow_meter' ? 'Flow Meter Integration' : 
+                        metric === 'villages' ? 'Village Completion' : 
                         'Scheme Completion';
       
       div.innerHTML += `<div style="font-size: 10px; margin-bottom: 15px; color: rgba(0,0,0,0.6);">Showing: ${metricTitle}</div>`;
       
       // Region items
       const regionItems = [
-        { name: 'Amaravati', color: regionColors['Amravati'] },
+        { name: 'Amravati', color: regionColors['Amravati'] },  // Fixed spelling from Amaravati to Amravati
         { name: 'Nagpur', color: regionColors['Nagpur'] },
         { name: 'C.S. Nagar', color: regionColors['Chhatrapati Sambhajinagar'] },
         { name: 'Nashik', color: regionColors['Nashik'] },

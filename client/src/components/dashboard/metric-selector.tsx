@@ -1,15 +1,15 @@
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group"
-import { Droplet, Home, Gauge, BarChart3 } from "lucide-react";
+import { Droplet, Home, BarChart3 } from "lucide-react";
 
 interface MetricSelectorProps {
-  value: 'completion' | 'esr' | 'villages' | 'flow_meter';
-  onChange: (value: 'completion' | 'esr' | 'villages' | 'flow_meter') => void;
+  value: 'completion' | 'esr' | 'villages';
+  onChange: (value: 'completion' | 'esr' | 'villages') => void;
 }
 
 export default function MetricSelector({ value, onChange }: MetricSelectorProps) {
   const handleChange = (newValue: string) => {
     if (newValue) {
-      onChange(newValue as 'completion' | 'esr' | 'villages' | 'flow_meter');
+      onChange(newValue as 'completion' | 'esr' | 'villages');
     }
   };
 
@@ -38,11 +38,6 @@ export default function MetricSelector({ value, onChange }: MetricSelectorProps)
           <Home className="h-4 w-4" />
           <span className="hidden sm:inline">Village Integration</span>
           <span className="inline sm:hidden">Villages</span>
-        </ToggleGroupItem>
-        <ToggleGroupItem value="flow_meter" aria-label="Flow Meter Status" className="flex gap-1.5 items-center">
-          <Gauge className="h-4 w-4" />
-          <span className="hidden sm:inline">Flow Meter Status</span>
-          <span className="inline sm:hidden">Flow Meters</span>
         </ToggleGroupItem>
       </ToggleGroup>
     </div>

@@ -48,7 +48,7 @@ export default function Dashboard() {
 
   // State for status filter
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [mapMetric, setMapMetric] = useState<'completion' | 'esr' | 'villages' | 'flow_meter'>('completion');
+  const [mapMetric, setMapMetric] = useState<'completion' | 'esr' | 'villages'>('completion');
 
   // Fetch schemes data with region and status filters
   const {
