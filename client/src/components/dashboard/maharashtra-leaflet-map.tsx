@@ -44,85 +44,7 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Maharashtra GeoJSON data (simplified for this example)
-// In a real implementation, this would be loaded from a separate file
-const maharashtraGeoJson: FeatureCollection = {
-  "type": "FeatureCollection",
-  "features": [
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Konkan",
-        "id": "Konkan",
-        "color": "#c2c2c2"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[73.0, 18.2], [73.3, 17.8], [73.2, 17.0], [72.8, 16.5], [72.5, 16.7], [72.3, 17.3], [72.5, 18.0], [72.7, 18.8], [73.0, 18.2]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Pune",
-        "id": "Pune",
-        "color": "#adebad"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[73.8, 18.6], [74.4, 18.3], [74.5, 17.8], [74.2, 17.3], [73.8, 17.2], [73.5, 17.5], [73.3, 17.8], [73.0, 18.2], [73.2, 18.4], [73.5, 18.5], [73.8, 18.6]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Nashik",
-        "id": "Nashik",
-        "color": "#ffeb99"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[73.8, 20.1], [74.3, 20.0], [74.6, 19.8], [74.8, 19.5], [74.7, 19.2], [74.5, 19.0], [74.2, 19.0], [74.0, 19.1], [73.7, 19.4], [73.5, 19.6], [73.4, 19.9], [73.5, 20.1], [73.8, 20.1]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Chhatrapati Sambhajinagar",
-        "id": "Chhatrapati Sambhajinagar",
-        "color": "#ccdeff"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[75.3, 19.9], [75.8, 19.7], [76.0, 19.4], [76.0, 19.0], [75.8, 18.7], [75.5, 18.5], [75.0, 18.5], [74.8, 18.7], [74.7, 19.2], [74.8, 19.5], [75.0, 19.7], [75.3, 19.9]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Amravati",
-        "id": "Amravati",
-        "color": "#ffccaa"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[77.0, 21.2], [77.5, 21.0], [77.8, 20.7], [77.9, 20.3], [77.7, 20.0], [77.3, 19.8], [76.9, 19.7], [76.6, 19.8], [76.4, 20.1], [76.3, 20.5], [76.5, 20.8], [76.8, 21.0], [77.0, 21.2]]]
-      }
-    },
-    {
-      "type": "Feature",
-      "properties": {
-        "name": "Nagpur",
-        "id": "Nagpur",
-        "color": "#ffd699"
-      },
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [[[78.5, 21.2], [79.0, 21.0], [79.5, 20.7], [79.7, 20.3], [79.6, 19.9], [79.3, 19.7], [78.9, 19.6], [78.5, 19.7], [78.2, 19.9], [77.9, 20.3], [77.8, 20.7], [78.0, 21.0], [78.5, 21.2]]]
-      }
-    }
-  ]
-};
+// We'll load the GeoJSON data from the file we created
 
 // Region pins data
 const regionPins = [
@@ -194,6 +116,20 @@ export default function MaharashtraLeafletMap({
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [geoJsonLayer, setGeoJsonLayer] = useState<L.GeoJSON | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [districtGeoJson, setDistrictGeoJson] = useState<any>(null);
+  
+  // Fetch the GeoJSON data when the component mounts
+  useEffect(() => {
+    fetch('/maharashtra_districts.json')
+      .then(response => response.json())
+      .then(data => {
+        console.log('Loaded GeoJSON data:', data);
+        setDistrictGeoJson(data);
+      })
+      .catch(error => {
+        console.error('Error loading GeoJSON data:', error);
+      });
+  }, []);
 
   // Get region color based on metric
   const getRegionColor = (regionName: string) => {
@@ -228,14 +164,26 @@ export default function MaharashtraLeafletMap({
 
   // Style function for GeoJSON
   const style = (feature: any) => {
-    const regionId = feature.properties.id;
+    if (!feature || !feature.properties) {
+      return {
+        fillColor: '#cccccc',
+        weight: 1,
+        opacity: 1,
+        color: '#666',
+        fillOpacity: 0.7
+      };
+    }
+    
+    // For district GeoJSON, use the region property
+    const regionId = feature.properties.region || feature.properties.id || '';
+    
     return {
       fillColor: getRegionColor(regionId),
       weight: selectedRegion === regionId || hoveredRegion === regionId ? 2 : 1,
       opacity: 1,
       color: selectedRegion === regionId || hoveredRegion === regionId ? '#2563eb' : '#666',
       fillOpacity: 0.7,
-      className: `region-${regionId}`
+      className: `region-${regionId.replace ? regionId.replace(/\s+/g, '-').toLowerCase() : ''}`
     };
   };
 
@@ -243,6 +191,7 @@ export default function MaharashtraLeafletMap({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
+    if (!districtGeoJson) return undefined; // Wait for GeoJSON data to be loaded
     
     let mapRef: L.Map | null = null;
     let geoJsonLayerRef: L.GeoJSON | null = null;
@@ -294,13 +243,35 @@ export default function MaharashtraLeafletMap({
       console.log('Tile layer added');
     
       // Add GeoJSON layer
-      console.log('Adding GeoJSON layer...', maharashtraGeoJson);
-      const geojson = L.geoJSON(maharashtraGeoJson as any, {
-        style: style,
+      console.log('Adding GeoJSON layer...', districtGeoJson);
+      const geojson = L.geoJSON(districtGeoJson, {
+        style: (feature) => {
+          if (!feature || !feature.properties) {
+            return {
+              fillColor: '#cccccc',
+              weight: 1,
+              opacity: 1,
+              color: '#666',
+              fillOpacity: 0.7
+            };
+          }
+          
+          // Get the region for this district
+          const region = feature.properties.region || '';
+          
+          return {
+            fillColor: getRegionColor(region),
+            weight: selectedRegion === region || hoveredRegion === region ? 2 : 1,
+            opacity: 1,
+            color: selectedRegion === region || hoveredRegion === region ? '#2563eb' : '#666',
+            fillOpacity: 0.7,
+            className: `region-${region.replace(/\s+/g, '-').toLowerCase()}`
+          };
+        },
         onEachFeature: (feature, layer) => {
           console.log('Feature added:', feature);
           if (feature.properties) {
-            const regionId = feature.properties.id;
+            const regionId = feature.properties.region;
             
             // Add hover effects
             layer.on({
@@ -485,7 +456,7 @@ export default function MaharashtraLeafletMap({
         mapInstance.remove();
       }
     };
-  }, []); // Only run once on mount
+  }, [districtGeoJson, mapInstance, setMapInstance, setGeoJsonLayer, style, selectedRegion, hoveredRegion, onRegionClick, getRegionColor, metric]); // Run when district data is loaded
 
   // Update map styles when selectedRegion or metric changes
   useEffect(() => {
