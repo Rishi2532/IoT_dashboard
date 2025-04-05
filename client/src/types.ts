@@ -1,0 +1,53 @@
+// Region summary data for dashboard
+export interface RegionSummary {
+  region_name?: string;
+  total_schemes_integrated?: number;
+  fully_completed_schemes?: number;
+  partial_schemes?: number;
+  total_esr_in_scheme?: number;
+  total_esr_integrated?: number;
+  fully_completed_esr?: number;
+  total_villages_in_scheme?: number;
+  total_villages_integrated?: number;
+  fully_completed_villages?: number;
+  flow_meter_integrated?: number;
+  updated_at?: string;
+}
+
+// Region data with metrics
+export interface Region {
+  region_name: string;
+  region_id?: string;
+  total_schemes_integrated: number;
+  fully_completed_schemes: number;
+  total_esr_integrated: number;
+  fully_completed_esr: number;
+  total_villages_integrated: number;
+  fully_completed_villages: number;
+  flow_meter_integrated: number;
+  updated_at?: string;
+}
+
+// Scheme status data
+export interface SchemeStatus {
+  scheme_id: string;
+  scheme_name: string;
+  region_name: string;
+  agency: string;  // Implementing agency for the scheme
+  total_villages_in_scheme: number;
+  villages_integrated_on_iot: number;
+  fully_completed_villages: number;
+  total_esr_in_scheme: number;
+  esr_integrated_on_iot: number;
+  fully_completed_esr: number;
+  gps_latitude?: number | null;
+  gps_longitude?: number | null;
+  scheme_completion_status?: string;
+  scheme_status?: string;
+  flow_meter_installed?: boolean;
+  flow_meter_working?: boolean;
+  flow_meter_data_on_cloud?: boolean;
+  implementation_date?: string;
+  last_updated?: string;
+  updated_at?: string;
+}

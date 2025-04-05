@@ -4,7 +4,8 @@ import DashboardLayout from "@/components/dashboard/dashboard-layout";
 import RegionFilter from "@/components/dashboard/region-filter";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RegionComparisonChart from "@/components/dashboard/region-comparison-chart";
-import CompletionStatusChart from "@/components/dashboard/completion-status-chart";
+import RegionHeatmap from "@/components/dashboard/region-heatmap";
+import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
@@ -46,6 +47,7 @@ export default function Dashboard() {
 
   // State for status filter
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [mapMetric, setMapMetric] = useState<'completion' | 'esr' | 'villages' | 'flow_meter'>('completion');
 
   // Fetch schemes data with region and status filters
   const {
@@ -254,13 +256,21 @@ export default function Dashboard() {
         </div>
         <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all">
           <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
-            Completion Status
+            Regional Status
           </h2>
+          <MetricSelector
+            value={mapMetric}
+            onChange={setMapMetric}
+          />
           <div className="w-full overflow-x-auto">
             <div className="min-w-[300px] sm:min-w-full">
-              <CompletionStatusChart
+              <RegionHeatmap
                 regionSummary={regionSummary}
-                isLoading={isSummaryLoading}
+                regions={regions}
+                selectedRegion={selectedRegion}
+                onRegionClick={handleRegionChange}
+                metric={mapMetric}
+                isLoading={isRegionsLoading || isSummaryLoading}
               />
             </div>
           </div>
