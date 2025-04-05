@@ -209,13 +209,13 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
 
       {/* Total ESR Card */}
       <Card className="bg-white overflow-hidden border-2 border-purple-200 hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px] rounded-xl">
-        <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
+        <div className="absolute top-0 right-0 h-20 w-20 sm:h-28 sm:w-28 xl:h-32 xl:w-32" style={{ opacity: 0.15 }}>
           <img src="/images/esr-water-tank.png" alt="ESR" className="h-full w-full text-purple-700" />
         </div>
         <CardContent className="p-3 sm:p-4 md:p-6 xl:p-8">
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-2 sm:p-3 xl:p-4 shadow-md">
-              <img src="/images/esr-water-tank.png" alt="ESR Tank" className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 xl:h-7 xl:w-7 text-white" />
+            <div className="flex-shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-1 sm:p-2 xl:p-2 shadow-md flex items-center justify-center">
+              <img src="/images/esr-water-tank.png" alt="ESR Tank" className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 xl:h-9 xl:w-9" />
             </div>
             <div className="ml-3 sm:ml-4 md:ml-5 xl:ml-6 flex-1">
               <h3 className="text-xs sm:text-sm xl:text-base font-medium text-purple-800">

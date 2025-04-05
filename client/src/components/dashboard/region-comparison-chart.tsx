@@ -165,7 +165,7 @@ export default function RegionComparisonChart({ regions, isLoading }: RegionComp
   }, [regions, isLoading]);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="h-full flex flex-col" style={{ minHeight: '600px' }}>
       {isLoading ? (
         <div className="animate-pulse h-full w-full bg-gray-200 rounded flex-1"></div>
       ) : (

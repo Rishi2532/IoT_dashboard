@@ -102,13 +102,13 @@ export default function GISMaharashtraMap({
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
     
-    // Add state boundary for Maharashtra
+    // Add state boundary for Maharashtra with bold black border
     L.geoJSON(maharashtraGeoJson, {
       style: {
         fillOpacity: 0,
-        weight: 2.5,
-        color: '#0d4c92',
-        dashArray: '3',
+        weight: 4,
+        color: '#000000',
+        opacity: 1,
         lineCap: 'round',
         lineJoin: 'round'
       }
@@ -407,7 +407,7 @@ export default function GISMaharashtraMap({
           <Skeleton className="h-full w-full rounded-md" />
         </div>
       ) : (
-        <div className="relative w-full h-full flex-1" style={{ overflow: 'hidden' }}>
+        <div className="relative w-full h-full flex-1" style={{ overflow: 'hidden', minHeight: '600px' }}>
           <div 
             ref={mapRef}
             id="maharashtra-gis-map" 
