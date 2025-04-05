@@ -134,7 +134,7 @@ export default function MaharashtraSvgMap({
             <div 
               id="maharashtra-svg-map" 
               className="h-full w-full bg-center bg-no-repeat bg-contain relative"
-              style={{ backgroundImage: 'url(/maharashtra-divisions.svg)' }}
+              style={{ backgroundColor: '#0a1033', backgroundImage: 'url(/maharashtra-divisions.svg)', backgroundPosition: 'center', backgroundSize: 'contain', backgroundRepeat: 'no-repeat' }}
             >
               {/* SVG overlay layer for pins, labels, etc. */}
               <svg 
@@ -148,35 +148,61 @@ export default function MaharashtraSvgMap({
                     <circle 
                       cx={pin.x} 
                       cy={pin.y} 
-                      r="6" 
+                      r="7" 
                       fill="#FF4136" 
+                      stroke="#fff" 
+                      strokeWidth="1.5"
+                      filter="drop-shadow(0px 2px 3px rgba(0,0,0,0.5))"
+                    />
+                    <circle 
+                      cx={pin.x} 
+                      cy={pin.y} 
+                      r="3" 
+                      fill="#ff6b63" 
+                      stroke="#fff" 
+                      strokeWidth="0.5"
+                    />
+                    <line 
+                      x1={pin.x-5} 
+                      y1={pin.y} 
+                      x2={pin.x+5} 
+                      y2={pin.y} 
                       stroke="#fff" 
                       strokeWidth="1.5" 
                     />
                     <line 
-                      x1={pin.x-4} 
-                      y1={pin.y} 
-                      x2={pin.x+4} 
-                      y2={pin.y} 
-                      stroke="#fff" 
-                      strokeWidth="1" 
-                    />
-                    <line 
                       x1={pin.x} 
-                      y1={pin.y-4} 
+                      y1={pin.y-5} 
                       x2={pin.x} 
-                      y2={pin.y+4} 
+                      y2={pin.y+5} 
                       stroke="#fff" 
-                      strokeWidth="1" 
+                      strokeWidth="1.5" 
                     />
                     <text 
                       x={pin.x} 
-                      y={pin.y+20} 
+                      y={pin.y+22} 
                       textAnchor="middle" 
                       fill="#fff" 
                       fontSize="14" 
                       fontWeight="bold"
-                      filter="drop-shadow(0px 0px 2px #000)"
+                      filter="drop-shadow(0px 1px 3px rgba(0,0,0,0.8))"
+                      style={{ letterSpacing: '0.5px' }}
+                    >
+                      {pin.name}
+                    </text>
+                    {/* Text outline/glow for better visibility */}
+                    <text 
+                      x={pin.x} 
+                      y={pin.y+22} 
+                      textAnchor="middle" 
+                      stroke="#0a1033" 
+                      strokeWidth="3"
+                      strokeLinejoin="round"
+                      strokeLinecap="round"
+                      fill="none"
+                      fontSize="14" 
+                      fontWeight="bold"
+                      style={{ opacity: 0.5 }}
                     >
                       {pin.name}
                     </text>
@@ -185,35 +211,55 @@ export default function MaharashtraSvgMap({
                 
                 {/* District labels */}
                 {districtData.map((district, idx) => (
-                  <text 
-                    key={`district-${idx}`}
-                    x={district.x} 
-                    y={district.y} 
-                    textAnchor="middle" 
-                    fill="#fff" 
-                    fontSize="10"
-                    filter="drop-shadow(0px 0px 1px #000)"
-                  >
-                    {district.name}
-                  </text>
+                  <g key={`district-${idx}`}>
+                    {/* Text shadow/outline for better readability */}
+                    <text 
+                      x={district.x} 
+                      y={district.y} 
+                      textAnchor="middle" 
+                      stroke="#0a1033" 
+                      strokeWidth="3"
+                      strokeLinejoin="round"
+                      fill="none"
+                      fontSize="10"
+                      opacity="0.4"
+                    >
+                      {district.name}
+                    </text>
+                    <text 
+                      x={district.x} 
+                      y={district.y} 
+                      textAnchor="middle" 
+                      fill="#fff" 
+                      fontSize="10"
+                      fontWeight="500"
+                      filter="drop-shadow(0px 1px 2px rgba(0,0,0,0.6))"
+                      style={{ letterSpacing: '0.2px' }}
+                    >
+                      {district.name}
+                    </text>
+                  </g>
                 ))}
                 
                 {/* Compass rose */}
                 <g transform="translate(50, 500)">
+                  <circle cx="25" cy="25" r="24" fill="#0a1033" stroke="rgba(255,255,255,0.5)" strokeWidth="1" filter="drop-shadow(0px 2px 4px rgba(0,0,0,0.3))" />
                   <circle cx="25" cy="25" r="22" fill="none" stroke="#fff" strokeWidth="1" />
+                  <circle cx="25" cy="25" r="18" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
                   <path d="M25,3 L25,47 M3,25 L47,25" stroke="#fff" strokeWidth="1" />
-                  <path d="M10,10 L40,40 M10,40 L40,10" stroke="#fff" strokeWidth="1" />
-                  <circle cx="25" cy="25" r="3" fill="#fff" stroke="#fff" strokeWidth="0.5" />
-                  <text x="25" y="5" textAnchor="middle" fill="#fff" fontSize="10px">N</text>
-                  <text x="25" y="48" textAnchor="middle" fill="#fff" fontSize="10px">S</text>
-                  <text x="3" y="27" textAnchor="middle" fill="#fff" fontSize="10px">W</text>
-                  <text x="47" y="27" textAnchor="middle" fill="#fff" fontSize="10px">E</text>
+                  <path d="M10,10 L40,40 M10,40 L40,10" stroke="rgba(255,255,255,0.5)" strokeWidth="1" strokeDasharray="2,1" />
+                  <circle cx="25" cy="25" r="4" fill="#0a1033" stroke="#fff" strokeWidth="1" />
+                  <circle cx="25" cy="25" r="2" fill="#fff" />
+                  <text x="25" y="8" textAnchor="middle" fill="#fff" fontSize="10px" fontWeight="bold" filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.5))">N</text>
+                  <text x="25" y="45" textAnchor="middle" fill="#fff" fontSize="10px" fontWeight="bold" filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.5))">S</text>
+                  <text x="5" y="27" textAnchor="middle" fill="#fff" fontSize="10px" fontWeight="bold" filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.5))">W</text>
+                  <text x="45" y="27" textAnchor="middle" fill="#fff" fontSize="10px" fontWeight="bold" filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.5))">E</text>
                 </g>
                 
                 {/* Region legend */}
                 <g transform="translate(420, 375)">
-                  <rect x="0" y="0" width="120" height="140" fill="#0a1033" opacity="0.8" rx="4" ry="4" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
-                  <text x="10" y="20" fill="#fff" fontSize="12" fontWeight="bold">Regions</text>
+                  <rect x="0" y="0" width="120" height="140" fill="#0a1033" opacity="0.8" rx="4" ry="4" stroke="rgba(255,255,255,0.3)" strokeWidth="1" filter="drop-shadow(0px 2px 4px rgba(0,0,0,0.3))" />
+                  <text x="10" y="20" fill="#fff" fontSize="12" fontWeight="bold" filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.5))">Regions</text>
                   
                   {[
                     { name: 'Amravati', color: '#ffccaa', y: 40 },
@@ -224,17 +270,17 @@ export default function MaharashtraSvgMap({
                     { name: 'Konkan', color: '#c2c2c2', y: 140 }
                   ].map((region, idx) => (
                     <g key={`legend-${idx}`}>
-                      <rect x="10" y={region.y-10} width="10" height="10" fill={region.color} />
-                      <text x="25" y={region.y} fill="#fff" fontSize="10">{region.name}</text>
+                      <rect x="10" y={region.y-10} width="10" height="10" fill={region.color} stroke="#fff" strokeWidth="0.5" rx="2" ry="2" />
+                      <text x="25" y={region.y} fill="#fff" fontSize="10" filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.3))">{region.name}</text>
                     </g>
                   ))}
                 </g>
                 
                 {/* Metric legend */}
                 <g transform="translate(420, 140)">
-                  <rect x="0" y="0" width="120" height="140" fill="#0a1033" opacity="0.8" rx="4" ry="4" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                  <rect x="0" y="0" width="120" height="140" fill="#0a1033" opacity="0.8" rx="4" ry="4" stroke="rgba(255,255,255,0.3)" strokeWidth="1" filter="drop-shadow(0px 2px 4px rgba(0,0,0,0.3))" />
                   
-                  <text x="10" y="20" fill="#fff" fontSize="12" fontWeight="bold">
+                  <text x="10" y="20" fill="#fff" fontSize="12" fontWeight="bold" filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.5))">
                     {metric === 'completion' ? 'Scheme Completion' : 
                     metric === 'esr' ? 'ESR Integration' : 
                     metric === 'villages' ? 'Village Integration' : 
@@ -248,8 +294,8 @@ export default function MaharashtraSvgMap({
                     { label: '0-24%', color: '#f87171', y: 100 }
                   ].map((item, idx) => (
                     <g key={`metric-${idx}`}>
-                      <rect x="10" y={item.y-10} width="10" height="10" fill={item.color} />
-                      <text x="25" y={item.y} fill="#fff" fontSize="10">{item.label}</text>
+                      <rect x="10" y={item.y-10} width="10" height="10" fill={item.color} stroke="#fff" strokeWidth="0.5" rx="2" ry="2" />
+                      <text x="25" y={item.y} fill="#fff" fontSize="10" filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.3))">{item.label}</text>
                     </g>
                   ))}
                 </g>
@@ -259,7 +305,7 @@ export default function MaharashtraSvgMap({
               <div className="absolute inset-0" style={{ zIndex: 5 }}>
                 {/* Amravati region clickable area */}
                 <div 
-                  className="absolute" 
+                  className="absolute transition-all duration-200 ease-in-out" 
                   style={{
                     top: '160px', 
                     left: '240px', 
@@ -267,7 +313,9 @@ export default function MaharashtraSvgMap({
                     height: '120px',
                     cursor: 'pointer',
                     backgroundColor: hoveredRegion === 'Amravati' ? 'rgba(255,204,170,0.3)' : 'transparent',
-                    border: selectedRegion === 'Amravati' ? '2px solid #2563eb' : 'none'
+                    border: selectedRegion === 'Amravati' ? '2px solid #2563eb' : '1px solid rgba(255,255,255,0.2)',
+                    boxShadow: hoveredRegion === 'Amravati' ? '0 0 8px rgba(255,204,170,0.5)' : 'none',
+                    borderRadius: '4px'
                   }}
                   onClick={() => onRegionClick('Amravati')}
                   onMouseOver={() => setHoveredRegion('Amravati')}
@@ -276,7 +324,7 @@ export default function MaharashtraSvgMap({
                 
                 {/* Nagpur region clickable area */}
                 <div 
-                  className="absolute" 
+                  className="absolute transition-all duration-200 ease-in-out" 
                   style={{
                     top: '120px', 
                     left: '380px', 
@@ -284,7 +332,9 @@ export default function MaharashtraSvgMap({
                     height: '180px',
                     cursor: 'pointer',
                     backgroundColor: hoveredRegion === 'Nagpur' ? 'rgba(255,214,153,0.3)' : 'transparent',
-                    border: selectedRegion === 'Nagpur' ? '2px solid #2563eb' : 'none'
+                    border: selectedRegion === 'Nagpur' ? '2px solid #2563eb' : '1px solid rgba(255,255,255,0.2)',
+                    boxShadow: hoveredRegion === 'Nagpur' ? '0 0 8px rgba(255,214,153,0.5)' : 'none',
+                    borderRadius: '4px'
                   }}
                   onClick={() => onRegionClick('Nagpur')}
                   onMouseOver={() => setHoveredRegion('Nagpur')}
@@ -293,7 +343,7 @@ export default function MaharashtraSvgMap({
                 
                 {/* Chhatrapati Sambhajinagar region clickable area */}
                 <div 
-                  className="absolute" 
+                  className="absolute transition-all duration-200 ease-in-out" 
                   style={{
                     top: '260px', 
                     left: '200px', 
@@ -301,7 +351,9 @@ export default function MaharashtraSvgMap({
                     height: '150px',
                     cursor: 'pointer',
                     backgroundColor: hoveredRegion === 'Chhatrapati Sambhajinagar' ? 'rgba(204,222,255,0.3)' : 'transparent',
-                    border: selectedRegion === 'Chhatrapati Sambhajinagar' ? '2px solid #2563eb' : 'none'
+                    border: selectedRegion === 'Chhatrapati Sambhajinagar' ? '2px solid #2563eb' : '1px solid rgba(255,255,255,0.2)',
+                    boxShadow: hoveredRegion === 'Chhatrapati Sambhajinagar' ? '0 0 8px rgba(204,222,255,0.5)' : 'none',
+                    borderRadius: '4px'
                   }}
                   onClick={() => onRegionClick('Chhatrapati Sambhajinagar')}
                   onMouseOver={() => setHoveredRegion('Chhatrapati Sambhajinagar')}
@@ -310,7 +362,7 @@ export default function MaharashtraSvgMap({
                 
                 {/* Nashik region clickable area */}
                 <div 
-                  className="absolute" 
+                  className="absolute transition-all duration-200 ease-in-out" 
                   style={{
                     top: '150px', 
                     left: '80px', 
@@ -318,7 +370,9 @@ export default function MaharashtraSvgMap({
                     height: '180px',
                     cursor: 'pointer',
                     backgroundColor: hoveredRegion === 'Nashik' ? 'rgba(255,235,153,0.3)' : 'transparent',
-                    border: selectedRegion === 'Nashik' ? '2px solid #2563eb' : 'none'
+                    border: selectedRegion === 'Nashik' ? '2px solid #2563eb' : '1px solid rgba(255,255,255,0.2)',
+                    boxShadow: hoveredRegion === 'Nashik' ? '0 0 8px rgba(255,235,153,0.5)' : 'none',
+                    borderRadius: '4px'
                   }}
                   onClick={() => onRegionClick('Nashik')}
                   onMouseOver={() => setHoveredRegion('Nashik')}
@@ -327,7 +381,7 @@ export default function MaharashtraSvgMap({
                 
                 {/* Pune region clickable area */}
                 <div 
-                  className="absolute" 
+                  className="absolute transition-all duration-200 ease-in-out" 
                   style={{
                     top: '350px', 
                     left: '80px', 
@@ -335,7 +389,9 @@ export default function MaharashtraSvgMap({
                     height: '150px',
                     cursor: 'pointer',
                     backgroundColor: hoveredRegion === 'Pune' ? 'rgba(173,235,173,0.3)' : 'transparent',
-                    border: selectedRegion === 'Pune' ? '2px solid #2563eb' : 'none'
+                    border: selectedRegion === 'Pune' ? '2px solid #2563eb' : '1px solid rgba(255,255,255,0.2)',
+                    boxShadow: hoveredRegion === 'Pune' ? '0 0 8px rgba(173,235,173,0.5)' : 'none',
+                    borderRadius: '4px'
                   }}
                   onClick={() => onRegionClick('Pune')}
                   onMouseOver={() => setHoveredRegion('Pune')}
@@ -344,7 +400,7 @@ export default function MaharashtraSvgMap({
                 
                 {/* Konkan region clickable area */}
                 <div 
-                  className="absolute" 
+                  className="absolute transition-all duration-200 ease-in-out" 
                   style={{
                     top: '280px', 
                     left: '30px', 
@@ -352,7 +408,9 @@ export default function MaharashtraSvgMap({
                     height: '200px',
                     cursor: 'pointer',
                     backgroundColor: hoveredRegion === 'Konkan' ? 'rgba(194,194,194,0.3)' : 'transparent',
-                    border: selectedRegion === 'Konkan' ? '2px solid #2563eb' : 'none'
+                    border: selectedRegion === 'Konkan' ? '2px solid #2563eb' : '1px solid rgba(255,255,255,0.2)',
+                    boxShadow: hoveredRegion === 'Konkan' ? '0 0 8px rgba(194,194,194,0.5)' : 'none',
+                    borderRadius: '4px'
                   }}
                   onClick={() => onRegionClick('Konkan')}
                   onMouseOver={() => setHoveredRegion('Konkan')}
@@ -362,8 +420,11 @@ export default function MaharashtraSvgMap({
             </div>
             
             {selectedRegion !== "all" && (
-              <div className="mt-4 text-center">
-                <span className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full text-sm font-medium shadow-sm">
+              <div className="absolute bottom-4 left-0 right-0 text-center">
+                <span className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full text-sm font-medium shadow-md backdrop-blur-sm border border-blue-400">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="inline-block h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                  </svg>
                   {selectedRegion} Region Selected
                 </span>
               </div>
