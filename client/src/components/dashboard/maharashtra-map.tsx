@@ -5,6 +5,7 @@ import { Region, RegionSummary } from '@/types';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import * as d3 from 'd3';
+import { maharashtraRegions, maharashtraOutlinePath, regionNameToId } from '@/data/maharashtra-boundaries';
 
 interface MaharashtraMapProps {
   regionSummary?: RegionSummary;
@@ -15,82 +16,8 @@ interface MaharashtraMapProps {
   isLoading?: boolean;
 }
 
-// Define region boundaries (GeoJSON-like structure for Maharashtra regions)
-const regionBoundaries = {
-  "Nagpur": {
-    color: "#E8CEAD", // Light brown/beige
-    path: "M580,70 L780,70 L780,250 L580,250 Z",
-    center: [670, 100],
-    districts: [
-      { name: "Bhandara", position: [725, 100] },
-      { name: "Gondia", position: [760, 80] },
-      { name: "Wardha", position: [595, 140] },
-      { name: "Chandrapur", position: [675, 180] },
-      { name: "Gadchiroli", position: [720, 250] }
-    ]
-  },
-  "Amravati": {
-    color: "#F8BFC7", // Light pink
-    path: "M390,90 L580,90 L580,210 L500,230 L390,210 Z",
-    center: [515, 115],
-    districts: [
-      { name: "Akola", position: [460, 140] },
-      { name: "Washim", position: [455, 180] },
-      { name: "Yavatmal", position: [505, 195] },
-      { name: "Buldhana", position: [390, 165] }
-    ]
-  },
-  "Chhatrapati Sambhajinagar": {
-    color: "#C0D1F0", // Light blue
-    path: "M320,210 L500,210 L520,290 L420,340 L320,360 Z",
-    center: [318, 218],
-    districts: [
-      { name: "Jalna", position: [400, 218] },
-      { name: "Parbhani", position: [430, 245] },
-      { name: "Hingoli", position: [465, 255] },
-      { name: "Nanded", position: [500, 265] },
-      { name: "Beed", position: [350, 280] },
-      { name: "Latur", position: [425, 300] },
-      { name: "Dharashiv", position: [380, 340] }
-    ]
-  },
-  "Nashik": {
-    color: "#F1E476", // Yellow
-    path: "M120,125 L340,125 L340,210 L270,260 L120,275 Z",
-    center: [180, 185],
-    districts: [
-      { name: "Dhule", position: [215, 140] },
-      { name: "Jalgaon", position: [300, 125] },
-      { name: "Nandurbar", position: [160, 100] },
-      { name: "Ahmadnagar", position: [270, 260] },
-      { name: "Palghar", position: [120, 170] }
-    ]
-  },
-  "Pune": {
-    color: "#ADEBAD", // Light green
-    path: "M150,280 L320,280 L380,340 L380,480 L150,480 Z",
-    center: [230, 340],
-    districts: [
-      { name: "Solapur", position: [320, 380] },
-      { name: "Sangli", position: [230, 420] },
-      { name: "Kolhapur", position: [190, 460] },
-      { name: "Satara", position: [230, 380] }
-    ]
-  },
-  "Konkan": {
-    color: "#BFC0C0", // Gray
-    path: "M50,280 L150,280 L150,500 L50,500 Z",
-    center: [100, 420],
-    districts: [
-      { name: "Mumbai", position: [60, 320] },
-      { name: "Mumbai Suburban", position: [60, 300] },
-      { name: "Thane", position: [100, 280] },
-      { name: "Raigad", position: [120, 330] },
-      { name: "Ratnagiri", position: [140, 390] },
-      { name: "Sindhudurg", position: [120, 460] }
-    ]
-  }
-};
+// Use the boundaries defined in the imported maharashtraRegions
+const regionBoundaries = maharashtraRegions;
 
 export default function MaharashtraMap({
   regionSummary,
@@ -166,6 +93,56 @@ export default function MaharashtraMap({
     // Set the map background
     mapContainer.style.backgroundColor = '#0a1033';
     
+    // Add the state outline first as a base layer
+    svg.append('path')
+      .attr('d', maharashtraOutlinePath)
+      .attr('fill', 'none')
+      .attr('stroke', 'rgba(255,255,255,0.3)')
+      .attr('stroke-width', 2)
+      .attr('stroke-dasharray', '5,3')
+      .attr('filter', 'drop-shadow(0px 2px 4px rgba(0,0,0,0.7))');
+      
+    // Add inter-region connection paths (roads/rivers)
+    const nagpurCenter = maharashtraRegions["Nagpur"].center;
+    const amravatiCenter = maharashtraRegions["Amravati"].center;
+    const sambhajinagarCenter = maharashtraRegions["Chhatrapati Sambhajinagar"].center;
+    const nashikCenter = maharashtraRegions["Nashik"].center;
+    const puneCenter = maharashtraRegions["Pune"].center;
+    const konkanCenter = maharashtraRegions["Konkan"].center;
+    
+    const connectionPaths = [
+      // Nagpur to Amravati
+      {
+        path: `M${nagpurCenter[0]},${nagpurCenter[1]} Q${nagpurCenter[0] - 25},${nagpurCenter[1] + 10} ${amravatiCenter[0]},${amravatiCenter[1]}`,
+        color: 'rgba(255,255,255,0.15)'
+      },
+      // Amravati to Chhatrapati Sambhajinagar
+      {
+        path: `M${amravatiCenter[0]},${amravatiCenter[1]} Q${amravatiCenter[0] - 15},${amravatiCenter[1] + 30} ${sambhajinagarCenter[0]},${sambhajinagarCenter[1]}`,
+        color: 'rgba(255,255,255,0.15)'
+      },
+      // Nashik to Pune
+      {
+        path: `M${nashikCenter[0]},${nashikCenter[1]} Q${(nashikCenter[0] + puneCenter[0])/2},${(nashikCenter[1] + puneCenter[1])/2 - 10} ${puneCenter[0]},${puneCenter[1]}`,
+        color: 'rgba(255,255,255,0.15)'
+      },
+      // Pune to Konkan
+      {
+        path: `M${puneCenter[0]},${puneCenter[1]} Q${puneCenter[0] - 20},${puneCenter[1] + 10} ${konkanCenter[0]},${konkanCenter[1]}`,
+        color: 'rgba(255,255,255,0.15)'
+      }
+    ];
+    
+    // Draw each connection path
+    connectionPaths.forEach(conn => {
+      svg.append('path')
+        .attr('d', conn.path)
+        .attr('fill', 'none')
+        .attr('stroke', conn.color)
+        .attr('stroke-width', 1.5)
+        .attr('stroke-dasharray', '3,2');
+    });
+    
     // Add region polygons
     Object.entries(regionBoundaries).forEach(([regionName, regionData]) => {
       // Create the region path
@@ -198,22 +175,40 @@ export default function MaharashtraMap({
         onRegionClick(regionName);
       });
       
-      // Add district boundaries
+      // Add district boundaries with more detailed shapes
       regionData.districts.forEach(district => {
-        // Create a simple circle for each district
+        // Create a district boundary with curved path
+        const districtX = district.position[0];
+        const districtY = district.position[1];
+        
+        // Generate a small circular boundary to represent the district area
+        const radius = 8;
+        const circlePath = `
+          M ${districtX - radius} ${districtY}
+          a ${radius},${radius} 0 1,0 ${radius * 2},0
+          a ${radius},${radius} 0 1,0 -${radius * 2},0
+        `;
+        
+        svg.append('path')
+          .attr('d', circlePath)
+          .attr('fill', 'rgba(255,255,255,0.05)')
+          .attr('stroke', 'rgba(255,255,255,0.3)')
+          .attr('stroke-width', 0.5);
+          
+        // Create a location dot for the district
         svg.append('circle')
           .attr('cx', district.position[0])
           .attr('cy', district.position[1])
           .attr('r', 2)
           .attr('fill', '#ffffff')
-          .attr('opacity', 0.5);
+          .attr('opacity', 0.7);
           
         // Add district name
         svg.append('text')
           .attr('x', district.position[0])
-          .attr('y', district.position[1])
+          .attr('y', district.position[1] - 8)
           .attr('text-anchor', 'middle')
-          .attr('font-size', '9px')
+          .attr('font-size', '8px')
           .attr('fill', '#ffffff')
           .attr('filter', 'drop-shadow(0px 1px 2px rgba(0,0,0,0.6))')
           .text(district.name);
@@ -221,9 +216,9 @@ export default function MaharashtraMap({
         // Add outline for better readability
         svg.append('text')
           .attr('x', district.position[0])
-          .attr('y', district.position[1])
+          .attr('y', district.position[1] - 8)
           .attr('text-anchor', 'middle')
-          .attr('font-size', '9px')
+          .attr('font-size', '8px')
           .attr('stroke', '#0a1033')
           .attr('stroke-width', 3)
           .attr('fill', 'none')
@@ -232,8 +227,16 @@ export default function MaharashtraMap({
           .text(district.name);
       });
       
-      // Add region markers
-      svg.append('circle')
+      // Add region markers (pin style)
+      const markerGroup = svg.append('g')
+        .attr('class', 'region-marker')
+        .style('cursor', 'pointer')
+        .on('click', () => {
+          onRegionClick(regionName);
+        });
+        
+      // Pin base (red circle)
+      markerGroup.append('circle')
         .attr('cx', regionData.center[0])
         .attr('cy', regionData.center[1])
         .attr('r', 8)
@@ -241,14 +244,43 @@ export default function MaharashtraMap({
         .attr('stroke', '#ffffff')
         .attr('stroke-width', 1.5)
         .attr('filter', 'drop-shadow(0px 2px 3px rgba(0,0,0,0.5))');
-        
-      svg.append('circle')
+      
+      // Pin inner circle  
+      markerGroup.append('circle')
         .attr('cx', regionData.center[0])
         .attr('cy', regionData.center[1])
         .attr('r', 3)
         .attr('fill', '#ff6b63')
         .attr('stroke', '#ffffff')
         .attr('stroke-width', 0.5);
+        
+      // Add pulse animation effect for the selected region
+      if (regionName === selectedRegion) {
+        const pulseCircle = markerGroup.append('circle')
+          .attr('cx', regionData.center[0])
+          .attr('cy', regionData.center[1])
+          .attr('r', 8)
+          .attr('fill', 'none')
+          .attr('stroke', '#ffffff')
+          .attr('stroke-width', 2)
+          .attr('opacity', 0.7);
+        
+        // Create pulse animation directly with recursive function
+        const animatePulse = () => {
+          pulseCircle
+            .transition()
+            .duration(1000)
+            .attr('r', 20)
+            .attr('opacity', 0)
+            .transition()
+            .duration(100)
+            .attr('r', 8)
+            .attr('opacity', 0.7)
+            .on('end', animatePulse);
+        };
+        
+        animatePulse();
+      }
         
       // Add region name
       svg.append('text')
@@ -272,6 +304,62 @@ export default function MaharashtraMap({
         .attr('fill', 'none')
         .attr('opacity', 0.5)
         .text(regionName);
+    });
+    
+    // Add scale bar
+    const scaleBar = svg.append('g').attr('transform', 'translate(50, 430)');
+    
+    // Scale bar title
+    scaleBar.append('text')
+      .attr('x', 0)
+      .attr('y', -5)
+      .attr('fill', '#ffffff')
+      .attr('font-size', 8)
+      .attr('font-weight', 'bold')
+      .text('Scale');
+    
+    // Scale bar
+    scaleBar.append('rect')
+      .attr('x', 0)
+      .attr('y', 0)
+      .attr('width', 100)
+      .attr('height', 4)
+      .attr('fill', 'url(#scale-gradient)');
+    
+    // Add gradient definition for scale bar
+    const gradient = scaleBar.append('defs')
+      .append('linearGradient')
+      .attr('id', 'scale-gradient')
+      .attr('x1', '0%')
+      .attr('y1', '0%')
+      .attr('x2', '100%')
+      .attr('y2', '0%');
+    
+    gradient.append('stop')
+      .attr('offset', '0%')
+      .attr('stop-color', '#ffffff');
+    
+    gradient.append('stop')
+      .attr('offset', '100%')
+      .attr('stop-color', 'rgba(255,255,255,0.4)');
+    
+    // Scale bar ticks and labels
+    [0, 25, 50, 75, 100].forEach(pos => {
+      scaleBar.append('line')
+        .attr('x1', pos)
+        .attr('y1', 0)
+        .attr('x2', pos)
+        .attr('y2', 6)
+        .attr('stroke', '#ffffff')
+        .attr('stroke-width', 1);
+      
+      scaleBar.append('text')
+        .attr('x', pos)
+        .attr('y', 16)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', 8)
+        .attr('fill', '#ffffff')
+        .text(`${pos}km`);
     });
     
     // Add compass rose
@@ -346,60 +434,142 @@ export default function MaharashtraMap({
         .text(dir);
     });
     
-    // Add region legend
-    const legend = svg.append('g').attr('transform', 'translate(620, 400)');
+    // Add region legend with metric information
+    const legend = svg.append('g').attr('transform', 'translate(620, 360)');
+    
+    // Legend background
     legend.append('rect')
       .attr('x', 0)
       .attr('y', 0)
-      .attr('width', 150)
-      .attr('height', 175)
+      .attr('width', 180)
+      .attr('height', 230)
       .attr('fill', '#0a1033')
-      .attr('opacity', 0.8)
-      .attr('rx', 4)
-      .attr('ry', 4)
+      .attr('opacity', 0.9)
+      .attr('rx', 6)
+      .attr('ry', 6)
       .attr('stroke', 'rgba(255,255,255,0.3)')
       .attr('stroke-width', 1)
-      .attr('filter', 'drop-shadow(0px 2px 4px rgba(0,0,0,0.3))');
-      
+      .attr('filter', 'drop-shadow(0px 2px 6px rgba(0,0,0,0.7))');
+    
+    // Legend title  
     legend.append('text')
-      .attr('x', 10)
-      .attr('y', 20)
+      .attr('x', 15)
+      .attr('y', 25)
       .attr('fill', '#ffffff')
-      .attr('font-size', 12)
+      .attr('font-size', 14)
       .attr('font-weight', 'bold')
       .attr('filter', 'drop-shadow(0px 1px 1px rgba(0,0,0,0.5))')
-      .text('Regions');
-      
-    // Add legend items
+      .text('Maharashtra Regions');
+    
+    // Legend subtitle - metric type
+    let metricTitle = 'ESR Integration';
+    if (metric === 'villages') metricTitle = 'Village Completion';
+    if (metric === 'flow_meter') metricTitle = 'Flow Meter Integration';
+    
+    legend.append('text')
+      .attr('x', 15)
+      .attr('y', 45)
+      .attr('fill', 'rgba(255,255,255,0.7)')
+      .attr('font-size', 10)
+      .text(`Showing: ${metricTitle}`);
+    
+    // Add legend items with interactive hover
     const legendItems = [
-      { name: 'Amaravati', color: '#F8BFC7', y: 45 },
-      { name: 'Nagpur', color: '#E8CEAD', y: 65 },
-      { name: 'C.S. Nagar', color: '#C0D1F0', y: 85 },
-      { name: 'Nashik', color: '#F1E476', y: 105 },
-      { name: 'Pune', color: '#ADEBAD', y: 125 },
-      { name: 'Konkan', color: '#BFC0C0', y: 145 }
+      { name: 'Amaravati', color: '#F8BFC7', y: 70 },
+      { name: 'Nagpur', color: '#E8CEAD', y: 95 },
+      { name: 'C.S. Nagar', color: '#C0D1F0', y: 120 },
+      { name: 'Nashik', color: '#F1E476', y: 145 },
+      { name: 'Pune', color: '#ADEBAD', y: 170 },
+      { name: 'Konkan', color: '#BFC0C0', y: 195 }
     ];
     
+    // Get metric data for each region
+    const regionData = regions?.reduce((acc, r) => {
+      acc[r.region_name] = r;
+      return acc;
+    }, {} as Record<string, any>) || {};
+    
     legendItems.forEach((item, idx) => {
-      legend.append('rect')
-        .attr('x', 10)
+      const region = regionData[item.name];
+      const isSelected = item.name === selectedRegion;
+      
+      // Interactive group for each legend item
+      const itemGroup = legend.append('g')
+        .attr('class', 'legend-item')
+        .style('cursor', 'pointer')
+        .on('click', () => {
+          onRegionClick(item.name);
+        })
+        .on('mouseover', function() {
+          d3.select(this).select('rect')
+            .attr('stroke', '#ffffff')
+            .attr('stroke-width', 1.5);
+        })
+        .on('mouseout', function() {
+          if (item.name !== selectedRegion) {
+            d3.select(this).select('rect')
+              .attr('stroke', '#ffffff')
+              .attr('stroke-width', 0.5);
+          }
+        });
+      
+      // Region color box
+      itemGroup.append('rect')
+        .attr('x', 15)
         .attr('y', item.y - 10)
         .attr('width', 15)
         .attr('height', 15)
         .attr('fill', item.color)
-        .attr('stroke', '#ffffff')
-        .attr('stroke-width', 0.5)
+        .attr('stroke', isSelected ? '#ffffff' : 'rgba(255,255,255,0.5)')
+        .attr('stroke-width', isSelected ? 1.5 : 0.5)
         .attr('rx', 2)
         .attr('ry', 2);
-        
-      legend.append('text')
-        .attr('x', 32)
+      
+      // Region name  
+      itemGroup.append('text')
+        .attr('x', 37)
         .attr('y', item.y)
         .attr('fill', '#ffffff')
-        .attr('font-size', 10)
+        .attr('font-size', 11)
+        .attr('font-weight', isSelected ? 'bold' : 'normal')
         .attr('filter', 'drop-shadow(0px 1px 1px rgba(0,0,0,0.3))')
         .text(item.name);
+      
+      // Add metric data if available
+      if (region) {
+        // Function to get the right metric value
+        const getMetricValue = () => {
+          switch(metric) {
+            case 'esr':
+              return `${region.total_esr_integrated || 0}/${region.fully_completed_esr || 0}`;
+            case 'villages':
+              return `${region.total_villages_integrated || 0}/${region.fully_completed_villages || 0}`;
+            case 'flow_meter':
+              return `${region.flow_meter_integrated || 0}`;
+            default:
+              return `${region.total_esr_integrated || 0}/${region.fully_completed_esr || 0}`;
+          }
+        };
+        
+        // Small metric value indicator
+        itemGroup.append('text')
+          .attr('x', 120)
+          .attr('y', item.y)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#ffffff')
+          .attr('font-size', 10)
+          .attr('font-family', 'monospace')
+          .text(getMetricValue());
+      }
     });
+    
+    // Add legend description
+    legend.append('text')
+      .attr('x', 15)
+      .attr('y', 220)
+      .attr('fill', 'rgba(255,255,255,0.6)')
+      .attr('font-size', 8)
+      .text('Click on a region to filter data');
     
     // Store the map reference
     leafletMapRef.current = map;
