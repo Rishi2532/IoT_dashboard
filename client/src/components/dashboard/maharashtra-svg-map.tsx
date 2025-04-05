@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Card, CardContent } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Region, RegionSummary } from '@/types';
 
 interface MaharashtraSvgMapProps {
@@ -14,68 +14,102 @@ interface MaharashtraSvgMapProps {
 
 export default function MaharashtraSvgMap({
   regionSummary,
-  regions = [],
+  regions,
   selectedRegion,
   onRegionClick,
   metric,
   isLoading = false,
-}: MaharashtraSvgMapProps) {
+}: MaharashtraSvgMapProps): JSX.Element {
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
-
-  // Get color based on metric value if available
+  
+  // Get region color based on metric
   const getRegionColor = (regionName: string) => {
-    if (selectedRegion === regionName || hoveredRegion === regionName) {
-      return '#3b82f6'; // blue-500 for selected or hovered
-    }
+    if (!regions) return '#cccccc'; // Default color
 
-    // Find the region in the regions data
-    const regionData = regions.find(r => r.region_name === regionName);
-    if (!regionData) {
-      return '#E5E7EB'; // gray-200 if region not found
+    const region = regions.find(r => r.region_name === regionName);
+    if (!region) {
+      // Fallback color scheme for the regions
+      if (regionName === 'Amravati') return '#ffccaa';
+      if (regionName === 'Nagpur') return '#ffd699';
+      if (regionName === 'Chhatrapati Sambhajinagar' || regionName === 'Aurangabad') return '#ccdeff';
+      if (regionName === 'Nashik') return '#ffeb99';
+      if (regionName === 'Pune') return '#adebad';
+      if (regionName === 'Konkan') return '#c2c2c2';
+      return '#cccccc';
     }
-
-    // Calculate color based on metric
+    
     let percentage = 0;
     
-    switch (metric) {
-      case 'completion':
-        if (regionData.total_schemes_integrated > 0) {
-          percentage = (Number(regionData.fully_completed_schemes) / Number(regionData.total_schemes_integrated)) * 100;
-        }
-        break;
-      case 'esr':
-        if (regionData.total_esr_integrated > 0) {
-          percentage = (Number(regionData.fully_completed_esr) / Number(regionData.total_esr_integrated)) * 100;
-        }
-        break;
-      case 'villages':
-        if (regionData.total_villages_integrated > 0) {
-          percentage = (Number(regionData.fully_completed_villages) / Number(regionData.total_villages_integrated)) * 100;
-        }
-        break;
-      case 'flow_meter':
-        if (regionData.total_esr_integrated > 0) {
-          percentage = (Number(regionData.flow_meter_integrated) / Number(regionData.total_esr_integrated)) * 100;
-        }
-        break;
+    if (metric === 'completion') {
+      percentage = region.fully_completed_schemes / region.total_schemes_integrated * 100 || 0;
+    } else if (metric === 'esr') {
+      percentage = region.fully_completed_esr / region.total_esr_integrated * 100 || 0;
+    } else if (metric === 'villages') {
+      percentage = region.fully_completed_villages / region.total_villages_integrated * 100 || 0;
+    } else if (metric === 'flow_meter') {
+      percentage = region.flow_meter_integrated / region.total_schemes_integrated * 100 || 0;
     }
-
-    // Color scale based on percentage
+    
+    // Color based on percentage
     if (percentage >= 75) {
       return '#4ade80'; // green-400 for high completion
     } else if (percentage >= 50) {
-      return '#a3e635'; // lime-400 for good completion
+      return '#a3e635'; // lime-400 for medium-high completion
     } else if (percentage >= 25) {
-      return '#facc15'; // yellow-400 for medium completion
+      return '#facc15'; // yellow-400 for medium-low completion
     } else {
       return '#f87171'; // red-400 for low completion
     }
   };
 
-  // Handle region click
-  const handleRegionClick = (regionName: string) => {
-    onRegionClick(regionName);
-  };
+  // Location pins for each region
+  const regionPins = [
+    { name: "Nagpur", x: 450, y: 150 },
+    { name: "Amravati", x: 320, y: 180 },
+    { name: "Chhatrapati Sambhajinagar", x: 250, y: 300 },
+    { name: "Nashik", x: 130, y: 250 },
+    { name: "Pune", x: 130, y: 380 },
+    { name: "Konkan", x: 50, y: 420 }
+  ];
+
+  // District data for labels
+  const districtData = [
+    { name: "Akola", x: 300, y: 200, region: "Amravati" },
+    { name: "Washim", x: 290, y: 230, region: "Amravati" },
+    { name: "Yavatmal", x: 330, y: 250, region: "Amravati" },
+    { name: "Buldhana", x: 250, y: 230, region: "Amravati" },
+    
+    { name: "Bhandara", x: 470, y: 160, region: "Nagpur" },
+    { name: "Gondia", x: 490, y: 140, region: "Nagpur" },
+    { name: "Wardha", x: 400, y: 200, region: "Nagpur" },
+    { name: "Chandrapur", x: 450, y: 240, region: "Nagpur" },
+    { name: "Gadchiroli", x: 480, y: 280, region: "Nagpur" },
+    
+    { name: "Jalna", x: 260, y: 280, region: "Chhatrapati Sambhajinagar" },
+    { name: "Parbhani", x: 290, y: 310, region: "Chhatrapati Sambhajinagar" },
+    { name: "Hingoli", x: 310, y: 290, region: "Chhatrapati Sambhajinagar" },
+    { name: "Nanded", x: 350, y: 320, region: "Chhatrapati Sambhajinagar" },
+    { name: "Beed", x: 220, y: 330, region: "Chhatrapati Sambhajinagar" },
+    { name: "Latur", x: 280, y: 360, region: "Chhatrapati Sambhajinagar" },
+    { name: "Dharashiv", x: 240, y: 380, region: "Chhatrapati Sambhajinagar" },
+    
+    { name: "Dhule", x: 150, y: 190, region: "Nashik" },
+    { name: "Jalgaon", x: 200, y: 180, region: "Nashik" },
+    { name: "Nandurbar", x: 120, y: 150, region: "Nashik" },
+    { name: "Ahmadnagar", x: 170, y: 290, region: "Nashik" },
+    { name: "Palghar", x: 60, y: 240, region: "Nashik" },
+    
+    { name: "Solapur", x: 200, y: 390, region: "Pune" },
+    { name: "Sangli", x: 130, y: 440, region: "Pune" },
+    { name: "Kolhapur", x: 100, y: 460, region: "Pune" },
+    { name: "Satara", x: 130, y: 410, region: "Pune" },
+    
+    { name: "Mumbai", x: 50, y: 300, region: "Konkan" },
+    { name: "Thane", x: 70, y: 280, region: "Konkan" },
+    { name: "Raigad", x: 80, y: 330, region: "Konkan" },
+    { name: "Ratnagiri", x: 60, y: 380, region: "Konkan" },
+    { name: "Sindhudurg", x: 50, y: 440, region: "Konkan" }
+  ];
 
   return (
     <Card className={isLoading ? "opacity-50" : ""}>
@@ -96,152 +130,200 @@ export default function MaharashtraSvgMap({
             <Skeleton className="h-[400px] w-full rounded-md" />
           </div>
         ) : (
-          <div className="relative w-full" style={{ maxWidth: "800px", margin: "0 auto" }}>
-            <div className="relative">
+          <div className="relative w-full" style={{ height: '500px', backgroundColor: '#0a1033' }}>
+            <div id="maharashtra-svg-map" className="h-full">
+              {/* Use the SVG directly */}
+              <object 
+                data="/Maharashtra_Divisions_Eng.svg" 
+                type="image/svg+xml"
+                className="h-full w-full"
+                style={{ filter: 'brightness(0.8) invert(0.1)' }}
+                onLoad={(e) => {
+                  // When SVG loads, we can access its document
+                  const obj = e.currentTarget as HTMLObjectElement;
+                  
+                  // Wait for SVG to be fully loaded
+                  setTimeout(() => {
+                    if (obj.contentDocument) {
+                      const svgDoc = obj.contentDocument;
+                      
+                      // Find all region paths in the SVG
+                      const paths = svgDoc.querySelectorAll('path');
+                      
+                      // Apply styling and interactions to each path
+                      paths.forEach(path => {
+                        const id = path.getAttribute('id');
+                        let regionName = null;
+                        
+                        // Map path IDs to region names
+                        if (id?.includes('Amravati')) regionName = 'Amravati';
+                        else if (id?.includes('Nagpur')) regionName = 'Nagpur';
+                        else if (id?.includes('Aurangabad')) regionName = 'Chhatrapati Sambhajinagar';
+                        else if (id?.includes('Nashik')) regionName = 'Nashik';
+                        else if (id?.includes('Pune')) regionName = 'Pune';
+                        else if (id?.includes('Konkan')) regionName = 'Konkan';
+                        
+                        if (regionName) {
+                          // Apply color based on metric
+                          path.setAttribute('fill', getRegionColor(regionName));
+                          path.setAttribute('stroke', '#fff');
+                          path.setAttribute('stroke-width', '1');
+                          
+                          // Highlight selected region
+                          if (regionName === selectedRegion) {
+                            path.setAttribute('stroke', '#2563eb');
+                            path.setAttribute('stroke-width', '2');
+                          }
+                          
+                          // Add hover effect
+                          path.addEventListener('mouseover', () => {
+                            path.setAttribute('stroke', '#2563eb');
+                            path.setAttribute('stroke-width', '2');
+                            setHoveredRegion(regionName);
+                          });
+                          
+                          path.addEventListener('mouseout', () => {
+                            if (regionName !== selectedRegion) {
+                              path.setAttribute('stroke', '#fff');
+                              path.setAttribute('stroke-width', '1');
+                            }
+                            setHoveredRegion(null);
+                          });
+                          
+                          // Add click event
+                          path.addEventListener('click', () => {
+                            onRegionClick(regionName!);
+                          });
+                          
+                          // Make clickable
+                          path.style.cursor = 'pointer';
+                        }
+                      });
+                    }
+                  }, 500); // Small delay to ensure SVG is fully loaded
+                }}
+              />
+              
+              {/* Custom overlays (pins, labels, legends) */}
               <svg 
-                viewBox="0 0 800 700" 
-                xmlns="http://www.w3.org/2000/svg"
-                className="w-full h-auto"
+                className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                viewBox="0 0 550 550"
+                style={{ zIndex: 10 }}
               >
-                {/* Map Legend - Regions */}
-                <g transform="translate(650, 400)">
-                  <text x="0" y="0" className="text-xs font-semibold" style={{ fill: '#333' }}>Regions</text>
-                  {['Amravati', 'Nagpur', 'Chhatrapati Sambhajinagar', 'Nashik', 'Pune', 'Konkan'].map((region, index) => (
-                    <g key={region} transform={`translate(0, ${20 * (index + 1)})`}>
-                      <rect width="15" height="15" fill={getRegionColor(region)} />
-                      <text x="20" y="12" className="text-xs" style={{ fill: '#333', fontSize: '10px' }}>{region}</text>
+                {/* Location pins */}
+                {regionPins.map((pin, idx) => (
+                  <g key={`pin-${idx}`}>
+                    <circle 
+                      cx={pin.x} 
+                      cy={pin.y} 
+                      r="6" 
+                      fill="#FF4136" 
+                      stroke="#fff" 
+                      strokeWidth="1.5" 
+                    />
+                    <line 
+                      x1={pin.x-4} 
+                      y1={pin.y} 
+                      x2={pin.x+4} 
+                      y2={pin.y} 
+                      stroke="#fff" 
+                      strokeWidth="1" 
+                    />
+                    <line 
+                      x1={pin.x} 
+                      y1={pin.y-4} 
+                      x2={pin.x} 
+                      y2={pin.y+4} 
+                      stroke="#fff" 
+                      strokeWidth="1" 
+                    />
+                    <text 
+                      x={pin.x} 
+                      y={pin.y+20} 
+                      textAnchor="middle" 
+                      fill="#fff" 
+                      fontSize="14" 
+                      fontWeight="bold"
+                      filter="drop-shadow(0px 0px 2px #000)"
+                    >
+                      {pin.name}
+                    </text>
+                  </g>
+                ))}
+                
+                {/* District labels */}
+                {districtData.map((district, idx) => (
+                  <text 
+                    key={`district-${idx}`}
+                    x={district.x} 
+                    y={district.y} 
+                    textAnchor="middle" 
+                    fill="#fff" 
+                    fontSize="10"
+                    filter="drop-shadow(0px 0px 1px #000)"
+                  >
+                    {district.name}
+                  </text>
+                ))}
+                
+                {/* Compass rose */}
+                <g transform="translate(50, 500)">
+                  <circle cx="25" cy="25" r="22" fill="none" stroke="#fff" strokeWidth="1" />
+                  <path d="M25,3 L25,47 M3,25 L47,25" stroke="#fff" strokeWidth="1" />
+                  <path d="M10,10 L40,40 M10,40 L40,10" stroke="#fff" strokeWidth="1" />
+                  <circle cx="25" cy="25" r="3" fill="#fff" stroke="#fff" strokeWidth="0.5" />
+                  <text x="25" y="5" textAnchor="middle" fill="#fff" fontSize="10px">N</text>
+                  <text x="25" y="48" textAnchor="middle" fill="#fff" fontSize="10px">S</text>
+                  <text x="3" y="27" textAnchor="middle" fill="#fff" fontSize="10px">W</text>
+                  <text x="47" y="27" textAnchor="middle" fill="#fff" fontSize="10px">E</text>
+                </g>
+                
+                {/* Region legend */}
+                <g transform="translate(450, 400)">
+                  <rect x="0" y="0" width="100" height="140" fill="#0a1033" opacity="0.8" rx="4" ry="4" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                  <text x="10" y="20" fill="#fff" fontSize="12" fontWeight="bold">Regions</text>
+                  
+                  {[
+                    { name: 'Amravati', color: '#ffccaa', y: 40 },
+                    { name: 'Nagpur', color: '#ffd699', y: 60 },
+                    { name: 'C.S. Nagar', color: '#ccdeff', y: 80 },
+                    { name: 'Nashik', color: '#ffeb99', y: 100 },
+                    { name: 'Pune', color: '#adebad', y: 120 },
+                    { name: 'Konkan', color: '#c2c2c2', y: 140 }
+                  ].map((region, idx) => (
+                    <g key={`legend-${idx}`}>
+                      <rect x="10" y={region.y-10} width="10" height="10" fill={region.color} />
+                      <text x="25" y={region.y} fill="#fff" fontSize="10">{region.name}</text>
                     </g>
                   ))}
                 </g>
                 
-                {/* Map Legend - Colors */}
-                <g transform="translate(650, 570)">
-                  <text x="0" y="0" className="text-xs font-semibold" style={{ fill: '#333' }}>
-                    {metric === 'completion' && 'Scheme Completion'}
-                    {metric === 'esr' && 'ESR Integration'}
-                    {metric === 'villages' && 'Village Integration'}
-                    {metric === 'flow_meter' && 'Flow Meter Progress'}
+                {/* Metric legend */}
+                <g transform="translate(450, 140)">
+                  <rect x="0" y="0" width="100" height="140" fill="#0a1033" opacity="0.8" rx="4" ry="4" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                  
+                  <text x="10" y="20" fill="#fff" fontSize="12" fontWeight="bold">
+                    {metric === 'completion' ? 'Scheme Completion' : 
+                    metric === 'esr' ? 'ESR Integration' : 
+                    metric === 'villages' ? 'Village Integration' : 
+                    'Flow Meter Progress'}
                   </text>
-                  <g transform="translate(0, 20)">
-                    <rect width="15" height="15" fill="#4ade80" />
-                    <text x="20" y="12" className="text-xs" style={{ fill: '#333', fontSize: '10px' }}>75-100%</text>
-                  </g>
-                  <g transform="translate(0, 40)">
-                    <rect width="15" height="15" fill="#a3e635" />
-                    <text x="20" y="12" className="text-xs" style={{ fill: '#333', fontSize: '10px' }}>50-74%</text>
-                  </g>
-                  <g transform="translate(0, 60)">
-                    <rect width="15" height="15" fill="#facc15" />
-                    <text x="20" y="12" className="text-xs" style={{ fill: '#333', fontSize: '10px' }}>25-49%</text>
-                  </g>
-                  <g transform="translate(0, 80)">
-                    <rect width="15" height="15" fill="#f87171" />
-                    <text x="20" y="12" className="text-xs" style={{ fill: '#333', fontSize: '10px' }}>0-24%</text>
-                  </g>
+                  
+                  {[
+                    { label: '75-100%', color: '#4ade80', y: 40 },
+                    { label: '50-74%', color: '#a3e635', y: 60 },
+                    { label: '25-49%', color: '#facc15', y: 80 },
+                    { label: '0-24%', color: '#f87171', y: 100 }
+                  ].map((item, idx) => (
+                    <g key={`metric-${idx}`}>
+                      <rect x="10" y={item.y-10} width="10" height="10" fill={item.color} />
+                      <text x="25" y={item.y} fill="#fff" fontSize="10">{item.label}</text>
+                    </g>
+                  ))}
                 </g>
-                
-                {/* Maharashtra outline - defines the SVG path for the full state outline */}
-                <path d="M150,150 L290,100 L410,120 L620,80 L700,250 L650,380 L500,450 L380,500 L200,480 L100,400 Z" 
-                  fill="none" 
-                  stroke="#333" 
-                  strokeWidth="1" 
-                />
-                
-                {/* Konkan Region */}
-                <path 
-                  d="M72,205 L116,195 L168,220 L172,250 L147,313 L102,430 L41,361 L33,268 Z" 
-                  fill={getRegionColor('Konkan')}
-                  stroke={selectedRegion === 'Konkan' || hoveredRegion === 'Konkan' ? '#2563eb' : '#666'}
-                  strokeWidth={selectedRegion === 'Konkan' || hoveredRegion === 'Konkan' ? 2 : 1}
-                  onClick={() => handleRegionClick('Konkan')}
-                  onMouseEnter={() => setHoveredRegion('Konkan')}
-                  onMouseLeave={() => setHoveredRegion(null)}
-                  style={{ cursor: 'pointer', transition: 'fill 0.2s, stroke 0.2s' }}
-                />
-                <text x="102" y="350" textAnchor="middle" style={{ fill: '#333', fontSize: '12px', fontWeight: 'bold', pointerEvents: 'none' }}>Konkan</text>
-
-                {/* Nashik Region */}
-                <path 
-                  d="M235,58 L270,53 L317,61 L401,87 L442,151 L405,205 L330,204 L285,220 L254,250 L229,186 L224,124 Z" 
-                  fill={getRegionColor('Nashik')}
-                  stroke={selectedRegion === 'Nashik' || hoveredRegion === 'Nashik' ? '#2563eb' : '#666'}
-                  strokeWidth={selectedRegion === 'Nashik' || hoveredRegion === 'Nashik' ? 2 : 1}
-                  onClick={() => handleRegionClick('Nashik')}
-                  onMouseEnter={() => setHoveredRegion('Nashik')}
-                  onMouseLeave={() => setHoveredRegion(null)}
-                  style={{ cursor: 'pointer', transition: 'fill 0.2s, stroke 0.2s' }}
-                />
-                <text x="300" y="150" textAnchor="middle" style={{ fill: '#333', fontSize: '12px', fontWeight: 'bold', pointerEvents: 'none' }}>Nashik</text>
-
-                {/* Pune Region */}
-                <path 
-                  d="M202,341 L254,250 L285,220 L330,291 L392,321 L387,387 L330,458 L245,494 L198,453 L172,392 Z" 
-                  fill={getRegionColor('Pune')}
-                  stroke={selectedRegion === 'Pune' || hoveredRegion === 'Pune' ? '#2563eb' : '#666'}
-                  strokeWidth={selectedRegion === 'Pune' || hoveredRegion === 'Pune' ? 2 : 1}
-                  onClick={() => handleRegionClick('Pune')}
-                  onMouseEnter={() => setHoveredRegion('Pune')}
-                  onMouseLeave={() => setHoveredRegion(null)}
-                  style={{ cursor: 'pointer', transition: 'fill 0.2s, stroke 0.2s' }}
-                />
-                <text x="280" y="380" textAnchor="middle" style={{ fill: '#333', fontSize: '12px', fontWeight: 'bold', pointerEvents: 'none' }}>Pune</text>
-
-                {/* Chhatrapati Sambhajinagar Region */}
-                <path 
-                  d="M316,206 L350,203 L389,220 L442,220 L495,220 L556,227 L582,236 L546,293 L487,340 L392,321 L330,291 Z" 
-                  fill={getRegionColor('Chhatrapati Sambhajinagar')}
-                  stroke={selectedRegion === 'Chhatrapati Sambhajinagar' || hoveredRegion === 'Chhatrapati Sambhajinagar' ? '#2563eb' : '#666'}
-                  strokeWidth={selectedRegion === 'Chhatrapati Sambhajinagar' || hoveredRegion === 'Chhatrapati Sambhajinagar' ? 2 : 1}
-                  onClick={() => handleRegionClick('Chhatrapati Sambhajinagar')}
-                  onMouseEnter={() => setHoveredRegion('Chhatrapati Sambhajinagar')}
-                  onMouseLeave={() => setHoveredRegion(null)}
-                  style={{ cursor: 'pointer', transition: 'fill 0.2s, stroke 0.2s' }}
-                />
-                <text x="450" y="270" textAnchor="middle" style={{ fill: '#333', fontSize: '12px', fontWeight: 'bold', pointerEvents: 'none' }}>Chhatrapati Sambhajinagar</text>
-
-                {/* Amravati Region */}
-                <path 
-                  d="M510,124 L552,114 L608,109 L634,131 L619,190 L582,236 L525,242 L455,198 L442,151 L478,127 Z" 
-                  fill={getRegionColor('Amravati')}
-                  stroke={selectedRegion === 'Amravati' || hoveredRegion === 'Amravati' ? '#2563eb' : '#666'}
-                  strokeWidth={selectedRegion === 'Amravati' || hoveredRegion === 'Amravati' ? 2 : 1}
-                  onClick={() => handleRegionClick('Amravati')}
-                  onMouseEnter={() => setHoveredRegion('Amravati')}
-                  onMouseLeave={() => setHoveredRegion(null)}
-                  style={{ cursor: 'pointer', transition: 'fill 0.2s, stroke 0.2s' }}
-                />
-                <text x="530" y="180" textAnchor="middle" style={{ fill: '#333', fontSize: '12px', fontWeight: 'bold', pointerEvents: 'none' }}>Amravati</text>
-
-                {/* Nagpur Region */}
-                <path 
-                  d="M697,56 L737,61 L760,91 L766,143 L749,193 L708,240 L665,265 L619,240 L608,190 L634,131 L665,92 Z" 
-                  fill={getRegionColor('Nagpur')}
-                  stroke={selectedRegion === 'Nagpur' || hoveredRegion === 'Nagpur' ? '#2563eb' : '#666'}
-                  strokeWidth={selectedRegion === 'Nagpur' || hoveredRegion === 'Nagpur' ? 2 : 1}
-                  onClick={() => handleRegionClick('Nagpur')}
-                  onMouseEnter={() => setHoveredRegion('Nagpur')}
-                  onMouseLeave={() => setHoveredRegion(null)}
-                  style={{ cursor: 'pointer', transition: 'fill 0.2s, stroke 0.2s' }}
-                />
-                <text x="680" y="150" textAnchor="middle" style={{ fill: '#333', fontSize: '12px', fontWeight: 'bold', pointerEvents: 'none' }}>Nagpur</text>
-
-                {/* Decorative elements */}
-                <g transform="translate(50, 600)">
-                  {/* Compass Rose */}
-                  <circle cx="25" cy="25" r="20" fill="white" stroke="#666" />
-                  <path d="M25,5 L25,45 M5,25 L45,25 M15,15 L35,35 M15,35 L35,15" stroke="#666" strokeWidth="1" />
-                  <text x="25" y="15" textAnchor="middle" style={{ fill: '#333', fontSize: '10px' }}>N</text>
-                  <text x="25" y="40" textAnchor="middle" style={{ fill: '#333', fontSize: '10px' }}>S</text>
-                  <text x="10" y="25" textAnchor="middle" style={{ fill: '#333', fontSize: '10px' }}>W</text>
-                  <text x="40" y="25" textAnchor="middle" style={{ fill: '#333', fontSize: '10px' }}>E</text>
-                </g>
-                
-                {/* Title */}
-                <text x="400" y="30" textAnchor="middle" style={{ fill: '#333', fontSize: '16px', fontWeight: 'bold' }}>Maharashtra Water Infrastructure Management</text>
               </svg>
             </div>
             
-            {/* Selected region indicator */}
             {selectedRegion !== "all" && (
               <div className="mt-4 text-center">
                 <span className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-full text-sm font-medium shadow-sm">
