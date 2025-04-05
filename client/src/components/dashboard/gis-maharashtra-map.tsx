@@ -191,15 +191,8 @@ export default function GISMaharashtraMap({
           className: 'custom-marker-icon',
           html: metric === 'esr' ? `
             <div class="marker-pin" style="background-color: white; border: 1.5px solid #0A93E2; width: 30px; height: 30px; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
-              <div style="width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
-                <svg viewBox="0 0 512 512" width="20" height="20">
-                  <!-- Water drop shape -->
-                  <path d="M256 0C194 0 144 95 144 192C144 260 175 320 224 320C224 290 238 270 256 270C274 270 288 290 288 320C337 320 368 260 368 192C368 95 318 0 256 0Z" fill="#0A93E2"/>
-                  <!-- Water tank -->
-                  <path d="M205 150 C205 120, 307 120, 307 150 L307 270 C307 300, 205 300, 205 270 Z" fill="white" stroke="#0A93E2" stroke-width="8"/>
-                  <!-- Tank stand -->
-                  <path d="M220 270 L220 310 M292 270 L292 310 M205 310 L307 310" stroke="#0A93E2" stroke-width="8" fill="none"/>
-                </svg>
+              <div style="width: 26px; height: 26px; display: flex; align-items: center; justify-content: center;">
+                <img src="/images/esr-water-tank.png" alt="ESR" width="26" height="26" />
               </div>
             </div>
           ` : `
@@ -397,33 +390,31 @@ export default function GISMaharashtraMap({
   }, [isLoading, regions, selectedRegion, metric, onRegionClick]);
 
   return (
-    <Card className={isLoading ? "opacity-50" : ""}>
-      <CardContent className="p-3 sm:p-6">
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="text-sm sm:text-base font-medium text-neutral-700">
-            Maharashtra Regions
-          </h3>
-          {selectedRegion !== "all" && (
-            <div className="text-xs sm:text-sm text-blue-600 font-medium px-2 py-1 bg-blue-50 rounded-md">
-              Region: {selectedRegion}
-            </div>
-          )}
-        </div>
-
-        {isLoading ? (
-          <div className="space-y-2">
-            <Skeleton className="h-[400px] w-full rounded-md" />
-          </div>
-        ) : (
-          <div className="relative w-full" style={{ height: '500px', overflow: 'hidden' }}>
-            <div 
-              ref={mapRef}
-              id="maharashtra-gis-map" 
-              className="h-full w-full bg-[#f0f8ff]"
-            ></div>
+    <div className={`h-full ${isLoading ? "opacity-50" : ""}`}>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="text-sm sm:text-base font-medium text-neutral-700">
+          Maharashtra Regions
+        </h3>
+        {selectedRegion !== "all" && (
+          <div className="text-xs sm:text-sm text-blue-600 font-medium px-2 py-1 bg-blue-50 rounded-md">
+            Region: {selectedRegion}
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+
+      {isLoading ? (
+        <div className="space-y-2 flex-1">
+          <Skeleton className="h-full w-full rounded-md" />
+        </div>
+      ) : (
+        <div className="relative w-full h-full flex-1" style={{ overflow: 'hidden' }}>
+          <div 
+            ref={mapRef}
+            id="maharashtra-gis-map" 
+            className="h-full w-full bg-[#f0f8ff]"
+          ></div>
+        </div>
+      )}
+    </div>
   );
 }

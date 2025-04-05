@@ -165,20 +165,14 @@ export default function RegionComparisonChart({ regions, isLoading }: RegionComp
   }, [regions, isLoading]);
 
   return (
-    <Card className="bg-white">
-      <CardContent className="p-5">
-        <h3 className="text-lg leading-6 font-medium text-neutral-900">Region Comparison</h3>
-        <div className="mt-1 text-sm text-neutral-500">
-          Progress across different regions
+    <div className="h-full flex flex-col">
+      {isLoading ? (
+        <div className="animate-pulse h-full w-full bg-gray-200 rounded flex-1"></div>
+      ) : (
+        <div className="h-full w-full flex-1">
+          <canvas ref={chartRef} className="h-full w-full"></canvas>
         </div>
-        <div className="mt-4 h-[350px] w-full">
-          {isLoading ? (
-            <div className="animate-pulse h-full w-full bg-gray-200 rounded"></div>
-          ) : (
-            <canvas ref={chartRef}></canvas>
-          )}
-        </div>
-      </CardContent>
-    </Card>
+      )}
+    </div>
   );
 }

@@ -30,7 +30,7 @@ export default function MetricSelector({ value, onChange }: MetricSelectorProps)
           <span className="inline sm:hidden">Schemes</span>
         </ToggleGroupItem>
         <ToggleGroupItem value="esr" aria-label="ESR Integration" className="flex gap-1.5 items-center">
-          <Droplet className="h-4 w-4" />
+          <img src="/images/esr-water-tank.png" alt="ESR" className="h-5 w-5" />
           <span className="hidden sm:inline">ESR Integration</span>
           <span className="inline sm:hidden">ESR</span>
         </ToggleGroupItem>

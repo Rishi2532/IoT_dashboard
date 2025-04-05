@@ -242,12 +242,12 @@ export default function Dashboard() {
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 mb-4 sm:mb-6">
-        <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all h-full flex flex-col">
           <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
             Region Comparison
           </h2>
-          <div className="w-full overflow-x-auto">
-            <div className="min-w-[300px] sm:min-w-full">
+          <div className="w-full overflow-x-auto flex-1 flex flex-col">
+            <div className="min-w-[300px] sm:min-w-full flex-1 flex flex-col">
               <RegionComparisonChart
                 regions={regions || []}
                 isLoading={isRegionsLoading}
@@ -255,7 +255,7 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-        <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all">
+        <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all h-full flex flex-col">
           <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
             Regional Status
           </h2>
@@ -263,8 +263,8 @@ export default function Dashboard() {
             value={mapMetric}
             onChange={setMapMetric}
           />
-          <div className="w-full overflow-x-auto">
-            <div className="min-w-[300px] sm:min-w-full">
+          <div className="w-full overflow-x-auto flex-1">
+            <div className="min-w-[300px] sm:min-w-full h-full">
               <GISMaharashtraMap
                 regionSummary={regionSummary}
                 regions={regions}
