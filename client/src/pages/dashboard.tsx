@@ -5,6 +5,7 @@ import RegionFilter from "@/components/dashboard/region-filter";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RegionComparisonChart from "@/components/dashboard/region-comparison-chart";
 import MaharashtraMap from "@/components/dashboard/maharashtra-map";
+import GISMaharashtraMap from "@/components/dashboard/gis-maharashtra-map";
 import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
 import SchemeTable from "@/components/dashboard/scheme-table";
@@ -264,7 +265,7 @@ export default function Dashboard() {
           />
           <div className="w-full overflow-x-auto">
             <div className="min-w-[300px] sm:min-w-full">
-              <MaharashtraMap
+              <GISMaharashtraMap
                 regionSummary={regionSummary}
                 regions={regions}
                 selectedRegion={selectedRegion}

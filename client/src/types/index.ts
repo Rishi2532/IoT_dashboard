@@ -1,75 +1,80 @@
-// Define region types
+// Region types
 export interface Region {
   region_id: number;
   region_name: string;
+  agency: string;
   total_esr_integrated: number;
   fully_completed_esr: number;
   partial_esr: number;
   total_villages_integrated: number;
   fully_completed_villages: number;
+  partially_integrated_villages: number;
   total_schemes_integrated: number;
   fully_completed_schemes: number;
+  partially_completed_schemes: number;
   flow_meter_integrated: number;
-  rca_integrated: number;
-  pressure_transmitter_integrated: number;
+  updated_at: string;
 }
 
-// Define scheme status types
-export interface SchemeStatus {
-  sr_no?: number | null;
+// Summary types
+export interface RegionSummary {
+  total_regions: number;
+  total_esr_integrated: number;
+  fully_completed_esr: number;
+  partial_esr: number;
+  total_villages_integrated: number;
+  fully_completed_villages: number;
+  partially_integrated_villages: number;
+  total_schemes_integrated: number;
+  fully_completed_schemes: number;
+  partially_completed_schemes: number;
+  flow_meter_integrated: number;
+  last_updated_at: string;
+}
+
+// Scheme types
+export interface Scheme {
   scheme_id: string;
   scheme_name: string;
-  region_name: string;
-  circle?: string | null;
-  division?: string | null;
-  sub_division?: string | null;
-  block?: string | null;
-  
-  // Villages data
-  total_villages: number | null;
-  villages_integrated: number | null;
-  functional_villages: number | null;
-  partial_villages: number | null;
-  non_functional_villages: number | null;
-  fully_completed_villages: number | null;
-  villages_integrated_on_iot?: number | null; // For backwards compatibility
-  total_villages_in_scheme?: number | null; // For backwards compatibility
-  
-  // ESR data
-  total_esr: number | null;
-  esr_integrated_on_iot: number | null;
-  fully_completed_esr: number | null;
-  balance_esr: number | null;
-  esr_request_received?: number | null; // For backwards compatibility
-  total_esr_in_scheme?: number | null; // For backwards compatibility
-  balance_for_fully_completion?: number | null; // For backwards compatibility
-  
-  // Component data
-  flow_meters_connected: number | null;
-  pressure_transmitters_connected: number | null;
-  residual_chlorine_connected: number | null;
-  
-  // Legacy component data for backwards compatibility
-  fm_integrated?: number | null;
-  rca_integrated?: number | null;
-  pt_integrated?: number | null;
-  
-  // Status
-  scheme_status: string | null;
-  scheme_functional_status: string | null;
-  scheme_completion_status?: string; // For backwards compatibility
+  region: string;
+  district: string;
+  taluka: string;
+  village: string;
+  constituency: string;
+  agency: string;
+  scheme_type: string;
+  technology: string;
+  stage: string;
+  contract_cap_mld: number;
+  population_covered: number;
+  households_covered: number;
+  agency_involved: string;
+  esr_status: string;
+  scheme_status: string;
+  village_status: string;
+  has_flow_meter: boolean;
+  latitude: number | null;
+  longitude: number | null;
+  updated_at: string;
 }
 
-// Aggregate summary of region stats (can be filtered by region)
-export interface RegionSummary {
-  total_schemes_integrated: number;
-  fully_completed_schemes: number;
-  total_villages_integrated: number;
-  fully_completed_villages: number;
-  total_esr_integrated: number;
-  fully_completed_esr: number;
-  partial_esr: number;
-  flow_meter_integrated: number;
-  rca_integrated: number;
-  pressure_transmitter_integrated: number;
+// Scheme status types
+export interface SchemeStatus {
+  id: number;
+  scheme_id: string;
+  region: string;
+  district: string;
+  completed_civil_works: number;
+  pending_civil_works: number;
+  households_connected: number;
+  households_pending: number;
+  esr_constructed: boolean;
+  esr_functional: boolean;
+  pump_house_completed: boolean;
+  pipe_laying_completed: boolean;
+  standpost_completed: boolean;
+  electrical_work_completed: boolean;
+  issues_reported: string | null;
+  issue_resolution_status: string | null;
+  updated_at: string;
 }
