@@ -106,29 +106,39 @@ export default function GISMaharashtraMap({
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
     
-    // Add state boundary for Maharashtra with bold black border and highlighted neighboring state borders
+    // Add white background outline (larger)
     L.geoJSON(maharashtraGeoJson, {
       style: {
         fillOpacity: 0,
-        weight: 5,              // Increased thickness for more visibility
-        color: '#000000',
+        weight: 10,             // Thicker white border first
+        color: '#ffffff',       // Pure white for contrast
         opacity: 1,
         lineCap: 'round',
-        lineJoin: 'round',
-        dashArray: undefined   // Solid line
+        lineJoin: 'round'
       }
     }).addTo(map);
     
-    // Add a white outline just outside the black border for better visibility against different backgrounds
+    // Add a shadow outline for depth effect
     L.geoJSON(maharashtraGeoJson, {
       style: {
         fillOpacity: 0,
-        weight: 7,
-        color: 'rgba(255,255,255,0.8)',
-        opacity: 0.8,
+        weight: 8,
+        color: 'rgba(0,0,0,0.3)', // Shadow color
+        opacity: 1,
         lineCap: 'round',
-        lineJoin: 'round',
-        dashArray: undefined
+        lineJoin: 'round'
+      }
+    }).addTo(map);
+    
+    // Add main black outline (like the example image)
+    L.geoJSON(maharashtraGeoJson, {
+      style: {
+        fillOpacity: 0,
+        weight: 3,              // Solid black border
+        color: '#000000',
+        opacity: 1,
+        lineCap: 'round',
+        lineJoin: 'round'
       }
     }).addTo(map);
     

@@ -41,7 +41,7 @@ export default function Header() {
   };
   
   return (
-    <header className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 shadow-md sticky top-0 z-[100]">
+    <header className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 shadow-xl sticky top-0 z-[9999]">
       <div className="absolute inset-0 bg-[url('/images/water-bg.svg')] opacity-10 bg-repeat"></div>
       <div className="mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between items-center h-16">

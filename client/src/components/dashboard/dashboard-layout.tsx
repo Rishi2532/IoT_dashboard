@@ -9,7 +9,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-b from-blue-50 to-blue-100">
       <Header />
-      <main className="flex-1 py-4 sm:py-6 lg:py-8 2xl:py-10 overflow-auto">
+      <main className="flex-1 pt-6 sm:pt-8 lg:pt-10 2xl:pt-12 pb-4 sm:pb-6 lg:pb-8 2xl:pb-10 overflow-auto">
         <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 max-w-full lg:max-w-[90rem] 2xl:max-w-[120rem]">
           {children}
         </div>
