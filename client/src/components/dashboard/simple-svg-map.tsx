@@ -131,80 +131,12 @@ export default function MaharashtraSvgMap({
           </div>
         ) : (
           <div className="relative w-full" style={{ height: '500px', backgroundColor: '#0a1033', overflow: 'hidden' }}>
-            <div id="maharashtra-svg-map" className="h-full relative z-0">
-              {/* Use the SVG directly */}
-              <object 
-                data="/maharashtra-divisions.svg" 
-                type="image/svg+xml"
-                className="h-full w-full"
-                style={{ filter: 'brightness(0.8) invert(0.1)' }}
-                onLoad={(e) => {
-                  // When SVG loads, we can access its document
-                  const obj = e.currentTarget as HTMLObjectElement;
-                  
-                  // Wait for SVG to be fully loaded
-                  setTimeout(() => {
-                    if (obj.contentDocument) {
-                      const svgDoc = obj.contentDocument;
-                      
-                      // Find all region paths in the SVG
-                      const paths = svgDoc.querySelectorAll('path');
-                      
-                      // Apply styling and interactions to each path
-                      paths.forEach(path => {
-                        const id = path.getAttribute('id');
-                        let regionName = null;
-                        
-                        // Map path IDs to region names
-                        if (id?.includes('Amravati')) regionName = 'Amravati';
-                        else if (id?.includes('Nagpur')) regionName = 'Nagpur';
-                        else if (id?.includes('Aurangabad')) regionName = 'Chhatrapati Sambhajinagar';
-                        else if (id?.includes('Nashik')) regionName = 'Nashik';
-                        else if (id?.includes('Pune')) regionName = 'Pune';
-                        else if (id?.includes('Konkan')) regionName = 'Konkan';
-                        
-                        if (regionName) {
-                          // Apply color based on metric
-                          path.setAttribute('fill', getRegionColor(regionName));
-                          path.setAttribute('stroke', '#fff');
-                          path.setAttribute('stroke-width', '1');
-                          
-                          // Highlight selected region
-                          if (regionName === selectedRegion) {
-                            path.setAttribute('stroke', '#2563eb');
-                            path.setAttribute('stroke-width', '2');
-                          }
-                          
-                          // Add hover effect
-                          path.addEventListener('mouseover', () => {
-                            path.setAttribute('stroke', '#2563eb');
-                            path.setAttribute('stroke-width', '2');
-                            setHoveredRegion(regionName);
-                          });
-                          
-                          path.addEventListener('mouseout', () => {
-                            if (regionName !== selectedRegion) {
-                              path.setAttribute('stroke', '#fff');
-                              path.setAttribute('stroke-width', '1');
-                            }
-                            setHoveredRegion(null);
-                          });
-                          
-                          // Add click event
-                          path.addEventListener('click', () => {
-                            onRegionClick(regionName!);
-                          });
-                          
-                          // Make clickable
-                          path.style.cursor = 'pointer';
-                        }
-                      });
-                    }
-                  }, 500); // Small delay to ensure SVG is fully loaded
-                }}
-              />
-              
-              {/* Custom overlays (pins, labels, legends) */}
+            <div 
+              id="maharashtra-svg-map" 
+              className="h-full w-full bg-center bg-no-repeat bg-contain relative"
+              style={{ backgroundImage: 'url(/maharashtra-divisions.svg)' }}
+            >
+              {/* SVG overlay layer for pins, labels, etc. */}
               <svg 
                 className="absolute top-0 left-0 w-full h-full pointer-events-none"
                 viewBox="0 0 550 550"
@@ -279,8 +211,8 @@ export default function MaharashtraSvgMap({
                 </g>
                 
                 {/* Region legend */}
-                <g transform="translate(450, 400)">
-                  <rect x="0" y="0" width="100" height="140" fill="#0a1033" opacity="0.8" rx="4" ry="4" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                <g transform="translate(420, 375)">
+                  <rect x="0" y="0" width="120" height="140" fill="#0a1033" opacity="0.8" rx="4" ry="4" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
                   <text x="10" y="20" fill="#fff" fontSize="12" fontWeight="bold">Regions</text>
                   
                   {[
@@ -299,8 +231,8 @@ export default function MaharashtraSvgMap({
                 </g>
                 
                 {/* Metric legend */}
-                <g transform="translate(450, 140)">
-                  <rect x="0" y="0" width="100" height="140" fill="#0a1033" opacity="0.8" rx="4" ry="4" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                <g transform="translate(420, 140)">
+                  <rect x="0" y="0" width="120" height="140" fill="#0a1033" opacity="0.8" rx="4" ry="4" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
                   
                   <text x="10" y="20" fill="#fff" fontSize="12" fontWeight="bold">
                     {metric === 'completion' ? 'Scheme Completion' : 
@@ -322,6 +254,111 @@ export default function MaharashtraSvgMap({
                   ))}
                 </g>
               </svg>
+                
+              {/* Clickable region areas */}
+              <div className="absolute inset-0" style={{ zIndex: 5 }}>
+                {/* Amravati region clickable area */}
+                <div 
+                  className="absolute" 
+                  style={{
+                    top: '160px', 
+                    left: '240px', 
+                    width: '130px', 
+                    height: '120px',
+                    cursor: 'pointer',
+                    backgroundColor: hoveredRegion === 'Amravati' ? 'rgba(255,204,170,0.3)' : 'transparent',
+                    border: selectedRegion === 'Amravati' ? '2px solid #2563eb' : 'none'
+                  }}
+                  onClick={() => onRegionClick('Amravati')}
+                  onMouseOver={() => setHoveredRegion('Amravati')}
+                  onMouseOut={() => setHoveredRegion(null)}
+                />
+                
+                {/* Nagpur region clickable area */}
+                <div 
+                  className="absolute" 
+                  style={{
+                    top: '120px', 
+                    left: '380px', 
+                    width: '150px', 
+                    height: '180px',
+                    cursor: 'pointer',
+                    backgroundColor: hoveredRegion === 'Nagpur' ? 'rgba(255,214,153,0.3)' : 'transparent',
+                    border: selectedRegion === 'Nagpur' ? '2px solid #2563eb' : 'none'
+                  }}
+                  onClick={() => onRegionClick('Nagpur')}
+                  onMouseOver={() => setHoveredRegion('Nagpur')}
+                  onMouseOut={() => setHoveredRegion(null)}
+                />
+                
+                {/* Chhatrapati Sambhajinagar region clickable area */}
+                <div 
+                  className="absolute" 
+                  style={{
+                    top: '260px', 
+                    left: '200px', 
+                    width: '180px', 
+                    height: '150px',
+                    cursor: 'pointer',
+                    backgroundColor: hoveredRegion === 'Chhatrapati Sambhajinagar' ? 'rgba(204,222,255,0.3)' : 'transparent',
+                    border: selectedRegion === 'Chhatrapati Sambhajinagar' ? '2px solid #2563eb' : 'none'
+                  }}
+                  onClick={() => onRegionClick('Chhatrapati Sambhajinagar')}
+                  onMouseOver={() => setHoveredRegion('Chhatrapati Sambhajinagar')}
+                  onMouseOut={() => setHoveredRegion(null)}
+                />
+                
+                {/* Nashik region clickable area */}
+                <div 
+                  className="absolute" 
+                  style={{
+                    top: '150px', 
+                    left: '80px', 
+                    width: '150px', 
+                    height: '180px',
+                    cursor: 'pointer',
+                    backgroundColor: hoveredRegion === 'Nashik' ? 'rgba(255,235,153,0.3)' : 'transparent',
+                    border: selectedRegion === 'Nashik' ? '2px solid #2563eb' : 'none'
+                  }}
+                  onClick={() => onRegionClick('Nashik')}
+                  onMouseOver={() => setHoveredRegion('Nashik')}
+                  onMouseOut={() => setHoveredRegion(null)}
+                />
+                
+                {/* Pune region clickable area */}
+                <div 
+                  className="absolute" 
+                  style={{
+                    top: '350px', 
+                    left: '80px', 
+                    width: '160px', 
+                    height: '150px',
+                    cursor: 'pointer',
+                    backgroundColor: hoveredRegion === 'Pune' ? 'rgba(173,235,173,0.3)' : 'transparent',
+                    border: selectedRegion === 'Pune' ? '2px solid #2563eb' : 'none'
+                  }}
+                  onClick={() => onRegionClick('Pune')}
+                  onMouseOver={() => setHoveredRegion('Pune')}
+                  onMouseOut={() => setHoveredRegion(null)}
+                />
+                
+                {/* Konkan region clickable area */}
+                <div 
+                  className="absolute" 
+                  style={{
+                    top: '280px', 
+                    left: '30px', 
+                    width: '80px', 
+                    height: '200px',
+                    cursor: 'pointer',
+                    backgroundColor: hoveredRegion === 'Konkan' ? 'rgba(194,194,194,0.3)' : 'transparent',
+                    border: selectedRegion === 'Konkan' ? '2px solid #2563eb' : 'none'
+                  }}
+                  onClick={() => onRegionClick('Konkan')}
+                  onMouseOver={() => setHoveredRegion('Konkan')}
+                  onMouseOut={() => setHoveredRegion(null)}
+                />
+              </div>
             </div>
             
             {selectedRegion !== "all" && (

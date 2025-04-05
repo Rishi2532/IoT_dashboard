@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/dashboard/dashboard-layout";
 import RegionFilter from "@/components/dashboard/region-filter";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RegionComparisonChart from "@/components/dashboard/region-comparison-chart";
-import MaharashtraSvgMap from "@/components/dashboard/maharashtra-svg-map";
+import MaharashtraSvgMap from "@/components/dashboard/simple-svg-map";
 import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
 import SchemeTable from "@/components/dashboard/scheme-table";
