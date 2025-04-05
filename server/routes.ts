@@ -21,6 +21,7 @@ import { log } from './vite';
 import { fileURLToPath } from 'url';
 import * as cp from 'child_process';
 import { promisify } from 'util';
+import { importCsvHandler } from './routes/admin/import-csv';
 
 const exec = promisify(cp.exec);
 
@@ -561,6 +562,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 } // 5MB limit
   });
+  
+  // Import CSV with column mapping (for admin use only)
+  app.post("/api/admin/import-csv", requireAdmin, upload.single('file'), importCsvHandler);
   
   // Import scheme data from SQL file
   app.post("/api/admin/import/sql", requireAdmin, async (req, res) => {

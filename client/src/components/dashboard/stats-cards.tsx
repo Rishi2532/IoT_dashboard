@@ -209,13 +209,13 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
 
       {/* Total ESR Card */}
       <Card className="bg-white overflow-hidden border-2 border-purple-200 hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px] rounded-xl">
-        <div className="absolute top-0 right-0 h-20 w-20 sm:h-28 sm:w-28 xl:h-32 xl:w-32" style={{ opacity: 0.15 }}>
-          <img src="/images/esr-water-tank.png" alt="ESR" className="h-full w-full text-purple-700" />
+        <div className="absolute top-0 right-0 h-24 w-24 sm:h-32 sm:w-32 xl:h-40 xl:w-40" style={{ opacity: 0.15 }}>
+          <img src="/images/esr-water-tank.png" alt="ESR" className="h-full w-full text-purple-700 object-contain" />
         </div>
         <CardContent className="p-3 sm:p-4 md:p-6 xl:p-8">
           <div className="flex items-center">
-            <div className="flex-shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-1 sm:p-2 xl:p-2 shadow-md flex items-center justify-center">
-              <img src="/images/esr-water-tank.png" alt="ESR Tank" className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 xl:h-9 xl:w-9" />
+            <div className="flex-shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-0.5 sm:p-1 xl:p-1.5 shadow-md flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 xl:w-14 xl:h-14">
+              <img src="/images/esr-water-tank.png" alt="ESR Tank" className="h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 xl:h-12 xl:w-12 object-contain" />
             </div>
             <div className="ml-3 sm:ml-4 md:ml-5 xl:ml-6 flex-1">
               <h3 className="text-xs sm:text-sm xl:text-base font-medium text-purple-800">
