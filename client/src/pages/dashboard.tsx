@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/dashboard/dashboard-layout";
 import RegionFilter from "@/components/dashboard/region-filter";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RegionComparisonChart from "@/components/dashboard/region-comparison-chart";
-import RegionHeatmap from "@/components/dashboard/region-heatmap";
+import MaharashtraDistrictMap from "@/components/dashboard/maharashtra-district-map";
 import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
 import SchemeTable from "@/components/dashboard/scheme-table";
@@ -264,7 +264,7 @@ export default function Dashboard() {
           />
           <div className="w-full overflow-x-auto">
             <div className="min-w-[300px] sm:min-w-full">
-              <RegionHeatmap
+              <MaharashtraDistrictMap
                 regionSummary={regionSummary}
                 regions={regions}
                 selectedRegion={selectedRegion}
