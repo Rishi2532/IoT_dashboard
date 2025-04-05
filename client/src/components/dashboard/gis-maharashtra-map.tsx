@@ -73,10 +73,19 @@ export default function GISMaharashtraMap({
     return '';
   };
   
-  // Get color based on percentage
+  // Get color based on region name to match reference image
   const getColor = (regionName: string): string => {
-    const defaultColor = regionColors[regionName] || '#cccccc';
-    return defaultColor;
+    // Custom vibrant colors matching the reference image
+    const regionColorMap: Record<string, string> = {
+      'Nashik': '#8CB3E2',         // Light blue
+      'Amravati': '#ff7300',       // Orange 
+      'Nagpur': '#E2B8B8',         // Light red/pink
+      'Chhatrapati Sambhajinagar': '#68A9A9', // Teal green
+      'Pune': '#FFC408',           // Yellow
+      'Konkan': '#4A77BB'          // Blue
+    };
+    
+    return regionColorMap[regionName] || '#cccccc';
   };
   
   // Initialize map
@@ -95,6 +104,9 @@ export default function GISMaharashtraMap({
       maxZoom: 10,  // Allow more zoom in for detailed view
       zoomControl: false, // We'll add custom zoom controls
       attributionControl: false,
+      scrollWheelZoom: true, // Explicitly enable scroll wheel zoom
+      wheelDebounceTime: 50, // Make wheel zooming more responsive
+      wheelPxPerZoomLevel: 60, // Adjust scroll sensitivity
       maxBounds: L.latLngBounds(
         L.latLng(14.5, 72.5),  // Southwest coordinates
         L.latLng(22.5, 82.5)   // Northeast coordinates
@@ -152,10 +164,10 @@ export default function GISMaharashtraMap({
         
         return {
           fillColor: getColor(regionName),
-          weight: isSelected ? 2 : 1,
+          weight: 2,  // Thicker borders for all regions like in the reference image
           opacity: 1,
-          color: isSelected ? '#2563eb' : 'rgba(0,0,0,0.3)',
-          fillOpacity: isSelected ? 0.9 : 0.7
+          color: '#000000',  // Black borders for all regions
+          fillOpacity: 0.9  // Solid fill colors for all regions
         };
       },
       onEachFeature: (feature, layer) => {
@@ -410,12 +422,12 @@ export default function GISMaharashtraMap({
       
       // Region items
       const regionItems = [
-        { name: 'Amravati', color: regionColors['Amravati'] },  // Fixed spelling from Amaravati to Amravati
-        { name: 'Nagpur', color: regionColors['Nagpur'] },
-        { name: 'C.S. Nagar', color: regionColors['Chhatrapati Sambhajinagar'] },
-        { name: 'Nashik', color: regionColors['Nashik'] },
-        { name: 'Pune', color: regionColors['Pune'] },
-        { name: 'Konkan', color: regionColors['Konkan'] }
+        { name: 'Amravati', color: getColor('Amravati') },
+        { name: 'Nagpur', color: getColor('Nagpur') },
+        { name: 'C.S. Nagar', color: getColor('Chhatrapati Sambhajinagar') },
+        { name: 'Nashik', color: getColor('Nashik') },
+        { name: 'Pune', color: getColor('Pune') },
+        { name: 'Konkan', color: getColor('Konkan') }
       ];
       
       regionItems.forEach(item => {
