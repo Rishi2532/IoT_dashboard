@@ -210,24 +210,29 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
       {/* Total ESR Card */}
       <Card className="bg-white overflow-hidden border-2 border-purple-200 hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px] rounded-xl">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-full w-full text-purple-700">
-            <path fill="currentColor" d="M7,12 L17,12 L17,8 L7,8 Z M5,8 L19,8 L19,6 L5,6 Z M7,6 L17,6 L17,3 L12,1 L7,3 Z M10,12 L14,12 L14,15 L10,15 Z M8,15 L16,15 L16,18 L8,18 Z M7,18 L9,23 M17,18 L15,23 M9,23 L15,23 M9,20 L15,20" />
-            <circle cx="12" cy="9" r="1" fill="currentColor" />
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="h-full w-full text-purple-700">
+            {/* Water drop background */}
+            <path d="M256 0C194 0 144 95 144 192C144 260 175 320 224 320C224 290 238 270 256 270C274 270 288 290 288 320C337 320 368 260 368 192C368 95 318 0 256 0Z" fill="currentColor" fillOpacity="0.8"/>
+            
+            {/* Water tank */}
+            <path d="M205 150 C205 120, 307 120, 307 150 L307 270 C307 300, 205 300, 205 270 Z" fill="white" stroke="currentColor" strokeWidth="8"/>
+            
+            {/* Tank stand */}
+            <path d="M220 270 L220 310 M292 270 L292 310 M205 310 L307 310" stroke="currentColor" strokeWidth="8" fill="none"/>
           </svg>
         </div>
         <CardContent className="p-3 sm:p-4 md:p-6 xl:p-8">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-2 sm:p-3 xl:p-4 shadow-md">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 xl:h-7 xl:w-7 text-white">
-                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M7,12 L17,12 L17,8 L7,8 Z" />
-                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M5,8 L19,8 L19,6 L5,6 Z" />
-                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" fill="rgba(255,255,255,0.2)" d="M7,6 L17,6 L17,3 L12,1 L7,3 Z" />
-                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M10,12 L14,12 L14,15 L10,15 Z" />
-                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M8,15 L16,15 L16,18 L8,18 Z" />
-                <path stroke="currentColor" strokeWidth="1.5" fill="rgba(255,255,255,0.1)" d="M12,8 L12,12" />
-                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M7,18 L9,23 M17,18 L15,23" />
-                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M9,23 L15,23" />
-                <path stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" d="M9,20 L15,20" />
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 xl:h-7 xl:w-7 text-white">
+                {/* Water drop background */}
+                <path d="M256 0C194 0 144 95 144 192C144 260 175 320 224 320C224 290 238 270 256 270C274 270 288 290 288 320C337 320 368 260 368 192C368 95 318 0 256 0Z" fill="currentColor" fillOpacity="0.8"/>
+                
+                {/* Water tank */}
+                <path d="M205 150 C205 120, 307 120, 307 150 L307 270 C307 300, 205 300, 205 270 Z" fill="white" stroke="currentColor" strokeWidth="12"/>
+                
+                {/* Tank stand */}
+                <path d="M220 270 L220 310 M292 270 L292 310 M205 310 L307 310" stroke="currentColor" strokeWidth="12" fill="none"/>
               </svg>
             </div>
             <div className="ml-3 sm:ml-4 md:ml-5 xl:ml-6 flex-1">

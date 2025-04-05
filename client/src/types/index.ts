@@ -29,6 +29,8 @@ export interface RegionSummary {
   fully_completed_schemes: number;
   partially_completed_schemes: number;
   flow_meter_integrated: number;
+  rca_integrated: number;
+  pressure_transmitter_integrated: number;
   last_updated_at: string;
 }
 

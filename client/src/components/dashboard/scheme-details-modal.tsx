@@ -190,7 +190,19 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
             
             {/* ESR Status Card */}
             <div className="bg-white p-2 rounded-lg shadow-sm border border-neutral-200">
-              <h4 className="text-xs font-medium text-neutral-700 mb-1">ESR Integration</h4>
+              <h4 className="text-xs font-medium text-neutral-700 mb-1 flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className="h-4 w-4 mr-1 text-purple-700">
+                  {/* Water drop background */}
+                  <path d="M256 0C194 0 144 95 144 192C144 260 175 320 224 320C224 290 238 270 256 270C274 270 288 290 288 320C337 320 368 260 368 192C368 95 318 0 256 0Z" fill="currentColor" fillOpacity="0.8"/>
+                  
+                  {/* Water tank */}
+                  <path d="M205 150 C205 120, 307 120, 307 150 L307 270 C307 300, 205 300, 205 270 Z" fill="white" stroke="currentColor" strokeWidth="12"/>
+                  
+                  {/* Tank stand */}
+                  <path d="M220 270 L220 310 M292 270 L292 310 M205 310 L307 310" stroke="currentColor" strokeWidth="12" fill="none"/>
+                </svg>
+                ESR Integration
+              </h4>
               <div className="bg-neutral-50 rounded-lg p-2">
                 {/* ESR integrated */}
                 <div className="flex justify-between mb-1 mt-2">

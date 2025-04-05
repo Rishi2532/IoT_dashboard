@@ -186,16 +186,29 @@ export default function GISMaharashtraMap({
         const feature = features[0];
         const center = getFeatureCenter(feature);
         
-        // Create custom marker icon
+        // Create custom marker icon with ESR water tank for ESR metric
         const markerIcon = L.divIcon({
           className: 'custom-marker-icon',
-          html: `
+          html: metric === 'esr' ? `
+            <div class="marker-pin" style="background-color: white; border: 1.5px solid #0A93E2; width: 30px; height: 30px; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
+              <div style="width: 20px; height: 20px; display: flex; align-items: center; justify-content: center;">
+                <svg viewBox="0 0 512 512" width="20" height="20">
+                  <!-- Water drop shape -->
+                  <path d="M256 0C194 0 144 95 144 192C144 260 175 320 224 320C224 290 238 270 256 270C274 270 288 290 288 320C337 320 368 260 368 192C368 95 318 0 256 0Z" fill="#0A93E2"/>
+                  <!-- Water tank -->
+                  <path d="M205 150 C205 120, 307 120, 307 150 L307 270 C307 300, 205 300, 205 270 Z" fill="white" stroke="#0A93E2" stroke-width="8"/>
+                  <!-- Tank stand -->
+                  <path d="M220 270 L220 310 M292 270 L292 310 M205 310 L307 310" stroke="#0A93E2" stroke-width="8" fill="none"/>
+                </svg>
+              </div>
+            </div>
+          ` : `
             <div class="marker-pin" style="background-color: #2563eb; border: 1.5px solid white; width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">
               <div style="background-color: #3b82f6; width: 6px; height: 6px; border-radius: 50%; position: absolute; top: 5px; left: 5px; border: 0.5px solid white;"></div>
             </div>
           `,
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
+          iconSize: metric === 'esr' ? [30, 30] : [16, 16],
+          iconAnchor: metric === 'esr' ? [15, 15] : [8, 8]
         });
         
         // Add marker
@@ -205,28 +218,28 @@ export default function GISMaharashtraMap({
         let labelAnchorX = 60;
         let labelAnchorY = 25;
         
-        // Custom positioning for specific regions as requested
-        // Position Chhatrapati Sambhajinagar, Pune, and Nagpur below their markers
+        // Custom positioning for specific regions to prevent overlapping
+        // Based on the reference image positioning
         if (regionName === 'Chhatrapati Sambhajinagar') {
           labelAnchorX = 120; // Move C.S. Nagar label more to the right
-          labelAnchorY = 40;  // Position below marker
+          labelAnchorY = 30;  // Position below marker
         } else if (regionName === 'Pune') {
           labelAnchorX = 60;
-          labelAnchorY = 40;  // Position below marker
+          labelAnchorY = 35;  // Position below marker
         } else if (regionName === 'Nagpur') {
           labelAnchorX = 60;
-          labelAnchorY = 40;  // Position below marker
+          labelAnchorY = 35;  // Position below marker
         } 
-        // Position Nashik, Amravati, and Konkan above their markers
+        // Position Nashik, Amravati, and Konkan with more spacing
         else if (regionName === 'Nashik') {
           labelAnchorX = 30;
-          labelAnchorY = -5;  // Position above marker
+          labelAnchorY = -15;  // Position further above marker
         } else if (regionName === 'Amravati') {
           labelAnchorX = 60;
-          labelAnchorY = -5;  // Position above marker
+          labelAnchorY = -15;  // Position further above marker
         } else if (regionName === 'Konkan') {
-          labelAnchorX = 60;
-          labelAnchorY = 25;  // Default position
+          labelAnchorX = 50;
+          labelAnchorY = 15;  // Position slightly above and to the left
         }
         
         const labelIcon = L.divIcon({
