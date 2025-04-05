@@ -84,7 +84,17 @@ export default function UserLoginPage() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Check if the user is an admin - admins should use admin login
+      if (data.role === 'admin') {
+        setLoginError('Administrators should use the admin login page. This login is for regular users only.');
+        
+        // Log out the admin who tried to log in through user login
+        fetch('/api/auth/logout', { method: 'POST' });
+        
+        return;
+      }
+      
       toast({
         title: 'Login successful',
         description: 'You are now logged in',

@@ -91,9 +91,9 @@ export default function GISMaharashtraMap({
     const map = L.map(mapRef.current, {
       center: [18.5, 76], // Maharashtra's approximate center
       zoom: 7,
-      minZoom: 7,   // Increased minZoom to prevent zooming out to all of India
-      maxZoom: 9,   // Adjusted maxZoom for better control
-      zoomControl: true,
+      minZoom: 6,   // Allow slightly more zoom out for better context
+      maxZoom: 10,  // Allow more zoom in for detailed view
+      zoomControl: false, // We'll add custom zoom controls
       attributionControl: false,
       maxBounds: L.latLngBounds(
         L.latLng(14.5, 72.5),  // Southwest coordinates
@@ -308,6 +308,84 @@ export default function GISMaharashtraMap({
       imperial: false,
       maxWidth: 200
     }).addTo(map);
+    
+    // Add custom zoom controls
+    const zoomControl = new L.Control({ position: 'topright' });
+    zoomControl.onAdd = () => {
+      const div = L.DomUtil.create('div', 'custom-zoom-control');
+      div.style.backgroundColor = 'rgba(255, 255, 255, 0.9)';
+      div.style.padding = '6px';
+      div.style.borderRadius = '4px';
+      div.style.boxShadow = '0 1px 5px rgba(0,0,0,0.2)';
+      div.style.margin = '10px';
+      div.style.display = 'flex';
+      div.style.flexDirection = 'column';
+      div.style.gap = '6px';
+      
+      const zoomInButton = document.createElement('button');
+      zoomInButton.innerHTML = `
+        <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">+</div>
+      `;
+      zoomInButton.style.backgroundColor = 'white';
+      zoomInButton.style.border = '1px solid rgba(0,0,0,0.2)';
+      zoomInButton.style.borderRadius = '4px';
+      zoomInButton.style.cursor = 'pointer';
+      zoomInButton.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
+      zoomInButton.title = 'Zoom in';
+      
+      const zoomOutButton = document.createElement('button');
+      zoomOutButton.innerHTML = `
+        <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: bold;">−</div>
+      `;
+      zoomOutButton.style.backgroundColor = 'white';
+      zoomOutButton.style.border = '1px solid rgba(0,0,0,0.2)';
+      zoomOutButton.style.borderRadius = '4px';
+      zoomOutButton.style.cursor = 'pointer';
+      zoomOutButton.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
+      zoomOutButton.title = 'Zoom out';
+      
+      const resetButton = document.createElement('button');
+      resetButton.innerHTML = `
+        <div style="width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 14px;">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+        </div>
+      `;
+      resetButton.style.backgroundColor = 'white';
+      resetButton.style.border = '1px solid rgba(0,0,0,0.2)';
+      resetButton.style.borderRadius = '4px';
+      resetButton.style.cursor = 'pointer';
+      resetButton.style.boxShadow = '0 1px 2px rgba(0,0,0,0.1)';
+      resetButton.title = 'Reset view';
+      
+      div.appendChild(zoomInButton);
+      div.appendChild(zoomOutButton);
+      div.appendChild(resetButton);
+      
+      // Add event listeners
+      L.DomEvent.on(zoomInButton, 'click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        map.zoomIn();
+      });
+      
+      L.DomEvent.on(zoomOutButton, 'click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        map.zoomOut();
+      });
+      
+      L.DomEvent.on(resetButton, 'click', (e) => {
+        L.DomEvent.stopPropagation(e);
+        map.setView([18.5, 76], 7); // Reset to initial view
+      });
+      
+      // Prevent clicks from propagating to the map (which would cause additional map actions)
+      L.DomEvent.disableClickPropagation(div);
+      
+      return div;
+    };
+    zoomControl.addTo(map);
     
     // Add legend
     const legendControl = new L.Control({ position: 'bottomright' });

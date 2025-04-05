@@ -83,7 +83,17 @@ export default function AdminPage() {
       
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      // Check if the user is an admin
+      if (data.role !== 'admin') {
+        setLoginError('You are not authorized to access the admin panel. This login is for administrators only.');
+        
+        // Log out the non-admin user who tried to log in
+        fetch('/api/auth/logout', { method: 'POST' });
+        
+        return;
+      }
+      
       toast({
         title: 'Login successful',
         description: 'You are now logged in as admin',
