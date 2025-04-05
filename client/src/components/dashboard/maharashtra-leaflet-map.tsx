@@ -190,7 +190,7 @@ export default function MaharashtraLeafletMap({
   onRegionClick,
   metric,
   isLoading = false,
-}: MaharashtraLeafletMapProps) {
+}: MaharashtraLeafletMapProps): JSX.Element {
   const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
   const [geoJsonLayer, setGeoJsonLayer] = useState<L.GeoJSON | null>(null);
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
@@ -241,205 +241,217 @@ export default function MaharashtraLeafletMap({
 
   // Initialize map
   useEffect(() => {
-    if (typeof window === 'undefined') return;
+    if (typeof window === 'undefined') return undefined;
     
     // Clean up previous map instance
     if (mapInstance) {
       mapInstance.remove();
     }
     
-    // Create map
-    const map = L.map('maharashtra-map', {
-      center: [19.7515, 75.7139], // Centered on Maharashtra
-      zoom: 7,
-      zoomControl: false,
-      attributionControl: false,
-      scrollWheelZoom: false,
-      dragging: false,
-      boxZoom: false,
-      doubleClickZoom: false
-    });
-    
-    // Add dark tile layer
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      maxZoom: 8,
-    }).addTo(map);
-    
-    // Add GeoJSON layer
-    const geojson = L.geoJSON(maharashtraGeoJson as any, {
-      style: style,
-      onEachFeature: (feature, layer) => {
-        if (feature.properties) {
-          const regionId = feature.properties.id;
-          
-          // Add hover effects
-          layer.on({
-            mouseover: () => {
-              setHoveredRegion(regionId);
-              if (layer instanceof L.Path) {
-                layer.setStyle({
-                  weight: 2,
-                  color: '#2563eb'
-                });
-              }
-            },
-            mouseout: () => {
-              setHoveredRegion(null);
-              geojson.resetStyle(layer);
-            },
-            click: () => {
-              onRegionClick(regionId);
-            }
-          });
-        }
+    // Make sure the container exists before initializing map
+    // Add a small delay to ensure the DOM is fully rendered
+    const timeoutId = setTimeout(() => {
+      // Check if the container exists
+      const container = document.getElementById('maharashtra-map');
+      if (!container) {
+        console.error('Map container not found');
+        return;
       }
-    }).addTo(map);
     
-    setGeoJsonLayer(geojson);
-    
-    // Add pins
-    const customIcon = L.divIcon({
-      className: 'custom-pin-icon',
-      html: `<div style="background-color: #FF4136; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; position: relative;">
-              <div style="position: absolute; width: 10px; height: 2px; background: #fff; left: 2px; top: 6px;"></div>
-              <div style="position: absolute; width: 2px; height: 10px; background: #fff; left: 6px; top: 2px;"></div>
-            </div>`,
-      iconSize: [18, 18],
-      iconAnchor: [9, 9]
-    });
-    
-    regionPins.forEach(pin => {
-      L.marker([pin.lat, pin.lng], { 
-        icon: customIcon
-      }).addTo(map);
-    });
-    
-    // Add district labels
-    districtData.forEach(district => {
-      L.marker([district.lat, district.lng], {
-        icon: L.divIcon({
-          className: 'district-label',
-          html: `<div style="color: white; font-size: 10px; white-space: nowrap; text-shadow: 0 0 2px #000;">${district.name}</div>`,
-          iconSize: [100, 20],
-          iconAnchor: [50, 10]
-        })
-      }).addTo(map);
-    });
-    
-    // Add region labels (larger)
-    regionPins.forEach(pin => {
-      L.marker([pin.lat, pin.lng], {
-        icon: L.divIcon({
-          className: 'region-label',
-          html: `<div style="color: white; font-size: 14px; font-weight: bold; white-space: nowrap; text-shadow: 0 0 3px #000; margin-top: 15px;">${pin.name}</div>`,
-          iconSize: [120, 20],
-          iconAnchor: [60, 0]
-        })
-      }).addTo(map);
-    });
-    
-    // Create and add legend control
-    const legend = new L.Control({ position: 'bottomright' });
-    legend.onAdd = (map: L.Map) => {
-      const div = L.DomUtil.create('div', 'info legend');
-      div.style.background = '#0a1033';
-      div.style.color = 'white';
-      div.style.padding = '10px';
-      div.style.borderRadius = '4px';
-      div.style.border = '1px solid rgba(255,255,255,0.3)';
-      
-      div.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px;">Regions</div>';
-      
-      const regions = [
-        { name: 'Amravati', color: '#ffccaa' },
-        { name: 'Nagpur', color: '#ffd699' },
-        { name: 'Chhatrapati Sambhaji Nagar', color: '#ccdeff' },
-        { name: 'Nashik', color: '#ffeb99' },
-        { name: 'Pune', color: '#adebad' },
-        { name: 'Konkan', color: '#c2c2c2' }
-      ];
-      
-      regions.forEach(region => {
-        div.innerHTML += `<div style="margin-top: 5px;">
-          <span style="display: inline-block; width: 15px; height: 15px; background: ${region.color}; margin-right: 5px;"></span>
-          <span>${region.name}</span>
-        </div>`;
+      // Create map
+      const map = L.map('maharashtra-map', {
+        center: [19.7515, 75.7139], // Centered on Maharashtra
+        zoom: 7,
+        zoomControl: false,
+        attributionControl: false,
+        scrollWheelZoom: false,
+        dragging: false,
+        boxZoom: false,
+        doubleClickZoom: false
       });
       
-      return div;
-    };
-    legend.addTo(map);
+      // Add dark tile layer
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 8,
+      }).addTo(map);
     
-    // Create and add compass rose control
-    const compass = new L.Control({ position: 'bottomleft' });
-    compass.onAdd = (map: L.Map) => {
-      const div = L.DomUtil.create('div', 'compass-rose');
-      div.innerHTML = `
-        <svg width="50" height="50" viewBox="0 0 50 50">
-          <circle cx="25" cy="25" r="22" fill="none" stroke="#ffffff" stroke-width="1" />
-          <path d="M25,7 L25,43 M7,25 L43,25" stroke="#ffffff" stroke-width="1" />
-          <path d="M12,12 L38,38 M12,38 L38,12" stroke="#ffffff" stroke-width="1" />
-          <circle cx="25" cy="25" r="3" fill="#ffffff" stroke="#ffffff" stroke-width="0.5" />
-          <text x="25" y="5" text-anchor="middle" fill="#ffffff" font-size="10px">N</text>
-          <text x="25" y="48" text-anchor="middle" fill="#ffffff" font-size="10px">S</text>
-          <text x="3" y="27" text-anchor="middle" fill="#ffffff" font-size="10px">W</text>
-          <text x="47" y="27" text-anchor="middle" fill="#ffffff" font-size="10px">E</text>
-        </svg>
-      `;
-      return div;
-    };
-    compass.addTo(map);
-    
-    // Create and add metric legend control
-    const metricLegend = new L.Control({ position: 'bottomleft' });
-    metricLegend.onAdd = (map: L.Map) => {
-      const div = L.DomUtil.create('div', 'metric-legend');
-      div.style.background = '#0a1033';
-      div.style.color = 'white';
-      div.style.padding = '10px';
-      div.style.borderRadius = '4px';
-      div.style.border = '1px solid rgba(255,255,255,0.3)';
-      div.style.marginBottom = '60px';
+      // Add GeoJSON layer
+      const geojson = L.geoJSON(maharashtraGeoJson as any, {
+        style: style,
+        onEachFeature: (feature, layer) => {
+          if (feature.properties) {
+            const regionId = feature.properties.id;
+            
+            // Add hover effects
+            layer.on({
+              mouseover: () => {
+                setHoveredRegion(regionId);
+                if (layer instanceof L.Path) {
+                  layer.setStyle({
+                    weight: 2,
+                    color: '#2563eb'
+                  });
+                }
+              },
+              mouseout: () => {
+                setHoveredRegion(null);
+                geojson.resetStyle(layer);
+              },
+              click: () => {
+                onRegionClick(regionId);
+              }
+            });
+          }
+        }
+      }).addTo(map);
       
-      let metricTitle = '';
-      if (metric === 'completion') metricTitle = 'Scheme Completion';
-      if (metric === 'esr') metricTitle = 'ESR Integration';
-      if (metric === 'villages') metricTitle = 'Village Integration';
-      if (metric === 'flow_meter') metricTitle = 'Flow Meter Progress';
+      setGeoJsonLayer(geojson);
       
-      div.innerHTML = `
-        <div style="font-weight: bold; margin-bottom: 5px; font-size: 12px;">${metricTitle}</div>
-        <div style="margin-top: 5px; font-size: 11px;">
-          <span style="display: inline-block; width: 12px; height: 12px; background: #4ade80; margin-right: 5px;"></span>
-          <span>75-100%</span>
-        </div>
-        <div style="margin-top: 5px; font-size: 11px;">
-          <span style="display: inline-block; width: 12px; height: 12px; background: #a3e635; margin-right: 5px;"></span>
-          <span>50-74%</span>
-        </div>
-        <div style="margin-top: 5px; font-size: 11px;">
-          <span style="display: inline-block; width: 12px; height: 12px; background: #facc15; margin-right: 5px;"></span>
-          <span>25-49%</span>
-        </div>
-        <div style="margin-top: 5px; font-size: 11px;">
-          <span style="display: inline-block; width: 12px; height: 12px; background: #f87171; margin-right: 5px;"></span>
-          <span>0-24%</span>
-        </div>
-      `;
+      // Add pins
+      const customIcon = L.divIcon({
+        className: 'custom-pin-icon',
+        html: `<div style="background-color: #FF4136; width: 14px; height: 14px; border-radius: 50%; border: 2px solid #fff; position: relative;">
+                <div style="position: absolute; width: 10px; height: 2px; background: #fff; left: 2px; top: 6px;"></div>
+                <div style="position: absolute; width: 2px; height: 10px; background: #fff; left: 6px; top: 2px;"></div>
+              </div>`,
+        iconSize: [18, 18],
+        iconAnchor: [9, 9]
+      });
       
-      return div;
-    };
-    metricLegend.addTo(map);
-    
-    setMapInstance(map);
+      regionPins.forEach(pin => {
+        L.marker([pin.lat, pin.lng], { 
+          icon: customIcon
+        }).addTo(map);
+      });
+      
+      // Add district labels
+      districtData.forEach(district => {
+        L.marker([district.lat, district.lng], {
+          icon: L.divIcon({
+            className: 'district-label',
+            html: `<div style="color: white; font-size: 10px; white-space: nowrap; text-shadow: 0 0 2px #000;">${district.name}</div>`,
+            iconSize: [100, 20],
+            iconAnchor: [50, 10]
+          })
+        }).addTo(map);
+      });
+      
+      // Add region labels (larger)
+      regionPins.forEach(pin => {
+        L.marker([pin.lat, pin.lng], {
+          icon: L.divIcon({
+            className: 'region-label',
+            html: `<div style="color: white; font-size: 14px; font-weight: bold; white-space: nowrap; text-shadow: 0 0 3px #000; margin-top: 15px;">${pin.name}</div>`,
+            iconSize: [120, 20],
+            iconAnchor: [60, 0]
+          })
+        }).addTo(map);
+      });
+      
+      // Create and add legend control
+      const legend = new L.Control({ position: 'bottomright' });
+      legend.onAdd = (map: L.Map) => {
+        const div = L.DomUtil.create('div', 'info legend');
+        div.style.background = '#0a1033';
+        div.style.color = 'white';
+        div.style.padding = '10px';
+        div.style.borderRadius = '4px';
+        div.style.border = '1px solid rgba(255,255,255,0.3)';
+        
+        div.innerHTML = '<div style="font-weight: bold; margin-bottom: 5px;">Regions</div>';
+        
+        const regions = [
+          { name: 'Amravati', color: '#ffccaa' },
+          { name: 'Nagpur', color: '#ffd699' },
+          { name: 'Chhatrapati Sambhaji Nagar', color: '#ccdeff' },
+          { name: 'Nashik', color: '#ffeb99' },
+          { name: 'Pune', color: '#adebad' },
+          { name: 'Konkan', color: '#c2c2c2' }
+        ];
+        
+        regions.forEach(region => {
+          div.innerHTML += `<div style="margin-top: 5px;">
+            <span style="display: inline-block; width: 15px; height: 15px; background: ${region.color}; margin-right: 5px;"></span>
+            <span>${region.name}</span>
+          </div>`;
+        });
+        
+        return div;
+      };
+      legend.addTo(map);
+      
+      // Create and add compass rose control
+      const compass = new L.Control({ position: 'bottomleft' });
+      compass.onAdd = (map: L.Map) => {
+        const div = L.DomUtil.create('div', 'compass-rose');
+        div.innerHTML = `
+          <svg width="50" height="50" viewBox="0 0 50 50">
+            <circle cx="25" cy="25" r="22" fill="none" stroke="#ffffff" stroke-width="1" />
+            <path d="M25,7 L25,43 M7,25 L43,25" stroke="#ffffff" stroke-width="1" />
+            <path d="M12,12 L38,38 M12,38 L38,12" stroke="#ffffff" stroke-width="1" />
+            <circle cx="25" cy="25" r="3" fill="#ffffff" stroke="#ffffff" stroke-width="0.5" />
+            <text x="25" y="5" text-anchor="middle" fill="#ffffff" font-size="10px">N</text>
+            <text x="25" y="48" text-anchor="middle" fill="#ffffff" font-size="10px">S</text>
+            <text x="3" y="27" text-anchor="middle" fill="#ffffff" font-size="10px">W</text>
+            <text x="47" y="27" text-anchor="middle" fill="#ffffff" font-size="10px">E</text>
+          </svg>
+        `;
+        return div;
+      };
+      compass.addTo(map);
+      
+      // Create and add metric legend control
+      const metricLegend = new L.Control({ position: 'bottomleft' });
+      metricLegend.onAdd = (map: L.Map) => {
+        const div = L.DomUtil.create('div', 'metric-legend');
+        div.style.background = '#0a1033';
+        div.style.color = 'white';
+        div.style.padding = '10px';
+        div.style.borderRadius = '4px';
+        div.style.border = '1px solid rgba(255,255,255,0.3)';
+        div.style.marginBottom = '60px';
+        
+        let metricTitle = '';
+        if (metric === 'completion') metricTitle = 'Scheme Completion';
+        if (metric === 'esr') metricTitle = 'ESR Integration';
+        if (metric === 'villages') metricTitle = 'Village Integration';
+        if (metric === 'flow_meter') metricTitle = 'Flow Meter Progress';
+        
+        div.innerHTML = `
+          <div style="font-weight: bold; margin-bottom: 5px; font-size: 12px;">${metricTitle}</div>
+          <div style="margin-top: 5px; font-size: 11px;">
+            <span style="display: inline-block; width: 12px; height: 12px; background: #4ade80; margin-right: 5px;"></span>
+            <span>75-100%</span>
+          </div>
+          <div style="margin-top: 5px; font-size: 11px;">
+            <span style="display: inline-block; width: 12px; height: 12px; background: #a3e635; margin-right: 5px;"></span>
+            <span>50-74%</span>
+          </div>
+          <div style="margin-top: 5px; font-size: 11px;">
+            <span style="display: inline-block; width: 12px; height: 12px; background: #facc15; margin-right: 5px;"></span>
+            <span>25-49%</span>
+          </div>
+          <div style="margin-top: 5px; font-size: 11px;">
+            <span style="display: inline-block; width: 12px; height: 12px; background: #f87171; margin-right: 5px;"></span>
+            <span>0-24%</span>
+          </div>
+        `;
+        
+        return div;
+      };
+      metricLegend.addTo(map);
+      
+      setMapInstance(map);
+    }, 100); // 100ms delay
     
     // Cleanup on unmount
     return () => {
-      if (map) {
-        map.remove();
+      clearTimeout(timeoutId);
+      if (mapInstance) {
+        mapInstance.remove();
       }
     };
-  }, []);
+  }, [mapInstance, onRegionClick, metric, style]);
 
   // Update map styles when selectedRegion or metric changes
   useEffect(() => {
