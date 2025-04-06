@@ -65,7 +65,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
               {/* Sr. No. removed as requested */}
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Agency</h4>
-                <p className="text-xs text-neutral-900">{scheme.agency || getAgencyByRegion(scheme.region_name)}</p>
+                <p className="text-xs text-neutral-900">{getAgencyByRegion(scheme.region_name)}</p>
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Total Villages</h4>
@@ -133,13 +133,17 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                 <h4 className="text-xs font-medium text-neutral-500">Functional Status</h4>
                 <p className="mt-1">
                   <span className={`px-2 py-1 inline-flex items-center justify-center text-xs font-medium rounded-md ${
-                    scheme.scheme_functional_status === 'Functional' 
+                    scheme.scheme_functional_status === 'Functional' || scheme.scheme_functional_status === 'true' || scheme.scheme_functional_status === true
                       ? 'bg-green-100 text-green-800' 
-                      : scheme.scheme_functional_status === 'Partial' || scheme.scheme_functional_status === 'In Progress'
+                      : scheme.scheme_functional_status === 'Partial' || scheme.scheme_functional_status === 'In Progress' || scheme.scheme_functional_status === 'false' || scheme.scheme_functional_status === false
                         ? 'bg-orange-100 text-orange-800' 
                         : 'bg-red-100 text-red-800'
                   }`}>
-                    {scheme.scheme_functional_status || (scheme.scheme_status === 'Fully-Completed' ? 'Functional' : 'Partial')}
+                    {scheme.scheme_functional_status === 'false' || scheme.scheme_functional_status === false 
+                      ? 'Partial' 
+                      : scheme.scheme_functional_status === 'true' || scheme.scheme_functional_status === true 
+                        ? 'Functional' 
+                        : scheme.scheme_functional_status || (scheme.scheme_status === 'Fully-Completed' ? 'Functional' : 'Partial')}
                   </span>
                 </p>
               </div>

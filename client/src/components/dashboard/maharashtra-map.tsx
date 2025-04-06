@@ -41,14 +41,28 @@ export default function MaharashtraMap({
     
     let percentage = 0;
     
+    // Helper function to handle null/undefined values
+    const getValue = (value: any) => {
+      if (value === null || value === undefined || value === 'null') return 0;
+      return parseInt(value) || 0;
+    };
+
     if (metric === 'completion') {
-      percentage = region.fully_completed_schemes / region.total_schemes_integrated * 100 || 0;
+      const completed = getValue(region.fully_completed_schemes);
+      const total = getValue(region.total_schemes_integrated);
+      percentage = total > 0 ? (completed / total * 100) : 0;
     } else if (metric === 'esr') {
-      percentage = region.fully_completed_esr / region.total_esr_integrated * 100 || 0;
+      const completed = getValue(region.fully_completed_esr);
+      const total = getValue(region.total_esr_integrated);
+      percentage = total > 0 ? (completed / total * 100) : 0;
     } else if (metric === 'villages') {
-      percentage = region.fully_completed_villages / region.total_villages_integrated * 100 || 0;
+      const completed = getValue(region.fully_completed_villages);
+      const total = getValue(region.total_villages_integrated);
+      percentage = total > 0 ? (completed / total * 100) : 0;
     } else if (metric === 'flow_meter') {
-      percentage = region.flow_meter_integrated / region.total_schemes_integrated * 100 || 0;
+      const flowMeters = getValue(region.flow_meter_integrated);
+      const total = getValue(region.total_schemes_integrated);
+      percentage = total > 0 ? (flowMeters / total * 100) : 0;
     }
     
     return Math.round(percentage);
@@ -557,19 +571,21 @@ export default function MaharashtraMap({
         const getMetricValue = () => {
           // Make sure to replace 'null' with '0' for any metrics
           const formatValue = (value: any) => {
-            if (value === null || value === undefined) return "0";
+            if (value === null || value === undefined || value === 'null') return "0";
             return value.toString();
           };
 
           switch(metric) {
+            case 'completion':
+              return `${formatValue(region.fully_completed_schemes)}/${formatValue(region.total_schemes_integrated)}`;
             case 'esr':
-              return `${formatValue(region.total_esr_integrated)}/${formatValue(region.fully_completed_esr)}`;
+              return `${formatValue(region.fully_completed_esr)}/${formatValue(region.total_esr_integrated)}`;
             case 'villages':
-              return `${formatValue(region.total_villages_integrated)}/${formatValue(region.fully_completed_villages)}`;
+              return `${formatValue(region.fully_completed_villages)}/${formatValue(region.total_villages_integrated)}`;
             case 'flow_meter':
               return `${formatValue(region.flow_meter_integrated)}`;
             default:
-              return `${formatValue(region.total_esr_integrated)}/${formatValue(region.fully_completed_esr)}`;
+              return `${formatValue(region.fully_completed_schemes)}/${formatValue(region.total_schemes_integrated)}`;
           }
         };
         
