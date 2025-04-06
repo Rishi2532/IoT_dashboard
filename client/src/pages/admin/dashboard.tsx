@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { useMutation } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { 
   Card, 
   CardContent, 
@@ -17,13 +17,322 @@ import {
   LogOut, 
   RefreshCw,
   Database,
-  FileText
+  FileText,
+  Trash2,
+  Cog,
+  List
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
 import ProtectedRoute from '@/components/auth/protected-route';
 import RegionImporter from '@/components/admin/region-importer';
 import SchemeImporter from '@/components/admin/scheme-importer';
-import CsvImporter from '@/components/admin/csv-importer';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell
+} from '@/components/ui/table';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Spinner } from '@/components/ui/spinner';
+
+// Schema Manager component
+function SchemeManager() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [searchSchemeId, setSearchSchemeId] = useState<string>("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [schemeToDelete, setSchemeToDelete] = useState<Scheme | null>(null);
+  
+  // Define region type
+  interface Region {
+    region_id: number;
+    region_name: string;
+  }
+  
+  // Fetch regions
+  const regionsQuery = useQuery<Region[]>({
+    queryKey: ['/api/regions'],
+    queryFn: async () => {
+      const response = await fetch('/api/regions');
+      if (!response.ok) {
+        throw new Error('Failed to fetch regions');
+      }
+      return response.json();
+    },
+    refetchOnWindowFocus: false
+  });
+  
+  // Define scheme type
+  interface Scheme {
+    scheme_id: string;
+    scheme_name: string;
+    region_name: string;
+    scheme_status: string;
+    agency?: string;
+    total_villages?: number;
+    villages_integrated?: number;
+    functional_villages?: number;
+    partial_villages?: number;
+    non_functional_villages?: number;
+    fully_completed_villages?: number;
+    total_esr?: number;
+    esr_integrated_on_iot?: number;
+    fully_completed_esr?: number;
+    balance_esr?: number;
+    flow_meters_connected?: number;
+    pressure_transmitters_connected?: number;
+    residual_chlorine_connected?: number;
+  }
+  
+  // Fetch schemes based on selected region
+  const schemesQuery = useQuery<Scheme[]>({
+    queryKey: ['/api/schemes', selectedRegion, searchSchemeId],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append('region', selectedRegion);
+      }
+      if (searchSchemeId) {
+        params.append('scheme_id', searchSchemeId);
+      }
+      
+      const response = await fetch(`/api/schemes?${params.toString()}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch schemes');
+      }
+      return response.json();
+    },
+    refetchOnWindowFocus: false
+  });
+  
+  // Delete scheme mutation
+  const deleteSchemeMutation = useMutation({
+    mutationFn: async (schemeId: string) => {
+      const response = await fetch(`/api/schemes/${schemeId}`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete scheme');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Success',
+        description: data.message || 'Scheme deleted successfully',
+      });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/schemes'] });
+      
+      // Close the dialog
+      setDeleteDialogOpen(false);
+      setSchemeToDelete(null);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to delete scheme: ${error.message}`,
+        variant: 'destructive'
+      });
+    }
+  });
+  
+  const handleDelete = (scheme: Scheme) => {
+    setSchemeToDelete(scheme);
+    setDeleteDialogOpen(true);
+  };
+  
+  const confirmDelete = () => {
+    if (schemeToDelete) {
+      deleteSchemeMutation.mutate(schemeToDelete.scheme_id);
+    }
+  };
+  
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Manage Schemes</CardTitle>
+        <CardDescription>
+          View and manage schemes in the system. Use the filters to find specific schemes.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {/* Filters */}
+          <div className="flex flex-col sm:flex-row gap-4">
+            <div className="w-full sm:w-1/3">
+              <label className="text-sm font-medium mb-1 block">Region</label>
+              <Select
+                value={selectedRegion}
+                onValueChange={setSelectedRegion}
+                disabled={regionsQuery.isLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select region" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Regions</SelectItem>
+                  {regionsQuery.data?.map((region: Region) => (
+                    <SelectItem key={region.region_name} value={region.region_name}>
+                      {region.region_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-full sm:w-1/3">
+              <label className="text-sm font-medium mb-1 block">Scheme ID</label>
+              <Input
+                placeholder="Enter scheme ID"
+                value={searchSchemeId}
+                onChange={(e) => setSearchSchemeId(e.target.value)}
+              />
+            </div>
+            <div className="w-full sm:w-1/3 flex items-end">
+              <Button
+                className="w-full"
+                variant="outline"
+                onClick={() => {
+                  queryClient.invalidateQueries({ queryKey: ['/api/schemes', selectedRegion, searchSchemeId] });
+                }}
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+            </div>
+          </div>
+          
+          {/* Schemes Table */}
+          {schemesQuery.isLoading ? (
+            <div className="flex justify-center p-8">
+              <Spinner className="h-8 w-8" />
+            </div>
+          ) : schemesQuery.isError ? (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                Failed to load schemes. {(schemesQuery.error as Error).message}
+              </AlertDescription>
+            </Alert>
+          ) : schemesQuery.data?.length === 0 ? (
+            <Alert>
+              <AlertTitle>No schemes found</AlertTitle>
+              <AlertDescription>
+                No schemes match the current filters. Try changing the region or scheme ID.
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Scheme ID</TableHead>
+                    <TableHead>Name</TableHead>
+                    <TableHead>Region</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {schemesQuery.data?.map((scheme: Scheme) => (
+                    <TableRow key={scheme.scheme_id}>
+                      <TableCell className="font-mono text-xs">{scheme.scheme_id}</TableCell>
+                      <TableCell>{scheme.scheme_name}</TableCell>
+                      <TableCell>{scheme.region_name}</TableCell>
+                      <TableCell>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          scheme.scheme_status === 'Fully Completed' 
+                            ? 'bg-green-100 text-green-800' 
+                            : scheme.scheme_status === 'In Progress' || scheme.scheme_status === 'Partial'
+                            ? 'bg-yellow-100 text-yellow-800'
+                            : 'bg-gray-100 text-gray-800'
+                        }`}>
+                          {scheme.scheme_status}
+                        </span>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(scheme)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </div>
+        
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Confirm Deletion</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete the scheme "{schemeToDelete?.scheme_name}"? 
+                This action cannot be undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteDialogOpen(false)}
+                disabled={deleteSchemeMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={deleteSchemeMutation.isPending}
+              >
+                {deleteSchemeMutation.isPending ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </CardContent>
+    </Card>
+  );
+}
 
 export default function AdminDashboard() {
   const { toast } = useToast();
@@ -155,7 +464,7 @@ export default function AdminDashboard() {
 
         <div className="px-6">
           <Tabs defaultValue="region-import" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsList className="grid w-full grid-cols-3 mb-6">
               <TabsTrigger value="region-import" className="flex items-center">
                 <Database className="h-4 w-4 mr-2" />
                 Import Region Data
@@ -163,6 +472,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="scheme-import" className="flex items-center">
                 <FileUp className="h-4 w-4 mr-2" />
                 Import Scheme Data
+              </TabsTrigger>
+              <TabsTrigger value="manage-schemes" className="flex items-center">
+                <Cog className="h-4 w-4 mr-2" />
+                Manage Schemes
               </TabsTrigger>
             </TabsList>
             
@@ -172,6 +485,10 @@ export default function AdminDashboard() {
             
             <TabsContent value="scheme-import" className="mt-0">
               <SchemeImporter />
+            </TabsContent>
+            
+            <TabsContent value="manage-schemes" className="mt-0">
+              <SchemeManager />
             </TabsContent>
           </Tabs>
         </div>

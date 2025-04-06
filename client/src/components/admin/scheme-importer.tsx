@@ -48,15 +48,27 @@ const schemeFields = [
   { value: 'scheme_status', label: 'Scheme Status' }
 ];
 
-// Regions for the dropdown
+// Regions for the dropdown with agency mapping
 const regions = [
-  { value: 'Nagpur', label: 'Nagpur' },
-  { value: 'Pune', label: 'Pune' },
-  { value: 'Konkan', label: 'Konkan' },
-  { value: 'Amravati', label: 'Amravati' },
-  { value: 'Nashik', label: 'Nashik' },
-  { value: 'Chhatrapati Sambhajinagar', label: 'Chhatrapati Sambhajinagar' }
+  { value: 'all_regions', label: 'All Regions (CSV contains region column)' },
+  { value: 'no_region', label: 'Not Applicable / Unknown' },
+  { value: 'Nagpur', label: 'Nagpur - M/s Rite' },
+  { value: 'Pune', label: 'Pune - M/s Indo/Chetas' },
+  { value: 'Konkan', label: 'Konkan - M/s Indo/Chetas' },
+  { value: 'Amravati', label: 'Amravati - M/s Ceinsys' },
+  { value: 'Nashik', label: 'Nashik - M/s Ceinsys' },
+  { value: 'Chhatrapati Sambhajinagar', label: 'Chhatrapati Sambhajinagar - M/s Rite Water' }
 ];
+
+// Agency mapping by region
+const agencyMapping: Record<string, string> = {
+  'Amravati': 'M/s Ceinsys',
+  'Nashik': 'M/s Ceinsys',
+  'Nagpur': 'M/s Rite',
+  'Chhatrapati Sambhajinagar': 'M/s Rite Water',
+  'Konkan': 'M/s Indo/Chetas',
+  'Pune': 'M/s Indo/Chetas'
+};
 
 export default function SchemeImporter() {
   const { toast } = useToast();
@@ -68,14 +80,41 @@ export default function SchemeImporter() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [importDetails, setImportDetails] = useState<any>(null);
   
+  // Fixed column mappings for scheme CSV based on user specifications
+  const fixedSchemeMappings: Record<string, number> = {
+    'sr_no': 0,                               // Column 1
+    'region_name': 1,                         // Column 2
+    'circle': 2,                              // Column 3
+    'division': 3,                            // Column 4
+    'sub_division': 4,                        // Column 5
+    'block': 5,                               // Column 6
+    'scheme_id': 6,                           // Column 7
+    'scheme_name': 7,                         // Column 8
+    'total_villages': 8,                      // Column 9
+    'villages_integrated': 9,                 // Column 10
+    'functional_villages': 10,                // Column 11
+    'partial_villages': 11,                   // Column 12
+    'non_functional_villages': 12,            // Column 13
+    'fully_completed_villages': 13,           // Column 14
+    'total_esr': 14,                          // Column 15
+    'scheme_functional_status': 15,           // Column 16
+    'esr_integrated_on_iot': 16,              // Column 17
+    'fully_completed_esr': 17,                // Column 18
+    'balance_esr': 18,                        // Column 19
+    'flow_meters_connected': 19,              // Column 20
+    'pressure_transmitters_connected': 20,    // Column 21
+    'residual_chlorine_connected': 21,        // Column 22
+    'scheme_status': 22                       // Column 23
+  };
+
   // CSV import state
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [columnCount, setColumnCount] = useState(5);
-  const [columnMappings, setColumnMappings] = useState<Record<string, number>>({});
+  const [columnCount, setColumnCount] = useState(23); // Fixed to 23 columns for scheme
+  const [columnMappings] = useState<Record<string, number | string>>(fixedSchemeMappings); // Fixed mappings
   const [isUploading, setIsUploading] = useState(false);
   const [previewData, setPreviewData] = useState<string[][]>([]);
   const [uploadResult, setUploadResult] = useState<{ message: string; details?: string } | null>(null);
-  const [regionName, setRegionName] = useState('');
+  const [regionName, setRegionName] = useState('all_regions'); // Default to all regions option
 
   const importMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -215,12 +254,11 @@ export default function SchemeImporter() {
     }
   };
 
-  // Update column mapping
+  // Column mappings are fixed, this function is no longer needed
+  // but kept as a no-op for future reference
   const handleColumnMappingChange = (field: string, columnIndex: number) => {
-    setColumnMappings(prev => ({
-      ...prev,
-      [field]: columnIndex
-    }));
+    // No-op as we're using fixed column mappings
+    console.log(`Column mapping change disabled: ${field} -> ${columnIndex}`);
   };
 
   // Handle CSV form submission
@@ -574,30 +612,37 @@ export default function SchemeImporter() {
                           Map each database field to a specific column in your CSV file.
                         </p>
                         
-                        <div className="grid gap-4">
-                          {schemeFields.map((field) => (
-                            <div key={field.value} className="grid grid-cols-2 gap-4 items-center">
-                              <span className="text-sm font-medium">{field.label}</span>
-                              <Select
-                                value={columnMappings[field.value]?.toString()}
-                                onValueChange={(value) => 
-                                  handleColumnMappingChange(field.value, parseInt(value))
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select column" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="not_mapped">Not mapped</SelectItem>
-                                  {columnOptions.map((col) => (
-                                    <SelectItem key={col.value} value={col.value}>
-                                      {col.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-md mb-4">
+                          <h3 className="font-medium text-blue-800 mb-2">Predefined Column Mapping</h3>
+                          <p className="text-sm text-blue-700 mb-3">
+                            The following fixed mapping will be used for importing scheme data:
+                          </p>
+                          
+                          <div className="grid grid-cols-2 gap-x-8 gap-y-2 mb-4 max-h-[400px] overflow-y-auto pr-2">
+                            {schemeFields.map((field) => (
+                              <div key={field.value} className="flex justify-between items-center">
+                                <span className="text-xs font-medium">{field.label}</span>
+                                <span className="text-xs bg-blue-100 px-2 py-1 rounded">
+                                  Column {(columnMappings[field.value] as number) + 1}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          
+                          <div className="mt-4 pt-4 border-t border-blue-200">
+                            <h4 className="font-medium text-blue-800 mb-2">Agency Assignment</h4>
+                            <p className="text-xs text-blue-700 mb-2">
+                              For your reference, agencies will be automatically assigned based on region:
+                            </p>
+                            <div className="grid grid-cols-2 gap-x-8 gap-y-1 text-xs">
+                              {Object.entries(agencyMapping).map(([region, agency]) => (
+                                <div key={region} className="flex justify-between items-center">
+                                  <span className="font-medium">{region}</span>
+                                  <span className="bg-blue-100 px-2 py-1 rounded">{agency}</span>
+                                </div>
+                              ))}
                             </div>
-                          ))}
+                          </div>
                         </div>
                       </div>
                       

@@ -183,6 +183,21 @@ async function updateDatabaseRecords(
           item.scheme_id = `${item.region_name.substring(0, 3).toUpperCase()}-${timestamp}-${randomPart}`;
         }
         
+        // Assign agency based on region if not specified
+        if (!item.agency) {
+          // Map region to agency according to requirements
+          const regionAgencyMap: Record<string, string> = {
+            'Amravati': 'M/s Ceinsys',
+            'Nashik': 'M/s Ceinsys',
+            'Nagpur': 'M/s Rite',
+            'Chhatrapati Sambhajinagar': 'M/s Rite Water',
+            'Konkan': 'M/s Indo/Chetas',
+            'Pune': 'M/s Indo/Chetas'
+          };
+          
+          item.agency = regionAgencyMap[item.region_name] || null;
+        }
+        
         // Check if scheme exists
         const existingScheme = await storage.getSchemeById(item.scheme_id);
         

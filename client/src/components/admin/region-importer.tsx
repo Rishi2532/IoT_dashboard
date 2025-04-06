@@ -40,10 +40,25 @@ export default function RegionImporter() {
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [activeTab, setActiveTab] = useState('excel');
 
+  // Fixed column mappings for region CSV based on user specifications
+  const fixedRegionMappings: Record<string, number> = {
+    'region_name': 0,                     // Column 1
+    'total_esr_integrated': 1,            // Column 2
+    'fully_completed_esr': 2,             // Column 3
+    'partial_esr': 3,                     // Column 4
+    'total_villages_integrated': 4,       // Column 5
+    'fully_completed_villages': 5,        // Column 6
+    'total_schemes_integrated': 6,        // Column 7
+    'fully_completed_schemes': 7,         // Column 8
+    'flow_meter_integrated': 8,           // Column 9
+    'rca_integrated': 9,                  // Column 10
+    'pressure_transmitter_integrated': 10  // Column 11
+  };
+
   // CSV import state
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [columnCount, setColumnCount] = useState(5);
-  const [columnMappings, setColumnMappings] = useState<Record<string, number>>({});
+  const [columnCount, setColumnCount] = useState(11); // Fixed to 11 columns for region
+  const [columnMappings] = useState<Record<string, number>>(fixedRegionMappings); // Fixed mappings
   const [isUploading, setIsUploading] = useState(false);
   const [previewData, setPreviewData] = useState<string[][]>([]);
   const [uploadResult, setUploadResult] = useState<{ message: string; details?: string } | null>(null);
@@ -119,12 +134,11 @@ export default function RegionImporter() {
     }
   };
 
-  // Update column mapping
+  // Column mappings are fixed, this function is no longer needed
+  // but kept as a no-op for future reference
   const handleColumnMappingChange = (field: string, columnIndex: number) => {
-    setColumnMappings(prev => ({
-      ...prev,
-      [field]: columnIndex
-    }));
+    // No-op as we're using fixed column mappings
+    console.log(`Column mapping change disabled: ${field} -> ${columnIndex}`);
   };
 
   // Handle CSV form submission
@@ -304,30 +318,21 @@ export default function RegionImporter() {
                           Map each database field to a specific column in your CSV file.
                         </p>
                         
-                        <div className="grid gap-4">
-                          {regionFields.map((field) => (
-                            <div key={field.value} className="grid grid-cols-2 gap-4 items-center">
-                              <span className="text-sm font-medium">{field.label}</span>
-                              <Select
-                                value={columnMappings[field.value]?.toString()}
-                                onValueChange={(value) => 
-                                  handleColumnMappingChange(field.value, parseInt(value))
-                                }
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select column" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  <SelectItem value="not_mapped">Not mapped</SelectItem>
-                                  {columnOptions.map((col) => (
-                                    <SelectItem key={col.value} value={col.value}>
-                                      {col.label}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            </div>
-                          ))}
+                        <div className="p-4 bg-blue-50 border border-blue-200 rounded-md mb-4">
+                          <h3 className="font-medium text-blue-800 mb-2">Predefined Column Mapping</h3>
+                          <p className="text-sm text-blue-700 mb-3">
+                            The following fixed mapping will be used for importing region data:
+                          </p>
+                          <div className="grid grid-cols-2 gap-x-8 gap-y-2">
+                            {regionFields.map((field) => (
+                              <div key={field.value} className="flex justify-between items-center">
+                                <span className="text-xs font-medium">{field.label}</span>
+                                <span className="text-xs bg-blue-100 px-2 py-1 rounded">
+                                  Column {(columnMappings[field.value] as number) + 1}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
                         </div>
                       </div>
                       

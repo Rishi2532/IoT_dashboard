@@ -364,8 +364,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // Delete a scheme
-  app.delete("/api/schemes/:id", async (req, res) => {
+  // Delete a scheme (admin only)
+  app.delete("/api/schemes/:id", requireAdmin, async (req, res) => {
     try {
       const schemeId = req.params.id;
       
@@ -380,7 +380,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       await storage.deleteScheme(schemeId);
-      res.status(204).end();
+      
+      // Return the deleted scheme info and success message
+      res.json({ 
+        success: true, 
+        message: `Scheme '${existingScheme.scheme_name}' has been deleted successfully`,
+        deletedScheme: {
+          scheme_id: existingScheme.scheme_id,
+          scheme_name: existingScheme.scheme_name,
+          region_name: existingScheme.region_name
+        }
+      });
     } catch (error) {
       console.error("Error deleting scheme:", error);
       res.status(500).json({ message: "Failed to delete scheme" });
