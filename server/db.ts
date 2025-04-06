@@ -30,8 +30,20 @@ export async function getDB() {
         process.cwd().includes("Users")
       ) {
         try {
-          pool = require("./local-adapter.js");
-          console.log("PostgreSQL pool imported from local adapter");
+          // Try to dynamically import ESM local-adapter.js
+          import("./local-adapter.js").then(module => {
+            pool = module.default;
+            console.log("PostgreSQL pool imported from local adapter (ESM)");
+          }).catch(error => {
+            console.error("Failed to import ESM local adapter, trying CommonJS");
+            try {
+              pool = require("./local-adapter.js");  
+              console.log("PostgreSQL pool imported from local adapter (CommonJS)");
+            } catch (cjsError) {
+              console.error("Failed to import local adapter, falling back to default adapter:", cjsError);
+              pool = require("./pg-adapter.cjs");
+            }
+          });
         } catch (error) {
           console.error(
             "Failed to import local adapter, falling back to default adapter:",

@@ -4,17 +4,21 @@
  */
 
 import pg from 'pg';
-import * as dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+// Load environment variables
+import dotenv from 'dotenv';
 dotenv.config();
+
 const { Pool } = pg;
 
-// Create a PostgreSQL client
+// Create PostgreSQL client
 const pool = new Pool({
   user: process.env.PGUSER,
   host: process.env.PGHOST,
@@ -24,144 +28,218 @@ const pool = new Pool({
 });
 
 async function fixLocalSetup() {
-  const client = await pool.connect();
+  console.log('========================================');
+  console.log('Local Database Fix Script');
+  console.log('========================================\n');
+  
+  console.log('Attempting to connect to PostgreSQL database...');
+  
   try {
-    console.log('Connected to PostgreSQL database');
+    const client = await pool.connect();
     
-    // Fix 1: Check if scheme_status table is empty but regions has data
-    const schemeCount = await client.query('SELECT COUNT(*) FROM scheme_status');
-    const regionCount = await client.query('SELECT COUNT(*) FROM regions');
-    
-    console.log(`Found ${schemeCount.rows[0].count} schemes and ${regionCount.rows[0].count} regions`);
-    
-    if (parseInt(schemeCount.rows[0].count) === 0 && parseInt(regionCount.rows[0].count) > 0) {
-      console.log('Found regions data but no scheme_status data - generating sample schemes for each region');
+    try {
+      console.log('✅ Connected to PostgreSQL database successfully');
       
-      // Get regions
-      const regions = await client.query('SELECT * FROM regions');
+      // Check for incomplete or corrupted schema
+      console.log('\n🔧 Checking for schema issues...');
       
-      // Create sample schemes for each region
-      for (const region of regions.rows) {
-        const regionName = region.region_name;
-        console.log(`Creating sample schemes for ${regionName}`);
+      // Check if regions table has partial_esr column
+      const partialEsrCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns 
+          WHERE table_name = 'regions' 
+          AND column_name = 'partial_esr'
+        );
+      `);
+      
+      if (!partialEsrCheck.rows[0].exists) {
+        console.log('Adding missing partial_esr column to regions table...');
+        await client.query(`
+          ALTER TABLE regions 
+          ADD COLUMN partial_esr INTEGER DEFAULT 0;
+        `);
+        console.log('✅ Added partial_esr column');
+      }
+      
+      // Check if scheme_status table has scheme_functional_status column
+      const functionalStatusCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.columns 
+          WHERE table_name = 'scheme_status' 
+          AND column_name = 'scheme_functional_status'
+        );
+      `);
+      
+      if (!functionalStatusCheck.rows[0].exists) {
+        console.log('Adding missing scheme_functional_status column to scheme_status table...');
+        await client.query(`
+          ALTER TABLE scheme_status 
+          ADD COLUMN scheme_functional_status TEXT;
+        `);
+        console.log('✅ Added scheme_functional_status column');
+      }
+      
+      // Fix functional status values to ensure they're text
+      const wrongStatusCount = await client.query(
+        `SELECT COUNT(*) FROM scheme_status 
+         WHERE scheme_functional_status IS NOT NULL 
+         AND scheme_functional_status NOT IN ('Functional', 'Partial')`
+      );
+      
+      if (parseInt(wrongStatusCount.rows[0].count) > 0) {
+        console.log('Fixing functional status values...');
         
-        // Generate schemes based on total_schemes_integrated count
-        const schemeCount = parseInt(region.total_schemes_integrated) || 1;
+        await client.query(
+          `UPDATE scheme_status 
+           SET scheme_functional_status = 'Functional' 
+           WHERE scheme_functional_status IN ('true', '1') 
+           OR scheme_functional_status::text = 'true'`
+        );
         
-        for (let i = 0; i < schemeCount; i++) {
-          const schemeId = `${regionName.substring(0, 3).toUpperCase()}${i+1000}`;
-          const schemeName = `${regionName} Sample Water Scheme ${i+1}`;
-          const agency = getAgencyByRegion(regionName);
-          const district = regionName;
-          const taluka = `${regionName} Taluka ${i+1}`;
+        await client.query(
+          `UPDATE scheme_status 
+           SET scheme_functional_status = 'Partial' 
+           WHERE scheme_functional_status IN ('false', '0')
+           OR scheme_functional_status::text = 'false'`
+        );
+        
+        console.log('✅ Fixed functional status values');
+      }
+      
+      // Check if fully completed schemes for Konkan and Pune regions are null but should be 0
+      const nullSchemesCount = await client.query(`
+        SELECT COUNT(*) FROM regions 
+        WHERE region_name IN ('Konkan', 'Pune') 
+        AND fully_completed_schemes IS NULL
+      `);
+      
+      if (parseInt(nullSchemesCount.rows[0].count) > 0) {
+        console.log('Fixing null values for fully completed schemes in Konkan and Pune regions...');
+        
+        await client.query(`
+          UPDATE regions 
+          SET fully_completed_schemes = 0 
+          WHERE region_name IN ('Konkan', 'Pune') 
+          AND fully_completed_schemes IS NULL
+        `);
+        
+        console.log('✅ Fixed null values for fully completed schemes');
+      }
+      
+      // Update agency values for each region
+      console.log('\n🔧 Checking agency values for schemes...');
+      
+      const regions = await client.query(`SELECT DISTINCT region_name FROM regions`);
+      
+      for (const row of regions.rows) {
+        const regionName = row.region_name;
+        const agency = getAgencyByRegion(regionName);
+        
+        const nullAgencyCount = await client.query(`
+          SELECT COUNT(*) FROM scheme_status 
+          WHERE region_name = $1 AND agency IS NULL
+        `, [regionName]);
+        
+        if (parseInt(nullAgencyCount.rows[0].count) > 0) {
+          console.log(`Updating agency values for ${regionName} region...`);
           
-          // Calculate random values based on region totals
-          const villages = Math.min(10, Math.max(1, Math.floor(Math.random() * 10) + 1));
-          const villages_integrated = villages;
-          const fully_completed_villages = Math.floor(villages * Math.random());
+          await client.query(`
+            UPDATE scheme_status 
+            SET agency = $1 
+            WHERE region_name = $2 AND agency IS NULL
+          `, [agency, regionName]);
           
-          const total_esr = Math.min(15, Math.max(1, Math.floor(Math.random() * 15) + 1));
-          const esr_integrated = total_esr;
-          const fully_completed_esr = Math.floor(total_esr * Math.random());
-          
-          const project_cost = Math.floor(Math.random() * 5000) + 1000;
-          
-          // Status based on completion
-          const isFullyCompleted = Math.random() > 0.7;
-          const scheme_status = isFullyCompleted ? 'Fully-Completed' : 'In Progress';
-          const scheme_functional_status = isFullyCompleted ? 'Functional' : 'Partial';
-          
-          const flow_meters = Math.floor(Math.random() * 10) + 1;
-          const pressure_transmitters = Math.floor(Math.random() * 8) + 1;
-          const residual_chlorine = Math.floor(Math.random() * 5) + 1;
-          
-          // Add the scheme to the database
-          await client.query(
-            `INSERT INTO scheme_status (
-              scheme_id, region_name, district, taluka, scheme_name, agency,
-              villages, villages_integrated, fully_completed_villages,
-              total_esr, esr_integrated, fully_completed_esr,
-              project_cost, scheme_status, scheme_functional_status,
-              flow_meters_connected, pressure_transmitters_connected, residual_chlorine_connected
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
-            [
-              schemeId, regionName, district, taluka, schemeName, agency,
-              villages, villages_integrated, fully_completed_villages,
-              total_esr, esr_integrated, fully_completed_esr,
-              project_cost, scheme_status, scheme_functional_status,
-              flow_meters, pressure_transmitters, residual_chlorine
-            ]
-          );
+          console.log(`✅ Updated agency values for ${regionName} region`);
         }
       }
       
-      console.log('Sample scheme data created successfully');
-    } else if (parseInt(schemeCount.rows[0].count) > 0) {
-      console.log('Scheme_status table already has data');
+      // Check for updates table and create if missing
+      const updatesTableCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'updates'
+        );
+      `);
+      
+      if (!updatesTableCheck.rows[0].exists) {
+        console.log('Creating missing updates table...');
+        
+        await client.query(`
+          CREATE TABLE updates (
+            id SERIAL PRIMARY KEY,
+            date DATE,
+            type TEXT,
+            count INTEGER,
+            region TEXT,
+            affected_ids TEXT[]
+          );
+        `);
+        
+        console.log('✅ Created updates table');
+        
+        // Insert today's date for a sample update
+        const today = new Date().toISOString().split('T')[0];
+        
+        await client.query(
+          `INSERT INTO updates (date, type, count, region, affected_ids)
+           VALUES ($1, 'scheme', 2, 'Nagpur', ARRAY['NAG1000', 'NAG1001'])`,
+          [today]
+        );
+        
+        console.log('✅ Added sample update for today');
+      }
+      
+      // Check for users table and create if missing
+      const usersTableCheck = await client.query(`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'users'
+        );
+      `);
+      
+      if (!usersTableCheck.rows[0].exists) {
+        console.log('Creating missing users table...');
+        
+        await client.query(`
+          CREATE TABLE users (
+            id SERIAL PRIMARY KEY,
+            username TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL,
+            is_admin BOOLEAN DEFAULT FALSE
+          );
+          
+          -- Insert default admin user (username: admin, password: admin123)
+          INSERT INTO users (username, password, is_admin) 
+          VALUES ('admin', 'admin123', TRUE);
+        `);
+        
+        console.log('✅ Created users table with default admin user');
+      }
+      
+      console.log('\n✅ Fix script completed successfully!');
+      console.log('Your database structure should now be ready for use.');
+      console.log('Try running the application with: npm run dev');
+      
+    } finally {
+      client.release();
     }
-    
-    // Fix 2: Check if updates table is empty
-    const updateCount = await client.query('SELECT COUNT(*) FROM updates');
-    
-    if (parseInt(updateCount.rows[0].count) === 0) {
-      console.log('No updates found - creating sample update records');
-      
-      // Create sample updates for today
-      await client.query(
-        `INSERT INTO updates (date, type, count, region, affected_ids)
-         VALUES (CURRENT_DATE, 'scheme', 3, 'Nagpur', ARRAY['NAG1000', 'NAG1001', 'NAG1002'])`
-      );
-      
-      await client.query(
-        `INSERT INTO updates (date, type, count, region, affected_ids)
-         VALUES (CURRENT_DATE, 'village', 5, 'Pune', ARRAY['village1', 'village2', 'village3', 'village4', 'village5'])`
-      );
-      
-      console.log('Sample update records created');
-    } else {
-      console.log('Updates table already has data');
-    }
-    
-    // Fix 3: Check if any scheme_functional_status fields have boolean values instead of text
-    const functionalStatusCheck = await client.query(
-      `SELECT COUNT(*) FROM scheme_status 
-       WHERE scheme_functional_status IS NOT NULL 
-       AND scheme_functional_status NOT IN ('Functional', 'Partial')`
-    );
-    
-    if (parseInt(functionalStatusCheck.rows[0].count) > 0) {
-      console.log('Found schemes with incorrect functional status values - fixing...');
-      
-      await client.query(
-        `UPDATE scheme_status 
-         SET scheme_functional_status = 'Functional' 
-         WHERE scheme_functional_status IN ('true', '1') 
-         OR scheme_functional_status::text = 'true'`
-      );
-      
-      await client.query(
-        `UPDATE scheme_status 
-         SET scheme_functional_status = 'Partial' 
-         WHERE scheme_functional_status IN ('false', '0')
-         OR scheme_functional_status::text = 'false'`
-      );
-      
-      console.log('Functional status values fixed');
-    }
-    
-    console.log('\nLocal database setup fix completed!');
-    console.log('Now restart your application with: npm run dev');
-    
   } catch (err) {
-    console.error('Error fixing local setup:', err);
+    console.error('❌ Error connecting to database:', err);
+    console.log('\nPlease check your PostgreSQL connection settings in .env file:');
+    console.log(`DATABASE_URL=${process.env.DATABASE_URL}`);
+    console.log(`PGUSER=${process.env.PGUSER}`);
+    console.log(`PGHOST=${process.env.PGHOST}`);
+    console.log(`PGDATABASE=${process.env.PGDATABASE}`);
+    console.log(`PGPORT=${process.env.PGPORT}`);
   } finally {
-    client.release();
-    pool.end();
+    await pool.end();
   }
 }
 
+// Helper function to determine agency by region
 function getAgencyByRegion(regionName) {
-  // Business rule mapping regions to agencies
   const regionAgencyMap = {
     'Nagpur': 'M/s Rite Water',
     'Amravati': 'JISL',
@@ -174,4 +252,5 @@ function getAgencyByRegion(regionName) {
   return regionAgencyMap[regionName] || 'L&T';
 }
 
+// Run the fix script
 fixLocalSetup();

@@ -1,110 +1,136 @@
-# Running the Application in VS Code
+# VS Code Setup Guide for Maharashtra Water Dashboard
 
-This guide will help you set up and run the Maharashtra Water Infrastructure Management Platform in Visual Studio Code.
+This guide will help you set up and run the Maharashtra Water Dashboard application in Visual Studio Code with a local PostgreSQL database.
 
 ## Prerequisites
 
-1. Install [Visual Studio Code](https://code.visualstudio.com/)
-2. Install [Node.js](https://nodejs.org/) (version 16 or higher)
-3. Install [PostgreSQL](https://www.postgresql.org/download/) locally or use a cloud PostgreSQL instance
+1. **PostgreSQL**: Install PostgreSQL on your local machine (version 12 or higher recommended)
+2. **pgAdmin**: Install pgAdmin 4 for easy database management
+3. **Node.js**: Install Node.js (LTS version recommended)
+4. **Visual Studio Code**: Install VS Code with recommended extensions:
+   - ESLint
+   - Prettier
+   - TypeScript and JavaScript Language Features
 
-## Setup Steps
+## Step 1: Clone the Repository
 
-### 1. Clone the repository
+Clone the repository to your local machine using Git:
 
-```bash
-git clone <your-repository-url>
-cd <repository-folder>
+```
+git clone <repository-url>
+cd maharashtra-water-dashboard
 ```
 
-### 2. Install dependencies
+## Step 2: Set Up PostgreSQL Database
 
-```bash
-npm install
-```
+1. Open pgAdmin and create a new database called `water_scheme_dashboard`
+2. Note your PostgreSQL connection details:
+   - Host: localhost
+   - Port: 5432 (default)
+   - Username: postgres (or your custom username)
+   - Password: Your PostgreSQL password
+   - Database: water_scheme_dashboard
 
-### 3. Set up environment variables
+## Step 3: Configure Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the root directory of the project with your PostgreSQL credentials:
 
 ```
 # PostgreSQL Connection
-DATABASE_URL=postgresql://username:password@localhost:5432/your_database_name
-PGUSER=your_username
+DATABASE_URL=postgresql://postgres:YourPassword@localhost:5432/water_scheme_dashboard
+PGUSER=postgres
 PGHOST=localhost
-PGPASSWORD=your_password
-PGDATABASE=your_database_name
+PGPASSWORD=YourPassword
+PGDATABASE=water_scheme_dashboard
 PGPORT=5432
 
 # App Configuration
 PORT=5000
 ```
 
-Replace the values with your actual PostgreSQL connection details.
+Replace `YourPassword` with your actual PostgreSQL password.
 
-### 4. Create the database
+## Step 4: Install Dependencies
 
-You can either:
+Run the following command to install project dependencies:
 
-- Create a PostgreSQL database using pgAdmin
-- Run the SQL commands in `database_backup.sql` to set up your database schema
-
-### 5. Create `dev` script in package.json
-
-Check that your `package.json` contains the following script:
-
-```json
-"scripts": {
-  "dev": "tsx server/index.ts"
-}
+```
+npm install
 ```
 
-### 6. Start the application
+## Step 5: Set Up Local Database
 
-```bash
+The project includes several utility scripts to help set up your local database correctly:
+
+1. **Initial Setup**: This script creates all necessary tables and sample data
+
+```
+node setup-vscode.js
+```
+
+2. **Verify Database Connection**: Test your connection to the database
+
+```
+node test-local-db.js
+```
+
+3. **Fix Common Issues**: If you encounter any issues, run the fix script
+
+```
+node fix-local-setup.js
+```
+
+## Step 6: Start the Application
+
+Start the application using:
+
+```
 npm run dev
 ```
 
-The application should start and be available at http://localhost:5000
+The application should now be running at [http://localhost:5000](http://localhost:5000)
+
+## Default Login
+
+Use the following credentials to log in:
+- Username: admin
+- Password: admin123
 
 ## Troubleshooting
 
-### Database Connection Issues
+If you encounter any issues, try these steps:
 
-If you encounter database connection problems:
+1. **Database Connection Issues**:
+   - Check your PostgreSQL credentials in the `.env` file
+   - Ensure PostgreSQL service is running
+   - Run `node fix-local-setup.js` to fix common database issues
 
-1. Make sure PostgreSQL is running
-2. Verify your connection details in the `.env` file
-3. Check that your PostgreSQL user has the necessary permissions
-4. Try running `node test-db.js` to test the database connection
+2. **Missing Tables or Data**:
+   - Run `node setup-vscode.js` to recreate tables and sample data
 
-### Environment Variables
+3. **Application Errors**:
+   - Check the console for error messages
+   - Ensure all environment variables are correctly set in `.env`
+   - Restart the application with `npm run dev`
 
-On Windows, you might need to set environment variables differently. You can use a `.env` file or set them in your terminal before running the application:
+4. **"Failed to fetch today's data" Error**:
+   - This error indicates the `updates` table is missing or empty
+   - Run `node fix-local-setup.js` to fix this issue
 
-```bash
-set DATABASE_URL=postgresql://username:password@localhost:5432/your_database_name
-set PGUSER=your_username
-# ... other variables
-npm run dev
-```
+## Importing Excel Data
 
-### Port Conflicts
+To import data from Excel files:
 
-If port 5000 is already in use, you can change the port in your `.env` file:
+1. Place your Excel file in the project root directory
+2. Run the appropriate import script:
+   ```
+   node import-scheme-level-data.js YourExcelFile.xlsx
+   ```
 
-```
-PORT=3000
-```
+## Additional Information
 
-## Importing Data
-
-After setting up, you can import data using the admin interface or run one of the import scripts:
-
-```bash
-node import-scheme-level-data.js
-```
-
-## More Information
-
-For more detailed information, refer to the project documentation or other README files in the repository.
+- The application uses a PostgreSQL database for data storage
+- The backend is built with Express.js
+- The frontend is built with React and uses Tailwind CSS for styling
+- The map visualization uses Leaflet.js
+- All database interactions are managed through Drizzle ORM
