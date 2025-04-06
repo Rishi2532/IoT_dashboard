@@ -9,19 +9,73 @@ import {
   CardTitle 
 } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, CheckCircle, FileSpreadsheet, Info, Loader2, Upload } from 'lucide-react';
+import { AlertCircle, CheckCircle, FileSpreadsheet, FileText, Info, Loader2, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { validateExcelFile } from '@/lib/excel-validator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+import { Spinner } from '@/components/ui/spinner';
+
+// Define the database fields for column mapping
+const schemeFields = [
+  { value: 'scheme_id', label: 'Scheme ID' },
+  { value: 'scheme_name', label: 'Scheme Name' },
+  { value: 'region_name', label: 'Region Name' },
+  { value: 'sr_no', label: 'Serial Number' },
+  { value: 'circle', label: 'Circle' },
+  { value: 'division', label: 'Division' },
+  { value: 'sub_division', label: 'Sub Division' },
+  { value: 'block', label: 'Block' },
+  { value: 'agency', label: 'Agency' },
+  { value: 'total_villages', label: 'Total Villages' },
+  { value: 'villages_integrated', label: 'Villages Integrated' },
+  { value: 'functional_villages', label: 'Functional Villages' },
+  { value: 'partial_villages', label: 'Partial Villages' },
+  { value: 'non_functional_villages', label: 'Non-Functional Villages' },
+  { value: 'fully_completed_villages', label: 'Fully Completed Villages' },
+  { value: 'total_esr', label: 'Total ESR' },
+  { value: 'scheme_functional_status', label: 'Scheme Functional Status' },
+  { value: 'esr_integrated_on_iot', label: 'ESR Integrated on IoT' },
+  { value: 'fully_completed_esr', label: 'Fully Completed ESR' },
+  { value: 'balance_esr', label: 'Balance ESR' },
+  { value: 'flow_meters_connected', label: 'Flow Meters Connected' },
+  { value: 'pressure_transmitters_connected', label: 'Pressure Transmitters' },
+  { value: 'residual_chlorine_connected', label: 'Residual Chlorine Analyzers' },
+  { value: 'scheme_status', label: 'Scheme Status' }
+];
+
+// Regions for the dropdown
+const regions = [
+  { value: 'Nagpur', label: 'Nagpur' },
+  { value: 'Pune', label: 'Pune' },
+  { value: 'Konkan', label: 'Konkan' },
+  { value: 'Amravati', label: 'Amravati' },
+  { value: 'Nashik', label: 'Nashik' },
+  { value: 'Chhatrapati Sambhajinagar', label: 'Chhatrapati Sambhajinagar' }
+];
 
 export default function SchemeImporter() {
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState('excel');
+  
+  // Excel import state
   const [file, setFile] = useState<File | null>(null);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [importDetails, setImportDetails] = useState<any>(null);
+  
+  // CSV import state
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [columnCount, setColumnCount] = useState(5);
+  const [columnMappings, setColumnMappings] = useState<Record<string, number>>({});
+  const [isUploading, setIsUploading] = useState(false);
+  const [previewData, setPreviewData] = useState<string[][]>([]);
+  const [uploadResult, setUploadResult] = useState<{ message: string; details?: string } | null>(null);
+  const [regionName, setRegionName] = useState('');
 
   const importMutation = useMutation({
     mutationFn: async (file: File) => {
@@ -131,192 +185,489 @@ export default function SchemeImporter() {
       });
     }
   };
+  
+  // Handle CSV file selection
+  const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0] || null;
+    setCsvFile(selectedFile);
+    
+    if (selectedFile) {
+      // Preview the file
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result as string;
+        
+        // Simple CSV parsing for preview
+        const rows = content.split('\n').slice(0, 5).map(row => 
+          row.split(',').map(cell => cell.trim().replace(/^"|"$/g, ''))
+        );
+        
+        setPreviewData(rows);
+        
+        // Automatically set the column count based on the first row
+        if (rows[0]) {
+          setColumnCount(rows[0].length);
+        }
+      };
+      reader.readAsText(selectedFile);
+    } else {
+      setPreviewData([]);
+    }
+  };
+
+  // Update column mapping
+  const handleColumnMappingChange = (field: string, columnIndex: number) => {
+    setColumnMappings(prev => ({
+      ...prev,
+      [field]: columnIndex
+    }));
+  };
+
+  // Handle CSV form submission
+  const handleCsvSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!csvFile) {
+      toast({
+        title: "No file selected",
+        description: "Please select a CSV file to upload",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (Object.keys(columnMappings).length === 0) {
+      toast({
+        title: "No column mappings",
+        description: "Please map at least one column to a database field",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      setIsUploading(true);
+      setUploadResult(null);
+      
+      const formData = new FormData();
+      formData.append('file', csvFile);
+      formData.append('columnMappings', JSON.stringify(columnMappings));
+      formData.append('tableName', 'scheme_status');
+      
+      if (regionName) {
+        formData.append('regionName', regionName);
+      }
+      
+      const response = await fetch('/api/admin/import-csv', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        setUploadResult(result);
+        toast({
+          title: "Upload successful",
+          description: `${result.updatedCount} records were updated`,
+          variant: "default"
+        });
+      } else {
+        const errorData = await response.json();
+        toast({
+          title: "Upload failed",
+          description: errorData.message || "Unknown error occurred",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("CSV upload error:", error);
+      toast({
+        title: "Upload error",
+        description: "Failed to upload CSV file",
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+  
+  // Generate column options for the select dropdown
+  const columnOptions = Array.from({ length: columnCount }, (_, i) => ({
+    value: i.toString(),
+    label: `Column ${i + 1}`
+  }));
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <FileSpreadsheet className="h-5 w-5 text-blue-600" />
-          Import Scheme Data From Excel
+          Import Scheme Data
         </CardTitle>
         <CardDescription>
-          Upload Excel spreadsheet to update scheme status data in the database
+          Upload Excel or CSV files to update scheme status data in the database
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        <Alert className="bg-blue-50 border-blue-200">
-          <Info className="h-4 w-4 text-blue-500" />
-          <AlertTitle className="text-blue-800">Excel Format Requirements</AlertTitle>
-          <AlertDescription className="text-blue-700">
-            <p className="mb-2">The Excel file should match the standard template with these columns:</p>
-            <ul className="list-disc pl-5 text-sm space-y-1">
-              <li>Basic information:
-                <ul className="list-disc pl-5 mt-1">
-                  <li><strong>Sr No.</strong> - Serial number</li>
-                  <li><strong>Scheme ID</strong> - Required for identifying schemes</li>
-                  <li><strong>Scheme Name</strong> - Name of the water scheme</li>
-                </ul>
-              </li>
-              <li>Location hierarchy:
-                <ul className="list-disc pl-5 mt-1">
-                  <li><strong>Region</strong> - Main region (Amravati, Nashik, Nagpur, Pune, etc.)</li>
-                  <li><strong>Circle</strong> - Administrative circle</li>
-                  <li><strong>Division</strong> - Administrative division</li>
-                  <li><strong>Sub Division</strong> - Administrative sub-division</li>
-                  <li><strong>Block</strong> - Administrative block</li>
-                </ul>
-              </li>
-              <li>Village statistics:
-                <ul className="list-disc pl-5 mt-1">
-                  <li><strong>Number of Village</strong> - Total villages in scheme</li>
-                  <li><strong>Total Villages Integrated</strong> - Villages integrated with IoT</li>
-                  <li><strong>No. of Functional Village</strong> - Count of functional villages</li>
-                  <li><strong>No. of Partial Village</strong> - Count of partially functional villages</li>
-                  <li><strong>No. of Non- Functional Village</strong> - Count of non-functional villages</li>
-                  <li><strong>Fully Completed Villages</strong> - Villages with full completion</li>
-                </ul>
-              </li>
-              <li>ESR statistics:
-                <ul className="list-disc pl-5 mt-1">
-                  <li><strong>Total Number of ESR</strong> - Total ESRs in scheme</li>
-                  <li><strong>Total ESR Integrated</strong> - ESRs integrated with IoT</li>
-                  <li><strong>No. Fully Completed ESR</strong> - ESRs with full completion</li>
-                  <li><strong>Balance to Complete ESR</strong> - Remaining ESRs to complete</li>
-                </ul>
-              </li>
-              <li>Component statistics:
-                <ul className="list-disc pl-5 mt-1">
-                  <li><strong>Flow Meters Connected</strong> - Count of flow meters</li>
-                  <li><strong>Pressure Transmitter Connected</strong> - Count of pressure transmitters</li>
-                  <li><strong>Residual Chlorine Analyzer Connected</strong> - Count of RCAs</li>
-                </ul>
-              </li>
-              <li>Status information:
-                <ul className="list-disc pl-5 mt-1">
-                  <li><strong>Scheme Functional Status</strong> - Functional state (Functional, Partial, Non-Functional)</li>
-                  <li><strong>Fully completion Scheme Status</strong> - Overall status (values will be automatically adjusted: "Partial" → "In Progress")</li>
-                </ul>
-              </li>
-            </ul>
-            <p className="mt-2 text-xs italic">Note: You can have one sheet with all regions or separate sheets with region names (Amravati, Nashik, Nagpur, Pune, Konkan, CS, etc.)</p>
-          </AlertDescription>
-        </Alert>
-        
-        <div className="space-y-4">
-          <div className="grid w-full max-w-sm items-center gap-1.5">
-            <Input 
-              type="file" 
-              accept=".xlsx,.xls" 
-              id="excel-file" 
-              onChange={handleFileChange}
-              disabled={importMutation.isPending}
-              className="cursor-pointer"
-            />
-            <p className="text-xs text-gray-500">
-              Select the updated Excel file with scheme data
-            </p>
-          </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="excel" className="flex items-center">
+              <FileSpreadsheet className="h-4 w-4 mr-2" />
+              Excel (with headers)
+            </TabsTrigger>
+            <TabsTrigger value="csv" className="flex items-center">
+              <FileText className="h-4 w-4 mr-2" />
+              CSV (no headers)
+            </TabsTrigger>
+          </TabsList>
           
-          {file && (
-            <div className="flex items-center px-3 py-1 text-sm rounded-md bg-green-50 text-green-700 border border-green-200 max-w-sm">
-              <FileSpreadsheet className="h-4 w-4 mr-2 text-green-500" />
-              <span className="truncate">{file.name}</span>
-              <span className="ml-2 text-xs text-green-500">
-                ({(file.size / 1024).toFixed(1)} KB)
-              </span>
-            </div>
-          )}
-
-          <Button
-            onClick={handleUpload}
-            disabled={!file || importMutation.isPending || validating}
-            className="w-full sm:w-auto"
-          >
-            {importMutation.isPending ? (
-              <>
-                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                Uploading...
-              </>
-            ) : validating ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Validating Excel...
-              </>
-            ) : (
-              <>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload and Process Excel
-              </>
-            )}
-          </Button>
-          
-          {validationDetails && validationDetails.isValid && !uploadSuccess && !uploadError && (
-            <Alert className="bg-green-50 border-green-200">
-              <CheckCircle className="h-4 w-4 text-green-500" />
-              <AlertTitle className="text-green-800">Excel File Validated</AlertTitle>
-              <AlertDescription className="text-green-700 text-sm">
-                {validationDetails.message}
+          <TabsContent value="excel">
+            <Alert className="bg-blue-50 border-blue-200">
+              <Info className="h-4 w-4 text-blue-500" />
+              <AlertTitle className="text-blue-800">Excel Format Requirements</AlertTitle>
+              <AlertDescription className="text-blue-700">
+                <p className="mb-2">The Excel file should match the standard template with these columns:</p>
+                <ul className="list-disc pl-5 text-sm space-y-1">
+                  <li>Basic information:
+                    <ul className="list-disc pl-5 mt-1">
+                      <li><strong>Sr No.</strong> - Serial number</li>
+                      <li><strong>Scheme ID</strong> - Required for identifying schemes</li>
+                      <li><strong>Scheme Name</strong> - Name of the water scheme</li>
+                    </ul>
+                  </li>
+                  <li>Location hierarchy:
+                    <ul className="list-disc pl-5 mt-1">
+                      <li><strong>Region</strong> - Main region (Amravati, Nashik, Nagpur, Pune, etc.)</li>
+                      <li><strong>Circle</strong> - Administrative circle</li>
+                      <li><strong>Division</strong> - Administrative division</li>
+                      <li><strong>Sub Division</strong> - Administrative sub-division</li>
+                      <li><strong>Block</strong> - Administrative block</li>
+                    </ul>
+                  </li>
+                  <li>Village statistics:
+                    <ul className="list-disc pl-5 mt-1">
+                      <li><strong>Number of Village</strong> - Total villages in scheme</li>
+                      <li><strong>Total Villages Integrated</strong> - Villages integrated with IoT</li>
+                      <li><strong>No. of Functional Village</strong> - Count of functional villages</li>
+                      <li><strong>No. of Partial Village</strong> - Count of partially functional villages</li>
+                      <li><strong>No. of Non- Functional Village</strong> - Count of non-functional villages</li>
+                      <li><strong>Fully Completed Villages</strong> - Villages with full completion</li>
+                    </ul>
+                  </li>
+                  <li>ESR statistics:
+                    <ul className="list-disc pl-5 mt-1">
+                      <li><strong>Total Number of ESR</strong> - Total ESRs in scheme</li>
+                      <li><strong>Total ESR Integrated</strong> - ESRs integrated with IoT</li>
+                      <li><strong>No. Fully Completed ESR</strong> - ESRs with full completion</li>
+                      <li><strong>Balance to Complete ESR</strong> - Remaining ESRs to complete</li>
+                    </ul>
+                  </li>
+                  <li>Component statistics:
+                    <ul className="list-disc pl-5 mt-1">
+                      <li><strong>Flow Meters Connected</strong> - Count of flow meters</li>
+                      <li><strong>Pressure Transmitter Connected</strong> - Count of pressure transmitters</li>
+                      <li><strong>Residual Chlorine Analyzer Connected</strong> - Count of RCAs</li>
+                    </ul>
+                  </li>
+                  <li>Status information:
+                    <ul className="list-disc pl-5 mt-1">
+                      <li><strong>Scheme Functional Status</strong> - Functional state (Functional, Partial, Non-Functional)</li>
+                      <li><strong>Fully completion Scheme Status</strong> - Overall status (values will be automatically adjusted: "Partial" → "In Progress")</li>
+                    </ul>
+                  </li>
+                </ul>
+                <p className="mt-2 text-xs italic">Note: You can have one sheet with all regions or separate sheets with region names (Amravati, Nashik, Nagpur, Pune, Konkan, CS, etc.)</p>
               </AlertDescription>
             </Alert>
-          )}
-          
-          {uploadError && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Upload Failed</AlertTitle>
-              <AlertDescription>{uploadError}</AlertDescription>
-            </Alert>
-          )}
-          
-          {uploadSuccess && importDetails && (
-            <Alert variant="default" className="bg-green-50 border-green-200 text-green-800">
-              <div className="flex-col space-y-2">
-                <div className="flex items-center">
-                  <svg className="h-5 w-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                  </svg>
-                  <AlertTitle className="text-green-800">Import Successful</AlertTitle>
-                </div>
-                <AlertDescription>
-                  <p>{importDetails.message}</p>
-                  <Accordion type="single" collapsible className="mt-2">
-                    <AccordionItem value="details">
-                      <AccordionTrigger className="text-sm font-medium text-green-700">View Details</AccordionTrigger>
-                      <AccordionContent>
-                        <div className="text-sm">
-                          <p><span className="font-medium">Total Updated:</span> {importDetails.updatedCount} schemes</p>
-                          {importDetails.schemasProcessed && importDetails.schemasProcessed.length > 0 && (
-                            <div className="mt-2">
-                              <p className="font-medium">Processed Scheme IDs:</p>
-                              <div className="max-h-24 overflow-y-auto mt-1 p-2 bg-white/50 rounded border border-green-100 text-xs">
-                                {importDetails.schemasProcessed.slice(0, 20).map((id: string, index: number) => (
-                                  <span key={index} className="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded bg-green-100 text-green-800">
-                                    {id}
-                                  </span>
-                                ))}
-                                {importDetails.schemasProcessed.length > 20 && (
-                                  <span className="text-green-600 italic">
-                                    ...and {importDetails.schemasProcessed.length - 20} more
-                                  </span>
-                                )}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </AccordionContent>
-                    </AccordionItem>
-                  </Accordion>
-                </AlertDescription>
+            
+            <div className="space-y-4">
+              <div className="grid w-full max-w-sm items-center gap-1.5">
+                <Input 
+                  type="file" 
+                  accept=".xlsx,.xls" 
+                  id="excel-file" 
+                  onChange={handleFileChange}
+                  disabled={importMutation.isPending}
+                  className="cursor-pointer"
+                />
+                <p className="text-xs text-gray-500">
+                  Select the updated Excel file with scheme data
+                </p>
               </div>
+              
+              {file && (
+                <div className="flex items-center px-3 py-1 text-sm rounded-md bg-green-50 text-green-700 border border-green-200 max-w-sm">
+                  <FileSpreadsheet className="h-4 w-4 mr-2 text-green-500" />
+                  <span className="truncate">{file.name}</span>
+                  <span className="ml-2 text-xs text-green-500">
+                    ({(file.size / 1024).toFixed(1)} KB)
+                  </span>
+                </div>
+              )}
+
+              <Button
+                onClick={handleUpload}
+                disabled={!file || importMutation.isPending || validating}
+                className="w-full sm:w-auto"
+              >
+                {importMutation.isPending ? (
+                  <>
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Uploading...
+                  </>
+                ) : validating ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Validating Excel...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="h-4 w-4 mr-2" />
+                    Upload and Process Excel
+                  </>
+                )}
+              </Button>
+              
+              {validationDetails && validationDetails.isValid && !uploadSuccess && !uploadError && (
+                <Alert className="bg-green-50 border-green-200">
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                  <AlertTitle className="text-green-800">Excel File Validated</AlertTitle>
+                  <AlertDescription className="text-green-700 text-sm">
+                    {validationDetails.message}
+                  </AlertDescription>
+                </Alert>
+              )}
+              
+              {uploadError && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Upload Failed</AlertTitle>
+                  <AlertDescription>{uploadError}</AlertDescription>
+                </Alert>
+              )}
+              
+              {uploadSuccess && importDetails && (
+                <Alert variant="default" className="bg-green-50 border-green-200 text-green-800">
+                  <div className="flex-col space-y-2">
+                    <div className="flex items-center">
+                      <svg className="h-5 w-5 mr-2 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                      </svg>
+                      <AlertTitle className="text-green-800">Import Successful</AlertTitle>
+                    </div>
+                    <AlertDescription>
+                      <p>{importDetails.message}</p>
+                      <Accordion type="single" collapsible className="mt-2">
+                        <AccordionItem value="details">
+                          <AccordionTrigger className="text-sm font-medium text-green-700">View Details</AccordionTrigger>
+                          <AccordionContent>
+                            <div className="text-sm">
+                              <p><span className="font-medium">Total Updated:</span> {importDetails.updatedCount} schemes</p>
+                              {importDetails.schemasProcessed && importDetails.schemasProcessed.length > 0 && (
+                                <div className="mt-2">
+                                  <p className="font-medium">Processed Scheme IDs:</p>
+                                  <div className="max-h-24 overflow-y-auto mt-1 p-2 bg-white/50 rounded border border-green-100 text-xs">
+                                    {importDetails.schemasProcessed.slice(0, 20).map((id: string, index: number) => (
+                                      <span key={index} className="inline-block px-1.5 py-0.5 mr-1 mb-1 rounded bg-green-100 text-green-800">
+                                        {id}
+                                      </span>
+                                    ))}
+                                    {importDetails.schemasProcessed.length > 20 && (
+                                      <span className="text-green-600 italic">
+                                        ...and {importDetails.schemasProcessed.length - 20} more
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </AccordionContent>
+                        </AccordionItem>
+                      </Accordion>
+                    </AlertDescription>
+                  </div>
+                </Alert>
+              )}
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="csv">
+            <Alert className="bg-blue-50 border-blue-200 mb-4">
+              <Info className="h-4 w-4 text-blue-500" />
+              <AlertTitle className="text-blue-800">CSV Import Information</AlertTitle>
+              <AlertDescription className="text-blue-700">
+                <p className="mb-2">Upload CSV files without headers by mapping columns to database fields:</p>
+                <ul className="list-disc pl-5 text-sm space-y-1">
+                  <li>CSV data should be properly formatted with consistent delimiters</li>
+                  <li>Map each column from your CSV to the corresponding database field</li>
+                  <li><strong>Region Name</strong> is required but can be set as a default if all schemes belong to the same region</li>
+                  <li>Numeric fields should contain only numbers (commas will be automatically removed)</li>
+                </ul>
+              </AlertDescription>
             </Alert>
-          )}
-        </div>
+            
+            <Tabs defaultValue="upload" className="space-y-4">
+              <TabsList>
+                <TabsTrigger value="upload">Upload & Map</TabsTrigger>
+                <TabsTrigger value="preview">Preview</TabsTrigger>
+                {uploadResult && <TabsTrigger value="result">Result</TabsTrigger>}
+              </TabsList>
+              
+              <TabsContent value="upload">
+                <form onSubmit={handleCsvSubmit} className="space-y-6">
+                  <div className="space-y-2">
+                    <Label htmlFor="region-select">Default Region (Optional)</Label>
+                    <Select 
+                      value={regionName} 
+                      onValueChange={setRegionName}
+                    >
+                      <SelectTrigger id="region-select">
+                        <SelectValue placeholder="Select region" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No default region</SelectItem>
+                        {regions.map(region => (
+                          <SelectItem key={region.value} value={region.value}>
+                            {region.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-sm text-muted-foreground">
+                      If set, this region will be used for records that don't have a region specified in the CSV.
+                    </p>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Label htmlFor="file-upload">Upload CSV File</Label>
+                    <Input
+                      id="file-upload"
+                      type="file"
+                      accept=".csv"
+                      onChange={handleCsvFileChange}
+                    />
+                    <p className="text-sm text-muted-foreground">
+                      Upload a CSV file without headers to import data.
+                    </p>
+                  </div>
+                  
+                  {csvFile && (
+                    <>
+                      <div className="space-y-2">
+                        <Label htmlFor="column-count">Number of Columns</Label>
+                        <Input
+                          id="column-count"
+                          type="number"
+                          min={1}
+                          max={30}
+                          value={columnCount}
+                          onChange={(e) => setColumnCount(parseInt(e.target.value) || 1)}
+                        />
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h3 className="text-lg font-medium">Column Mapping</h3>
+                        <p className="text-sm text-muted-foreground">
+                          Map each database field to a specific column in your CSV file.
+                        </p>
+                        
+                        <div className="grid gap-4">
+                          {schemeFields.map((field) => (
+                            <div key={field.value} className="grid grid-cols-2 gap-4 items-center">
+                              <span className="text-sm font-medium">{field.label}</span>
+                              <Select
+                                value={columnMappings[field.value]?.toString()}
+                                onValueChange={(value) => 
+                                  handleColumnMappingChange(field.value, parseInt(value))
+                                }
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select column" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="">Not mapped</SelectItem>
+                                  {columnOptions.map((col) => (
+                                    <SelectItem key={col.value} value={col.value}>
+                                      {col.label}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="pt-4">
+                        <Button type="submit" disabled={!csvFile || isUploading}>
+                          {isUploading ? <><Spinner className="mr-2" /> Importing Data...</> : 'Import Data'}
+                        </Button>
+                      </div>
+                    </>
+                  )}
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="preview">
+                {previewData.length > 0 ? (
+                  <div className="overflow-x-auto border rounded">
+                    <table className="w-full border-collapse">
+                      <thead>
+                        <tr>
+                          {Array.from({ length: Math.max(...previewData.map(row => row.length)) }, (_, i) => (
+                            <th key={i} className="px-4 py-2 bg-muted text-left text-xs font-medium text-muted-foreground">
+                              Column {i + 1}
+                            </th>
+                          ))}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {previewData.map((row, rowIndex) => (
+                          <tr key={rowIndex} className={rowIndex % 2 === 0 ? "bg-white" : "bg-muted/50"}>
+                            {row.map((cell, cellIndex) => (
+                              <td key={cellIndex} className="border px-4 py-2 text-sm">
+                                {cell}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="p-4 text-center">
+                    <p className="text-muted-foreground">Upload a file to preview its contents</p>
+                  </div>
+                )}
+              </TabsContent>
+              
+              {uploadResult && (
+                <TabsContent value="result">
+                  <div className="space-y-4">
+                    <div className="p-4 bg-green-50 border border-green-200 rounded-md">
+                      <h3 className="font-medium text-green-800">{uploadResult.message}</h3>
+                    </div>
+                    
+                    {uploadResult.details && (
+                      <div className="p-4 bg-muted rounded-md">
+                        <h4 className="font-medium mb-2">Import Details</h4>
+                        <pre className="text-xs overflow-auto p-2 bg-muted/50 rounded h-[200px]">
+                          {uploadResult.details}
+                        </pre>
+                      </div>
+                    )}
+                  </div>
+                </TabsContent>
+              )}
+            </Tabs>
+          </TabsContent>
+        </Tabs>
       </CardContent>
       <CardFooter className="bg-gray-50 text-xs text-gray-500 rounded-b-lg py-3">
-        Existing schemes will be updated with new values from the Excel file.
+        Existing schemes will be updated with new values from the file.
         Scheme status values will be automatically updated (Partial → In Progress).
       </CardFooter>
     </Card>

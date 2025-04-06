@@ -5,7 +5,7 @@ import { FileUp, CheckCircle2, X } from 'lucide-react';
 
 interface FileUploadProps {
   onFileUpload: (file: File) => Promise<void>;
-  acceptedFileTypes?: string;
+  acceptTypes?: string;
   maxSizeMB?: number;
   buttonText?: string;
   uploading: boolean;
@@ -15,7 +15,7 @@ interface FileUploadProps {
 
 export default function FileUpload({
   onFileUpload,
-  acceptedFileTypes = ".xlsx,.xls",
+  acceptTypes = ".xlsx,.xls",
   maxSizeMB = 5,
   buttonText = "Upload File",
   uploading,
@@ -31,12 +31,12 @@ export default function FileUpload({
   const validateFile = (file: File): string | null => {
     // Check file type
     const fileType = file.name.split('.').pop()?.toLowerCase();
-    const validTypes = acceptedFileTypes.split(',').map(type => 
+    const validTypes = acceptTypes.split(',').map(type => 
       type.trim().replace('.', '').toLowerCase()
     );
     
     if (!fileType || !validTypes.includes(fileType)) {
-      return `File type not supported. Please upload ${acceptedFileTypes} files only.`;
+      return `File type not supported. Please upload ${acceptTypes} files only.`;
     }
     
     // Check file size
@@ -148,7 +148,7 @@ export default function FileUpload({
                 ref={fileInputRef}
                 type="file"
                 className="hidden"
-                accept={acceptedFileTypes}
+                accept={acceptTypes}
                 onChange={handleFileChange}
               />
               
@@ -202,7 +202,7 @@ export default function FileUpload({
                       <span className="font-medium">Click to upload</span> or drag and drop
                     </p>
                     <p className="text-xs text-gray-500 mt-1">
-                      {acceptedFileTypes.replaceAll('.', '')} files up to {maxSizeMB}MB
+                      {acceptTypes.replaceAll('.', '')} files up to {maxSizeMB}MB
                     </p>
                   </div>
                   <Button
