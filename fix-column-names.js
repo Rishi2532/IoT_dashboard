@@ -351,6 +351,52 @@ async function fixColumnNames() {
         console.log('✅ Added taluka column');
       }
       
+      // Add total_villages_in_scheme column
+      const hasTotalVillagesInScheme = currentColumns.includes('total_villages_in_scheme');
+      
+      if (!hasTotalVillagesInScheme && hasNumberOfVillage) {
+        console.log('🔧 Adding total_villages_in_scheme column that maps to number_of_village...');
+        
+        await client.query(`
+          ALTER TABLE scheme_status 
+          ADD COLUMN total_villages_in_scheme INTEGER GENERATED ALWAYS AS (number_of_village) STORED;
+        `);
+        
+        console.log('✅ Added total_villages_in_scheme as a generated column');
+      } else if (!hasTotalVillagesInScheme) {
+        console.log('🔧 Adding total_villages_in_scheme column with default 0...');
+        
+        await client.query(`
+          ALTER TABLE scheme_status 
+          ADD COLUMN total_villages_in_scheme INTEGER DEFAULT 0;
+        `);
+        
+        console.log('✅ Added total_villages_in_scheme column with default 0');
+      }
+      
+      // Add total_esr_in_scheme column
+      const hasTotalEsrInScheme = currentColumns.includes('total_esr_in_scheme');
+      
+      if (!hasTotalEsrInScheme && hasTotalNumberOfEsr) {
+        console.log('🔧 Adding total_esr_in_scheme column that maps to total_number_of_esr...');
+        
+        await client.query(`
+          ALTER TABLE scheme_status 
+          ADD COLUMN total_esr_in_scheme INTEGER GENERATED ALWAYS AS (total_number_of_esr) STORED;
+        `);
+        
+        console.log('✅ Added total_esr_in_scheme as a generated column');
+      } else if (!hasTotalEsrInScheme) {
+        console.log('🔧 Adding total_esr_in_scheme column with default 0...');
+        
+        await client.query(`
+          ALTER TABLE scheme_status 
+          ADD COLUMN total_esr_in_scheme INTEGER DEFAULT 0;
+        `);
+        
+        console.log('✅ Added total_esr_in_scheme column with default 0');
+      }
+      
       // Verify fixes
       console.log('\n🔍 Verifying fixes...');
       
@@ -367,7 +413,8 @@ async function fixColumnNames() {
       const requiredColumns = [
         'total_villages', 'villages', 'scheme_status', 'total_esr', 'esr_integrated',
         'fully_completed_esr', 'balance_esr', 'villages_integrated', 'scheme_functional_status',
-        'residual_chlorine_connected', 'district', 'taluka', 'agency'
+        'residual_chlorine_connected', 'district', 'taluka', 'agency',
+        'total_villages_in_scheme', 'total_esr_in_scheme'
       ];
       
       const missingColumns = requiredColumns.filter(col => !updatedColumns.includes(col));
