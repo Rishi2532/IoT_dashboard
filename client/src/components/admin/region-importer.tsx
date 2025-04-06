@@ -318,7 +318,7 @@ export default function RegionImporter() {
                                   <SelectValue placeholder="Select column" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">Not mapped</SelectItem>
+                                  <SelectItem value="not_mapped">Not mapped</SelectItem>
                                   {columnOptions.map((col) => (
                                     <SelectItem key={col.value} value={col.value}>
                                       {col.label}

@@ -28,7 +28,10 @@ import CsvImporter from '@/components/admin/csv-importer';
 export default function AdminDashboard() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState('region-import');
-
+  
+  // Remove CSV Importer component import to match user request
+  // We will only use the existing region and scheme importers with their CSV functionality
+  
   // Logout mutation
   const logoutMutation = useMutation({
     mutationFn: async () => {
@@ -152,18 +155,14 @@ export default function AdminDashboard() {
 
         <div className="px-6">
           <Tabs defaultValue="region-import" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-2 mb-6">
               <TabsTrigger value="region-import" className="flex items-center">
                 <Database className="h-4 w-4 mr-2" />
                 Import Region Data
               </TabsTrigger>
               <TabsTrigger value="scheme-import" className="flex items-center">
                 <FileUp className="h-4 w-4 mr-2" />
-                Import Scheme Excel
-              </TabsTrigger>
-              <TabsTrigger value="csv-import" className="flex items-center">
-                <FileText className="h-4 w-4 mr-2" />
-                Import CSV (No Headers)
+                Import Scheme Data
               </TabsTrigger>
             </TabsList>
             
@@ -173,10 +172,6 @@ export default function AdminDashboard() {
             
             <TabsContent value="scheme-import" className="mt-0">
               <SchemeImporter />
-            </TabsContent>
-            
-            <TabsContent value="csv-import" className="mt-0">
-              <CsvImporter />
             </TabsContent>
           </Tabs>
         </div>

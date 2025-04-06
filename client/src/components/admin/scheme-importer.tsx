@@ -528,7 +528,7 @@ export default function SchemeImporter() {
                         <SelectValue placeholder="Select region" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="">No default region</SelectItem>
+                        <SelectItem value="no_region">No default region</SelectItem>
                         {regions.map(region => (
                           <SelectItem key={region.value} value={region.value}>
                             {region.label}
@@ -588,7 +588,7 @@ export default function SchemeImporter() {
                                   <SelectValue placeholder="Select column" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                  <SelectItem value="">Not mapped</SelectItem>
+                                  <SelectItem value="not_mapped">Not mapped</SelectItem>
                                   {columnOptions.map((col) => (
                                     <SelectItem key={col.value} value={col.value}>
                                       {col.label}

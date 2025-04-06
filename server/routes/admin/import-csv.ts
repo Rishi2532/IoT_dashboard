@@ -14,13 +14,18 @@ export async function importCsvHandler(req: Request, res: Response) {
     }
     
     // Extract column mappings and region from request body
-    const { columnMappings, regionName, tableName } = req.body;
+    let { columnMappings, regionName, tableName } = req.body;
     
     if (!columnMappings || !tableName) {
       return res.status(400).json({ 
         message: "Missing required parameters", 
         details: "Column mappings and table name are required" 
       });
+    }
+    
+    // Handle 'no_region' value from SelectItem to actual null/empty value
+    if (regionName === 'no_region') {
+      regionName = null;
     }
     
     // Read CSV data from the uploaded file
@@ -53,7 +58,7 @@ export async function importCsvHandler(req: Request, res: Response) {
 /**
  * Parse CSV data using provided column mappings
  */
-function parseCsvData(csvData: string, columnMappings: Record<string, number>): any[] {
+function parseCsvData(csvData: string, columnMappings: Record<string, string | number>): any[] {
   // Parse the CSV into records (array of arrays)
   const records = parse(csvData, {
     skip_empty_lines: true,
@@ -65,9 +70,20 @@ function parseCsvData(csvData: string, columnMappings: Record<string, number>): 
     const mappedRecord: Record<string, any> = {};
     
     // Apply each column mapping
-    for (const [fieldName, columnIndex] of Object.entries(columnMappings)) {
-      if (columnIndex >= 0 && columnIndex < row.length) {
-        mappedRecord[fieldName] = parseFieldValue(fieldName, row[columnIndex]);
+    for (const [fieldName, columnIndexValue] of Object.entries(columnMappings)) {
+      // Skip "not_mapped" values that were added to fix the SelectItem empty value error
+      if (columnIndexValue === "not_mapped") {
+        mappedRecord[fieldName] = null;
+        continue;
+      }
+      
+      // Convert columnIndex to number if it's a string representation of a number
+      const colIndex = typeof columnIndexValue === 'string' ? 
+                        parseInt(columnIndexValue) : columnIndexValue;
+      
+      // Check if colIndex is a valid number and within row bounds
+      if (!isNaN(colIndex) && colIndex >= 0 && colIndex < row.length) {
+        mappedRecord[fieldName] = parseFieldValue(fieldName, row[colIndex]);
       } else {
         mappedRecord[fieldName] = null; // Set null for unmapped columns
       }
