@@ -189,10 +189,31 @@ function extractValue(row, field, mapping) {
     if (!status || status === '') return 'Not-Connected';
     
     // Map status values to standardized format
-    if (status.toLowerCase().includes('full')) return 'Fully-Completed';
-    if (status.toLowerCase().includes('partial')) return 'In Progress';
-    if (status.toLowerCase().includes('progress')) return 'In Progress';
-    if (status.toLowerCase().includes('function')) return 'In Progress';
+    const statusMap = {
+      'completed': 'Fully Completed',
+      'fully completed': 'Fully Completed',
+      'fully-completed': 'Fully Completed',
+      'partial': 'Partial',
+      'in progress': 'In Progress',
+      'functional': 'Functional',
+      'non functional': 'Non Functional',
+      'non-functional': 'Non Functional',
+      'not connected': 'Not-Connected'
+    };
+    
+    // Try exact match first
+    const lowerStatus = status.toLowerCase();
+    if (statusMap[lowerStatus]) {
+      return statusMap[lowerStatus];
+    }
+    
+    // Then try patterns
+    if (lowerStatus.includes('full') && lowerStatus.includes('complet')) return 'Fully Completed';
+    if (lowerStatus.includes('partial')) return 'Partial';
+    if (lowerStatus.includes('progress')) return 'In Progress';
+    if (lowerStatus.includes('function') && !lowerStatus.includes('non')) return 'Functional';
+    if ((lowerStatus.includes('non') || lowerStatus.includes('not')) && lowerStatus.includes('function')) 
+      return 'Non Functional';
     
     return status;
   }

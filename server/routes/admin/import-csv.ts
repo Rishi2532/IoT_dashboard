@@ -106,6 +106,22 @@ function parseFieldValue(fieldName: string, value: string): any {
       fieldName === 'scheme_id' || fieldName === 'district' || 
       fieldName === 'implementing_agency') {
     return String(value).trim();
+  } else if (fieldName === 'scheme_status') {
+    // Handle scheme_status specially - keep the original text values
+    const trimmedValue = String(value).trim();
+    
+    // Map common status values to standardized ones
+    const statusMap: Record<string, string> = {
+      'completed': 'Fully Completed',
+      'in progress': 'In Progress',
+      'functional': 'Functional',
+      'non functional': 'Non Functional',
+      'non-functional': 'Non Functional',
+      'partial': 'Partial'
+    };
+    
+    // Return mapped value if it exists, otherwise return the original value
+    return statusMap[trimmedValue.toLowerCase()] || trimmedValue;
   } else if (fieldName.includes('date')) {
     // Try to parse as date if it looks like a date
     const dateValue = new Date(value);
@@ -128,7 +144,8 @@ function parseBoolean(value: string): boolean {
          lowerValue === 'true' || 
          lowerValue === '1' || 
          lowerValue === 'y' || 
-         lowerValue === 'completed';
+         lowerValue === 'completed' || 
+         lowerValue === 'fully completed';
 }
 
 /**
