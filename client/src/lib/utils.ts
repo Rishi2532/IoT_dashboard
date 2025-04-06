@@ -15,17 +15,32 @@ export function calculatePercentage(value: number | undefined | null, total: num
   return Number(((value / total) * 100).toFixed(2));
 }
 
-export type SchemeCompletionStatus = 'Fully-Completed' | 'Completed' | 'In Progress' | 'Partial' | 'Not-Connected';
+export type SchemeCompletionStatus = 'Fully-Completed' | 'Fully Completed' | 'Completed' | 'In Progress' | 'Partial' | 'Not-Connected' | 'Non Functional' | string;
 
 export function getStatusColorClass(status: SchemeCompletionStatus): string {
+  if (!status) return 'bg-neutral-50 text-neutral-600';
+  
+  const statusLower = status.toLowerCase();
+  
+  if (statusLower.includes('fully') || statusLower === 'completed' || statusLower === 'fully completed') {
+    return 'bg-green-100 text-green-800';
+  } else if (statusLower.includes('progress') || statusLower === 'partial') {
+    return 'bg-yellow-100 text-yellow-800';
+  } else if (statusLower.includes('not') || statusLower.includes('non')) {
+    return 'bg-red-100 text-red-800';
+  }
+  
+  // Handle special explicit cases
   switch (status) {
     case 'Fully-Completed':
+    case 'Fully Completed':
     case 'Completed':
       return 'bg-green-100 text-green-800';
     case 'In Progress':
     case 'Partial':
       return 'bg-yellow-100 text-yellow-800';
     case 'Not-Connected':
+    case 'Non Functional':
       return 'bg-red-100 text-red-800';
     default:
       return 'bg-neutral-50 text-neutral-600';
@@ -53,20 +68,20 @@ export function getStatusDisplayName(status: SchemeCompletionStatus): string {
   }
 }
 
-// Function to get agency based on region name
+// Function to get agency based on region name with proper M/s formatting (small 's')
 export function getAgencyByRegion(regionName: string | null | undefined): string {
   if (!regionName) return 'N/A';
   
   switch (regionName) {
     case 'Nagpur':
     case 'Chhatrapati Sambhajinagar':
-      return 'M/S Rite Water';
+      return 'M/s Rite Water';
     case 'Pune':
     case 'Konkan':
-      return 'M/S Indo/Chetas';
+      return 'M/s Indo/Chetas';
     case 'Nashik':
     case 'Amravati':
-      return 'M/S Ceinsys';
+      return 'M/s Ceinsys';
     default:
       return 'N/A';
   }

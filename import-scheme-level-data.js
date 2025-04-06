@@ -223,6 +223,33 @@ function extractValue(row, field, mapping) {
 }
 
 /**
+ * Get the agency name for a region according to business rules
+ * @param {String} regionName - The region name
+ * @returns {String} The agency name
+ */
+function getAgencyByRegion(regionName) {
+  if (!regionName) return null;
+  
+  // Correctly format agency name with small 's' in 'M/s'
+  switch (regionName.trim()) {
+    case 'Amravati':
+      return 'M/s Ceinsys';
+    case 'Nashik':
+      return 'M/s Ceinsys';
+    case 'Nagpur':
+      return 'M/s Rite Water';
+    case 'Chhatrapati Sambhajinagar':
+      return 'M/s Rite Water';
+    case 'Pune':
+      return 'M/s Indo/Chetas';
+    case 'Konkan':
+      return 'M/s Indo/Chetas';
+    default:
+      return null;
+  }
+}
+
+/**
  * Detect region from sheet name using predefined patterns
  * @param {String} sheetName - Name of the Excel sheet
  * @returns {String|null} Detected region name or null if not found
@@ -426,7 +453,8 @@ async function processExcelFile(filePath) {
             flow_meters_connected: extractValue(row, 'flow_meters_connected', columnMapping),
             pressure_transmitters_connected: extractValue(row, 'pressure_transmitters_connected', columnMapping),
             residual_chlorine_connected: extractValue(row, 'residual_chlorine_connected', columnMapping),
-            scheme_status: extractValue(row, 'scheme_status', columnMapping)
+            scheme_status: extractValue(row, 'scheme_status', columnMapping),
+            agency: getAgencyByRegion(regionName)
           };
           
           // Skip if we don't have a scheme name or if it looks like a header row
@@ -506,8 +534,9 @@ async function processExcelFile(filePath) {
                 flow_meters_connected = $19,
                 pressure_transmitters_connected = $20,
                 residual_chlorine_connected = $21,
-                scheme_status = $22
-              WHERE scheme_id = $23
+                scheme_status = $22,
+                agency = $23
+              WHERE scheme_id = $24
             `, [
               schemeData.sr_no,
               schemeData.scheme_name,
@@ -531,6 +560,7 @@ async function processExcelFile(filePath) {
               schemeData.pressure_transmitters_connected,
               schemeData.residual_chlorine_connected,
               schemeData.scheme_status,
+              schemeData.agency,
               schemeData.scheme_id
             ]);
             
@@ -562,8 +592,9 @@ async function processExcelFile(filePath) {
                 flow_meters_connected,
                 pressure_transmitters_connected,
                 residual_chlorine_connected,
-                scheme_status
-              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
+                scheme_status,
+                agency
+              ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
             `, [
               schemeData.sr_no,
               schemeData.scheme_id,
@@ -587,7 +618,8 @@ async function processExcelFile(filePath) {
               schemeData.flow_meters_connected,
               schemeData.pressure_transmitters_connected,
               schemeData.residual_chlorine_connected,
-              schemeData.scheme_status
+              schemeData.scheme_status,
+              schemeData.agency
             ]);
             
             totalCreated++;
@@ -640,7 +672,11 @@ async function updateRegionSummaries() {
         total_villages_integrated: schemes.reduce((sum, scheme) => sum + (scheme.villages_integrated || 0), 0),
         fully_completed_villages: schemes.reduce((sum, scheme) => sum + (scheme.fully_completed_villages || 0), 0),
         total_schemes_integrated: schemes.length,
-        fully_completed_schemes: schemes.filter(s => s.scheme_status === 'Fully-Completed').length,
+        fully_completed_schemes: schemes.filter(s => {
+          // Match any variant of 'Fully Completed'
+          const status = (s.scheme_status || '').toLowerCase();
+          return status.includes('fully') || status === 'completed' || status === 'fully completed';
+        }).length,
         flow_meter_integrated: schemes.reduce((sum, scheme) => sum + (scheme.flow_meters_connected || 0), 0),
         rca_integrated: schemes.reduce((sum, scheme) => sum + (scheme.residual_chlorine_connected || 0), 0),
         pressure_transmitter_integrated: schemes.reduce((sum, scheme) => sum + (scheme.pressure_transmitters_connected || 0), 0)
