@@ -41,9 +41,9 @@ export default function MaharashtraMap({
     
     let percentage = 0;
     
-    // Helper function to handle null/undefined values
+    // Helper function to handle null/undefined/zero values
     const getValue = (value: any) => {
-      if (value === null || value === undefined || value === 'null') return 0;
+      if (value === null || value === undefined || value === 'null' || value === '' || value === '0') return 0;
       return parseInt(value) || 0;
     };
 
@@ -571,7 +571,7 @@ export default function MaharashtraMap({
         const getMetricValue = () => {
           // Make sure to replace 'null' with '0' for any metrics
           const formatValue = (value: any) => {
-            if (value === null || value === undefined || value === 'null') return "0";
+            if (value === null || value === undefined || value === 'null' || value === '' || value === '0' || parseInt(value) === 0) return "0";
             return value.toString();
           };
 

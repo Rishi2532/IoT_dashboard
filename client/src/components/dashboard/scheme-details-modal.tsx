@@ -139,11 +139,13 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                         ? 'bg-orange-100 text-orange-800' 
                         : 'bg-red-100 text-red-800'
                   }`}>
-                    {scheme.scheme_functional_status === 'false' || scheme.scheme_functional_status === false 
-                      ? 'Partial' 
-                      : scheme.scheme_functional_status === 'true' || scheme.scheme_functional_status === true 
-                        ? 'Functional' 
-                        : scheme.scheme_functional_status || (scheme.scheme_status === 'Fully-Completed' ? 'Functional' : 'Partial')}
+                    {typeof scheme.scheme_functional_status === 'string' 
+                      ? scheme.scheme_functional_status
+                      : scheme.scheme_functional_status === true || scheme.scheme_functional_status === 'true'
+                        ? 'Functional'
+                        : scheme.scheme_functional_status === false || scheme.scheme_functional_status === 'false'
+                          ? 'Partial'
+                          : (scheme.scheme_status === 'Fully-Completed' ? 'Functional' : 'Partial')}
                   </span>
                 </p>
               </div>
