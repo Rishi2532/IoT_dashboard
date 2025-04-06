@@ -41,14 +41,14 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-3xl bg-white border-2 border-blue-100 rounded-xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-3xl bg-white border-2 border-blue-100 rounded-xl max-h-[90vh] overflow-y-auto mt-16">
         <DialogHeader className="bg-blue-50 -mx-6 -mt-6 mb-2 px-4 py-3 rounded-t-xl border-b border-blue-100">
           <DialogTitle className="text-md font-semibold text-blue-800">
-            <span className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span className="flex items-center break-words">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
               </svg>
-              {scheme.scheme_name}
+              <span className="break-all">{scheme.scheme_name}</span>
             </span>
           </DialogTitle>
         </DialogHeader>
@@ -139,7 +139,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                         ? 'bg-yellow-100 text-yellow-800' 
                         : 'bg-red-100 text-red-800'
                   }`}>
-                    {scheme.scheme_functional_status || 'Unknown'}
+                    {scheme.scheme_functional_status || (scheme.scheme_status === 'Fully-Completed' ? 'Functional' : 'Partial')}
                   </span>
                 </p>
               </div>

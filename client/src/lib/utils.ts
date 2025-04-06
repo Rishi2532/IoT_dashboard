@@ -74,6 +74,7 @@ export function getAgencyByRegion(regionName: string | null | undefined): string
   
   switch (regionName) {
     case 'Nagpur':
+      return 'M/s Rite';
     case 'Chhatrapati Sambhajinagar':
       return 'M/s Rite Water';
     case 'Pune':

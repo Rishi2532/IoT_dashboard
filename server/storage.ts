@@ -490,7 +490,28 @@ export class PostgresStorage implements IStorage {
       // Add new updates to today's updates
       if (updates.length > 0) {
         console.log(`Adding ${updates.length} new updates`);
-        todayUpdates = [...updates, ...todayUpdates];
+        // When there are specific region updates in the global todayUpdates variable, prioritize them
+        if ((global as any).todayUpdates && (global as any).todayUpdates.length > 0) {
+          // Extract region-specific updates (they have region property not equal to "All Regions")
+          const regionSpecificUpdates = (global as any).todayUpdates.filter((update: any) => 
+            update.region && update.region !== "All Regions"
+          );
+          
+          // Add region-specific updates at the beginning for higher visibility
+          todayUpdates = [...regionSpecificUpdates, ...updates, ...todayUpdates];
+          
+          // Clear the global variable after we've processed them
+          (global as any).todayUpdates = [];
+          console.log(`Added ${regionSpecificUpdates.length} region-specific updates to the top of today's updates`);
+        } else {
+          todayUpdates = [...updates, ...todayUpdates];
+        }
+      } else if ((global as any).todayUpdates && (global as any).todayUpdates.length > 0) {
+        // If we have region updates but no general updates, still process them
+        const regionSpecificUpdates = (global as any).todayUpdates;
+        todayUpdates = [...regionSpecificUpdates, ...todayUpdates];
+        (global as any).todayUpdates = [];
+        console.log(`Added ${regionSpecificUpdates.length} region-specific updates to today's updates`);
       }
       
       // Store current state in the database
