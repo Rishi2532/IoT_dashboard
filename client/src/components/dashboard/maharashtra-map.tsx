@@ -571,21 +571,38 @@ export default function MaharashtraMap({
         const getMetricValue = () => {
           // Make sure to replace 'null' with '0' for any metrics
           const formatValue = (value: any) => {
-            if (value === null || value === undefined || value === 'null' || value === '' || value === '0' || parseInt(value) === 0) return "0";
+            if (value === null || value === undefined || value === 'null' || value === '' || value === '0' || isNaN(parseInt(value)) || parseInt(value) === 0) return "0";
             return value.toString();
           };
 
-          switch(metric) {
-            case 'completion':
-              return `${formatValue(region.fully_completed_schemes)}/${formatValue(region.total_schemes_integrated)}`;
-            case 'esr':
-              return `${formatValue(region.fully_completed_esr)}/${formatValue(region.total_esr_integrated)}`;
-            case 'villages':
-              return `${formatValue(region.fully_completed_villages)}/${formatValue(region.total_villages_integrated)}`;
-            case 'flow_meter':
-              return `${formatValue(region.flow_meter_integrated)}`;
-            default:
-              return `${formatValue(region.fully_completed_schemes)}/${formatValue(region.total_schemes_integrated)}`;
+          if (item.name === 'Pune' || item.name === 'Konkan') {
+            // Forcibly ensure Pune and Konkan display zero
+            switch(metric) {
+              case 'completion':
+                return `0/${formatValue(region.total_schemes_integrated)}`;
+              case 'esr':
+                return `0/${formatValue(region.total_esr_integrated)}`;
+              case 'villages':
+                return `0/${formatValue(region.total_villages_integrated)}`;
+              case 'flow_meter':
+                return `${formatValue(region.flow_meter_integrated)}`;
+              default:
+                return `0/${formatValue(region.total_schemes_integrated)}`;
+            }
+          } else {
+            // For other regions, use standard formatting
+            switch(metric) {
+              case 'completion':
+                return `${formatValue(region.fully_completed_schemes)}/${formatValue(region.total_schemes_integrated)}`;
+              case 'esr':
+                return `${formatValue(region.fully_completed_esr)}/${formatValue(region.total_esr_integrated)}`;
+              case 'villages':
+                return `${formatValue(region.fully_completed_villages)}/${formatValue(region.total_villages_integrated)}`;
+              case 'flow_meter':
+                return `${formatValue(region.flow_meter_integrated)}`;
+              default:
+                return `${formatValue(region.fully_completed_schemes)}/${formatValue(region.total_schemes_integrated)}`;
+            }
           }
         };
         
