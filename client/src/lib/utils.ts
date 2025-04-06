@@ -22,10 +22,10 @@ export function getStatusColorClass(status: SchemeCompletionStatus): string {
   
   const statusLower = status.toLowerCase();
   
-  if (statusLower.includes('fully') || statusLower === 'completed' || statusLower === 'fully completed') {
+  if (statusLower.includes('fully') || statusLower === 'completed' || statusLower === 'fully completed' || statusLower === 'functional') {
     return 'bg-green-100 text-green-800';
   } else if (statusLower.includes('progress') || statusLower === 'partial') {
-    return 'bg-yellow-100 text-yellow-800';
+    return 'bg-orange-100 text-orange-800';
   } else if (statusLower.includes('not') || statusLower.includes('non')) {
     return 'bg-red-100 text-red-800';
   }
@@ -35,10 +35,11 @@ export function getStatusColorClass(status: SchemeCompletionStatus): string {
     case 'Fully-Completed':
     case 'Fully Completed':
     case 'Completed':
+    case 'Functional':
       return 'bg-green-100 text-green-800';
     case 'In Progress':
     case 'Partial':
-      return 'bg-yellow-100 text-yellow-800';
+      return 'bg-orange-100 text-orange-800';
     case 'Not-Connected':
     case 'Non Functional':
       return 'bg-red-100 text-red-800';
@@ -63,6 +64,8 @@ export function getStatusDisplayName(status: SchemeCompletionStatus): string {
     case 'partial':
     case 'in progress':
       return 'In Progress';
+    case 'functional':
+      return 'Functional';
     default:
       return cleanStatus;
   }
@@ -74,7 +77,7 @@ export function getAgencyByRegion(regionName: string | null | undefined): string
   
   switch (regionName) {
     case 'Nagpur':
-      return 'M/s Rite';
+      return 'M/s Rite Water';
     case 'Chhatrapati Sambhajinagar':
       return 'M/s Rite Water';
     case 'Pune':

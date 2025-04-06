@@ -136,7 +136,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
                     scheme.scheme_functional_status === 'Functional' 
                       ? 'bg-green-100 text-green-800' 
                       : scheme.scheme_functional_status === 'Partial' || scheme.scheme_functional_status === 'In Progress'
-                        ? 'bg-yellow-100 text-yellow-800' 
+                        ? 'bg-orange-100 text-orange-800' 
                         : 'bg-red-100 text-red-800'
                   }`}>
                     {scheme.scheme_functional_status || (scheme.scheme_status === 'Fully-Completed' ? 'Functional' : 'Partial')}

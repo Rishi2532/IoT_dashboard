@@ -282,10 +282,26 @@ export default function MaharashtraMap({
         animatePulse();
       }
         
-      // Add region name
+      // Get custom position adjustments for each region to prevent overlap
+      const positionAdjustments: Record<string, { x: number, y: number }> = {
+        "Nagpur": { x: 0, y: -15 },
+        "Amravati": { x: 0, y: -15 },
+        "Chhatrapati Sambhajinagar": { x: 0, y: -20 }, // Move up more
+        "Nashik": { x: 0, y: -15 },
+        "Pune": { x: 0, y: -15 },
+        "Konkan": { x: 0, y: -15 }
+      };
+      
+      // Get the adjustment for this region
+      let adjustment = { x: 0, y: -15 };
+      if (regionName in positionAdjustments) {
+        adjustment = positionAdjustments[regionName as keyof typeof positionAdjustments];
+      }
+      
+      // Add region name (with adjustments)
       svg.append('text')
-        .attr('x', regionData.center[0])
-        .attr('y', regionData.center[1] - 15)
+        .attr('x', regionData.center[0] + adjustment.x)
+        .attr('y', regionData.center[1] + adjustment.y)
         .attr('text-anchor', 'middle')
         .attr('font-size', '14px')
         .attr('font-weight', 'bold')
@@ -294,8 +310,8 @@ export default function MaharashtraMap({
         .text(regionName);
         
       svg.append('text')
-        .attr('x', regionData.center[0])
-        .attr('y', regionData.center[1] - 15)
+        .attr('x', regionData.center[0] + adjustment.x)
+        .attr('y', regionData.center[1] + adjustment.y)
         .attr('text-anchor', 'middle')
         .attr('font-size', '14px')
         .attr('font-weight', 'bold')
@@ -539,15 +555,21 @@ export default function MaharashtraMap({
       if (region) {
         // Function to get the right metric value
         const getMetricValue = () => {
+          // Make sure to replace 'null' with '0' for any metrics
+          const formatValue = (value: any) => {
+            if (value === null || value === undefined) return "0";
+            return value.toString();
+          };
+
           switch(metric) {
             case 'esr':
-              return `${region.total_esr_integrated || 0}/${region.fully_completed_esr || 0}`;
+              return `${formatValue(region.total_esr_integrated)}/${formatValue(region.fully_completed_esr)}`;
             case 'villages':
-              return `${region.total_villages_integrated || 0}/${region.fully_completed_villages || 0}`;
+              return `${formatValue(region.total_villages_integrated)}/${formatValue(region.fully_completed_villages)}`;
             case 'flow_meter':
-              return `${region.flow_meter_integrated || 0}`;
+              return `${formatValue(region.flow_meter_integrated)}`;
             default:
-              return `${region.total_esr_integrated || 0}/${region.fully_completed_esr || 0}`;
+              return `${formatValue(region.total_esr_integrated)}/${formatValue(region.fully_completed_esr)}`;
           }
         };
         
