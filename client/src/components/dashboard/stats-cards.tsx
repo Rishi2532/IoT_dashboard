@@ -14,12 +14,16 @@ import {
 interface StatsCardsProps {
   data?: RegionSummary;
   isLoading: boolean;
+  layout?: 'normal' | 'compact';  // Add layout option for different display modes
 }
 
-export default function StatsCards({ data, isLoading }: StatsCardsProps) {
+export default function StatsCards({ data, isLoading, layout = 'normal' }: StatsCardsProps) {
   if (isLoading || !data) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+      <div className={layout === 'compact'
+        ? "grid grid-cols-1 sm:grid-cols-2 gap-4" // Compact layout (2x2 grid)
+        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6" // Normal layout (4 cards in a row)
+      }>
         {[...Array(4)].map((_, i) => (
           <Card
             key={i}
@@ -44,9 +48,8 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
   const completedEsr = data.fully_completed_esr || 0;
   const partialEsr = data.partial_esr || 0;
   const flowMeterIntegrated = data.flow_meter_integrated || 0;
-  const rcaIntegrated = data.rca_integrated || 0;
-  const pressureTransmitterIntegrated =
-    data.pressure_transmitter_integrated || 0;
+  const rcaIntegrated = data.rca_integrated || 0; 
+  const pressureTransmitterIntegrated = data.pressure_transmitter_integrated || 0;
 
   const schemeCompletionPercentage = calculatePercentage(
     completedSchemes,
@@ -59,7 +62,10 @@ export default function StatsCards({ data, isLoading }: StatsCardsProps) {
   const esrCompletionPercentage = calculatePercentage(completedEsr, totalEsr);
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+    <div className={layout === 'compact' 
+      ? "grid grid-cols-2 gap-4 sm:gap-5" // Compact layout
+      : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6" // Normal layout
+    }>
       {/* Total Schemes Card */}
       <Card className="bg-white overflow-hidden border-2 border-blue-200 hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px] rounded-xl">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">

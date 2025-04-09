@@ -118,37 +118,13 @@ export default function GISMaharashtraMap({
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
     
-    // Add white background outline (larger)
+    // Add simple outline for the map (matching reference image)
     L.geoJSON(maharashtraGeoJson, {
       style: {
         fillOpacity: 0,
-        weight: 10,             // Thicker white border first
-        color: '#ffffff',       // Pure white for contrast
-        opacity: 1,
-        lineCap: 'round',
-        lineJoin: 'round'
-      }
-    }).addTo(map);
-    
-    // Add a shadow outline for depth effect
-    L.geoJSON(maharashtraGeoJson, {
-      style: {
-        fillOpacity: 0,
-        weight: 8,
-        color: 'rgba(0,0,0,0.3)', // Shadow color
-        opacity: 1,
-        lineCap: 'round',
-        lineJoin: 'round'
-      }
-    }).addTo(map);
-    
-    // Add main black outline (like the example image)
-    L.geoJSON(maharashtraGeoJson, {
-      style: {
-        fillOpacity: 0,
-        weight: 3,              // Solid black border
-        color: '#000000',
-        opacity: 1,
+        weight: 1.5,            // Thin border 
+        color: '#000000',       // Simple black outline
+        opacity: 0.7,           // Slightly transparent
         lineCap: 'round',
         lineJoin: 'round'
       }
@@ -229,16 +205,15 @@ export default function GISMaharashtraMap({
         const feature = features[0];
         const center = getFeatureCenter(feature);
         
-        // Create custom marker icon (without ESR water tank per requirement)
+        // Create simple marker icon (matching reference image)
         const markerIcon = L.divIcon({
           className: 'custom-marker-icon',
           html: `
-            <div class="marker-pin" style="background-color: #2563eb; border: 1.5px solid white; width: 16px; height: 16px; border-radius: 50%; box-shadow: 0 1px 4px rgba(0,0,0,0.3);">
-              <div style="background-color: #3b82f6; width: 6px; height: 6px; border-radius: 50%; position: absolute; top: 5px; left: 5px; border: 0.5px solid white;"></div>
+            <div class="marker-pin" style="background-color: #2563eb; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);">
             </div>
           `,
-          iconSize: [16, 16],
-          iconAnchor: [8, 8]
+          iconSize: [10, 10],
+          iconAnchor: [5, 5]
         });
         
         // Add marker

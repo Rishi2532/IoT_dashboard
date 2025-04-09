@@ -235,29 +235,12 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Stats Cards with extra spacing and animations */}
-      <div className="mb-4 sm:mb-6 animate-in fade-in duration-500">
-        <StatsCards data={regionSummary} isLoading={isSummaryLoading} />
-      </div>
-
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 gap-4 sm:gap-6 lg:grid-cols-2 mb-4 sm:mb-6">
-        <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all h-full flex flex-col">
+      {/* Map and Stats Cards Layout (Map Left, Cards Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        {/* Map Column (Left) */}
+        <div className="lg:col-span-1 bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all h-full flex flex-col">
           <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
-            Region Comparison
-          </h2>
-          <div className="w-full overflow-x-auto flex-1 flex flex-col">
-            <div className="min-w-[300px] sm:min-w-full flex-1 flex flex-col">
-              <RegionComparisonChart
-                regions={regions || []}
-                isLoading={isRegionsLoading}
-              />
-            </div>
-          </div>
-        </div>
-        <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all h-full flex flex-col">
-          <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
-            Regional Status
+            Maharashtra Regional Status
           </h2>
           <MetricSelector
             value={mapMetric}
@@ -274,6 +257,30 @@ export default function Dashboard() {
                 isLoading={isRegionsLoading || isSummaryLoading}
               />
             </div>
+          </div>
+        </div>
+        
+        {/* Stats Cards Column (Right) */}
+        <div className="lg:col-span-2">
+          <StatsCards 
+            data={regionSummary} 
+            isLoading={isSummaryLoading} 
+            layout="compact" 
+          />
+        </div>
+      </div>
+      
+      {/* Region Comparison Chart (Full Width) */}
+      <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all h-full flex flex-col mb-4 sm:mb-6">
+        <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
+          Region Wise Project Status
+        </h2>
+        <div className="w-full overflow-x-auto flex-1 flex flex-col">
+          <div className="min-w-[300px] sm:min-w-full flex-1 flex flex-col">
+            <RegionComparisonChart
+              regions={regions || []}
+              isLoading={isRegionsLoading}
+            />
           </div>
         </div>
       </div>
