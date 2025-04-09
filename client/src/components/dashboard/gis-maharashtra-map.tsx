@@ -151,7 +151,7 @@ export default function GISMaharashtraMap({
       }
     }).addTo(map);
     
-    // Add GeoJSON data
+    // Add GeoJSON data - with authentic borders only, no colored overlays
     const geoJsonLayer = L.geoJSON(geoJsonData, {
       style: (feature) => {
         if (!feature || !feature.properties) return {};
@@ -160,11 +160,11 @@ export default function GISMaharashtraMap({
         const isSelected = regionName === selectedRegion;
         
         return {
-          fillColor: getColor(regionName),
-          weight: 1.0,          // Thinner borders for districts
-          opacity: 0.9,
-          color: '#333333',     // Darker gray borders
-          fillOpacity: 0.8,     // Slightly transparent to see background map
+          fillColor: 'transparent', // No fill color
+          weight: 0.8,          // Thin borders for districts
+          opacity: 0.7,
+          color: '#555555',     // Light gray borders
+          fillOpacity: 0,       // No fill opacity
           className: 'region-polygon' + (isSelected ? ' region-selected' : '')
         };
       },
@@ -198,10 +198,10 @@ export default function GISMaharashtraMap({
           },
           mouseover: () => {
             polygonLayer.setStyle({
-              weight: 3.5, // Make borders even thicker on hover
-              color: '#000000', // Keep black borders
-              fillOpacity: 0.8, // Slightly reduce opacity on hover for contrast
-              dashArray: '3,3' // Add a dashed line effect on hover
+              weight: 1.2, // Make borders slightly thicker on hover
+              color: '#0066cc', // Blue borders on hover
+              fillOpacity: 0, // Keep transparent fill
+              dashArray: '2,2' // Add a subtle dashed line effect on hover
             });
           },
           mouseout: () => {
@@ -514,14 +514,14 @@ export default function GISMaharashtraMap({
 
       {isLoading ? (
         <div className="space-y-2 flex-1">
-          <Skeleton className="h-full w-full rounded-md" style={{ minHeight: '650px' }} />
+          <Skeleton className="h-full w-full rounded-md" style={{ minHeight: '450px' }} />
         </div>
       ) : (
-        <div className="relative w-full h-full flex-1" style={{ overflow: 'hidden', minHeight: '650px', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '8px', boxShadow: '0 4px 12px rgba(0,0,0,0.08)' }}>
+        <div className="relative w-full h-full flex-1" style={{ overflow: 'hidden', height: '450px', border: '1px solid rgba(0,0,0,0.1)', borderRadius: '8px', boxShadow: '0 2px 6px rgba(0,0,0,0.05)' }}>
           <div 
             ref={mapRef}
             id="maharashtra-gis-map" 
-            className="h-full w-full bg-[#f0f8ff]"
+            className="h-full w-full bg-[#f8f9fa]"
           ></div>
         </div>
       )}

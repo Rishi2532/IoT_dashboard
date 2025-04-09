@@ -21,13 +21,13 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
   if (isLoading || !data) {
     return (
       <div className={layout === 'compact'
-        ? "grid grid-cols-2 gap-4 sm:gap-6" // Compact layout (2x2 grid as shown in example)
-        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6" // Normal layout (4 cards in a row)
+        ? "grid grid-cols-2 gap-4" // Compact layout (2x2 grid as shown in example)
+        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" // Normal layout (4 cards in a row)
       }>
         {[...Array(4)].map((_, i) => (
           <Card
             key={i}
-            className="bg-white overflow-hidden border border-gray-200 shadow-sm rounded-lg"
+            className="bg-white overflow-hidden border border-gray-100 shadow-sm rounded-lg"
           >
             <CardContent className="p-4">
               <div className="h-24 flex items-center justify-center">
@@ -63,11 +63,11 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
 
   return (
     <div className={layout === 'compact' 
-      ? "grid grid-cols-2 gap-4 sm:gap-5" // Compact layout
-      : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6" // Normal layout
+      ? "grid grid-cols-2 gap-4" // Compact layout matching reference image exactly
+      : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" // Normal layout
     }>
       {/* Total Schemes Card */}
-      <Card className="bg-white overflow-hidden border-2 border-blue-200 hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px] rounded-xl">
+      <Card className="bg-white overflow-hidden border border-gray-100 shadow-sm">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-full w-full text-blue-700" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 12h6m-2 2v6m-4-8V4m0 0h16m0 0v8m0-8h4v16H2" />
@@ -140,7 +140,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
       </Card>
 
       {/* Total Villages Card */}
-      <Card className="bg-white overflow-hidden border-2 border-amber-200 hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px] rounded-xl">
+      <Card className="bg-white overflow-hidden border border-gray-100 shadow-sm">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-full w-full text-amber-700" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M3 10l9-7 9 7v11H3z" />
@@ -214,7 +214,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
       </Card>
 
       {/* Total ESR Card */}
-      <Card className="bg-white overflow-hidden border-2 border-purple-200 hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px] rounded-xl">
+      <Card className="bg-white overflow-hidden border border-gray-100 shadow-sm">
         <div className="absolute top-0 right-0 h-24 w-24 sm:h-32 sm:w-32 xl:h-40 xl:w-40" style={{ opacity: 0.15 }}>
           <img src="/images/esr-water-tank.png" alt="ESR" className="h-full w-full text-purple-700 object-contain" />
         </div>
@@ -283,7 +283,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
       </Card>
 
       {/* Infrastructure Components Card */}
-      <Card className="bg-white overflow-hidden border-2 border-emerald-200 hover:shadow-lg transition-all duration-300 hover:translate-y-[-3px] rounded-xl">
+      <Card className="bg-white overflow-hidden border border-gray-100 shadow-sm">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-full w-full text-emerald-700" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="2" y="2" width="20" height="8" rx="2" />
