@@ -27,7 +27,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
         {[...Array(4)].map((_, i) => (
           <Card
             key={i}
-            className="bg-white overflow-hidden border border-gray-100 shadow-sm rounded-lg"
+            className="bg-white overflow-hidden rounded-lg border-0 shadow-sm rounded-lg"
           >
             <CardContent className="p-4">
               <div className="h-24 flex items-center justify-center">
@@ -67,7 +67,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
       : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" // Normal layout
     }>
       {/* Total Schemes Card */}
-      <Card className="bg-white overflow-hidden border border-gray-100 shadow-sm">
+      <Card className="bg-white overflow-hidden rounded-lg border-0 shadow-sm">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-full w-full text-blue-700" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M2 12h6m-2 2v6m-4-8V4m0 0h16m0 0v8m0-8h4v16H2" />
@@ -75,7 +75,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
             <path d="M16 14v4m-2-2h4" />
           </svg>
         </div>
-        <CardContent className="p-3 sm:p-4 md:p-6 xl:p-8">
+        <CardContent className="p-4">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg p-2 sm:p-3 xl:p-4 shadow-md">
               <GitBranchPlus className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 xl:h-7 xl:w-7 text-white" />
@@ -140,7 +140,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
       </Card>
 
       {/* Total Villages Card */}
-      <Card className="bg-white overflow-hidden border border-gray-100 shadow-sm">
+      <Card className="bg-white overflow-hidden rounded-lg border-0 shadow-sm">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-full w-full text-amber-700" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path d="M3 10l9-7 9 7v11H3z" />
@@ -149,7 +149,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
             <path d="M19 21v-6h-4v6" />
           </svg>
         </div>
-        <CardContent className="p-3 sm:p-4 md:p-6 xl:p-8">
+        <CardContent className="p-4">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-gradient-to-br from-amber-500 to-amber-600 rounded-lg p-2 sm:p-3 xl:p-4 shadow-md">
               <Home className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 xl:h-7 xl:w-7 text-white" />
@@ -214,11 +214,11 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
       </Card>
 
       {/* Total ESR Card */}
-      <Card className="bg-white overflow-hidden border border-gray-100 shadow-sm">
+      <Card className="bg-white overflow-hidden rounded-lg border-0 shadow-sm">
         <div className="absolute top-0 right-0 h-24 w-24 sm:h-32 sm:w-32 xl:h-40 xl:w-40" style={{ opacity: 0.15 }}>
           <img src="/images/esr-water-tank.png" alt="ESR" className="h-full w-full text-purple-700 object-contain" />
         </div>
-        <CardContent className="p-3 sm:p-4 md:p-6 xl:p-8">
+        <CardContent className="p-4">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg p-0.5 sm:p-1 xl:p-1.5 shadow-md flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 xl:w-14 xl:h-14">
               <img src="/images/esr-water-tank.png" alt="ESR Tank" className="h-9 w-9 sm:h-10 sm:w-10 md:h-11 md:w-11 xl:h-12 xl:w-12 object-contain" />
@@ -283,7 +283,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
       </Card>
 
       {/* Infrastructure Components Card */}
-      <Card className="bg-white overflow-hidden border border-gray-100 shadow-sm">
+      <Card className="bg-white overflow-hidden rounded-lg border-0 shadow-sm">
         <div className="absolute top-0 right-0 h-16 w-16 sm:h-20 sm:w-20 xl:h-24 xl:w-24 opacity-10">
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-full w-full text-emerald-700" fill="none" stroke="currentColor" strokeWidth="1.5">
             <rect x="2" y="2" width="20" height="8" rx="2" />
@@ -296,7 +296,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
             <line x1="14" y1="18" x2="18" y2="18" strokeLinecap="round" />
           </svg>
         </div>
-        <CardContent className="p-3 sm:p-4 md:p-6 xl:p-8">
+        <CardContent className="p-4">
           <div className="flex items-center">
             <div className="flex-shrink-0 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg p-2 sm:p-3 xl:p-4 shadow-md">
               <Cpu className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 xl:h-7 xl:w-7 text-white" />

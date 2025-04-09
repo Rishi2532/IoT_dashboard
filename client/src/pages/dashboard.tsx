@@ -237,11 +237,11 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Map and Stats Cards Layout (Map Left, Cards Right) - Adjusted to 45:55 ratio */}
-      <div className="grid grid-cols-1 lg:grid-cols-20 gap-4 sm:gap-6 mb-4 sm:mb-6">
+      {/* Map and Stats Cards Layout (Map Left, Cards Right) - Exactly matching reference image */}
+      <div className="flex flex-col lg:flex-row gap-4 mb-4">
         {/* Map Column (Left) - 45% width */}
-        <div className="lg:col-span-9 bg-white p-3 sm:p-5 rounded-lg border shadow-sm h-full flex flex-col">
-          <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
+        <div className="lg:w-[45%] bg-white p-4 rounded-lg border-0 h-full flex flex-col">
+          <h2 className="text-base font-medium mb-3 text-blue-800">
             Maharashtra Regional Status
           </h2>
           <div className="mb-3">
@@ -264,8 +264,8 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* Stats Cards Column (Right) - 55% width */}
-        <div className="lg:col-span-11">
+        {/* Stats Cards Area (Right) - 55% width with 2x2 grid layout */}
+        <div className="lg:w-[55%]">
           <StatsCards 
             data={regionSummary} 
             isLoading={isSummaryLoading} 
