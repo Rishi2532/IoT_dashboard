@@ -119,9 +119,9 @@ export default function GISMaharashtraMap({
     
     // Create the map centered on Maharashtra
     const map = L.map(mapRef.current, {
-      center: [18.5, 76], // Maharashtra's approximate center
-      zoom: 6.5,
-      minZoom: 6,    // Prevent zooming out too far
+      center: [19.0, 76.5], // Maharashtra's center adjusted to show all regions properly
+      zoom: 7,
+      minZoom: 6.5,    // Prevent zooming out too far 
       maxZoom: 9,    // Allow moderate zoom in for detailed view
       zoomControl: false, // We'll add custom zoom controls
       attributionControl: false,
@@ -129,8 +129,8 @@ export default function GISMaharashtraMap({
       wheelDebounceTime: 40, // Make wheel zooming more responsive
       wheelPxPerZoomLevel: 40, 
       maxBounds: L.latLngBounds(
-        L.latLng(14.5, 72.5),  // Southwest coordinates
-        L.latLng(22.5, 82.5)   // Northeast coordinates
+        L.latLng(15.5, 72.5),  // Southwest coordinates - adjusted to focus on Maharashtra
+        L.latLng(22.5, 81.5)   // Northeast coordinates - adjusted to focus on Maharashtra
       ),  // Set bounds to Maharashtra state area only
     });
     
@@ -225,15 +225,15 @@ export default function GISMaharashtraMap({
         const feature = features[0];
         const center = getFeatureCenter(feature);
         
-        // Create simple marker icon (matching reference image)
+        // Create region marker - with colors matching the reference image but without outer circles
         const markerIcon = L.divIcon({
           className: 'custom-marker-icon',
           html: `
-            <div class="marker-pin" style="background-color: #2563eb; width: 10px; height: 10px; border-radius: 50%; box-shadow: 0 1px 2px rgba(0,0,0,0.2);">
+            <div class="marker-pin" style="background-color: ${getColor(regionName)}; width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 1px 1px rgba(0,0,0,0.15);">
             </div>
           `,
-          iconSize: [10, 10],
-          iconAnchor: [5, 5]
+          iconSize: [8, 8],
+          iconAnchor: [4, 4]
         });
         
         // Add marker

@@ -7,24 +7,30 @@ export interface RegionSummary {
   total_esr_in_scheme?: number;
   total_esr_integrated?: number;
   fully_completed_esr?: number;
+  partial_esr?: number; // Added to match schema and fix TypeScript error
   total_villages_in_scheme?: number;
   total_villages_integrated?: number;
   fully_completed_villages?: number;
   flow_meter_integrated?: number;
+  rca_integrated?: number; // Added to match schema and fix TypeScript error
+  pressure_transmitter_integrated?: number; // Added to match schema and fix TypeScript error
   updated_at?: string;
 }
 
 // Region data with metrics
 export interface Region {
   region_name: string;
-  region_id?: string;
+  region_id?: string | number;
   total_schemes_integrated: number;
   fully_completed_schemes: number;
   total_esr_integrated: number;
   fully_completed_esr: number;
+  partial_esr?: number;
   total_villages_integrated: number;
   fully_completed_villages: number;
   flow_meter_integrated: number;
+  rca_integrated?: number;
+  pressure_transmitter_integrated?: number;
   updated_at?: string;
 }
 

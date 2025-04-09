@@ -730,10 +730,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
             total_schemes_integrated: Number(row['Total Schemes Integrated'] || 0),
             fully_completed_schemes: Number(row['Fully Completed Schemes'] || 0),
             // Get flow meter values from Excel or use stored values as fallback
-            // Use explicit Number conversion with fallback when the value doesn't exist or conversion gives NaN
-            flow_meter_integrated: isNaN(Number(row['Flow Meter Integrated'])) ? (storedValues ? storedValues.flow_meter_integrated : 0) : Number(row['Flow Meter Integrated']),
-            rca_integrated: isNaN(Number(row['RCA Integrated'])) ? (storedValues ? storedValues.rca_integrated : 0) : Number(row['RCA Integrated']),
-            pressure_transmitter_integrated: isNaN(Number(row['Pressure Transmitter Integrated'])) ? (storedValues ? storedValues.pressure_transmitter_integrated : 0) : Number(row['Pressure Transmitter Integrated'])
+            // Check for 'Flow meter Integrated' (with lowercase 'm') as specified by the user
+            flow_meter_integrated: isNaN(Number(row['Flow meter Integrated'] || row['Flow Meter Integrated'])) 
+              ? (storedValues ? storedValues.flow_meter_integrated : 0) 
+              : Number(row['Flow meter Integrated'] || row['Flow Meter Integrated']),
+            // Check for RCA values
+            rca_integrated: isNaN(Number(row['RCA Integrated'])) 
+              ? (storedValues ? storedValues.rca_integrated : 0) 
+              : Number(row['RCA Integrated']),
+            // Check for pressure transmitter values
+            pressure_transmitter_integrated: isNaN(Number(row['Pressure Transmitter Integrated'])) 
+              ? (storedValues ? storedValues.pressure_transmitter_integrated : 0) 
+              : Number(row['Pressure Transmitter Integrated'])
           };
           
           if (!regionData.region_name) {

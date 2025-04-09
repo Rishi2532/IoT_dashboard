@@ -237,22 +237,20 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Enhanced Map and Stats Cards Layout (Map Left, Cards Right) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
-        {/* Map Column (Left) */}
-        <div className="lg:col-span-1 bg-gradient-to-b from-white to-blue-50 p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all h-full flex flex-col">
-          <div className="flex justify-between items-center mb-3 sm:mb-4">
-            <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center">
-              <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
-              Maharashtra Regional Status
-            </h2>
-            <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Interactive</span>
+      {/* Map and Stats Cards Layout (Map Left, Cards Right) */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 mb-4 sm:mb-6">
+        {/* Map Column (Left) - With more width (3/4) */}
+        <div className="lg:col-span-3 bg-white p-3 sm:p-5 rounded-lg border shadow-sm h-full flex flex-col">
+          <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
+            Maharashtra Regional Status
+          </h2>
+          <div className="mb-3">
+            <MetricSelector
+              value={mapMetric}
+              onChange={setMapMetric}
+            />
           </div>
-          <MetricSelector
-            value={mapMetric}
-            onChange={setMapMetric}
-          />
-          <div className="w-full overflow-x-auto flex-1 mt-2 rounded-lg overflow-hidden">
+          <div className="w-full overflow-x-auto flex-1">
             <div className="min-w-[300px] sm:min-w-full h-full">
               <GISMaharashtraMap
                 regionSummary={regionSummary}
@@ -266,24 +264,13 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* Stats Cards Column (Right) */}
-        <div className="lg:col-span-2">
-          <div className="bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md h-full">
-            <div className="flex justify-between items-center mb-3 sm:mb-4">
-              <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center">
-                <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
-                Key Performance Indicators
-              </h2>
-              <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
-                {selectedRegion === 'all' ? 'All Regions' : selectedRegion}
-              </span>
-            </div>
-            <StatsCards 
-              data={regionSummary} 
-              isLoading={isSummaryLoading} 
-              layout="compact" 
-            />
-          </div>
+        {/* Stats Cards Column (Right) - With narrower width (1/4) */}
+        <div className="lg:col-span-1">
+          <StatsCards 
+            data={regionSummary} 
+            isLoading={isSummaryLoading} 
+            layout="compact" 
+          />
         </div>
       </div>
       

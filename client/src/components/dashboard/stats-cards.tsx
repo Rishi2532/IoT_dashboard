@@ -21,15 +21,15 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
   if (isLoading || !data) {
     return (
       <div className={layout === 'compact'
-        ? "grid grid-cols-1 sm:grid-cols-2 gap-4" // Compact layout (2x2 grid)
+        ? "grid grid-cols-2 gap-4 sm:gap-6" // Compact layout (2x2 grid as shown in example)
         : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6" // Normal layout (4 cards in a row)
       }>
         {[...Array(4)].map((_, i) => (
           <Card
             key={i}
-            className="bg-white overflow-hidden border border-gray-200 shadow-sm hover:shadow-md transition-all"
+            className="bg-white overflow-hidden border border-gray-200 shadow-sm rounded-lg"
           >
-            <CardContent className="p-4 sm:p-5 lg:p-6">
+            <CardContent className="p-4">
               <div className="h-24 flex items-center justify-center">
                 <div className="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
               </div>
