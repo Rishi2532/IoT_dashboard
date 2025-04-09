@@ -187,22 +187,24 @@ export default function Dashboard() {
 
   return (
     <DashboardLayout>
-      {/* Dashboard Header with gradient */}
-      <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-500/10 to-blue-600/5 rounded-lg mb-4 sm:mb-6">
+      {/* Enhanced Dashboard Header with water-themed gradient */}
+      <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-600/20 via-blue-400/15 to-blue-700/10 rounded-lg mb-4 sm:mb-6 shadow-md border border-blue-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
           <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-blue-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-700 to-blue-500">
+            <h1 className="text-2xl sm:text-3xl font-bold text-blue-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-800 via-blue-600 to-blue-500">
               SWSM IoT Project Progress Dashboard
             </h1>
-            <p className="mt-1 sm:mt-2 text-sm text-blue-700/80 font-medium">
-              Integration Dashboard for Jal Jeevan Mission
+            <p className="mt-1 sm:mt-2 text-sm text-blue-700/80 font-medium flex items-center">
+              <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
+              Integration Dashboard for Jal Jeevan Mission 
+              <span className="ml-3 py-0.5 px-2 text-xs bg-blue-100 text-blue-700 rounded-full">Live Data</span>
             </p>
           </div>
           <div className="mt-4 flex sm:mt-0 sm:ml-4 space-x-3">
             <Button
               variant="outline"
               size="sm"
-              className="border-blue-300 hover:bg-blue-50 transition-all text-xs sm:text-sm"
+              className="border-blue-300 hover:bg-blue-50 transition-all text-xs sm:text-sm shadow-sm"
               onClick={handleExport}
             >
               <Download className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
@@ -211,7 +213,7 @@ export default function Dashboard() {
             <Button
               size="sm"
               onClick={handleRefresh}
-              className="bg-blue-600 hover:bg-blue-700 transition-all text-xs sm:text-sm"
+              className="bg-blue-600 hover:bg-blue-700 transition-all text-xs sm:text-sm shadow-sm"
             >
               <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Refresh
@@ -235,18 +237,22 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Map and Stats Cards Layout (Map Left, Cards Right) */}
+      {/* Enhanced Map and Stats Cards Layout (Map Left, Cards Right) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-4 sm:mb-6">
         {/* Map Column (Left) */}
-        <div className="lg:col-span-1 bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all h-full flex flex-col">
-          <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
-            Maharashtra Regional Status
-          </h2>
+        <div className="lg:col-span-1 bg-gradient-to-b from-white to-blue-50 p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all h-full flex flex-col">
+          <div className="flex justify-between items-center mb-3 sm:mb-4">
+            <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center">
+              <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
+              Maharashtra Regional Status
+            </h2>
+            <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full">Interactive</span>
+          </div>
           <MetricSelector
             value={mapMetric}
             onChange={setMapMetric}
           />
-          <div className="w-full overflow-x-auto flex-1">
+          <div className="w-full overflow-x-auto flex-1 mt-2 rounded-lg overflow-hidden">
             <div className="min-w-[300px] sm:min-w-full h-full">
               <GISMaharashtraMap
                 regionSummary={regionSummary}
@@ -262,20 +268,44 @@ export default function Dashboard() {
         
         {/* Stats Cards Column (Right) */}
         <div className="lg:col-span-2">
-          <StatsCards 
-            data={regionSummary} 
-            isLoading={isSummaryLoading} 
-            layout="compact" 
-          />
+          <div className="bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md h-full">
+            <div className="flex justify-between items-center mb-3 sm:mb-4">
+              <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center">
+                <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
+                Key Performance Indicators
+              </h2>
+              <span className="text-xs font-medium px-2 py-1 bg-blue-100 text-blue-700 rounded-full">
+                {selectedRegion === 'all' ? 'All Regions' : selectedRegion}
+              </span>
+            </div>
+            <StatsCards 
+              data={regionSummary} 
+              isLoading={isSummaryLoading} 
+              layout="compact" 
+            />
+          </div>
         </div>
       </div>
       
-      {/* Region Comparison Chart (Full Width) */}
-      <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm hover:shadow-md transition-all h-full flex flex-col mb-4 sm:mb-6">
-        <h2 className="text-base sm:text-lg font-medium mb-3 sm:mb-4 text-blue-800">
-          Region Wise Project Status
-        </h2>
-        <div className="w-full overflow-x-auto flex-1 flex flex-col">
+      {/* Enhanced Region Comparison Chart (Full Width) */}
+      <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all h-full flex flex-col mb-4 sm:mb-6">
+        <div className="flex justify-between items-center mb-3 sm:mb-4">
+          <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center">
+            <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
+            Region Wise Project Status
+          </h2>
+          <span className="hidden sm:inline-flex space-x-2 items-center">
+            <span className="flex items-center">
+              <span className="h-3 w-3 rounded-sm bg-blue-500 mr-1"></span>
+              <span className="text-xs text-blue-700">ESR Integration</span>
+            </span>
+            <span className="flex items-center ml-3">
+              <span className="h-3 w-3 rounded-sm bg-green-500 mr-1"></span>
+              <span className="text-xs text-green-700">Village Coverage</span>
+            </span>
+          </span>
+        </div>
+        <div className="w-full overflow-x-auto flex-1 flex flex-col bg-white rounded-lg p-3">
           <div className="min-w-[300px] sm:min-w-full flex-1 flex flex-col">
             <RegionComparisonChart
               regions={regions || []}
@@ -285,16 +315,24 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Schemes Table with title and styling */}
-      <div className="bg-white p-3 sm:p-5 rounded-lg border shadow-sm mb-4 sm:mb-6">
-        <h2 className="text-base sm:text-lg font-medium mb-2 sm:mb-4 text-blue-800">
-          Water Scheme Details
-        </h2>
-        <p className="text-xs sm:text-sm text-neutral-500 mb-3 sm:mb-4">
-          Click on any scheme to view detailed integration status and progress
-          information.
-        </p>
-        <div className="w-full overflow-x-auto">
+      {/* Enhanced Schemes Table with title and styling */}
+      <div className="bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md mb-4 sm:mb-6">
+        <div className="flex justify-between items-center mb-3 sm:mb-4">
+          <div>
+            <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center">
+              <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
+              Water Scheme Details
+            </h2>
+            <p className="text-xs sm:text-sm text-neutral-500 mt-1 sm:mt-2">
+              Click on any scheme to view detailed integration status and progress information
+            </p>
+          </div>
+          <span className="hidden sm:flex items-center text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+            <span className="font-medium">{schemes.length}</span>
+            <span className="ml-1">scheme{schemes.length !== 1 ? 's' : ''} found</span>
+          </span>
+        </div>
+        <div className="w-full overflow-x-auto bg-gradient-to-r from-blue-50/30 via-white to-blue-50/30 rounded-lg p-2">
           <div className="min-w-[650px]">
             <SchemeTable
               schemes={schemes || []}

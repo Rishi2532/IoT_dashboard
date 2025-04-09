@@ -5,11 +5,13 @@ import { Region, RegionSummary } from '@/types';
 import L, { PathOptions } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { 
-  maharashtraGeoJson, 
+  loadMaharashtraGeoJson,
+  simplifiedMaharashtraGeoJson,
   regionColors, 
   regionNames, 
   getFeatureCenter,
   getFeaturesByRegion,
+  getRegionToFeatureMap,
   MaharashtraFeatureProperties 
 } from '@/data/maharashtra-geojson';
 
@@ -88,6 +90,25 @@ export default function GISMaharashtraMap({
     return regionColorMap[regionName] || '#cccccc';
   };
   
+  // State to store the GeoJSON data
+  const [geoJsonData, setGeoJsonData] = useState(simplifiedMaharashtraGeoJson);
+  
+  // Load GeoJSON data
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const data = await loadMaharashtraGeoJson();
+        if (data && data.features && data.features.length > 0) {
+          setGeoJsonData(data);
+        }
+      } catch (error) {
+        console.error('Error loading GeoJSON data:', error);
+      }
+    }
+    
+    loadData();
+  }, []);
+  
   // Initialize map
   useEffect(() => {
     if (isLoading || !mapRef.current) return;
@@ -99,39 +120,39 @@ export default function GISMaharashtraMap({
     // Create the map centered on Maharashtra
     const map = L.map(mapRef.current, {
       center: [18.5, 76], // Maharashtra's approximate center
-      zoom: 7,
-      minZoom: 5,   // Lower minimum zoom to allow zooming out further
-      maxZoom: 10,  // Allow more zoom in for detailed view
+      zoom: 6.5,
+      minZoom: 6,    // Prevent zooming out too far
+      maxZoom: 9,    // Allow moderate zoom in for detailed view
       zoomControl: false, // We'll add custom zoom controls
       attributionControl: false,
-      scrollWheelZoom: true, // Explicitly enable scroll wheel zoom
-      wheelDebounceTime: 40, // Make wheel zooming more responsive (lower value = faster response)
-      wheelPxPerZoomLevel: 40, // Lower value makes it easier to zoom with mouse wheel
+      scrollWheelZoom: true, // Enable scroll wheel zoom
+      wheelDebounceTime: 40, // Make wheel zooming more responsive
+      wheelPxPerZoomLevel: 40, 
       maxBounds: L.latLngBounds(
         L.latLng(14.5, 72.5),  // Southwest coordinates
         L.latLng(22.5, 82.5)   // Northeast coordinates
       ),  // Set bounds to Maharashtra state area only
     });
     
-    // Set light blue tile layer for better visual appeal
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+    // Set a minimal map layer with light colors for better visual focus on the data
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
       attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
     }).addTo(map);
     
-    // Add simple outline for the map (matching reference image)
-    L.geoJSON(maharashtraGeoJson, {
+    // Add simple outline for the map
+    L.geoJSON(geoJsonData, {
       style: {
         fillOpacity: 0,
-        weight: 1.5,            // Thin border 
+        weight: 1.0,            // Thinner outer border 
         color: '#000000',       // Simple black outline
-        opacity: 0.7,           // Slightly transparent
+        opacity: 0.5,           // More transparent
         lineCap: 'round',
         lineJoin: 'round'
       }
     }).addTo(map);
     
     // Add GeoJSON data
-    const geoJsonLayer = L.geoJSON(maharashtraGeoJson, {
+    const geoJsonLayer = L.geoJSON(geoJsonData, {
       style: (feature) => {
         if (!feature || !feature.properties) return {};
         
@@ -140,11 +161,10 @@ export default function GISMaharashtraMap({
         
         return {
           fillColor: getColor(regionName),
-          weight: 2.5,  // Even thicker borders for all regions like in the reference image
-          opacity: 1,
-          color: '#000000',  // Black borders for all regions
-          fillOpacity: 1.0,  // Fully opaque fill colors for all regions
-          // Add outer border glow with a drop shadow effect
+          weight: 1.0,          // Thinner borders for districts
+          opacity: 0.9,
+          color: '#333333',     // Darker gray borders
+          fillOpacity: 0.8,     // Slightly transparent to see background map
           className: 'region-polygon' + (isSelected ? ' region-selected' : '')
         };
       },
@@ -200,7 +220,7 @@ export default function GISMaharashtraMap({
     
     // Add region markers (pins)
     regionNames.forEach(regionName => {
-      const features = getFeaturesByRegion(regionName);
+      const features = getFeaturesByRegion(regionName, geoJsonData);
       if (features.length > 0) {
         const feature = features[0];
         const center = getFeatureCenter(feature);
@@ -477,7 +497,7 @@ export default function GISMaharashtraMap({
         leafletMapRef.current = null;
       }
     };
-  }, [isLoading, regions, selectedRegion, metric, onRegionClick]);
+  }, [isLoading, regions, selectedRegion, metric, onRegionClick, geoJsonData]);
 
   return (
     <div className={`h-full ${isLoading ? "opacity-50" : ""}`}>
