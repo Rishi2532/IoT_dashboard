@@ -43,7 +43,7 @@ export default function Sidebar() {
       </SheetTrigger>
       <SheetContent 
         side="left" 
-        className="w-[250px] p-0 bg-blue-50 border-r border-blue-200 shadow-xl"
+        className="w-[250px] p-0 bg-blue-50 border-r border-blue-200 shadow-xl z-[10000]"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <SheetHeader className="p-4 border-b border-blue-100">
