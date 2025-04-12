@@ -229,17 +229,17 @@ export class PostgresStorage implements IStorage {
     if (statusFilter && statusFilter !== "all") {
       // Handle both "Partial" and "In Progress" as the same filter
       if (statusFilter === "In Progress") {
-        query = query.where(sql`${schemeStatuses.scheme_status} IN ('Partial', 'In Progress')`);
+        query = query.where(sql`${schemeStatuses.fully_completion_scheme_status} IN ('Partial', 'In Progress')`);
       } 
       // Handle Fully Completed status including "completed" and "Completed" values
       else if (statusFilter === "Fully Completed") {
-        query = query.where(sql`LOWER(${schemeStatuses.scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);
+        query = query.where(sql`LOWER(${schemeStatuses.fully_completion_scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);
       } else {
-        query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+        query = query.where(eq(schemeStatuses.fully_completion_scheme_status, statusFilter));
       }
     }
     
-    return query.orderBy(schemeStatuses.region_name, schemeStatuses.scheme_name);
+    return query.orderBy(schemeStatuses.region, schemeStatuses.scheme_name);
   }
 
   async getSchemesByRegion(
@@ -251,7 +251,7 @@ export class PostgresStorage implements IStorage {
     
     // Start with the basic region filter
     let query = db.select().from(schemeStatuses)
-                 .where(eq(schemeStatuses.region_name, regionName));
+                 .where(eq(schemeStatuses.region, regionName));
     
     // Apply scheme_id filter if provided
     if (schemeId) {
@@ -262,13 +262,13 @@ export class PostgresStorage implements IStorage {
     if (statusFilter && statusFilter !== "all") {
       // Handle both "Partial" and "In Progress" as the same filter
       if (statusFilter === "In Progress") {
-        query = query.where(sql`${schemeStatuses.scheme_status} IN ('Partial', 'In Progress')`);
+        query = query.where(sql`${schemeStatuses.fully_completion_scheme_status} IN ('Partial', 'In Progress')`);
       }
       // Handle Fully Completed status including "completed" and "Completed" values
       else if (statusFilter === "Fully Completed") {
-        query = query.where(sql`LOWER(${schemeStatuses.scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);
+        query = query.where(sql`LOWER(${schemeStatuses.fully_completion_scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);
       } else {
-        query = query.where(eq(schemeStatuses.scheme_status, statusFilter));
+        query = query.where(eq(schemeStatuses.fully_completion_scheme_status, statusFilter));
       }
     }
     
@@ -296,22 +296,22 @@ export class PostgresStorage implements IStorage {
       .update(schemeStatuses)
       .set({
         scheme_name: scheme.scheme_name,
-        region_name: scheme.region_name,
-        total_villages: scheme.total_villages,
-        functional_villages: scheme.functional_villages,
-        partial_villages: scheme.partial_villages,
-        non_functional_villages: scheme.non_functional_villages,
+        region: scheme.region,
+        number_of_village: scheme.number_of_village,
+        no_of_functional_village: scheme.no_of_functional_village,
+        no_of_partial_village: scheme.no_of_partial_village,
+        no_of_non_functional_village: scheme.no_of_non_functional_village,
         fully_completed_villages: scheme.fully_completed_villages,
-        villages_integrated: scheme.villages_integrated,
-        total_esr: scheme.total_esr,
-        esr_integrated_on_iot: scheme.esr_integrated_on_iot,
+        total_villages_integrated: scheme.total_villages_integrated,
+        total_number_of_esr: scheme.total_number_of_esr,
+        total_esr_integrated: scheme.total_esr_integrated,
         scheme_functional_status: scheme.scheme_functional_status,
-        fully_completed_esr: scheme.fully_completed_esr,
-        balance_esr: scheme.balance_esr,
+        no_fully_completed_esr: scheme.no_fully_completed_esr,
+        balance_to_complete_esr: scheme.balance_to_complete_esr,
         flow_meters_connected: scheme.flow_meters_connected,
-        pressure_transmitters_connected: scheme.pressure_transmitters_connected,
-        residual_chlorine_connected: scheme.residual_chlorine_connected,
-        scheme_status: scheme.scheme_status
+        pressure_transmitter_connected: scheme.pressure_transmitter_connected,
+        residual_chlorine_analyzer_connected: scheme.residual_chlorine_analyzer_connected,
+        fully_completion_scheme_status: scheme.fully_completion_scheme_status
       })
       .where(eq(schemeStatuses.scheme_id, scheme.scheme_id));
 
@@ -399,7 +399,7 @@ export class PostgresStorage implements IStorage {
         villages: regionsData.reduce((sum: number, region: any) => sum + (region.total_villages_integrated || 0), 0),
         esr: regionsData.reduce((sum: number, region: any) => sum + (region.total_esr_integrated || 0), 0),
         completedSchemes: allSchemes.filter(scheme => {
-          const status = scheme.scheme_status?.toLowerCase() || '';
+          const status = scheme.fully_completion_scheme_status?.toLowerCase() || '';
           return status === 'fully-completed' || status === 'completed' || status === 'fully completed';
         }).length,
         flowMeters: regionsData.reduce((sum: number, region: any) => sum + (region.flow_meter_integrated || 0), 0),
