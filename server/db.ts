@@ -209,27 +209,27 @@ export async function initializeDatabase() {
         "rca_integrated" INTEGER,
         "pressure_transmitter_integrated" INTEGER
       );
+CREATE TABLE IF NOT EXISTS "scheme_status" (
+  "sr_no" SERIAL PRIMARY KEY,
+  "region" TEXT,
+  "scheme_id" TEXT, 
+  "scheme_name" TEXT NOT NULL,
+  "number_of_village" INTEGER,
+  "no_of_functional_village" INTEGER,
+  "no_of_partial_village" INTEGER,
+  "no_of_non_functional_village" INTEGER,
+  "fully_completed_villages" INTEGER,
+  "total_number_of_esr" INTEGER,
+  "scheme_functional_status" TEXT,
+  "no_fully_completed_esr" INTEGER,
+  "balance_to_complete_esr" INTEGER,
+  "flow_meters_connected" INTEGER,
+  "pressure_transmitter_connected" INTEGER,
+  "residual_chlorine_analyzer_connected" INTEGER,
+  "fully_completion_scheme_status" TEXT
+ 
+);
 
-      CREATE TABLE IF NOT EXISTS "scheme_status" (
-        "sr_no" SERIAL PRIMARY KEY,
-        "region_name" TEXT,
-        "scheme_id" TEXT, 
-        "scheme_name" TEXT NOT NULL,
-        "total_villages" INTEGER,
-        "functional_villages" INTEGER,
-        "partial_villages" INTEGER,
-        "non_functional_villages" INTEGER,
-        "fully_completed_villages" INTEGER,
-        "total_esr" INTEGER,
-        "scheme_functional_status" TEXT,
-        "fully_completed_esr" INTEGER,
-        "balance_esr" INTEGER,
-        "flow_meters_connected" INTEGER,
-        "pressure_transmitters_connected" INTEGER,
-        "residual_chlorine_connected" INTEGER,
-        "scheme_status" TEXT,
-        "agency" TEXT
-      );
 
       CREATE TABLE IF NOT EXISTS "users" (
         "id" SERIAL PRIMARY KEY,

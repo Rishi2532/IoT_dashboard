@@ -102,7 +102,7 @@ function parseFieldValue(fieldName: string, value: string): any {
   }
   
   // Apply specific parsing rules based on field name patterns
-  if (fieldName === 'region_name' || fieldName === 'scheme_name' || 
+  if (fieldName === 'region' || fieldName === 'scheme_name' || 
       fieldName === 'scheme_id' || fieldName === 'district' || 
       fieldName === 'implementing_agency') {
     return String(value).trim();
@@ -206,7 +206,7 @@ async function updateDatabaseRecords(
           const regionAgencyMap: Record<string, string> = {
             'Amravati': 'M/s Ceinsys',
             'Nashik': 'M/s Ceinsys',
-            'Nagpur': 'M/s Rite',
+            'Nagpur': 'M/s Rite Water',
             'Chhatrapati Sambhajinagar': 'M/s Rite Water',
             'Konkan': 'M/s Indo/Chetas',
             'Pune': 'M/s Indo/Chetas'
