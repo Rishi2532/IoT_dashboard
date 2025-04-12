@@ -23,37 +23,10 @@ export async function getDB() {
         pool = require("./pg-adapter.cjs");
         console.log("PostgreSQL pool imported from default adapter with DATABASE_URL");
       } 
-      // Check if this is a local environment (VS Code) by checking for specific folder paths
-      else if (
-        process.cwd().includes("\\") ||
-        process.cwd().includes("OneDrive") ||
-        process.cwd().includes("Users")
-      ) {
-        try {
-          // Try to dynamically import ESM local-adapter.js
-          import("./local-adapter.js").then(module => {
-            pool = module.default;
-            console.log("PostgreSQL pool imported from local adapter (ESM)");
-          }).catch(error => {
-            console.error("Failed to import ESM local adapter, trying CommonJS");
-            try {
-              pool = require("./local-adapter.js");  
-              console.log("PostgreSQL pool imported from local adapter (CommonJS)");
-            } catch (cjsError) {
-              console.error("Failed to import local adapter, falling back to default adapter:", cjsError);
-              pool = require("./pg-adapter.cjs");
-            }
-          });
-        } catch (error) {
-          console.error(
-            "Failed to import local adapter, falling back to default adapter:",
-            error,
-          );
-          pool = require("./pg-adapter.cjs");
-        }
-      } else {
+      // In Replit environment, we always use the PostgreSQL adapter
+      else {
+        console.log("Using the default PostgreSQL adapter");
         pool = require("./pg-adapter.cjs");
-        console.log("PostgreSQL pool imported from default adapter without DATABASE_URL");
       }
 
       // Create drizzle instance with the pool
@@ -209,34 +182,56 @@ export async function initializeDatabase() {
         "rca_integrated" INTEGER,
         "pressure_transmitter_integrated" INTEGER
       );
-CREATE TABLE IF NOT EXISTS "scheme_status" (
-  "sr_no" SERIAL PRIMARY KEY,
-  "region" TEXT,
-  "scheme_id" TEXT, 
-  "scheme_name" TEXT NOT NULL,
-  "number_of_village" INTEGER,
-  "no_of_functional_village" INTEGER,
-  "no_of_partial_village" INTEGER,
-  "no_of_non_functional_village" INTEGER,
-  "fully_completed_villages" INTEGER,
-  "total_number_of_esr" INTEGER,
-  "scheme_functional_status" TEXT,
-  "no_fully_completed_esr" INTEGER,
-  "balance_to_complete_esr" INTEGER,
-  "flow_meters_connected" INTEGER,
-  "pressure_transmitter_connected" INTEGER,
-  "residual_chlorine_analyzer_connected" INTEGER,
-  "fully_completion_scheme_status" TEXT
- 
-);
+    `);
+    
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "scheme_status" (
+        "sr_no" INTEGER,
+        "scheme_id" TEXT PRIMARY KEY,
+        "region" TEXT,
+        "circle" TEXT,
+        "division" TEXT,
+        "sub_division" TEXT,
+        "block" TEXT,
+        "scheme_name" TEXT NOT NULL,
+        "agency" TEXT,
+        "number_of_village" INTEGER,
+        "total_villages_integrated" INTEGER,
+        "total_villages_in_scheme" INTEGER,
+        "no_of_functional_village" INTEGER,
+        "no_of_partial_village" INTEGER,
+        "no_of_non_functional_village" INTEGER,
+        "fully_completed_villages" INTEGER,
+        "total_number_of_esr" INTEGER,
+        "scheme_functional_status" TEXT,
+        "total_esr_integrated" INTEGER,
+        "no_fully_completed_esr" INTEGER,
+        "balance_to_complete_esr" INTEGER,
+        "flow_meters_connected" INTEGER,
+        "fm_integrated" INTEGER,
+        "pressure_transmitter_connected" INTEGER,
+        "pt_integrated" INTEGER,
+        "residual_chlorine_analyzer_connected" INTEGER,
+        "rca_integrated" INTEGER,
+        "fully_completion_scheme_status" TEXT
+      );
+    `);
 
-
+    await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "users" (
         "id" SERIAL PRIMARY KEY,
         "username" TEXT NOT NULL UNIQUE,
         "password" TEXT NOT NULL,
         "name" TEXT,
         "role" TEXT NOT NULL DEFAULT 'user'
+      );
+    `);
+
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "app_state" (
+        "key" TEXT PRIMARY KEY,
+        "value" JSONB NOT NULL,
+        "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
 
