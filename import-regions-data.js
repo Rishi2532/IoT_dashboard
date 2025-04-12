@@ -58,11 +58,11 @@ async function importFromJson(jsonFilePath) {
     const jsonData = JSON.parse(fs.readFileSync(jsonFilePath, 'utf8'));
     
     // Get all existing schemes from database
-    const existingSchemes = await pool.query('SELECT scheme_id, scheme_name, region_name FROM scheme_status');
+    const existingSchemes = await pool.query('SELECT scheme_id, scheme_name, region FROM scheme_status');
     const existingSchemesMap = {};
     
     existingSchemes.rows.forEach(scheme => {
-      const key = `${scheme.region_name}:${scheme.scheme_name}`;
+      const key = `${scheme.region}:${scheme.scheme_name}`;
       existingSchemesMap[key] = scheme.scheme_id;
     });
     
