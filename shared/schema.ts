@@ -62,32 +62,32 @@ export type Region = typeof regions.$inferSelect;
 export const schemeStatuses = pgTable("scheme_status", {
   sr_no: integer("sr_no"), // Serial number
   scheme_id: text("scheme_id").primaryKey(), // Scheme ID as primary key
-  region_name: text("region_name"), // Region name
+  region: text("region"), // Region name
   circle: text("circle"), // Circle
   division: text("division"), // Division
   sub_division: text("sub_division"), // Sub Division
   block: text("block"), // Block
   scheme_name: text("scheme_name").notNull(), // Scheme Name
   agency: text("agency"), // Agency responsible for the scheme
-  total_villages: integer("total_villages"), // Number of village
-  villages_integrated: integer("villages_integrated"), // Total Villages Integrated
+  number_of_village: integer("number_of_village"), // Number of village
+  total_villages_integrated: integer("total_villages_integrated"), // Total Villages Integrated
   total_villages_in_scheme: integer("total_villages_in_scheme"), // Alternative for total villages
-  functional_villages: integer("functional_villages"), // No. of Functional Village
-  partial_villages: integer("partial_villages"), // No. of Partial Village
-  non_functional_villages: integer("non_functional_villages"), // No. of Non-Functional Village
+  no_of_functional_village: integer("no_of_functional_village"), // No. of Functional Village
+  no_of_partial_village: integer("no_of_partial_village"), // No. of Partial Village
+  no_of_non_functional_village: integer("no_of_non_functional_village"), // No. of Non-Functional Village
   fully_completed_villages: integer("fully_completed_villages"), // Fully completed Villages
-  total_esr: integer("total_esr"), // Total Number of ESR
+  total_number_of_esr: integer("total_number_of_esr"), // Total Number of ESR
   scheme_functional_status: text("scheme_functional_status"), // Scheme Functional Status
-  esr_integrated_on_iot: integer("esr_integrated_on_iot"), // Total ESR Integrated on IoT
-  fully_completed_esr: integer("fully_completed_esr"), // No. Fully Completed ESR
-  balance_esr: integer("balance_esr"), // Balance to Complete ESR
+  total_esr_integrated: integer("total_esr_integrated"), // Total ESR Integrated on IoT
+  no_fully_completed_esr: integer("no_fully_completed_esr"), // No. Fully Completed ESR
+  balance_to_complete_esr: integer("balance_to_complete_esr"), // Balance to Complete ESR
   flow_meters_connected: integer("flow_meters_connected"), // Flow Meters Connected
   fm_integrated: integer("fm_integrated"), // Alternative field for flow meters
-  pressure_transmitters_connected: integer("pressure_transmitters_connected"), // Pressure Transmitter Connected
+  pressure_transmitter_connected: integer("pressure_transmitter_connected"), // Pressure Transmitter Connected
   pt_integrated: integer("pt_integrated"), // Alternative field for pressure transmitters
-  residual_chlorine_connected: integer("residual_chlorine_connected"), // Residual Chlorine Analyzer Connected
+  residual_chlorine_analyzer_connected: integer("residual_chlorine_analyzer_connected"), // Residual Chlorine Analyzer Connected
   rca_integrated: integer("rca_integrated"), // Alternative field for residual chlorine analyzers
-  scheme_status: text("scheme_status"), // Scheme Status (Fully Completion Scheme Status)
+  fully_completion_scheme_status: text("fully_completion_scheme_status"), // Scheme Status (Fully Completion Scheme Status)
 });
 
 export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses);
