@@ -14,14 +14,14 @@ const pool = new Pool({
 
 // Column mappings
 const COLUMN_MAPPINGS = {
-  'Total Villages Integrated': 'villages_integrated_on_iot',
+  'Total Villages Integrated': 'total_villages_integrated',
   'Fully Completed Villages': 'fully_completed_villages',
-  'Total ESR Integrated': 'esr_integrated_on_iot',
-  'No. Fully Completed ESR': 'fully_completed_esr',
+  'Total ESR Integrated': 'total_esr_integrated',
+  'No. Fully Completed ESR': 'no_fully_completed_esr',
   'Flow Meters Connected': 'flow_meters_connected',
-  'Residual Chlorine Analyzer Connected': 'residual_chlorine_connected',
-  'Pressure Transmitter Connected': 'pressure_transmitters_connected',
-  'Fully completion Scheme Status': 'scheme_status',
+  'Residual Chlorine Analyzer Connected': 'residual_chlorine_analyzer_connected',
+  'Pressure Transmitter Connected': 'pressure_transmitter_connected',
+  'Fully completion Scheme Status': 'fully_completion_scheme_status',
 };
 
 // Region name mapping
@@ -100,13 +100,13 @@ async function importRegionData(data, regionName) {
       }
     }
     
-    // Handle special case for scheme_status
-    if (updateData.scheme_status === 'Partial') {
-      updateData.scheme_status = 'In Progress';
+    // Handle special case for fully_completion_scheme_status
+    if (updateData.fully_completion_scheme_status === 'Partial') {
+      updateData.fully_completion_scheme_status = 'In Progress';
     }
     
     // Make sure we have the correct region
-    updateData.region_name = regionName;
+    updateData.region = regionName;
     
     // Skip if no data to update
     if (Object.keys(updateData).length === 0) {
@@ -155,7 +155,7 @@ async function updateRegionSummaries(pool) {
   console.log("Updating region summaries...");
   
   // Update summaries for each region
-  const regions = await pool.query('SELECT region_name FROM region');
+  const regions = await pool.query('SELECT region_id, region_name FROM region');
   
   for (const region of regions.rows) {
     const regionName = region.region_name;
@@ -164,25 +164,25 @@ async function updateRegionSummaries(pool) {
       const schemesQuery = await pool.query(
         `SELECT 
           COUNT(*) AS total_schemes,
-          COUNT(CASE WHEN scheme_status = 'Fully-Completed' THEN 1 END) AS fully_completed_schemes
+          COUNT(CASE WHEN fully_completion_scheme_status = 'Fully-Completed' THEN 1 END) AS fully_completed_schemes
         FROM scheme_status 
-        WHERE region_name = $1`,
+        WHERE region = $1`,
         [regionName]
       );
       
       // Count ESRs and villages
       const countsQuery = await pool.query(
         `SELECT 
-          SUM(esr_integrated_on_iot) AS total_esr_integrated,
-          SUM(fully_completed_esr) AS fully_completed_esr,
-          SUM(esr_integrated_on_iot - fully_completed_esr) AS partial_esr,
-          SUM(villages_integrated_on_iot) AS total_villages_integrated,
+          SUM(total_esr_integrated) AS total_esr_integrated,
+          SUM(no_fully_completed_esr) AS fully_completed_esr,
+          SUM(total_esr_integrated - no_fully_completed_esr) AS partial_esr,
+          SUM(total_villages_integrated) AS total_villages_integrated,
           SUM(fully_completed_villages) AS fully_completed_villages,
           SUM(flow_meters_connected) AS flow_meter_integrated,
-          SUM(residual_chlorine_connected) AS rca_integrated,
-          SUM(pressure_transmitters_connected) AS pressure_transmitter_integrated
+          SUM(residual_chlorine_analyzer_connected) AS rca_integrated,
+          SUM(pressure_transmitter_connected) AS pressure_transmitter_integrated
         FROM scheme_status 
-        WHERE region_name = $1`,
+        WHERE region = $1`,
         [regionName]
       );
       
@@ -203,7 +203,7 @@ async function updateRegionSummaries(pool) {
           flow_meter_integrated = $8,
           rca_integrated = $9,
           pressure_transmitter_integrated = $10
-        WHERE region_name = $11`,
+        WHERE region_id = $11`,
         [
           schemes.total_schemes,
           schemes.fully_completed_schemes,
@@ -215,7 +215,7 @@ async function updateRegionSummaries(pool) {
           counts.flow_meter_integrated || 0,
           counts.rca_integrated || 0,
           counts.pressure_transmitter_integrated || 0,
-          regionName
+          region.region_id
         ]
       );
       
