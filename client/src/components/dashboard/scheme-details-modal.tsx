@@ -13,9 +13,9 @@ interface SchemeDetailsModalProps {
 export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDetailsModalProps) {
   if (!scheme) return null;
 
-  // Handle both old and new field names for backward compatibility
-  const totalVillages = scheme.number_of_village || scheme.total_villages_in_scheme || 0;
-  const villagesIntegrated = scheme.villages_integrated || scheme.villages_integrated_on_iot || 0;
+  // Handle field names from the database
+  const totalVillages = scheme.total_villages_in_scheme || 0;
+  const villagesIntegrated = scheme.villages_integrated_on_iot || 0;
   const totalEsr = scheme.total_esr || 0;
   const esrIntegrated = scheme.esr_integrated_on_iot || 0;
 
