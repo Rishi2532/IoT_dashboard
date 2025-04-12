@@ -147,16 +147,16 @@ async function updateRegionSummaries(client) {
       const schemeStats = await client.query(`
         SELECT 
           COUNT(*) as total_schemes,
-          SUM(CASE WHEN LOWER(scheme_status) IN ('completed', 'fully-completed', 'fully completed') THEN 1 ELSE 0 END) as completed_schemes,
-          SUM(villages_integrated) as total_villages,
+          SUM(CASE WHEN LOWER(fully_completion_scheme_status) IN ('completed', 'fully-completed', 'fully completed') THEN 1 ELSE 0 END) as completed_schemes,
+          SUM(number_of_village) as total_villages,
           SUM(fully_completed_villages) as completed_villages,
-          SUM(esr_integrated_on_iot) as total_esr,
-          SUM(fully_completed_esr) as completed_esr,
+          SUM(total_number_of_esr) as total_esr,
+          SUM(no_fully_completed_esr) as completed_esr,
           SUM(flow_meters_connected) as flow_meters,
-          SUM(residual_chlorine_connected) as rca,
-          SUM(pressure_transmitters_connected) as pt
+          SUM(residual_chlorine_analyzer_connected) as rca,
+          SUM(pressure_transmitter_connected) as pt
         FROM scheme_status 
-        WHERE region_name = $1
+        WHERE region = $1
       `, [regionName]);
       
       if (schemeStats.rows.length > 0) {
@@ -175,7 +175,7 @@ async function updateRegionSummaries(client) {
             flow_meter_integrated = $7,
             rca_integrated = $8,
             pressure_transmitter_integrated = $9
-          WHERE region_name = $10
+          WHERE region_id = $10
         `, [
           stats.total_schemes || 0,
           stats.completed_schemes || 0,
