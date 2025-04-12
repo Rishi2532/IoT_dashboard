@@ -147,7 +147,7 @@ async function processExcel(filePath) {
           schemeData.push({
             scheme_id: String(schemeId),
             scheme_name: String(schemeName),
-            region_name: extractedRegion,
+            region: extractedRegion,
             total_villages: totalVillages,
             functional_villages: functionalVillages,
             partial_villages: partialVillages,
@@ -242,11 +242,11 @@ async function importSchemesToDatabase() {
     // Create a single prepared statement for better performance
     const insertStmt = `
       INSERT INTO scheme_status (
-        scheme_id, scheme_name, region_name, total_villages, functional_villages,
-        partial_villages, non_functional_villages, fully_completed_villages,
-        total_esr, scheme_functional_status, fully_completed_esr, balance_esr,
-        flow_meters_connected, pressure_transmitters_connected, residual_chlorine_connected,
-        scheme_status, agency
+        scheme_id, scheme_name, region, number_of_village, no_of_functional_village,
+        no_of_partial_village, no_of_non_functional_village, fully_completed_villages,
+        total_number_of_esr, scheme_functional_status, no_fully_completed_esr, balance_to_complete_esr,
+        flow_meters_connected, pressure_transmitter_connected, residual_chlorine_analyzer_connected,
+        fully_completion_scheme_status, agency
       ) VALUES (
         $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
       )
@@ -256,7 +256,7 @@ async function importSchemesToDatabase() {
     for (const scheme of schemeData) {
       try {
         await pool.query(insertStmt, [
-          scheme.scheme_id, scheme.scheme_name, scheme.region_name,
+          scheme.scheme_id, scheme.scheme_name, scheme.region,
           scheme.total_villages, scheme.functional_villages,
           scheme.partial_villages, scheme.non_functional_villages,
           scheme.fully_completed_villages, scheme.total_esr,
@@ -290,26 +290,27 @@ async function updateRegionSummaries(pool) {
   
   try {
     // Get all the regions
-    const regionsResult = await pool.query('SELECT region_name FROM region');
-    const regions = regionsResult.rows.map(row => row.region_name);
+    const regionsResult = await pool.query('SELECT region_id, region_name FROM region');
+    const regions = regionsResult.rows;
     
     for (const region of regions) {
+      const regionName = region.region_name;
       // Calculate totals from scheme_status table
       const totalsResult = await pool.query(`
         SELECT 
           COUNT(*) as total_schemes_integrated,
-          SUM(CASE WHEN scheme_status = 'Fully-Completed' THEN 1 ELSE 0 END) as fully_completed_schemes,
-          SUM(total_villages) as total_villages_integrated,
+          SUM(CASE WHEN fully_completion_scheme_status = 'Fully-Completed' THEN 1 ELSE 0 END) as fully_completed_schemes,
+          SUM(number_of_village) as total_villages_integrated,
           SUM(fully_completed_villages) as fully_completed_villages,
-          SUM(total_esr) as total_esr_integrated,
-          SUM(fully_completed_esr) as fully_completed_esr,
-          SUM(total_esr - fully_completed_esr) as partial_esr,
+          SUM(total_number_of_esr) as total_esr_integrated,
+          SUM(no_fully_completed_esr) as fully_completed_esr,
+          SUM(total_number_of_esr - no_fully_completed_esr) as partial_esr,
           SUM(flow_meters_connected) as flow_meter_integrated,
-          SUM(residual_chlorine_connected) as rca_integrated,
-          SUM(pressure_transmitters_connected) as pressure_transmitter_integrated
+          SUM(residual_chlorine_analyzer_connected) as rca_integrated,
+          SUM(pressure_transmitter_connected) as pressure_transmitter_integrated
         FROM scheme_status
-        WHERE region_name = $1
-      `, [region]);
+        WHERE region = $1
+      `, [regionName]);
       
       if (totalsResult.rows.length > 0) {
         const totals = totalsResult.rows[0];
@@ -327,7 +328,7 @@ async function updateRegionSummaries(pool) {
             flow_meter_integrated = $8,
             rca_integrated = $9,
             pressure_transmitter_integrated = $10
-          WHERE region_name = $11
+          WHERE region_id = $11
         `, [
           totals.total_schemes_integrated || 0,
           totals.fully_completed_schemes || 0,
@@ -339,10 +340,10 @@ async function updateRegionSummaries(pool) {
           totals.flow_meter_integrated || 0,
           totals.rca_integrated || 0,
           totals.pressure_transmitter_integrated || 0,
-          region
+          region.region_id
         ]);
         
-        console.log(`Updated summary data for region: ${region}`);
+        console.log(`Updated summary data for region: ${regionName}`);
       }
     }
     
