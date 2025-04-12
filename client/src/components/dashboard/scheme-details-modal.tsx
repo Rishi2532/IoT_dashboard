@@ -14,7 +14,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
   if (!scheme) return null;
 
   // Handle both old and new field names for backward compatibility
-  const totalVillages = scheme.total_villages || scheme.total_villages_in_scheme || 0;
+  const totalVillages = scheme.number_of_village || scheme.total_villages_in_scheme || 0;
   const villagesIntegrated = scheme.villages_integrated || scheme.villages_integrated_on_iot || 0;
   const totalEsr = scheme.total_esr || 0;
   const esrIntegrated = scheme.esr_integrated_on_iot || 0;
@@ -84,7 +84,7 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Region</h4>
-                <p className="text-xs text-neutral-900">{scheme.region_name || 'N/A'}</p>
+                <p className="text-xs text-neutral-900">{scheme.region || 'N/A'}</p>
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Circle</h4>
