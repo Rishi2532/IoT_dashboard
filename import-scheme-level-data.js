@@ -599,26 +599,26 @@ async function processExcelFile(filePath) {
               schemeData.sr_no,
               schemeData.scheme_id,
               schemeData.scheme_name,
-              schemeData.region_name,
+              schemeData.region,
               schemeData.circle,
               schemeData.division,
               schemeData.sub_division,
               schemeData.block,
-              schemeData.total_villages,
-              schemeData.functional_villages,
-              schemeData.partial_villages,
-              schemeData.non_functional_villages,
-              schemeData.villages_integrated,
+              schemeData.number_of_village,
+              schemeData.no_of_functional_village,
+              schemeData.no_of_partial_village,
+              schemeData.no_of_non_functional_village,
+              schemeData.total_villages_integrated,
               schemeData.fully_completed_villages,
-              schemeData.total_esr,
-              schemeData.esr_integrated_on_iot,
+              schemeData.total_number_of_esr,
+              schemeData.total_esr_integrated,
               schemeData.scheme_functional_status,
-              schemeData.fully_completed_esr,
-              schemeData.balance_esr,
+              schemeData.no_fully_completed_esr,
+              schemeData.balance_to_complete_esr,
               schemeData.flow_meters_connected,
-              schemeData.pressure_transmitters_connected,
-              schemeData.residual_chlorine_connected,
-              schemeData.scheme_status,
+              schemeData.pressure_transmitter_connected,
+              schemeData.residual_chlorine_analyzer_connected,
+              schemeData.fully_completion_scheme_status,
               schemeData.agency
             ]);
             
@@ -657,7 +657,7 @@ async function updateRegionSummaries() {
     for (const region of regions) {
       // Get all schemes for this region
       const schemesResult = await pool.query(
-        'SELECT * FROM scheme_status WHERE region_name = $1',
+        'SELECT * FROM scheme_status WHERE region = $1',
         [region.region_name]
       );
       
@@ -665,21 +665,21 @@ async function updateRegionSummaries() {
       
       // Calculate region totals
       const totals = {
-        total_esr_integrated: schemes.reduce((sum, scheme) => sum + (scheme.esr_integrated_on_iot || 0), 0),
-        fully_completed_esr: schemes.reduce((sum, scheme) => sum + (scheme.fully_completed_esr || 0), 0),
+        total_esr_integrated: schemes.reduce((sum, scheme) => sum + (scheme.total_esr_integrated || 0), 0),
+        fully_completed_esr: schemes.reduce((sum, scheme) => sum + (scheme.no_fully_completed_esr || 0), 0),
         partial_esr: schemes.reduce((sum, scheme) => 
-          sum + (scheme.esr_integrated_on_iot || 0) - (scheme.fully_completed_esr || 0), 0),
-        total_villages_integrated: schemes.reduce((sum, scheme) => sum + (scheme.villages_integrated || 0), 0),
+          sum + (scheme.total_esr_integrated || 0) - (scheme.no_fully_completed_esr || 0), 0),
+        total_villages_integrated: schemes.reduce((sum, scheme) => sum + (scheme.total_villages_integrated || 0), 0),
         fully_completed_villages: schemes.reduce((sum, scheme) => sum + (scheme.fully_completed_villages || 0), 0),
         total_schemes_integrated: schemes.length,
         fully_completed_schemes: schemes.filter(s => {
           // Match any variant of 'Fully Completed'
-          const status = (s.scheme_status || '').toLowerCase();
+          const status = (s.fully_completion_scheme_status || '').toLowerCase();
           return status.includes('fully') || status === 'completed' || status === 'fully completed';
         }).length,
         flow_meter_integrated: schemes.reduce((sum, scheme) => sum + (scheme.flow_meters_connected || 0), 0),
-        rca_integrated: schemes.reduce((sum, scheme) => sum + (scheme.residual_chlorine_connected || 0), 0),
-        pressure_transmitter_integrated: schemes.reduce((sum, scheme) => sum + (scheme.pressure_transmitters_connected || 0), 0)
+        rca_integrated: schemes.reduce((sum, scheme) => sum + (scheme.residual_chlorine_analyzer_connected || 0), 0),
+        pressure_transmitter_integrated: schemes.reduce((sum, scheme) => sum + (scheme.pressure_transmitter_connected || 0), 0)
       };
       
       // Update the region record
