@@ -138,10 +138,11 @@ async function importSqlData() {
 async function updateRegionSummaries(client) {
   try {
     // For each region, calculate and update the summary statistics
-    const regions = await client.query('SELECT DISTINCT region_name FROM region');
+    const regions = await client.query('SELECT DISTINCT region_id, region_name FROM region');
     
     for (const region of regions.rows) {
       const regionName = region.region_name;
+      const regionId = region.region_id;
       
       // Get scheme statistics for this region
       const schemeStats = await client.query(`
@@ -186,7 +187,7 @@ async function updateRegionSummaries(client) {
           stats.flow_meters || 0,
           stats.rca || 0,
           stats.pt || 0,
-          regionName
+          regionId
         ]);
         
         console.log(`Updated summary for region: ${regionName}`);
