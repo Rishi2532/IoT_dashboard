@@ -37,7 +37,7 @@ function mapHeadersToFields(headers) {
     ],
     
     // Villages related fields
-    total_villages: [
+    number_of_village: [
       'Number of Village', 'No. of Village', 'Total Villages', 
       'Number of Villages', 'Villages'
     ],
@@ -45,29 +45,29 @@ function mapHeadersToFields(headers) {
       'Fully completed Villages', 'Fully Completed Villages', 
       'No. of Functional Village', 'Functional Villages'
     ],
-    villages_integrated: [
+    total_villages_integrated: [
       'Total Villages Integrated', 'Villages Integrated'
     ],
-    partial_villages: [
+    no_of_partial_village: [
       'No. of Partial Village', 'Partial Villages', 'Partial Village'
     ],
-    non_functional_villages: [
+    no_of_non_functional_village: [
       'No. of Non- Functional Village', 'No. of Non-Functional Village',
       'Non-Functional Villages', 'Non Functional Villages'
     ],
     
     // ESR related fields
-    total_esr: [
+    total_number_of_esr: [
       'Total Number of ESR', 'Total ESR', 'ESR Total'
     ],
-    esr_integrated_on_iot: [
+    total_esr_integrated: [
       'Total ESR Integrated', 'ESR Integrated', 'Total Number of ESR Integrated'
     ],
-    fully_completed_esr: [
+    no_fully_completed_esr: [
       'No. Fully Completed ESR', 'Fully Completed ESR', 'No. of Fully Completed ESR',
       'ESR Fully Completed'
     ],
-    balance_esr: [
+    balance_to_complete_esr: [
       'Balance to Complete ESR', 'Balance ESR'
     ],
     
@@ -88,7 +88,7 @@ function mapHeadersToFields(headers) {
     ],
     
     // Status fields
-    scheme_status: [
+    fully_completion_scheme_status: [
       'Fully completion Scheme Status', 'Scheme Status', 'Status',
       'Scheme status', ' Scheme Status'
     ],
@@ -167,23 +167,23 @@ function extractValue(row, field, mapping) {
     // Convert to number, but allow null if not provided
     return value ? Number(value) : null;
   } else if ([
-    'total_villages',
+    'number_of_village',
     'fully_completed_villages',
-    'villages_integrated',
-    'partial_villages',
-    'non_functional_villages',
-    'total_esr',
-    'esr_integrated_on_iot',
-    'fully_completed_esr',
-    'balance_esr',
+    'total_villages_integrated',
+    'no_of_partial_village',
+    'no_of_non_functional_village',
+    'total_number_of_esr',
+    'total_esr_integrated',
+    'no_fully_completed_esr',
+    'balance_to_complete_esr',
     'flow_meters_connected',
-    'pressure_transmitters_connected',
-    'residual_chlorine_connected'
+    'pressure_transmitter_connected',
+    'residual_chlorine_analyzer_connected'
   ].includes(field)) {
     // Convert to number, handling 0 and null cases
     const num = Number(value);
     return isNaN(num) ? 0 : num;
-  } else if (field === 'scheme_status') {
+  } else if (field === 'fully_completion_scheme_status') {
     // Standardize scheme status values
     const status = String(value || '').trim();
     if (!status || status === '') return 'Not-Connected';
@@ -434,26 +434,26 @@ async function processExcelFile(filePath) {
             sr_no: extractValue(row, 'sr_no', columnMapping),
             scheme_id: extractValue(row, 'scheme_id', columnMapping),
             scheme_name: extractValue(row, 'scheme_name', columnMapping),
-            region_name: regionName,
+            region: regionName,
             circle: extractValue(row, 'circle', columnMapping),
             division: extractValue(row, 'division', columnMapping),
             sub_division: extractValue(row, 'sub_division', columnMapping),
             block: extractValue(row, 'block', columnMapping),
-            total_villages: extractValue(row, 'total_villages', columnMapping),
-            functional_villages: extractValue(row, 'fully_completed_villages', columnMapping), // Function villages maps to fully completed
-            partial_villages: extractValue(row, 'partial_villages', columnMapping),
-            non_functional_villages: extractValue(row, 'non_functional_villages', columnMapping),
-            villages_integrated: extractValue(row, 'villages_integrated', columnMapping),
+            number_of_village: extractValue(row, 'number_of_village', columnMapping),
+            no_of_functional_village: extractValue(row, 'fully_completed_villages', columnMapping), // Functional villages maps to fully completed
+            no_of_partial_village: extractValue(row, 'no_of_partial_village', columnMapping),
+            no_of_non_functional_village: extractValue(row, 'no_of_non_functional_village', columnMapping),
+            total_villages_integrated: extractValue(row, 'total_villages_integrated', columnMapping),
             fully_completed_villages: extractValue(row, 'fully_completed_villages', columnMapping),
-            total_esr: extractValue(row, 'total_esr', columnMapping),
-            esr_integrated_on_iot: extractValue(row, 'esr_integrated_on_iot', columnMapping),
+            total_number_of_esr: extractValue(row, 'total_number_of_esr', columnMapping),
+            total_esr_integrated: extractValue(row, 'total_esr_integrated', columnMapping),
             scheme_functional_status: extractValue(row, 'scheme_functional_status', columnMapping),
-            fully_completed_esr: extractValue(row, 'fully_completed_esr', columnMapping),
-            balance_esr: extractValue(row, 'balance_esr', columnMapping),
+            no_fully_completed_esr: extractValue(row, 'no_fully_completed_esr', columnMapping),
+            balance_to_complete_esr: extractValue(row, 'balance_to_complete_esr', columnMapping),
             flow_meters_connected: extractValue(row, 'flow_meters_connected', columnMapping),
-            pressure_transmitters_connected: extractValue(row, 'pressure_transmitters_connected', columnMapping),
-            residual_chlorine_connected: extractValue(row, 'residual_chlorine_connected', columnMapping),
-            scheme_status: extractValue(row, 'scheme_status', columnMapping),
+            pressure_transmitter_connected: extractValue(row, 'pressure_transmitter_connected', columnMapping),
+            residual_chlorine_analyzer_connected: extractValue(row, 'residual_chlorine_analyzer_connected', columnMapping),
+            fully_completion_scheme_status: extractValue(row, 'fully_completion_scheme_status', columnMapping),
             agency: getAgencyByRegion(regionName)
           };
           
@@ -515,51 +515,51 @@ async function processExcelFile(filePath) {
               UPDATE scheme_status SET
                 sr_no = $1,
                 scheme_name = $2,
-                region_name = $3,
+                region = $3,
                 circle = $4,
                 division = $5,
                 sub_division = $6,
                 block = $7,
-                total_villages = $8,
-                functional_villages = $9,
-                partial_villages = $10,
-                non_functional_villages = $11,
-                villages_integrated = $12,
+                number_of_village = $8,
+                no_of_functional_village = $9,
+                no_of_partial_village = $10,
+                no_of_non_functional_village = $11,
+                total_villages_integrated = $12,
                 fully_completed_villages = $13,
-                total_esr = $14,
-                esr_integrated_on_iot = $15,
+                total_number_of_esr = $14,
+                total_esr_integrated = $15,
                 scheme_functional_status = $16,
-                fully_completed_esr = $17,
-                balance_esr = $18,
+                no_fully_completed_esr = $17,
+                balance_to_complete_esr = $18,
                 flow_meters_connected = $19,
-                pressure_transmitters_connected = $20,
-                residual_chlorine_connected = $21,
-                scheme_status = $22,
+                pressure_transmitter_connected = $20,
+                residual_chlorine_analyzer_connected = $21,
+                fully_completion_scheme_status = $22,
                 agency = $23
               WHERE scheme_id = $24
             `, [
               schemeData.sr_no,
               schemeData.scheme_name,
-              schemeData.region_name,
+              schemeData.region,
               schemeData.circle,
               schemeData.division,
               schemeData.sub_division,
               schemeData.block,
-              schemeData.total_villages,
-              schemeData.functional_villages,
-              schemeData.partial_villages,
-              schemeData.non_functional_villages,
-              schemeData.villages_integrated,
+              schemeData.number_of_village,
+              schemeData.no_of_functional_village,
+              schemeData.no_of_partial_village,
+              schemeData.no_of_non_functional_village,
+              schemeData.total_villages_integrated,
               schemeData.fully_completed_villages,
-              schemeData.total_esr,
-              schemeData.esr_integrated_on_iot,
+              schemeData.total_number_of_esr,
+              schemeData.total_esr_integrated,
               schemeData.scheme_functional_status,
-              schemeData.fully_completed_esr,
-              schemeData.balance_esr,
+              schemeData.no_fully_completed_esr,
+              schemeData.balance_to_complete_esr,
               schemeData.flow_meters_connected,
-              schemeData.pressure_transmitters_connected,
-              schemeData.residual_chlorine_connected,
-              schemeData.scheme_status,
+              schemeData.pressure_transmitter_connected,
+              schemeData.residual_chlorine_analyzer_connected,
+              schemeData.fully_completion_scheme_status,
               schemeData.agency,
               schemeData.scheme_id
             ]);
@@ -573,26 +573,26 @@ async function processExcelFile(filePath) {
                 sr_no,
                 scheme_id,
                 scheme_name,
-                region_name,
+                region,
                 circle,
                 division,
                 sub_division,
                 block,
-                total_villages,
-                functional_villages,
-                partial_villages,
-                non_functional_villages,
-                villages_integrated,
+                number_of_village,
+                no_of_functional_village,
+                no_of_partial_village,
+                no_of_non_functional_village,
+                total_villages_integrated,
                 fully_completed_villages,
-                total_esr,
-                esr_integrated_on_iot,
+                total_number_of_esr,
+                total_esr_integrated,
                 scheme_functional_status,
-                fully_completed_esr,
-                balance_esr,
+                no_fully_completed_esr,
+                balance_to_complete_esr,
                 flow_meters_connected,
-                pressure_transmitters_connected,
-                residual_chlorine_connected,
-                scheme_status,
+                pressure_transmitter_connected,
+                residual_chlorine_analyzer_connected,
+                fully_completion_scheme_status,
                 agency
               ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24)
             `, [
