@@ -14,10 +14,10 @@ export default function SchemeDetailsModal({ scheme, isOpen, onClose }: SchemeDe
   if (!scheme) return null;
 
   // Handle field names from the database
-  const totalVillages = scheme.total_villages_in_scheme || 0;
-  const villagesIntegrated = scheme.villages_integrated_on_iot || 0;
-  const totalEsr = scheme.total_esr || 0;
-  const esrIntegrated = scheme.esr_integrated_on_iot || 0;
+  const totalVillages = scheme.number_of_village || 0;
+  const villagesIntegrated = scheme.total_villages_integrated || 0;
+  const totalEsr = scheme.total_number_of_esr || 0;
+  const esrIntegrated = scheme.total_esr_integrated || 0;
 
   const villagesIntegratedPercent = calculatePercentage(
     villagesIntegrated,
