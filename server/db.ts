@@ -212,11 +212,11 @@ export async function initializeDatabase() {
         "no_fully_completed_esr" INTEGER,
         "balance_to_complete_esr" INTEGER,
         "flow_meters_connected" INTEGER,
-        "fm_integrated" INTEGER,
+        
         "pressure_transmitter_connected" INTEGER,
-        "pt_integrated" INTEGER,
+        
         "residual_chlorine_analyzer_connected" INTEGER,
-        "rca_integrated" INTEGER,
+        
         "fully_completion_scheme_status" TEXT
       );
     `);

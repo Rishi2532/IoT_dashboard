@@ -1,4 +1,12 @@
-import { pgTable, text, serial, integer, boolean, jsonb, timestamp } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  text,
+  serial,
+  integer,
+  boolean,
+  jsonb,
+  timestamp,
+} from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -18,13 +26,15 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
 });
 
-export const registerUserSchema = insertUserSchema.extend({
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string(),
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"],
-});
+export const registerUserSchema = insertUserSchema
+  .extend({
+    password: z.string().min(6, "Password must be at least 6 characters"),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords do not match",
+    path: ["confirmPassword"],
+  });
 
 export const loginSchema = z.object({
   username: z.string().min(1, "Username is required"),
@@ -52,8 +62,9 @@ export const regions = pgTable("region", {
   pressure_transmitter_integrated: integer("pressure_transmitter_integrated"),
 });
 
-export const insertRegionSchema = createInsertSchema(regions)
-  .omit({ region_id: true });
+export const insertRegionSchema = createInsertSchema(regions).omit({
+  region_id: true,
+});
 
 export type InsertRegion = z.infer<typeof insertRegionSchema>;
 export type Region = typeof regions.$inferSelect;
@@ -68,10 +79,10 @@ export const schemeStatuses = pgTable("scheme_status", {
   sub_division: text("sub_division"), // Sub Division
   block: text("block"), // Block
   scheme_name: text("scheme_name").notNull(), // Scheme Name
-  agency: text("agency"), // Agency responsible for the scheme
+
   number_of_village: integer("number_of_village"), // Number of village
   total_villages_integrated: integer("total_villages_integrated"), // Total Villages Integrated
-  total_villages_in_scheme: integer("total_villages_in_scheme"), // Alternative for total villages
+
   no_of_functional_village: integer("no_of_functional_village"), // No. of Functional Village
   no_of_partial_village: integer("no_of_partial_village"), // No. of Partial Village
   no_of_non_functional_village: integer("no_of_non_functional_village"), // No. of Non-Functional Village
@@ -82,11 +93,13 @@ export const schemeStatuses = pgTable("scheme_status", {
   no_fully_completed_esr: integer("no_fully_completed_esr"), // No. Fully Completed ESR
   balance_to_complete_esr: integer("balance_to_complete_esr"), // Balance to Complete ESR
   flow_meters_connected: integer("flow_meters_connected"), // Flow Meters Connected
-  fm_integrated: integer("fm_integrated"), // Alternative field for flow meters
+
   pressure_transmitter_connected: integer("pressure_transmitter_connected"), // Pressure Transmitter Connected
-  pt_integrated: integer("pt_integrated"), // Alternative field for pressure transmitters
-  residual_chlorine_analyzer_connected: integer("residual_chlorine_analyzer_connected"), // Residual Chlorine Analyzer Connected
-  rca_integrated: integer("rca_integrated"), // Alternative field for residual chlorine analyzers
+
+  residual_chlorine_analyzer_connected: integer(
+    "residual_chlorine_analyzer_connected",
+  ), // Residual Chlorine Analyzer Connected
+
   fully_completion_scheme_status: text("fully_completion_scheme_status"), // Scheme Status (Fully Completion Scheme Status)
 });
 
@@ -99,7 +112,7 @@ export type SchemeStatus = typeof schemeStatuses.$inferSelect;
 export const appState = pgTable("app_state", {
   key: text("key").primaryKey(),
   value: jsonb("value").notNull(),
-  updated_at: timestamp("updated_at").defaultNow()
+  updated_at: timestamp("updated_at").defaultNow(),
 });
 
 export const insertAppStateSchema = createInsertSchema(appState);
