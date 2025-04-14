@@ -21,8 +21,10 @@ export async function getDB() {
       // Always use pg-adapter.cjs when DATABASE_URL is available
       if (process.env.DATABASE_URL) {
         pool = require("./pg-adapter.cjs");
-        console.log("PostgreSQL pool imported from default adapter with DATABASE_URL");
-      } 
+        console.log(
+          "PostgreSQL pool imported from default adapter with DATABASE_URL",
+        );
+      }
       // In Replit environment, we always use the PostgreSQL adapter
       else {
         console.log("Using the default PostgreSQL adapter");
@@ -51,7 +53,9 @@ export async function updateRegionSummaries() {
     // Debug: Print all flow meter values
     console.log("Current flow meter values in database:");
     for (const region of allRegions) {
-      console.log(`Region: ${region.region_name}, Flow Meter: ${region.flow_meter_integrated}, RCA: ${region.rca_integrated}, PT: ${region.pressure_transmitter_integrated}`);
+      console.log(
+        `Region: ${region.region_name}, Flow Meter: ${region.flow_meter_integrated}, RCA: ${region.rca_integrated}, PT: ${region.pressure_transmitter_integrated}`,
+      );
     }
 
     // Create global_summary table if it doesn't exist
@@ -81,10 +85,10 @@ export async function updateRegionSummaries() {
         fully_completed_esr: sql<number>`SUM(${regions.fully_completed_esr})`,
         flow_meter_integrated: sql<number>`SUM(${regions.flow_meter_integrated})`,
         rca_integrated: sql<number>`SUM(${regions.rca_integrated})`,
-        pressure_transmitter_integrated: sql<number>`SUM(${regions.pressure_transmitter_integrated})`
+        pressure_transmitter_integrated: sql<number>`SUM(${regions.pressure_transmitter_integrated})`,
       })
       .from(regions);
-    
+
     console.log("Calculated totals from regions table:", totals[0]);
 
     // Update the global summary with the dynamic totals from regions table
@@ -131,11 +135,11 @@ export async function cleanupOldUpdates() {
   try {
     console.log("Cleaning up old update records...");
     const db = await getDB();
-    
+
     // Get current date
     const now = new Date();
-    const today = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-    
+    const today = now.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+
     // Create app_state table using SQL if it doesn't exist
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "app_state" (
@@ -144,18 +148,18 @@ export async function cleanupOldUpdates() {
         "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    
+
     // Delete all daily update records except for today's
     // We need to use raw SQL here because Drizzle doesn't support LIKE operator easily with parameters
     const updateKey = `daily_updates_${today}`;
-    const pattern = 'daily_updates_%';
-    
+    const pattern = "daily_updates_%";
+
     await db.execute(sql`
       DELETE FROM app_state 
       WHERE key LIKE ${pattern} 
       AND key != ${updateKey}
     `);
-    
+
     console.log("Cleaned up old update records successfully");
   } catch (error) {
     console.error("Error cleaning up old updates:", error);
@@ -183,7 +187,7 @@ export async function initializeDatabase() {
         "pressure_transmitter_integrated" INTEGER
       );
     `);
-    
+
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "scheme_status" (
         "sr_no" INTEGER,
@@ -1500,7 +1504,7 @@ export async function initializeDatabase() {
 
     // Clean up old update records
     await cleanupOldUpdates();
-    
+
     // Always update region summaries, whether the database was just initialized or not
     await updateRegionSummaries();
 

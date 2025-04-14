@@ -15,7 +15,7 @@ export function calculatePercentage(value: number | undefined | null, total: num
   return Number(((value / total) * 100).toFixed(2));
 }
 
-export type SchemeCompletionStatus = 'Fully-Completed' | 'Fully Completed' | 'Completed' | 'In Progress' | 'Partial' | 'Not-Connected' | 'Non Functional' | string;
+export type SchemeCompletionStatus = 'Fully-Completed' | 'Fully Completed' | 'Completed' | 'In Progress' | string;
 
 export function getStatusColorClass(status: SchemeCompletionStatus): string {
   if (!status) return 'bg-neutral-50 text-neutral-600';

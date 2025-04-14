@@ -38,21 +38,27 @@ export interface Region {
 export interface SchemeStatus {
   scheme_id: string;
   scheme_name: string;
-  region_name: string;
-  agency: string;  // Implementing agency for the scheme
-  total_villages_in_scheme: number;
-  villages_integrated_on_iot: number;
+  region: string;
+  circle: string;
+  division: string;
+  sub_division: string;
+  block: string;
+  agency: string; // Implementing agency for the scheme
+  number_of_village: number;
+  total_villages_integrated: number;
   fully_completed_villages: number;
-  total_esr_in_scheme: number;
-  esr_integrated_on_iot: number;
-  fully_completed_esr: number;
+  total_number_of_esr: number;
+  total_esr_integrated: number;
+  no_fully_completed_esr: number;
   gps_latitude?: number | null;
   gps_longitude?: number | null;
-  scheme_completion_status?: string;
-  scheme_status?: string;
-  flow_meter_installed?: boolean;
+  scheme_functional_status?: string;
+  fully_completion_scheme_status?: string;
+  flow_meters_connected?: boolean;
   flow_meter_working?: boolean;
   flow_meter_data_on_cloud?: boolean;
+  pressure_transmitter_connected?: boolean;
+  residual_chlorine_analyzer_connected?: boolean;
   implementation_date?: string;
   last_updated?: string;
   updated_at?: string;

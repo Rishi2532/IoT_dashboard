@@ -233,7 +233,7 @@ export class PostgresStorage implements IStorage {
       } 
       // Handle Fully Completed status including "completed" and "Completed" values
       else if (statusFilter === "Fully Completed") {
-        query = query.where(sql`LOWER(${schemeStatuses.fully_completion_scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);
+        query = query.where(sql`LOWER(${schemeStatuses.fully_completion_scheme_status}) IN ('fully-completed', 'Completed', 'fully completed')`);
       } else {
         query = query.where(eq(schemeStatuses.fully_completion_scheme_status, statusFilter));
       }
@@ -266,7 +266,7 @@ export class PostgresStorage implements IStorage {
       }
       // Handle Fully Completed status including "completed" and "Completed" values
       else if (statusFilter === "Fully Completed") {
-        query = query.where(sql`LOWER(${schemeStatuses.fully_completion_scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`);
+        query = query.where(sql`LOWER(${schemeStatuses.fully_completion_scheme_status}) IN ('fully-completed', 'Completed', 'fully completed')`);
       } else {
         query = query.where(eq(schemeStatuses.fully_completion_scheme_status, statusFilter));
       }
@@ -400,7 +400,7 @@ export class PostgresStorage implements IStorage {
         esr: regionsData.reduce((sum: number, region: any) => sum + (region.total_esr_integrated || 0), 0),
         completedSchemes: allSchemes.filter(scheme => {
           const status = scheme.fully_completion_scheme_status?.toLowerCase() || '';
-          return status === 'fully-completed' || status === 'completed' || status === 'fully completed';
+          return status === 'Fully-Completed' || status === 'Completed' || status === 'fully completed';
         }).length,
         flowMeters: regionsData.reduce((sum: number, region: any) => sum + (region.flow_meter_integrated || 0), 0),
         rca: regionsData.reduce((sum: number, region: any) => sum + (region.rca_integrated || 0), 0),
