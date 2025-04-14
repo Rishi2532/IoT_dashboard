@@ -286,7 +286,7 @@ async function updateDatabaseRecords(
               item.no_of_non_functional_village || 0,
             fully_completed_villages: item.fully_completed_villages || 0,
             total_number_of_esr: item.total_number_of_esr || 0,
-            scheme_functional_status: item.scheme_functional_status ||"Partial"||"Functional"|| null,
+            scheme_functional_status: item.scheme_functional_status || "Partial",
             total_esr_integrated: item.total_esr_integrated || 0,
             no_fully_completed_esr: item.no_fully_completed_esr || 0,
             balance_to_complete_esr: item.balance_to_complete_esr || 0,
@@ -296,7 +296,7 @@ async function updateDatabaseRecords(
             residual_chlorine_analyzer_connected:
               item.residual_chlorine_analyzer_connected || 0,
             fully_completion_scheme_status:
-              item.fully_completion_scheme_status || "In Progress"||"Completed"||"Fully Completed",
+              item.fully_completion_scheme_status || "In Progress",
           };
 
           await storage.createScheme(schemeData);
