@@ -127,21 +127,21 @@ function parseFieldValue(fieldName: string, value: string): any {
 
     // Map common status values to standardized ones
     const statusMap: Record<string, string> = {
-      'completed': 'Fully Completed',
-      'fully completed': 'Fully Completed',
-      'fully-completed': 'Fully Completed',
-      'complete': 'Fully Completed',
-      'partial': 'Partial',
-      'in progress': 'In Progress',
-      'in-progress': 'In Progress',
-      'ongoing': 'In Progress',
-      'functional': 'Functional',
-      'non functional': 'Non Functional',
-      'non-functional': 'Non Functional',
-      'not functional': 'Non Functional',
-      'not connected': 'Not-Connected',
-      'not-connected': 'Not-Connected',
-      'disconnected': 'Not-Connected'
+      Completed: "Fully Completed",
+      "fully completed": "Fully Completed",
+      "fully-completed": "Fully Completed",
+      complete: "Fully Completed",
+      partial: "Partial",
+      "In Progress": "In Progress",
+      "in-progress": "In Progress",
+      ongoing: "In Progress",
+      functional: "Functional",
+      "non functional": "Non Functional",
+      "non-functional": "Non Functional",
+      "not functional": "Non Functional",
+      "not connected": "Not-Connected",
+      "not-connected": "Not-Connected",
+      disconnected: "Not-Connected",
     };
 
     // Function to standardize status
@@ -180,7 +180,7 @@ function parseFieldValue(fieldName: string, value: string): any {
       // trimmedValue === "false" ||
       // trimmedValue === "0" ||
       // trimmedValue === "n" ||
-      trimmedValue === "in progress"
+      trimmedValue === "In Progress"
     ) {
       return "In Progress";
     }
