@@ -44,6 +44,7 @@ export default function Reports() {
           "Flow Meters Integrated": region.flow_meter_integrated || 0,
           "RCA Integrated": region.rca_integrated || 0,
           "Pressure Transmitters Integrated": region.pressure_transmitter_integrated || 0,
+          "Last Updated": new Date().toLocaleDateString("en-IN")
         };
       });
 
@@ -64,6 +65,7 @@ export default function Reports() {
         "Flow Meters Integrated": regions.reduce((sum, r) => sum + (r.flow_meter_integrated || 0), 0),
         "RCA Integrated": regions.reduce((sum, r) => sum + (r.rca_integrated || 0), 0),
         "Pressure Transmitters Integrated": regions.reduce((sum, r) => sum + (r.pressure_transmitter_integrated || 0), 0),
+        "Last Updated": new Date().toLocaleDateString("en-IN")
       };
       worksheetData.push(totalRow);
 
