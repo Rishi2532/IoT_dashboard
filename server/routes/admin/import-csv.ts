@@ -124,34 +124,36 @@ function parseFieldValue(fieldName: string, value: string): any {
   } else if (fieldName === "fully_completion_scheme_status") {
     // Handle scheme_status specially - keep the original text values
     const trimmedValue = String(value).trim();
+    const lowerValue = trimmedValue.toLowerCase();
 
     // Map common status values to standardized ones
     const statusMap: Record<string, string> = {
-      Completed: "Fully Completed",
+      "completed": "Fully Completed",
       "fully completed": "Fully Completed",
       "fully-completed": "Fully Completed",
-      complete: "Fully Completed",
-      partial: "Partial",
-      "In Progress": "In Progress",
+      "complete": "Fully Completed",
+      "yes": "Fully Completed",
+      "true": "Fully Completed",
+      "1": "Fully Completed",
+      "y": "Fully Completed",
+      "partial": "Partial",
+      "in progress": "In Progress",
       "in-progress": "In Progress",
-      ongoing: "In Progress",
-      functional: "Functional",
+      "no": "In Progress",
+      "false": "In Progress",
+      "0": "In Progress",
+      "n": "In Progress",
+      "functional": "Functional",
       "non functional": "Non Functional",
       "non-functional": "Non Functional",
       "not functional": "Non Functional",
       "not connected": "Not-Connected",
       "not-connected": "Not-Connected",
-      disconnected: "Not-Connected",
-    };
-
-    // Function to standardize status
-    const standardizeStatus = (status: string): string => {
-      const normalized = status.toLowerCase().trim();
-      return statusMap[normalized] || status;
+      "disconnected": "Not-Connected",
     };
 
     // Return mapped value if it exists, otherwise return the original value
-    return statusMap[trimmedValue.toLowerCase()] || trimmedValue;
+    return statusMap[lowerValue] || trimmedValue;
   } else if (fieldName.includes("date")) {
     // Try to parse as date if it looks like a date
     const dateValue = new Date(value);
@@ -164,28 +166,6 @@ function parseFieldValue(fieldName: string, value: string): any {
     fieldName === "active"
   ) {
     return parseBoolean(value);
-  } else if (fieldName === "fully_completion_scheme_status") {
-    const trimmedValue = String(value).toLowerCase().trim();
-    // Map common status values to standardized ones
-    if (
-      trimmedValue === "yes" ||
-      trimmedValue === "true" ||
-      trimmedValue === "1" ||
-      trimmedValue === "y" ||
-      trimmedValue === "Completed"
-    ) {
-      return "Fully Completed";
-    } else if (
-      // trimmedValue === "no" ||
-      // trimmedValue === "false" ||
-      // trimmedValue === "0" ||
-      // trimmedValue === "n" ||
-      trimmedValue === "In Progress"
-    ) {
-      return "In Progress";
-    }
-    // Return original value if it doesn't match any standard options
-    return String(value).trim();
   } else {
     // Default to number if it looks like a number, otherwise keep as string
     return parseNumber(value) ?? String(value).trim();
@@ -236,8 +216,7 @@ async function updateDatabaseRecords(
   let updatedCount = 0;
   let details = "";
 
-  // Handle both original and possibly transformed table names
-  if (tableName === "fully_completion_scheme_status" || tableName === "scheme_status") {
+  if (tableName === "fully_completion_scheme_status") {
     // Process scheme status updates
     for (const item of data) {
       try {
@@ -307,7 +286,7 @@ async function updateDatabaseRecords(
               item.no_of_non_functional_village || 0,
             fully_completed_villages: item.fully_completed_villages || 0,
             total_number_of_esr: item.total_number_of_esr || 0,
-            scheme_functional_status: item.scheme_functional_status || null,
+            scheme_functional_status: item.scheme_functional_status ||"Partial"||"Functional"|| null,
             total_esr_integrated: item.total_esr_integrated || 0,
             no_fully_completed_esr: item.no_fully_completed_esr || 0,
             balance_to_complete_esr: item.balance_to_complete_esr || 0,
@@ -317,7 +296,7 @@ async function updateDatabaseRecords(
             residual_chlorine_analyzer_connected:
               item.residual_chlorine_analyzer_connected || 0,
             fully_completion_scheme_status:
-              item.fully_completion_scheme_status || "In Progress",
+              item.fully_completion_scheme_status || "In Progress"||"Completed"||"Fully Completed",
           };
 
           await storage.createScheme(schemeData);
