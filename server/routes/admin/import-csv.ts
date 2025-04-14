@@ -127,12 +127,27 @@ function parseFieldValue(fieldName: string, value: string): any {
 
     // Map common status values to standardized ones
     const statusMap: Record<string, string> = {
-      completed: "Fully Completed",
-      "in progress": "In Progress",
-      functional: "Functional",
-      "non functional": "Non Functional",
-      "non-functional": "Non Functional",
-      partial: "Partial",
+      'completed': 'Fully Completed',
+      'fully completed': 'Fully Completed',
+      'fully-completed': 'Fully Completed',
+      'complete': 'Fully Completed',
+      'partial': 'Partial',
+      'in progress': 'In Progress',
+      'in-progress': 'In Progress',
+      'ongoing': 'In Progress',
+      'functional': 'Functional',
+      'non functional': 'Non Functional',
+      'non-functional': 'Non Functional',
+      'not functional': 'Non Functional',
+      'not connected': 'Not-Connected',
+      'not-connected': 'Not-Connected',
+      'disconnected': 'Not-Connected'
+    };
+
+    // Function to standardize status
+    const standardizeStatus = (status: string): string => {
+      const normalized = status.toLowerCase().trim();
+      return statusMap[normalized] || status;
     };
 
     // Return mapped value if it exists, otherwise return the original value
@@ -161,10 +176,10 @@ function parseFieldValue(fieldName: string, value: string): any {
     ) {
       return "Fully Completed";
     } else if (
-      trimmedValue === "no" ||
-      trimmedValue === "false" ||
-      trimmedValue === "0" ||
-      trimmedValue === "n" ||
+      // trimmedValue === "no" ||
+      // trimmedValue === "false" ||
+      // trimmedValue === "0" ||
+      // trimmedValue === "n" ||
       trimmedValue === "in progress"
     ) {
       return "In Progress";
