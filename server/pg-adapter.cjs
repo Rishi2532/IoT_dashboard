@@ -32,14 +32,18 @@ if (!password || typeof password !== 'string') {
 
 // Create pool using DATABASE_URL or fallback to explicit parameters
 let pool;
-// Always prefer DATABASE_URL for Replit environment
+// Check for Replit's DATABASE_URL environment variable
 if (process.env.DATABASE_URL) {
   console.log('Using DATABASE_URL for PostgreSQL connection');
   pool = new Pool({
     connectionString: process.env.DATABASE_URL,
     max: 10,
     idleTimeoutMillis: 30000,
-    ssl: process.env.NODE_ENV === 'production',
+    // Enable SSL for Neon DB connections
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
   });
 } else {
   console.log('Using explicit parameters for PostgreSQL connection');

@@ -1,38 +1,27 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import { sql, eq, like, and, not } from "drizzle-orm";
 import { regions, schemeStatuses, users, appState } from "../shared/schema";
-import { createRequire } from "module";
+import { setupDatabase, initializeTables } from "./setup-db";
+import dotenv from "dotenv";
 
-// Use createRequire to load CommonJS modules from ESM
-const require = createRequire(import.meta.url);
-const dotenv = require("dotenv");
+// Load environment variables
 dotenv.config();
 
-// We're using a separate CommonJS module for PostgreSQL connection
-// This avoids the ESM compatibility issues with pg
-let pool: any;
+// Database connection
 let db: any;
 
 // Create database connection
 export async function getDB() {
   if (!db) {
     try {
-      // Import the pool from CommonJS module
-      // Always use pg-adapter.cjs when DATABASE_URL is available
-      if (process.env.DATABASE_URL) {
-        pool = require("./pg-adapter.cjs");
-        console.log(
-          "PostgreSQL pool imported from default adapter with DATABASE_URL",
-        );
-      }
-      // In Replit environment, we always use the PostgreSQL adapter
-      else {
-        console.log("Using the default PostgreSQL adapter");
-        pool = require("./pg-adapter.cjs");
-      }
-
-      // Create drizzle instance with the pool
-      db = drizzle(pool);
+      console.log("Setting up database connection from getDB()...");
+      console.log("DATABASE_URL is set:", process.env.DATABASE_URL ? "Yes" : "No");
+      
+      // We'll use our new setup function
+      const { db: newDb } = setupDatabase();
+      db = newDb;
+      
+      console.log("Database connection setup successfully");
     } catch (error) {
       console.error("Failed to initialize PostgreSQL connection:", error);
       throw error;
@@ -170,6 +159,13 @@ export async function initializeDatabase() {
   const db = await getDB();
 
   try {
+    console.log("Initializing database with new setup...");
+    // Use the new initializeTables function
+    await initializeTables(db);
+    console.log("Database initialized successfully!");
+    return;
+    
+    // The code below is kept as a backup but won't be executed
     // Check if tables exist and create them if they don't
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "region" (
