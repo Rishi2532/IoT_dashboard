@@ -4,13 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter }
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Loader2, FileSpreadsheet, FileText } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import EnhancedCsvImporter from "@/components/admin/enhanced-csv-importer";
+import CsvImporter from "@/components/admin/csv-importer";
 
 export default function ImportDataPage() {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
   const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState("excel");
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -92,54 +96,83 @@ export default function ImportDataPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-6">Import Excel Data</h1>
+      <h1 className="text-2xl font-bold mb-6">Import Data</h1>
+      
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full mb-8">
+        <TabsList className="grid grid-cols-2 mb-6">
+          <TabsTrigger value="excel" className="flex items-center gap-2">
+            <FileSpreadsheet className="h-4 w-4" />
+            Excel Import
+          </TabsTrigger>
+          <TabsTrigger value="csv" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            CSV Import
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="excel" className="mt-0">
+          <Card>
+            <CardHeader>
+              <CardTitle>Upload Excel File</CardTitle>
+              <CardDescription>
+                Upload an Excel file to update scheme status data. The file should contain sheets for each region.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div>
+                  <Input 
+                    type="file" 
+                    accept=".xlsx,.xls" 
+                    onChange={handleFileChange}
+                    disabled={isUploading}
+                  />
+                  <p className="text-sm text-gray-500 mt-1">
+                    Upload an Excel file with sheets for each region: Amravati, Chhatrapati Sambhajinagar (CS), Konkan, Nagpur, Nashik, and Pune.
+                  </p>
+                </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Upload Excel File</CardTitle>
-          <CardDescription>
-            Upload an Excel file to update scheme status data. The file should contain sheets for each region.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <Input 
-                type="file" 
-                accept=".xlsx,.xls" 
-                onChange={handleFileChange}
-                disabled={isUploading}
-              />
-              <p className="text-sm text-gray-500 mt-1">
-                Upload an Excel file with sheets for each region: Amravati, Chhatrapati Sambhajinagar (CS), Konkan, Nagpur, Nashik, and Pune.
+                {result && (
+                  <Alert variant={result.success ? "default" : "destructive"}>
+                    <AlertTitle>{result.success ? "Success" : "Error"}</AlertTitle>
+                    <AlertDescription>{result.message}</AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            </CardContent>
+            <CardFooter>
+              <Button 
+                onClick={handleUpload} 
+                disabled={!file || isUploading}
+                className="w-full sm:w-auto"
+              >
+                {isUploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  "Upload and Import Data"
+                )}
+              </Button>
+            </CardFooter>
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="csv" className="mt-0">
+          <div className="flex flex-col space-y-4">
+            <EnhancedCsvImporter />
+            
+            <div className="text-center p-4 bg-gray-50 rounded-lg mt-6">
+              <h3 className="text-sm font-medium">Need help with CSV imports?</h3>
+              <p className="text-xs text-gray-500 mt-1">
+                The CSV importer supports various delimiters (comma, semicolon, tab) and can handle files with or without headers.
+                Map your columns to database fields for precise control over data import.
               </p>
             </div>
-
-            {result && (
-              <Alert variant={result.success ? "default" : "destructive"}>
-                <AlertTitle>{result.success ? "Success" : "Error"}</AlertTitle>
-                <AlertDescription>{result.message}</AlertDescription>
-              </Alert>
-            )}
           </div>
-        </CardContent>
-        <CardFooter>
-          <Button 
-            onClick={handleUpload} 
-            disabled={!file || isUploading}
-            className="w-full sm:w-auto"
-          >
-            {isUploading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Uploading...
-              </>
-            ) : (
-              "Upload and Import Data"
-            )}
-          </Button>
-        </CardFooter>
-      </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

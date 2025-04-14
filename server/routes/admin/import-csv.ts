@@ -5,7 +5,7 @@ import { updateRegionSummaries } from "../../db";
 import { type InsertSchemeStatus } from "@shared/schema";
 
 /**
- * Handle CSV import with column mapping for files without headers
+ * Handle CSV import with column mapping and advanced configuration options
  */
 export async function importCsvHandler(req: Request, res: Response) {
   try {
@@ -13,8 +13,8 @@ export async function importCsvHandler(req: Request, res: Response) {
       return res.status(400).json({ message: "No file uploaded" });
     }
 
-    // Extract column mappings and region from request body
-    let { columnMappings, regionName, tableName } = req.body;
+    // Extract parameters from request body
+    let { columnMappings, regionName, tableName, delimiter, hasHeader } = req.body;
 
     if (!columnMappings || !tableName) {
       return res.status(400).json({
@@ -23,16 +23,27 @@ export async function importCsvHandler(req: Request, res: Response) {
       });
     }
 
+    // Apply defaults if not provided
+    delimiter = delimiter || ",";
+    hasHeader = hasHeader === "true" || hasHeader === true;
+
     // Handle 'no_region' value from SelectItem to actual null/empty value
-    if (regionName === "no_region") {
+    if (regionName === "no_region" || regionName === "") {
       regionName = null;
     }
 
     // Read CSV data from the uploaded file
     const csvData = req.file.buffer.toString("utf-8");
 
-    // Parse CSV data according to mappings
-    const parsedData = parseCsvData(csvData, JSON.parse(columnMappings));
+    console.log(`Importing CSV with delimiter: '${delimiter}', hasHeader: ${hasHeader}, tableName: ${tableName}`);
+
+    // Parse CSV data according to mappings and options
+    const parsedData = parseCsvData(
+      csvData, 
+      JSON.parse(columnMappings), 
+      delimiter, 
+      hasHeader
+    );
 
     // Update database records based on the table name
     const result = await updateDatabaseRecords(
@@ -60,17 +71,24 @@ export async function importCsvHandler(req: Request, res: Response) {
 }
 
 /**
- * Parse CSV data using provided column mappings
+ * Parse CSV data using provided column mappings and options
  */
 function parseCsvData(
   csvData: string,
   columnMappings: Record<string, string | number>,
+  delimiter: string = ",",
+  hasHeader: boolean = false,
 ): any[] {
-  // Parse the CSV into records (array of arrays)
-  const records = parse(csvData, {
+  // Parse options
+  const parseOptions = {
+    delimiter: delimiter,
     skip_empty_lines: true,
     trim: true,
-  });
+    from_line: hasHeader ? 2 : 1, // Skip header row if present
+  };
+
+  // Parse the CSV into records (array of arrays)
+  const records = parse(csvData, parseOptions);
 
   // Transform records based on column mappings
   return records.map((row: string[]) => {
