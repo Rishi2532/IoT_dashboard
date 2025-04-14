@@ -233,7 +233,7 @@ export class PostgresStorage implements IStorage {
       } 
       // Handle Fully Completed status including "completed" and "Completed" values
       else if (statusFilter === "Fully Completed") {
-        query = query.where(sql`LOWER(${schemeStatuses.fully_completion_scheme_status}) IN ('fully-completed', 'Completed', 'fully completed')`);
+        query = query.where(sql`${schemeStatuses.fully_completion_scheme_status} IN ('Completed', 'Fully-Completed', 'Fully Completed')`);
       } else {
         query = query.where(eq(schemeStatuses.fully_completion_scheme_status, statusFilter));
       }
@@ -266,7 +266,7 @@ export class PostgresStorage implements IStorage {
       }
       // Handle Fully Completed status including "completed" and "Completed" values
       else if (statusFilter === "Fully Completed") {
-        query = query.where(sql`LOWER(${schemeStatuses.fully_completion_scheme_status}) IN ('fully-completed', 'Completed', 'fully completed')`);
+        query = query.where(sql`${schemeStatuses.fully_completion_scheme_status} IN ('Completed', 'Fully-Completed', 'Fully Completed')`);
       } else {
         query = query.where(eq(schemeStatuses.fully_completion_scheme_status, statusFilter));
       }
