@@ -70,12 +70,12 @@ async function fixAgencyColumn() {
           SET agency = 
             CASE
               WHEN region = 'Nagpur' THEN 'M/s Rite Water'
-              WHEN region = 'Amravati' THEN 'JISL'
-              WHEN region = 'Nashik' THEN 'JISL'
-              WHEN region = 'Pune' THEN 'L&T'
-              WHEN region = 'Konkan' THEN 'L&T'
-              WHEN region = 'Chhatrapati Sambhajinagar' THEN 'L&T'
-              ELSE 'L&T'
+              WHEN region = 'Amravati' THEN 'M/s Ceinsys'
+              WHEN region = 'Nashik' THEN 'M/s Ceinsys'
+              WHEN region = 'Pune' THEN 'M/s Indo/Chetas'
+              WHEN region = 'Konkan' THEN 'M/s Indo/Chetas'
+              WHEN region = 'Chhatrapati Sambhajinagar' THEN 'M/s Rite Water'
+              ELSE 'Not Specified'
             END;
         `);
         
