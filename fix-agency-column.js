@@ -11,11 +11,7 @@ const { Pool } = pg;
 
 // Create PostgreSQL client
 const pool = new Pool({
-  user: process.env.PGUSER,
-  host: process.env.PGHOST,
-  database: process.env.PGDATABASE,
-  password: process.env.PGPASSWORD,
-  port: process.env.PGPORT,
+  connectionString: process.env.DATABASE_URL,
 });
 
 async function fixAgencyColumn() {
@@ -73,12 +69,12 @@ async function fixAgencyColumn() {
           UPDATE scheme_status 
           SET agency = 
             CASE
-              WHEN region_name = 'Nagpur' THEN 'M/s Rite Water'
-              WHEN region_name = 'Amravati' THEN 'JISL'
-              WHEN region_name = 'Nashik' THEN 'JISL'
-              WHEN region_name = 'Pune' THEN 'L&T'
-              WHEN region_name = 'Konkan' THEN 'L&T'
-              WHEN region_name = 'Chhatrapati Sambhajinagar' THEN 'L&T'
+              WHEN region = 'Nagpur' THEN 'M/s Rite Water'
+              WHEN region = 'Amravati' THEN 'JISL'
+              WHEN region = 'Nashik' THEN 'JISL'
+              WHEN region = 'Pune' THEN 'L&T'
+              WHEN region = 'Konkan' THEN 'L&T'
+              WHEN region = 'Chhatrapati Sambhajinagar' THEN 'L&T'
               ELSE 'L&T'
             END;
         `);
