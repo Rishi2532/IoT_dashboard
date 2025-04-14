@@ -121,8 +121,8 @@ function parseFieldValue(fieldName: string, value: string): any {
     fieldName === "implementing_agency"
   ) {
     return String(value).trim();
-  } else if (fieldName === "fully_completion_scheme_status") {
-    // Handle scheme_status specially - keep the original text values
+  } else if (fieldName === "fully_completion_scheme_status" || fieldName === "scheme_functional_status") {
+    // Handle status fields specially - keep the original text values
     const trimmedValue = String(value).trim();
     const lowerValue = trimmedValue.toLowerCase();
 
@@ -152,6 +152,23 @@ function parseFieldValue(fieldName: string, value: string): any {
       "disconnected": "Not-Connected",
     };
 
+    // Special handling for functional status field
+    if (fieldName === "scheme_functional_status") {
+      // Ensure correct mapping for functional status
+      const functionalStatusMap: Record<string, string> = {
+        ...statusMap,
+        "complete": "Functional", // Override for functional status
+        "completed": "Functional",
+        "fully completed": "Functional",
+        "fully-completed": "Functional",
+        "yes": "Functional",
+        "true": "Functional",
+        "1": "Functional",
+        "y": "Functional"
+      };
+      return functionalStatusMap[lowerValue] || trimmedValue;
+    }
+
     // Return mapped value if it exists, otherwise return the original value
     return statusMap[lowerValue] || trimmedValue;
   } else if (fieldName.includes("date")) {
@@ -162,7 +179,8 @@ function parseFieldValue(fieldName: string, value: string): any {
     fieldName.includes("is_") ||
     fieldName.includes("has_") ||
     (fieldName.includes("_status") &&
-      fieldName !== "fully_completion_scheme_status") ||
+      fieldName !== "fully_completion_scheme_status" &&
+      fieldName !== "scheme_functional_status") ||
     fieldName === "active"
   ) {
     return parseBoolean(value);
@@ -286,7 +304,7 @@ async function updateDatabaseRecords(
               item.no_of_non_functional_village || 0,
             fully_completed_villages: item.fully_completed_villages || 0,
             total_number_of_esr: item.total_number_of_esr || 0,
-            scheme_functional_status: item.scheme_functional_status || "Partial",
+            scheme_functional_status: item.scheme_functional_status || "Functional",
             total_esr_integrated: item.total_esr_integrated || 0,
             no_fully_completed_esr: item.no_fully_completed_esr || 0,
             balance_to_complete_esr: item.balance_to_complete_esr || 0,
