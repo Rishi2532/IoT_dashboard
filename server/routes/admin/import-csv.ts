@@ -236,7 +236,8 @@ async function updateDatabaseRecords(
   let updatedCount = 0;
   let details = "";
 
-  if (tableName === "fully_completion_scheme_status") {
+  // Handle both original and possibly transformed table names
+  if (tableName === "fully_completion_scheme_status" || tableName === "scheme_status") {
     // Process scheme status updates
     for (const item of data) {
       try {
