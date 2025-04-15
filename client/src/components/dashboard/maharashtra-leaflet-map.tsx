@@ -48,12 +48,12 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 // Region pins data
 const regionPins = [
-  { name: "Nagpur", lat: 21.15, lng: 79.09 },
-  { name: "Amravati", lat: 20.93, lng: 77.76 },
-  { name: "Chhatrapati Sambhajinagar", lat: 19.88, lng: 75.34 },
-  { name: "Nashik", lat: 20.00, lng: 73.79 },
-  { name: "Pune", lat: 18.52, lng: 73.86 },
-  { name: "Konkan", lat: 17.30, lng: 73.05 }
+  { name: "Nagpur", lat: 21.15, lng: 79.09, color: '#FFD1D1' }, // Light red
+  { name: "Amravati", lat: 20.93, lng: 77.76, color: '#FF8C00' }, // Orange
+  { name: "Chhatrapati Sambhajinagar", lat: 19.88, lng: 75.34, color: '#BAD7FF' }, // Light blue
+  { name: "Nashik", lat: 20.00, lng: 73.79, color: '#90CAF9' }, // Medium blue
+  { name: "Pune", lat: 18.52, lng: 73.86, color: '#FFC107' }, // Amber/yellow
+  { name: "Konkan", lat: 17.30, lng: 73.05, color: '#5994DB' } // Darker blue
 ];
 
 // District data
@@ -282,7 +282,7 @@ export default function MaharashtraLeafletMap({
                   layer.setStyle({
                     weight: 1.5,
                     color: '#2563eb',
-                    dashArray: null
+                    dashArray: ''
                   });
                 }
               },
@@ -302,22 +302,19 @@ export default function MaharashtraLeafletMap({
       // Save reference for cleanup and updates
       geoJsonLayerRef = geojson;
       
-      // Create a location pin marker icon
-      const locationMarkerIcon = L.divIcon({
-        className: 'location-marker-icon',
-        html: `<svg width="24" height="32" viewBox="0 0 24 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M12 0C5.383 0 0 5.383 0 12C0 18.249 11.217 32 12 32C12.783 32 24 18.249 24 12C24 5.383 18.617 0 12 0Z" fill="#2563EB"/>
-                <circle cx="12" cy="12" r="6" fill="white"/>
-               </svg>`,
-        iconSize: [24, 32],
-        iconAnchor: [12, 32],
-        popupAnchor: [0, -32]
-      });
-      
-      // Add location markers for each region
+      // Add location markers for each region with colored dot markers
       regionPins.forEach(pin => {
+        // Create a colored dot marker for each region
+        const dotMarkerIcon = L.divIcon({
+          className: 'dot-marker-icon',
+          html: `<div style="background-color: ${pin.color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [12, 12],
+          iconAnchor: [6, 6],
+          popupAnchor: [0, -6]
+        });
+        
         const marker = L.marker([pin.lat, pin.lng], { 
-          icon: locationMarkerIcon
+          icon: dotMarkerIcon
         });
         
         // Add click handler to select the region
@@ -374,99 +371,89 @@ export default function MaharashtraLeafletMap({
         }).addTo(map);
       });
       
-      // Create and add scheme completion legend in the right side similar to the reference design
-      const schemeCompletionLegend = new L.Control({ position: 'topright' });
-      schemeCompletionLegend.onAdd = (map: L.Map) => {
-        const div = L.DomUtil.create('div', 'scheme-completion-legend');
+      // Create a legend panel that exactly matches the reference image
+      const regionLegend = new L.Control({ position: 'topright' });
+      regionLegend.onAdd = (map: L.Map) => {
+        const div = L.DomUtil.create('div', 'region-legend');
         div.style.background = '#ffffff';
         div.style.color = '#333333';
-        div.style.padding = '15px';
-        div.style.width = '220px';
-        div.style.borderRadius = '6px';
+        div.style.padding = '12px';
+        div.style.width = '180px';
+        div.style.borderRadius = '4px';
         div.style.border = '1px solid rgba(0,0,0,0.1)';
-        div.style.boxShadow = '0 2px 6px rgba(0,0,0,0.1)';
+        div.style.boxShadow = '0 1px 4px rgba(0,0,0,0.1)';
         div.style.marginTop = '10px';
         div.style.marginRight = '10px';
+        div.style.fontSize = '12px';
         
-        // Get region stats based on the current data
-        const regionStats = [];
+        // Get region stats for scheme completion
+        const regionStats: Array<{name: string, completed: number, total: number, color: string}> = [];
+        
         if (regions) {
-          regions.forEach(region => {
-            let completed = 0;
-            let total = 0;
-            
-            if (metric === 'completion') {
-              completed = region.fully_completed_schemes;
-              total = region.total_schemes_integrated;
-            } else if (metric === 'esr') {
-              completed = region.fully_completed_esr;
-              total = region.total_esr_integrated;
-            } else if (metric === 'villages') {
-              completed = region.fully_completed_villages;
-              total = region.total_villages_integrated;
+          regionPins.forEach(pin => {
+            const region = regions.find(r => r.region_name === pin.name);
+            if (region) {
+              let completed = 0;
+              let total = 0;
+              
+              if (metric === 'completion') {
+                completed = region.fully_completed_schemes;
+                total = region.total_schemes_integrated;
+              } else if (metric === 'esr') {
+                completed = region.fully_completed_esr;
+                total = region.total_esr_integrated;
+              } else if (metric === 'villages') {
+                completed = region.fully_completed_villages;
+                total = region.total_villages_integrated;
+              }
+              
+              regionStats.push({
+                name: region.region_name,
+                completed,
+                total,
+                color: pin.color
+              });
             }
-            
-            regionStats.push({
-              name: region.region_name,
-              completed,
-              total
-            });
           });
         }
         
-        // Home icon and title
+        // Maharashtra Regions title
         div.innerHTML = `
-          <div style="display: flex; align-items: center; margin-bottom: 15px; padding-bottom: 8px; border-bottom: 1px solid #eee;">
-            <div style="width: 18px; height: 18px; margin-right: 8px;">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
-              </svg>
-            </div>
-            <div style="font-weight: bold; font-size: 14px;">Maharashtra Regions</div>
+          <div style="font-size: 14px; font-weight: 500; margin-bottom: 10px; color: #111;">
+            Maharashtra Regions
           </div>
         `;
         
-        // Scheme Completion title
+        // Showing: Scheme Completion subtitle
         div.innerHTML += `
-          <div style="display: flex; align-items: center; margin-bottom: 10px;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <polyline points="12 6 12 12 16 14"></polyline>
-            </svg>
-            <div style="font-size: 12px; margin-left: 5px; color: #666;">Scheme Completion</div>
+          <div style="font-size: 11px; color: #555; margin-bottom: 15px; display: flex; align-items: center;">
+            <span>Showing: Scheme Completion</span>
           </div>
         `;
         
-        // Region completion stats
+        // Region completion stats using the exact color from the pin markers
         regionStats.forEach(stat => {
-          const color = '#2563EB'; // Blue color for all regions
           div.innerHTML += `
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 10px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
               <div style="display: flex; align-items: center;">
-                <div style="width: 12px; height: 12px; background-color: ${color}; margin-right: 8px;"></div>
-                <div style="font-size: 13px;">${stat.name}</div>
+                <div style="width: 10px; height: 10px; background-color: ${stat.color}; margin-right: 8px;"></div>
+                <div style="font-size: 12px;">${stat.name}</div>
               </div>
-              <div style="font-size: 13px; font-weight: 500;">${stat.completed}/${stat.total}</div>
+              <div style="font-size: 12px; color: #555;">${stat.completed}/${stat.total}</div>
             </div>
           `;
         });
         
-        // Note text
+        // Click on region note
         div.innerHTML += `
-          <div style="margin-top: 15px; font-size: 11px; color: #666; display: flex; align-items: center;">
-            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="10"></circle>
-              <line x1="12" y1="16" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12.01" y2="8"></line>
-            </svg>
-            <span style="margin-left: 5px;">Click on a region to filter dashboard data</span>
+          <div style="margin-top: 15px; font-size: 10px; color: #666; text-align: center;">
+            Click on a region to filter dashboard data
           </div>
         `;
         
         return div;
       };
-      schemeCompletionLegend.addTo(map);
+      regionLegend.addTo(map);
       
       // Create and add compass rose control
       const compass = new L.Control({ position: 'bottomleft' });
