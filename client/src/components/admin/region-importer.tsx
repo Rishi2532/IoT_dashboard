@@ -109,20 +109,20 @@ export default function RegionImporter() {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0] || null;
     setCsvFile(selectedFile);
-    
+
     if (selectedFile) {
       // Preview the file
       const reader = new FileReader();
       reader.onload = (event) => {
         const content = event.target?.result as string;
-        
+
         // Simple CSV parsing for preview
         const rows = content.split('\n').slice(0, 5).map(row => 
           row.split(',').map(cell => cell.trim().replace(/^"|"$/g, ''))
         );
-        
+
         setPreviewData(rows);
-        
+
         // Automatically set the column count based on the first row
         if (rows[0]) {
           setColumnCount(rows[0].length);
@@ -144,7 +144,7 @@ export default function RegionImporter() {
   // Handle CSV form submission
   const handleCsvSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!csvFile) {
       toast({
         title: "No file selected",
@@ -153,7 +153,7 @@ export default function RegionImporter() {
       });
       return;
     }
-    
+
     if (Object.keys(columnMappings).length === 0) {
       toast({
         title: "No column mappings",
@@ -162,22 +162,22 @@ export default function RegionImporter() {
       });
       return;
     }
-    
+
     try {
       setIsUploading(true);
       setUploadResult(null);
-      
+
       const formData = new FormData();
       formData.append('file', csvFile);
       formData.append('columnMappings', JSON.stringify(columnMappings));
       formData.append('tableName', 'region');
-      
+
       const response = await fetch('/api/admin/import-csv', {
         method: 'POST',
         body: formData,
         // Don't set Content-Type header, it will be set automatically with correct boundary
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         setUploadResult(result);
@@ -232,7 +232,7 @@ export default function RegionImporter() {
               CSV (no headers)
             </TabsTrigger>
           </TabsList>
-          
+
           <TabsContent value="excel">
             <Alert className="bg-blue-50 border-blue-200">
               <Info className="h-4 w-4 text-blue-500" />
@@ -250,7 +250,7 @@ export default function RegionImporter() {
                 </ul>
               </AlertDescription>
             </Alert>
-            
+
             <FileUpload
               onFileUpload={handleExcelUpload}
               uploading={excelImportMutation.isPending}
@@ -260,7 +260,7 @@ export default function RegionImporter() {
               acceptTypes=".xlsx,.xls"
             />
           </TabsContent>
-          
+
           <TabsContent value="csv">
             <Alert className="bg-blue-50 border-blue-200 mb-4">
               <Info className="h-4 w-4 text-blue-500" />
@@ -275,14 +275,14 @@ export default function RegionImporter() {
                 </ul>
               </AlertDescription>
             </Alert>
-            
+
             <Tabs defaultValue="upload" className="space-y-4">
               <TabsList>
                 <TabsTrigger value="upload">Upload & Map</TabsTrigger>
                 <TabsTrigger value="preview">Preview</TabsTrigger>
                 {uploadResult && <TabsTrigger value="result">Result</TabsTrigger>}
               </TabsList>
-              
+
               <TabsContent value="upload">
                 <form onSubmit={handleCsvSubmit} className="space-y-6">
                   <div className="space-y-2">
@@ -297,7 +297,7 @@ export default function RegionImporter() {
                       Upload a CSV file without headers to import data.
                     </p>
                   </div>
-                  
+
                   {csvFile && (
                     <>
                       <div className="space-y-2">
@@ -311,13 +311,13 @@ export default function RegionImporter() {
                           onChange={(e) => setColumnCount(parseInt(e.target.value) || 1)}
                         />
                       </div>
-                      
+
                       <div className="space-y-4">
                         <h3 className="text-lg font-medium">Column Mapping</h3>
                         <p className="text-sm text-muted-foreground">
                           Map each database field to a specific column in your CSV file.
                         </p>
-                        
+
                         <div className="p-4 bg-blue-50 border border-blue-200 rounded-md mb-4">
                           <h3 className="font-medium text-blue-800 mb-2">Predefined Column Mapping</h3>
                           <p className="text-sm text-blue-700 mb-3">
@@ -335,7 +335,7 @@ export default function RegionImporter() {
                           </div>
                         </div>
                       </div>
-                      
+
                       <div className="pt-4">
                         <Button type="submit" disabled={!csvFile || isUploading}>
                           {isUploading ? <><Spinner className="mr-2" /> Importing Data...</> : 'Import Data'}
@@ -345,7 +345,7 @@ export default function RegionImporter() {
                   )}
                 </form>
               </TabsContent>
-              
+
               <TabsContent value="preview">
                 {previewData.length > 0 ? (
                   <div className="overflow-x-auto border rounded">
@@ -378,14 +378,14 @@ export default function RegionImporter() {
                   </div>
                 )}
               </TabsContent>
-              
+
               {uploadResult && (
                 <TabsContent value="result">
                   <div className="space-y-4">
                     <div className="p-4 bg-green-50 border border-green-200 rounded-md">
                       <h3 className="font-medium text-green-800">{uploadResult.message}</h3>
                     </div>
-                    
+
                     {uploadResult.details && (
                       <div className="p-4 bg-muted rounded-md">
                         <h4 className="font-medium mb-2">Import Details</h4>

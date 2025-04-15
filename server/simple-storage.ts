@@ -32,7 +32,10 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  validateUserCredentials(username: string, password: string): Promise<User | null>;
+  validateUserCredentials(
+    username: string,
+    password: string,
+  ): Promise<User | null>;
 
   // Region operations
   getAllRegions(): Promise<Region[]>;
@@ -42,7 +45,10 @@ export interface IStorage {
   updateRegion(region: Region): Promise<Region>;
 
   // Scheme operations
-  getAllSchemes(statusFilter?: string, schemeId?: string): Promise<SchemeStatus[]>;
+  getAllSchemes(
+    statusFilter?: string,
+    schemeId?: string,
+  ): Promise<SchemeStatus[]>;
   getSchemesByRegion(
     regionName: string,
     statusFilter?: string,
@@ -52,7 +58,7 @@ export interface IStorage {
   createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus>;
   updateScheme(scheme: SchemeStatus): Promise<SchemeStatus>;
   deleteScheme(schemeId: string): Promise<boolean>;
-  
+
   // Updates operations
   getTodayUpdates(): Promise<any[]>;
 }
@@ -82,11 +88,11 @@ export class SimpleStorage implements IStorage {
   async getUser(id: number): Promise<User | undefined> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
       const result = await client.query(
         'SELECT * FROM "users" WHERE "id" = $1',
-        [id]
+        [id],
       );
       return result.rows.length > 0 ? result.rows[0] : undefined;
     } catch (error) {
@@ -98,11 +104,11 @@ export class SimpleStorage implements IStorage {
   async getUserByUsername(username: string): Promise<User | undefined> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
       const result = await client.query(
         'SELECT * FROM "users" WHERE "username" = $1',
-        [username]
+        [username],
       );
       return result.rows.length > 0 ? result.rows[0] : undefined;
     } catch (error) {
@@ -114,11 +120,16 @@ export class SimpleStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
       const result = await client.query(
         'INSERT INTO "users" ("username", "password", "name", "role") VALUES ($1, $2, $3, $4) RETURNING *',
-        [insertUser.username, insertUser.password, insertUser.name, insertUser.role]
+        [
+          insertUser.username,
+          insertUser.password,
+          insertUser.name,
+          insertUser.role,
+        ],
       );
       return result.rows[0];
     } catch (error) {
@@ -126,19 +137,22 @@ export class SimpleStorage implements IStorage {
       throw error;
     }
   }
-  
-  async validateUserCredentials(username: string, password: string): Promise<User | null> {
+
+  async validateUserCredentials(
+    username: string,
+    password: string,
+  ): Promise<User | null> {
     const user = await this.getUserByUsername(username);
-    
+
     if (!user) {
       return null;
     }
-    
+
     // Simple password check (in a real app, you would use bcrypt or similar)
     if (user.password === password) {
       return user;
     }
-    
+
     return null;
   }
 
@@ -146,9 +160,11 @@ export class SimpleStorage implements IStorage {
   async getAllRegions(): Promise<Region[]> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
-      const result = await client.query('SELECT * FROM "region" ORDER BY "region_name"');
+      const result = await client.query(
+        'SELECT * FROM "region" ORDER BY "region_name"',
+      );
       return result.rows;
     } catch (error) {
       console.error("Error in getAllRegions:", error);
@@ -159,11 +175,11 @@ export class SimpleStorage implements IStorage {
   async getRegionByName(regionName: string): Promise<Region | undefined> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
       const result = await client.query(
         'SELECT * FROM "region" WHERE "region_name" = $1',
-        [regionName]
+        [regionName],
       );
       return result.rows.length > 0 ? result.rows[0] : undefined;
     } catch (error) {
@@ -192,7 +208,8 @@ export class SimpleStorage implements IStorage {
           partial_esr: region.partial_esr || 0,
           flow_meter_integrated: region.flow_meter_integrated || 0,
           rca_integrated: region.rca_integrated || 0,
-          pressure_transmitter_integrated: region.pressure_transmitter_integrated || 0,
+          pressure_transmitter_integrated:
+            region.pressure_transmitter_integrated || 0,
         };
       } else {
         // Get summary for all regions
@@ -210,7 +227,7 @@ export class SimpleStorage implements IStorage {
             SUM("pressure_transmitter_integrated") as pressure_transmitter_integrated
           FROM "region"
         `);
-        
+
         return result.rows[0];
       }
     } catch (error) {
@@ -222,9 +239,10 @@ export class SimpleStorage implements IStorage {
   async createRegion(region: InsertRegion): Promise<Region> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
-      const result = await client.query(`
+      const result = await client.query(
+        `
         INSERT INTO "region" (
           "region_name", 
           "total_esr_integrated", 
@@ -249,8 +267,8 @@ export class SimpleStorage implements IStorage {
           region.fully_completed_schemes,
           region.flow_meter_integrated,
           region.rca_integrated,
-          region.pressure_transmitter_integrated
-        ]
+          region.pressure_transmitter_integrated,
+        ],
       );
       return result.rows[0];
     } catch (error) {
@@ -262,9 +280,10 @@ export class SimpleStorage implements IStorage {
   async updateRegion(region: Region): Promise<Region> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
-      await client.query(`
+      await client.query(
+        `
         UPDATE "region" SET
           "region_name" = $1,
           "total_esr_integrated" = $2,
@@ -290,8 +309,8 @@ export class SimpleStorage implements IStorage {
           region.flow_meter_integrated,
           region.rca_integrated,
           region.pressure_transmitter_integrated,
-          region.region_id
-        ]
+          region.region_id,
+        ],
       );
       return region;
     } catch (error) {
@@ -301,30 +320,35 @@ export class SimpleStorage implements IStorage {
   }
 
   // Scheme methods (simplified implementations)
-  async getAllSchemes(statusFilter?: string, schemeId?: string): Promise<SchemeStatus[]> {
+  async getAllSchemes(
+    statusFilter?: string,
+    schemeId?: string,
+  ): Promise<SchemeStatus[]> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
       let query = 'SELECT * FROM "scheme_status"';
       const params: any[] = [];
-      
+
       if (schemeId) {
         query += ' WHERE "scheme_id" = $1';
         params.push(schemeId);
       } else if (statusFilter && statusFilter !== "all") {
         if (statusFilter === "In Progress") {
-          query += ' WHERE "fully_completion_scheme_status" IN (\'Partial\', \'In Progress\')';
+          query +=
+            " WHERE \"fully_completion_scheme_status\" IN ('Partial', 'In Progress')";
         } else if (statusFilter === "Fully Completed") {
-          query += ' WHERE "fully_completion_scheme_status" IN (\'Completed\', \'Fully-Completed\', \'Fully Completed\')';
+          query +=
+            " WHERE \"fully_completion_scheme_status\" IN ('Completed', 'Fully-Completed', 'Fully Completed')";
         } else {
           query += ' WHERE "fully_completion_scheme_status" = $1';
           params.push(statusFilter);
         }
       }
-      
+
       query += ' ORDER BY "region", "scheme_name"';
-      
+
       const result = await client.query(query, params);
       return result.rows;
     } catch (error) {
@@ -333,30 +357,36 @@ export class SimpleStorage implements IStorage {
     }
   }
 
-  async getSchemesByRegion(regionName: string, statusFilter?: string, schemeId?: string): Promise<SchemeStatus[]> {
+  async getSchemesByRegion(
+    regionName: string,
+    statusFilter?: string,
+    schemeId?: string,
+  ): Promise<SchemeStatus[]> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
       let query = 'SELECT * FROM "scheme_status" WHERE "region" = $1';
       const params: any[] = [regionName];
-      
+
       if (schemeId) {
         query += ' AND "scheme_id" = $2';
         params.push(schemeId);
       } else if (statusFilter && statusFilter !== "all") {
         if (statusFilter === "In Progress") {
-          query += ' AND "fully_completion_scheme_status" IN (\'Partial\', \'In Progress\')';
+          query +=
+            " AND \"fully_completion_scheme_status\" IN ('Partial', 'In Progress')";
         } else if (statusFilter === "Fully Completed") {
-          query += ' AND "fully_completion_scheme_status" IN (\'Completed\', \'Fully-Completed\', \'Fully Completed\')';
+          query +=
+            " AND \"fully_completion_scheme_status\" IN ('Completed', 'Fully-Completed', 'Fully Completed')";
         } else {
           query += ' AND "fully_completion_scheme_status" = $2';
           params.push(statusFilter);
         }
       }
-      
+
       query += ' ORDER BY "scheme_name"';
-      
+
       const result = await client.query(query, params);
       return result.rows;
     } catch (error) {
@@ -368,11 +398,11 @@ export class SimpleStorage implements IStorage {
   async getSchemeById(schemeId: string): Promise<SchemeStatus | undefined> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
       const result = await client.query(
         'SELECT * FROM "scheme_status" WHERE "scheme_id" = $1',
-        [schemeId]
+        [schemeId],
       );
       return result.rows.length > 0 ? result.rows[0] : undefined;
     } catch (error) {
@@ -384,10 +414,11 @@ export class SimpleStorage implements IStorage {
   async createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
       // Simple implementation - in a real app you'd handle all fields properly
-      const result = await client.query(`
+      const result = await client.query(
+        `
         INSERT INTO "scheme_status" (
           "scheme_id", 
           "region", 
@@ -410,10 +441,10 @@ export class SimpleStorage implements IStorage {
           scheme.no_of_functional_village || 0,
           scheme.fully_completed_villages || 0,
           scheme.total_number_of_esr || 0,
-          scheme.scheme_functional_status || 'Functional',
+          scheme.scheme_functional_status || "Functional",
           scheme.total_esr_integrated || 0,
-          scheme.fully_completion_scheme_status || 'Partial'
-        ]
+          scheme.fully_completion_scheme_status || "Partial",
+        ],
       );
       return result.rows[0];
     } catch (error) {
@@ -425,10 +456,11 @@ export class SimpleStorage implements IStorage {
   async updateScheme(scheme: SchemeStatus): Promise<SchemeStatus> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
       // Simple implementation - in a real app you'd handle all fields properly
-      await client.query(`
+      await client.query(
+        `
         UPDATE "scheme_status" SET
           "region" = $1,
           "scheme_name" = $2,
@@ -452,8 +484,8 @@ export class SimpleStorage implements IStorage {
           scheme.scheme_functional_status,
           scheme.total_esr_integrated,
           scheme.fully_completion_scheme_status,
-          scheme.scheme_id
-        ]
+          scheme.scheme_id,
+        ],
       );
       return scheme;
     } catch (error) {
@@ -465,12 +497,11 @@ export class SimpleStorage implements IStorage {
   async deleteScheme(schemeId: string): Promise<boolean> {
     await this.initialized;
     const client = await getClient();
-    
+
     try {
-      await client.query(
-        'DELETE FROM "scheme_status" WHERE "scheme_id" = $1',
-        [schemeId]
-      );
+      await client.query('DELETE FROM "scheme_status" WHERE "scheme_id" = $1', [
+        schemeId,
+      ]);
       return true;
     } catch (error) {
       console.error("Error in deleteScheme:", error);

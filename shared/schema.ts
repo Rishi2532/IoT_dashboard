@@ -92,8 +92,7 @@ export const schemeStatuses = pgTable("scheme_status", {
   total_esr_integrated: integer("total_esr_integrated"), // Total ESR Integrated on IoT
   no_fully_completed_esr: integer("no_fully_completed_esr"), // No. Fully Completed ESR
   balance_to_complete_esr: integer("balance_to_complete_esr"), // Balance to Complete ESR
-  flow_meters_connected: integer("flow_meters_connected"), // Flow Meters Connected
-
+  flow_meters_connected: integer("flow_meters_connected"), // Flow Meters C
   pressure_transmitter_connected: integer("pressure_transmitter_connected"), // Pressure Transmitter Connected
 
   residual_chlorine_analyzer_connected: integer(

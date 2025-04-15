@@ -123,14 +123,14 @@ export default function EnhancedCsvImporter() {
           const commaCount = (content.match(/,/g) || []).length;
           const semicolonCount = (content.match(/;/g) || []).length;
           const tabCount = (content.match(/\t/g) || []).length;
-          
+
           let detectedDelimiter = ",";
           if (semicolonCount > commaCount && semicolonCount > tabCount) {
             detectedDelimiter = ";";
           } else if (tabCount > commaCount && tabCount > semicolonCount) {
             detectedDelimiter = "\t";
           }
-          
+
           setDelimiter(detectedDelimiter);
           parsePreviewData(content, detectedDelimiter, hasHeader);
         };
@@ -150,16 +150,16 @@ export default function EnhancedCsvImporter() {
     try {
       // Simple CSV parsing for preview (handles quoted cells)
       const rows = content.split(/\r?\n/).filter(row => row.trim() !== '');
-      
+
       const parsedRows = rows.map(row => {
         // Handle quoted cells with embedded delimiters
         const cells: string[] = [];
         let currentCell = '';
         let inQuotes = false;
-        
+
         for (let i = 0; i < row.length; i++) {
           const char = row[i];
-          
+
           if (char === '"') {
             inQuotes = !inQuotes;
           } else if (char === currentDelimiter && !inQuotes) {
@@ -169,39 +169,39 @@ export default function EnhancedCsvImporter() {
             currentCell += char;
           }
         }
-        
+
         // Add the last cell
         cells.push(currentCell.trim().replace(/^"|"$/g, ""));
         return cells;
       });
-      
+
       // Set preview data (show max 10 rows)
       setPreviewData(parsedRows.slice(0, 10));
-      
+
       // Automatically set the column count based on the first row
       if (parsedRows.length > 0) {
         setColumnCount(parsedRows[0].length);
-        
+
         // If we have headers, use them for initial mapping
         if (skipHeader && parsedRows.length > 1) {
           const headers = parsedRows[0];
           const initialMappings: Record<string, string> = {};
-          
+
           // Try to match headers to fields
           headers.forEach((header, index) => {
             const lowerHeader = header.toLowerCase().trim();
-            
+
             const fields = tableName === "scheme_status" ? schemeFields : regionFields;
             const matchedField = fields.find(field => 
               field.label.toLowerCase() === lowerHeader ||
               field.value.toLowerCase() === lowerHeader
             );
-            
+
             if (matchedField) {
               initialMappings[matchedField.value] = index.toString();
             }
           });
-          
+
           setColumnMappings(initialMappings);
         }
       }
@@ -244,29 +244,29 @@ export default function EnhancedCsvImporter() {
   const validateMappings = (): boolean => {
     const errors: string[] = [];
     const fields = tableName === "scheme_status" ? schemeFields : regionFields;
-    
+
     // Check required fields
     const requiredFields = fields.filter(field => field.required);
     const missingRequiredFields = requiredFields.filter(
       field => !columnMappings[field.value] || columnMappings[field.value] === "not_mapped"
     );
-    
+
     if (missingRequiredFields.length > 0) {
       errors.push(
         `Missing required fields: ${missingRequiredFields.map(f => f.label).join(", ")}`
       );
     }
-    
+
     // Check for duplicate mappings
     const mappedColumns = Object.values(columnMappings).filter(
       val => val !== "not_mapped" && val !== undefined
     );
     const uniqueMappedColumns = new Set(mappedColumns);
-    
+
     if (mappedColumns.length !== uniqueMappedColumns.size) {
       errors.push("Multiple fields are mapped to the same column");
     }
-    
+
     // Update validation errors
     setValidationErrors(errors);
     return errors.length === 0;
@@ -566,7 +566,7 @@ export default function EnhancedCsvImporter() {
         <TabsContent value="preview" className="p-6">
           <div className="grid gap-6">
             <h3 className="text-lg font-medium">Data Preview</h3>
-            
+
             {previewData.length > 0 ? (
               <div className="overflow-x-auto">
                 <Table>

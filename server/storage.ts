@@ -33,7 +33,10 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
-  validateUserCredentials(username: string, password: string): Promise<User | null>;
+  validateUserCredentials(
+    username: string,
+    password: string,
+  ): Promise<User | null>;
 
   // Region operations
   getAllRegions(): Promise<Region[]>;
@@ -43,7 +46,10 @@ export interface IStorage {
   updateRegion(region: Region): Promise<Region>;
 
   // Scheme operations
-  getAllSchemes(statusFilter?: string, schemeId?: string): Promise<SchemeStatus[]>;
+  getAllSchemes(
+    statusFilter?: string,
+    schemeId?: string,
+  ): Promise<SchemeStatus[]>;
   getSchemesByRegion(
     regionName: string,
     statusFilter?: string,
@@ -53,7 +59,7 @@ export interface IStorage {
   createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus>;
   updateScheme(scheme: SchemeStatus): Promise<SchemeStatus>;
   deleteScheme(schemeId: string): Promise<boolean>;
-  
+
   // Updates operations
   getTodayUpdates(): Promise<any[]>;
 }
@@ -106,20 +112,23 @@ export class PostgresStorage implements IStorage {
     const result = await db.insert(users).values(insertUser).returning();
     return result[0];
   }
-  
-  async validateUserCredentials(username: string, password: string): Promise<User | null> {
+
+  async validateUserCredentials(
+    username: string,
+    password: string,
+  ): Promise<User | null> {
     const db = await this.ensureInitialized();
     const user = await this.getUserByUsername(username);
-    
+
     if (!user) {
       return null;
     }
-    
+
     // Simple password check (in a real app, you would use bcrypt or similar)
     if (user.password === password) {
       return user;
     }
-    
+
     return null;
   }
 
@@ -157,12 +166,13 @@ export class PostgresStorage implements IStorage {
         partial_esr: region.partial_esr || 0,
         flow_meter_integrated: region.flow_meter_integrated || 0,
         rca_integrated: region.rca_integrated || 0,
-        pressure_transmitter_integrated: region.pressure_transmitter_integrated || 0,
+        pressure_transmitter_integrated:
+          region.pressure_transmitter_integrated || 0,
       };
     } else {
       // Always dynamically calculate the sum of all regions instead of using global_summary
       console.log("Calculating dynamic sum of all regions");
-      
+
       const result = await db
         .select({
           total_schemes_integrated: sql<number>`SUM(${regions.total_schemes_integrated})`,
@@ -177,10 +187,10 @@ export class PostgresStorage implements IStorage {
           pressure_transmitter_integrated: sql<number>`SUM(${regions.pressure_transmitter_integrated})`,
         })
         .from(regions);
-      
+
       // Log the dynamically calculated summary for debugging
       console.log("Dynamic region summary calculated:", result[0]);
-      
+
       return result[0];
     }
   }
@@ -214,64 +224,81 @@ export class PostgresStorage implements IStorage {
   }
 
   // Scheme methods
-  async getAllSchemes(statusFilter?: string, schemeId?: string): Promise<SchemeStatus[]> {
+  async getAllSchemes(
+    statusFilter?: string,
+    schemeId?: string,
+  ): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
-    
+
     // Start with the basic query
     let query = db.select().from(schemeStatuses);
-    
+
     // Apply scheme_id filter if provided
     if (schemeId) {
       query = query.where(eq(schemeStatuses.scheme_id, schemeId));
     }
-    
+
     // Apply status filter if provided
     if (statusFilter && statusFilter !== "all") {
       // Handle both "Partial" and "In Progress" as the same filter
       if (statusFilter === "In Progress") {
-        query = query.where(sql`${schemeStatuses.fully_completion_scheme_status} IN ('Partial', 'In Progress')`);
-      } 
+        query = query.where(
+          sql`${schemeStatuses.fully_completion_scheme_status} IN ('Partial', 'In Progress')`,
+        );
+      }
       // Handle Fully Completed status including "completed" and "Completed" values
       else if (statusFilter === "Fully Completed") {
-        query = query.where(sql`${schemeStatuses.fully_completion_scheme_status} IN ('Completed', 'Fully-Completed', 'Fully Completed')`);
+        query = query.where(
+          sql`${schemeStatuses.fully_completion_scheme_status} IN ('Completed', 'Fully-Completed', 'Fully Completed')`,
+        );
       } else {
-        query = query.where(eq(schemeStatuses.fully_completion_scheme_status, statusFilter));
+        query = query.where(
+          eq(schemeStatuses.fully_completion_scheme_status, statusFilter),
+        );
       }
     }
-    
+
     return query.orderBy(schemeStatuses.region, schemeStatuses.scheme_name);
   }
 
   async getSchemesByRegion(
     regionName: string,
     statusFilter?: string,
-    schemeId?: string
+    schemeId?: string,
   ): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
-    
+
     // Start with the basic region filter
-    let query = db.select().from(schemeStatuses)
-                 .where(eq(schemeStatuses.region, regionName));
-    
+    let query = db
+      .select()
+      .from(schemeStatuses)
+      .where(eq(schemeStatuses.region, regionName));
+
     // Apply scheme_id filter if provided
     if (schemeId) {
       query = query.where(eq(schemeStatuses.scheme_id, schemeId));
     }
-    
+
     // Apply status filter if provided
     if (statusFilter && statusFilter !== "all") {
       // Handle both "Partial" and "In Progress" as the same filter
       if (statusFilter === "In Progress") {
-        query = query.where(sql`${schemeStatuses.fully_completion_scheme_status} IN ('Partial', 'In Progress')`);
+        query = query.where(
+          sql`${schemeStatuses.fully_completion_scheme_status} IN ('Partial', 'In Progress')`,
+        );
       }
       // Handle Fully Completed status including "completed" and "Completed" values
       else if (statusFilter === "Fully Completed") {
-        query = query.where(sql`${schemeStatuses.fully_completion_scheme_status} IN ('Completed', 'Fully-Completed', 'Fully Completed')`);
+        query = query.where(
+          sql`${schemeStatuses.fully_completion_scheme_status} IN ('Completed', 'Fully-Completed', 'Fully Completed')`,
+        );
       } else {
-        query = query.where(eq(schemeStatuses.fully_completion_scheme_status, statusFilter));
+        query = query.where(
+          eq(schemeStatuses.fully_completion_scheme_status, statusFilter),
+        );
       }
     }
-    
+
     return query.orderBy(schemeStatuses.scheme_name);
   }
 
@@ -310,8 +337,9 @@ export class PostgresStorage implements IStorage {
         balance_to_complete_esr: scheme.balance_to_complete_esr,
         flow_meters_connected: scheme.flow_meters_connected,
         pressure_transmitter_connected: scheme.pressure_transmitter_connected,
-        residual_chlorine_analyzer_connected: scheme.residual_chlorine_analyzer_connected,
-        fully_completion_scheme_status: scheme.fully_completion_scheme_status
+        residual_chlorine_analyzer_connected:
+          scheme.residual_chlorine_analyzer_connected,
+        fully_completion_scheme_status: scheme.fully_completion_scheme_status,
       })
       .where(eq(schemeStatuses.scheme_id, scheme.scheme_id));
 
@@ -325,22 +353,22 @@ export class PostgresStorage implements IStorage {
       .where(eq(schemeStatuses.scheme_id, schemeId));
     return true;
   }
-  
+
   // We're now using global variables instead of static class variables
   // This makes the data accessible across different instances and module reloads
-  
+
   async getTodayUpdates(): Promise<any[]> {
     const db = await this.ensureInitialized();
     console.log("Fetching today's updates");
-    
+
     try {
       // Get the current date (server's local time)
       const now = new Date();
-      const today = now.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-      
+      const today = now.toISOString().split("T")[0]; // Format: YYYY-MM-DD
+
       // First, try to retrieve daily updates from the database
       const updateKey = `daily_updates_${today}`;
-      
+
       // Ensure the app_state table exists
       await db.execute(sql`
         CREATE TABLE IF NOT EXISTS "app_state" (
@@ -349,36 +377,42 @@ export class PostgresStorage implements IStorage {
           "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
       `);
-      
+
       // Use SQL template to avoid parameter issues
       const storedUpdatesQuery = await db.execute(sql`
         SELECT value FROM app_state WHERE key = ${updateKey}
       `);
-      
+
       let todayUpdates: any[] = [];
       let prevTotals: any = null;
       let lastUpdateDay = null;
-      
+
       // Check if we have stored updates for today
       if (storedUpdatesQuery.rows.length > 0) {
         try {
           // Handle the case where value might be an object and not a JSON string
           const storedValue = storedUpdatesQuery.rows[0].value;
           let storedData;
-          
-          if (typeof storedValue === 'string') {
+
+          if (typeof storedValue === "string") {
             storedData = JSON.parse(storedValue);
-          } else if (typeof storedValue === 'object' && storedValue !== null) {
+          } else if (typeof storedValue === "object" && storedValue !== null) {
             storedData = storedValue;
           } else {
             // Default to an empty structure if the value is neither string nor object
-            storedData = { updates: [], prevTotals: null, lastUpdateDay: today };
+            storedData = {
+              updates: [],
+              prevTotals: null,
+              lastUpdateDay: today,
+            };
           }
-          
+
           todayUpdates = storedData.updates || [];
           prevTotals = storedData.prevTotals || null;
           lastUpdateDay = storedData.lastUpdateDay || today;
-          console.log(`Loaded ${todayUpdates.length} stored updates for today (${today})`);
+          console.log(
+            `Loaded ${todayUpdates.length} stored updates for today (${today})`,
+          );
         } catch (parseError) {
           console.error("Error parsing stored updates:", parseError);
           // Initialize with empty values since there was a parse error
@@ -387,140 +421,181 @@ export class PostgresStorage implements IStorage {
           lastUpdateDay = today;
         }
       } else {
-        console.log(`No updates found for today (${today}), creating new record`);
+        console.log(
+          `No updates found for today (${today}), creating new record`,
+        );
       }
-      
+
       // Get current regions data
       const regionsData = await db.select().from(regions);
       const allSchemes = await this.getAllSchemes();
-      
+
       // Get current totals
       const currentTotals = {
-        villages: regionsData.reduce((sum: number, region: any) => sum + (region.total_villages_integrated || 0), 0),
-        esr: regionsData.reduce((sum: number, region: any) => sum + (region.total_esr_integrated || 0), 0),
-        completedSchemes: allSchemes.filter(scheme => {
-          const status = scheme.fully_completion_scheme_status?.toLowerCase() || '';
-          return status === 'Fully-Completed' || status === 'Completed' || status === 'fully completed';
+        villages: regionsData.reduce(
+          (sum: number, region: any) =>
+            sum + (region.total_villages_integrated || 0),
+          0,
+        ),
+        esr: regionsData.reduce(
+          (sum: number, region: any) =>
+            sum + (region.total_esr_integrated || 0),
+          0,
+        ),
+        completedSchemes: allSchemes.filter((scheme) => {
+          const status =
+            scheme.fully_completion_scheme_status?.toLowerCase() || "";
+          return (
+            status === "Fully-Completed" ||
+            status === "Completed" ||
+            status === "fully completed"
+          );
         }).length,
-        flowMeters: regionsData.reduce((sum: number, region: any) => sum + (region.flow_meter_integrated || 0), 0),
-        rca: regionsData.reduce((sum: number, region: any) => sum + (region.rca_integrated || 0), 0),
-        pt: regionsData.reduce((sum: number, region: any) => sum + (region.pressure_transmitter_integrated || 0), 0)
+        flowMeters: regionsData.reduce(
+          (sum: number, region: any) =>
+            sum + (region.flow_meter_integrated || 0),
+          0,
+        ),
+        rca: regionsData.reduce(
+          (sum: number, region: any) => sum + (region.rca_integrated || 0),
+          0,
+        ),
+        pt: regionsData.reduce(
+          (sum: number, region: any) =>
+            sum + (region.pressure_transmitter_integrated || 0),
+          0,
+        ),
       };
-      
+
       // Only detect new changes if we have previous totals
       // If this is the first run for today, just store the current totals
       const updates: any[] = [];
-      
+
       if (prevTotals) {
         // Calculate differences since the previous update
-        
+
         // Check for NEW village updates since last check
         const newVillages = currentTotals.villages - prevTotals.villages;
         if (newVillages > 0) {
-          updates.push({ 
-            type: 'village', 
+          updates.push({
+            type: "village",
             count: newVillages,
-            status: 'new',
+            status: "new",
             timestamp: new Date().toISOString(),
-            region: "All Regions"
+            region: "All Regions",
           });
         }
-        
+
         // Check for NEW ESR updates since last check
         const newESR = currentTotals.esr - prevTotals.esr;
         if (newESR > 0) {
-          updates.push({ 
-            type: 'esr', 
+          updates.push({
+            type: "esr",
             count: newESR,
-            status: 'new',
+            status: "new",
             timestamp: new Date().toISOString(),
-            region: "All Regions"
+            region: "All Regions",
           });
         }
-        
+
         // Check for NEW completed schemes since last check
-        const newCompletedSchemes = currentTotals.completedSchemes - prevTotals.completedSchemes;
+        const newCompletedSchemes =
+          currentTotals.completedSchemes - prevTotals.completedSchemes;
         if (newCompletedSchemes > 0) {
           updates.push({
-            type: 'scheme',
+            type: "scheme",
             count: newCompletedSchemes,
-            status: 'completed',
+            status: "completed",
             timestamp: new Date().toISOString(),
-            region: "All Regions"
+            region: "All Regions",
           });
         }
-        
+
         // Check for NEW flow meters since last check
         const newFlowMeters = currentTotals.flowMeters - prevTotals.flowMeters;
         if (newFlowMeters > 0) {
           updates.push({
-            type: 'flow_meter',
+            type: "flow_meter",
             count: newFlowMeters,
-            status: 'new',
+            status: "new",
             timestamp: new Date().toISOString(),
-            region: "All Regions"
+            region: "All Regions",
           });
         }
-        
+
         // Check for NEW RCAs since last check
         const newRCA = currentTotals.rca - prevTotals.rca;
         if (newRCA > 0) {
           updates.push({
-            type: 'rca',
+            type: "rca",
             count: newRCA,
-            status: 'new',
+            status: "new",
             timestamp: new Date().toISOString(),
-            region: "All Regions"
+            region: "All Regions",
           });
         }
-        
+
         // Check for NEW pressure transmitters since last check
         const newPT = currentTotals.pt - prevTotals.pt;
         if (newPT > 0) {
           updates.push({
-            type: 'pressure_transmitter',
+            type: "pressure_transmitter",
             count: newPT,
-            status: 'new',
+            status: "new",
             timestamp: new Date().toISOString(),
-            region: "All Regions"
+            region: "All Regions",
           });
         }
       }
-      
+
       // Add new updates to today's updates
       if (updates.length > 0) {
         console.log(`Adding ${updates.length} new updates`);
         // When there are specific region updates in the global todayUpdates variable, prioritize them
-        if ((global as any).todayUpdates && (global as any).todayUpdates.length > 0) {
+        if (
+          (global as any).todayUpdates &&
+          (global as any).todayUpdates.length > 0
+        ) {
           // Extract region-specific updates (they have region property not equal to "All Regions")
-          const regionSpecificUpdates = (global as any).todayUpdates.filter((update: any) => 
-            update.region && update.region !== "All Regions"
+          const regionSpecificUpdates = (global as any).todayUpdates.filter(
+            (update: any) => update.region && update.region !== "All Regions",
           );
-          
+
           // Add region-specific updates at the beginning for higher visibility
-          todayUpdates = [...regionSpecificUpdates, ...updates, ...todayUpdates];
-          
+          todayUpdates = [
+            ...regionSpecificUpdates,
+            ...updates,
+            ...todayUpdates,
+          ];
+
           // Clear the global variable after we've processed them
           (global as any).todayUpdates = [];
-          console.log(`Added ${regionSpecificUpdates.length} region-specific updates to the top of today's updates`);
+          console.log(
+            `Added ${regionSpecificUpdates.length} region-specific updates to the top of today's updates`,
+          );
         } else {
           todayUpdates = [...updates, ...todayUpdates];
         }
-      } else if ((global as any).todayUpdates && (global as any).todayUpdates.length > 0) {
+      } else if (
+        (global as any).todayUpdates &&
+        (global as any).todayUpdates.length > 0
+      ) {
         // If we have region updates but no general updates, still process them
         const regionSpecificUpdates = (global as any).todayUpdates;
         todayUpdates = [...regionSpecificUpdates, ...todayUpdates];
         (global as any).todayUpdates = [];
-        console.log(`Added ${regionSpecificUpdates.length} region-specific updates to today's updates`);
+        console.log(
+          `Added ${regionSpecificUpdates.length} region-specific updates to today's updates`,
+        );
       }
-      
+
       // Store current state in the database
       const stateToStore = {
         updates: todayUpdates,
         prevTotals: currentTotals,
-        lastUpdateDay: today
+        lastUpdateDay: today,
       };
-      
+
       // Upsert the app_state record using SQL template literal for safety
       // Store as a proper JSONB object
       const jsonValue = JSON.stringify(stateToStore);
@@ -530,7 +605,7 @@ export class PostgresStorage implements IStorage {
         ON CONFLICT (key) 
         DO UPDATE SET value = ${jsonValue}::jsonb
       `);
-      
+
       // Return updates for today
       return todayUpdates;
     } catch (error) {

@@ -1791,7 +1791,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
           // Status field - standardize values
           if (field === "fully_completion_scheme_status") {
-            log(`Processing fully_completion_scheme_status value: "${value}"`, "import");
+            log(
+              `Processing fully_completion_scheme_status value: "${value}"`,
+              "import",
+            );
             const status = String(value).trim().toLowerCase();
 
             // Direct mapping to "Fully-Completed"

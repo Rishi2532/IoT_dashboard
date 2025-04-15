@@ -34,16 +34,16 @@ export default function FileUpload({
     const validTypes = acceptTypes.split(',').map(type => 
       type.trim().replace('.', '').toLowerCase()
     );
-    
+
     if (!fileType || !validTypes.includes(fileType)) {
       return `File type not supported. Please upload ${acceptTypes} files only.`;
     }
-    
+
     // Check file size
     if (file.size > maxSizeBytes) {
       return `File is too large. Maximum size is ${maxSizeMB}MB.`;
     }
-    
+
     return null;
   };
 
@@ -51,12 +51,12 @@ export default function FileUpload({
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       const error = validateFile(file);
-      
+
       if (error) {
         alert(error);
         return;
       }
-      
+
       setSelectedFile(file);
     }
   };
@@ -64,7 +64,7 @@ export default function FileUpload({
   const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     if (e.type === 'dragenter' || e.type === 'dragover') {
       setDragActive(true);
     } else if (e.type === 'dragleave') {
@@ -76,16 +76,16 @@ export default function FileUpload({
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-    
+
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       const file = e.dataTransfer.files[0];
       const error = validateFile(file);
-      
+
       if (error) {
         alert(error);
         return;
       }
-      
+
       setSelectedFile(file);
     }
   };
@@ -151,7 +151,7 @@ export default function FileUpload({
                 accept={acceptTypes}
                 onChange={handleFileChange}
               />
-              
+
               {selectedFile ? (
                 <div className="w-full">
                   <div className="flex items-center justify-between p-3 border border-gray-200 rounded-lg mb-4">
