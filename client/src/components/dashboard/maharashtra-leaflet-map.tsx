@@ -46,14 +46,14 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 // We'll load the GeoJSON data from the file we created
 
-// Region pins data
+// Region pins data with blue shades in accordance with the second reference image
 const regionPins = [
-  { name: "Nagpur", lat: 21.15, lng: 79.09, color: '#FFD1D1' }, // Light red
-  { name: "Amravati", lat: 20.93, lng: 77.76, color: '#FF8C00' }, // Orange
-  { name: "Chhatrapati Sambhajinagar", lat: 19.88, lng: 75.34, color: '#BAD7FF' }, // Light blue
-  { name: "Nashik", lat: 20.00, lng: 73.79, color: '#90CAF9' }, // Medium blue
-  { name: "Pune", lat: 18.52, lng: 73.86, color: '#FFC107' }, // Amber/yellow
-  { name: "Konkan", lat: 17.30, lng: 73.05, color: '#5994DB' } // Darker blue
+  { name: "Nagpur", lat: 21.15, lng: 79.09, color: '#4F83CC' }, // Blue
+  { name: "Amravati", lat: 20.93, lng: 77.76, color: '#5182C5' }, // Blue
+  { name: "Chhatrapati Sambhajinagar", lat: 19.88, lng: 75.34, color: '#5E90D0' }, // Blue
+  { name: "Nashik", lat: 20.00, lng: 73.79, color: '#5182C5' }, // Blue
+  { name: "Pune", lat: 18.52, lng: 73.86, color: '#4F83CC' }, // Blue
+  { name: "Konkan", lat: 17.30, lng: 73.05, color: '#5E90D0' } // Blue
 ];
 
 // District data
@@ -302,19 +302,19 @@ export default function MaharashtraLeafletMap({
       // Save reference for cleanup and updates
       geoJsonLayerRef = geojson;
       
-      // Add location markers for each region with colored dot markers
+      // Add blue square markers to match the second reference image
       regionPins.forEach(pin => {
-        // Create a colored dot marker for each region
-        const dotMarkerIcon = L.divIcon({
-          className: 'dot-marker-icon',
-          html: `<div style="background-color: ${pin.color}; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>`,
-          iconSize: [12, 12],
-          iconAnchor: [6, 6],
-          popupAnchor: [0, -6]
+        // Create a blue square marker for each region matching the reference image
+        const squareMarkerIcon = L.divIcon({
+          className: 'square-marker-icon',
+          html: `<div style="background-color: ${pin.color}; width: 16px; height: 16px; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
+          popupAnchor: [0, -8]
         });
         
         const marker = L.marker([pin.lat, pin.lng], { 
-          icon: dotMarkerIcon
+          icon: squareMarkerIcon
         });
         
         // Add click handler to select the region
@@ -431,12 +431,12 @@ export default function MaharashtraLeafletMap({
           </div>
         `;
         
-        // Region completion stats using the exact color from the pin markers
+        // Region completion stats using square markers like in the reference image
         regionStats.forEach(stat => {
           div.innerHTML += `
             <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 8px;">
               <div style="display: flex; align-items: center;">
-                <div style="width: 10px; height: 10px; background-color: ${stat.color}; margin-right: 8px;"></div>
+                <div style="width: 12px; height: 12px; background-color: ${stat.color}; margin-right: 8px;"></div>
                 <div style="font-size: 12px;">${stat.name}</div>
               </div>
               <div style="font-size: 12px; color: #555;">${stat.completed}/${stat.total}</div>
