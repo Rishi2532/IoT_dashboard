@@ -99,98 +99,107 @@ const CustomChatbot = () => {
     setInput("");
     setLoading(true);
 
-    try {
-      let response = "";
-      let filters: { region?: string; status?: string } = {};
+    // Using setTimeout to simulate processing time
+    setTimeout(async () => {
+      try {
+        let response = "";
+        let filters: { region?: string; status?: string } = {};
 
-      const lowerText = text.toLowerCase();
-      const region = extractRegion(text);
+        const lowerText = text.toLowerCase();
+        const region = extractRegion(text);
 
-      // Check for status filters
-      const hasStatusFilter =
-        lowerText.includes("fully completed") ||
-        lowerText.includes("completed scheme") ||
-        lowerText.includes("completed schemes");
+        // Check for status filters
+        const hasStatusFilter =
+          lowerText.includes("fully completed") ||
+          lowerText.includes("completed scheme") ||
+          lowerText.includes("completed schemes");
 
-      // Simple pattern matching
-      if (lowerText.includes("hello") || lowerText.includes("hi")) {
-        response =
-          "Hello! How can I help you with Maharashtra's water infrastructure today?";
-      } else if (lowerText.includes("how many flowmeter") || lowerText.includes("how many flow meter")) {
-        try {
-          const summaryResponse = await fetch('/api/regions/summary');
-          const summary = await summaryResponse.json();
-          response = `There are ${summary.flow_meter_integrated} flow meters integrated across Maharashtra.`;
-        } catch (error) {
-          response = "Sorry, I couldn't fetch the flowmeter information at the moment.";
-        }
-      } else if (hasStatusFilter) {
-        // If region is specified, apply both filters
-        if (region) {
-          filters = { region, status: "Fully Completed" };
-          response = `I've filtered the dashboard to show fully completed schemes in ${region} region.`;
-        } else {
-          // Apply just the status filter
-          filters = { status: "Fully Completed" };
+        // Simple pattern matching
+        if (lowerText.includes("hello") || lowerText.includes("hi")) {
           response =
-            "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
+            "Hello! How can I help you with Maharashtra's water infrastructure today?";
+        } else if (lowerText.includes("how many flowmeter") || lowerText.includes("how many flow meter")) {
+          try {
+            const summaryResponse = await fetch('/api/regions/summary');
+            const summary = await summaryResponse.json();
+            response = `There are ${summary.flow_meter_integrated} flow meters integrated across Maharashtra.`;
+          } catch (error) {
+            response = "Sorry, I couldn't fetch the flowmeter information at the moment.";
+          }
+        } else if (hasStatusFilter) {
+          // If region is specified, apply both filters
+          if (region) {
+            filters = { region, status: "Fully Completed" };
+            response = `I've filtered the dashboard to show fully completed schemes in ${region} region.`;
+          } else {
+            // Apply just the status filter
+            filters = { status: "Fully Completed" };
+            response =
+              "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
+          }
+        } else if (region) {
+          // Just filter by region
+          filters = { region };
+          response = `I've updated the dashboard to focus on ${region} region and its schemes.`;
+        } else if (
+          lowerText.includes("summary") ||
+          lowerText.includes("statistics") ||
+          lowerText.includes("stats")
+        ) {
+          response =
+            "Maharashtra Water Systems Summary:\n• Total Schemes: 69\n• Fully Completed: 16\n• Total Villages Integrated: 607\n• ESRs Integrated: 797\n• Flow Meters: 733";
+        } else if (lowerText.includes("esr") || lowerText.includes("reservoir")) {
+          response =
+            "There are 797 ESRs (Elevated Storage Reservoirs) integrated across Maharashtra, with 330 fully completed and 446 partially completed.";
+        } else if (
+          lowerText.includes("flow meter") ||
+          lowerText.includes("meter")
+        ) {
+          response =
+            "There are 733 flow meters integrated across all regions in Maharashtra.";
+        } else if (
+          lowerText.includes("all regions") ||
+          lowerText.includes("show all")
+        ) {
+          filters = { region: "all" };
+          response =
+            "I've reset the region filter to show schemes from all regions.";
+        } else if (
+          lowerText.includes("reset") ||
+          lowerText.includes("clear filters")
+        ) {
+          filters = { region: "all", status: "all" };
+          response =
+            "I've reset all filters. Now showing schemes from all regions with any status.";
+        } else {
+          response =
+            "I'm not sure I understand that query. Could you try rephrasing it? You can ask about schemes, regions, ESRs, or flow meters.";
         }
-      } else if (region) {
-        // Just filter by region
-        filters = { region };
-        response = `I've updated the dashboard to focus on ${region} region and its schemes.`;
-      } else if (
-        lowerText.includes("summary") ||
-        lowerText.includes("statistics") ||
-        lowerText.includes("stats")
-      ) {
-        response =
-          "Maharashtra Water Systems Summary:\n• Total Schemes: 69\n• Fully Completed: 16\n• Total Villages Integrated: 607\n• ESRs Integrated: 797\n• Flow Meters: 733";
-      } else if (lowerText.includes("esr") || lowerText.includes("reservoir")) {
-        response =
-          "There are 797 ESRs (Elevated Storage Reservoirs) integrated across Maharashtra, with 330 fully completed and 446 partially completed.";
-      } else if (
-        lowerText.includes("flow meter") ||
-        lowerText.includes("meter")
-      ) {
-        response =
-          "There are 733 flow meters integrated across all regions in Maharashtra.";
-      } else if (
-        lowerText.includes("all regions") ||
-        lowerText.includes("show all")
-      ) {
-        filters = { region: "all" };
-        response =
-          "I've reset the region filter to show schemes from all regions.";
-      } else if (
-        lowerText.includes("reset") ||
-        lowerText.includes("clear filters")
-      ) {
-        filters = { region: "all", status: "all" };
-        response =
-          "I've reset all filters. Now showing schemes from all regions with any status.";
-      } else {
-        response =
-          "I'm not sure I understand that query. Could you try rephrasing it? You can ask about schemes, regions, ESRs, or flow meters.";
-      }
 
-      // Apply filters if available
-      if (filterContext && (filters.region || filters.status)) {
-        filterContext.applyFilters(filters);
-        // Add visual indication of filter application
-        setMessages((prev) => [
-          ...prev,
-          {
-            type: "bot",
-            text: response,
-            filters: filters, // Store applied filters for reference
-          },
-        ]);
-      } else {
-        setMessages((prev) => [...prev, { type: "bot", text: response }]);
+        // Apply filters if available
+        if (filterContext && (filters.region || filters.status)) {
+          filterContext.applyFilters(filters);
+          // Add visual indication of filter application
+          setMessages((prev) => [
+            ...prev,
+            {
+              type: "bot",
+              text: response,
+              filters: filters, // Store applied filters for reference
+            },
+          ]);
+        } else {
+          setMessages((prev) => [...prev, { type: "bot", text: response }]);
+        }
+      } catch (error) {
+        console.error("Error processing message:", error);
+        setMessages((prev) => [...prev, { 
+          type: "bot", 
+          text: "I encountered an error processing your request. Please try again." 
+        }]);
+      } finally {
+        setLoading(false);
       }
-
-      setLoading(false);
     }, 1000);
   };
 
