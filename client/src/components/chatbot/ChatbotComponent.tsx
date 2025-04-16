@@ -99,8 +99,7 @@ const CustomChatbot = () => {
     setInput("");
     setLoading(true);
 
-    // Process the message
-    setTimeout(() => {
+    try {
       let response = "";
       let filters: { region?: string; status?: string } = {};
 
@@ -118,9 +117,13 @@ const CustomChatbot = () => {
         response =
           "Hello! How can I help you with Maharashtra's water infrastructure today?";
       } else if (lowerText.includes("how many flowmeter") || lowerText.includes("how many flow meter")) {
-        const summaryResponse = await fetch('/api/regions/summary');
-        const summary = await summaryResponse.json();
-        response = `There are ${summary.flow_meter_integrated} flow meters integrated across Maharashtra.`;
+        try {
+          const summaryResponse = await fetch('/api/regions/summary');
+          const summary = await summaryResponse.json();
+          response = `There are ${summary.flow_meter_integrated} flow meters integrated across Maharashtra.`;
+        } catch (error) {
+          response = "Sorry, I couldn't fetch the flowmeter information at the moment.";
+        }
       } else if (hasStatusFilter) {
         // If region is specified, apply both filters
         if (region) {
