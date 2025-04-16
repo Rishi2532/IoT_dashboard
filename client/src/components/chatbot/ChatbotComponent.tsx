@@ -16,6 +16,7 @@ import {
 // Import Voice Recognition component
 import VoiceRecognition from "./VoiceRecognition";
 import TextToSpeech from "./TextToSpeech";
+import ChatbotGuide from "./ChatbotGuide";
 // Import OpenAI integration
 import { getOpenAICompletion, detectLanguage, translateText } from "@/services/openai-service";
 
@@ -327,10 +328,52 @@ const CustomChatbot = () => {
           response =
             "I've reset all filters. Now showing schemes from all regions with any status.";
         } 
-        // Default response for unrecognized queries
+        // Default response for unrecognized queries - use OpenAI
         else {
-          response =
-            "I'm not sure I understand that query. You can ask me about:\n• Flow meters, chlorine analyzers, pressure transmitters\n• ESRs (reservoirs) and villages\n• Filter by region (e.g., 'Schemes in Nagpur')\n• Filter by status (e.g., 'Show fully completed schemes')";
+          try {
+            // Detect language from user input
+            const detectedLanguage = detectLanguage(text);
+            console.log(`Detected language: ${detectedLanguage}`);
+            
+            // Create context for OpenAI about Maharashtra Water Dashboard
+            const contextPrompt = `
+              User query: "${text}"
+              
+              Context: The user is asking about the Maharashtra Water Dashboard, which tracks water infrastructure 
+              across Maharashtra, India. The dashboard monitors:
+              - Elevated Storage Reservoirs (ESRs)
+              - Villages with water access
+              - Flow meters
+              - Chlorine analyzers
+              - Pressure transmitters
+              
+              There are multiple regions: Nagpur, Pune, Nashik, Konkan, Amravati, and Chhatrapati Sambhajinagar.
+              
+              Answer the query briefly (max 3-4 sentences) based on context. If you don't know, suggest asking about 
+              specific regions or schemes instead. Don't make up information that's not in the context.
+            `;
+            
+            // Get response from OpenAI
+            console.log("Calling OpenAI for assistance with unrecognized query");
+            const openAIResponse = await getOpenAICompletion({
+              prompt: contextPrompt,
+              maxTokens: 150,
+              temperature: 0.7,
+              language: detectedLanguage
+            });
+            
+            if (!openAIResponse.isError) {
+              response = openAIResponse.text;
+              console.log("Received OpenAI response:", response);
+            } else {
+              // Fallback if OpenAI fails
+              response = "I'm not sure I understand that query. You can ask me about:\n• Flow meters, chlorine analyzers, pressure transmitters\n• ESRs (reservoirs) and villages\n• Filter by region (e.g., 'Schemes in Nagpur')\n• Filter by status (e.g., 'Show fully completed schemes')";
+              console.log("Using fallback response due to OpenAI error");
+            }
+          } catch (error) {
+            console.error("Error using OpenAI:", error);
+            response = "I'm not sure I understand that query. You can ask me about:\n• Flow meters, chlorine analyzers, pressure transmitters\n• ESRs (reservoirs) and villages\n• Filter by region (e.g., 'Schemes in Nagpur')\n• Filter by status (e.g., 'Show fully completed schemes')";
+          }
         }
 
         // Apply filters if available
@@ -476,45 +519,51 @@ const CustomChatbot = () => {
           )}
 
           {messages.length === 1 && (
-            <div className="mb-2 flex justify-start">
-              <div className="bg-gray-100 p-3 rounded-lg max-w-[90%]">
-                <p className="text-sm font-medium mb-2">Try asking me:</p>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
-                    onClick={() =>
-                      handlePredefinedQuery("How many flow meters are there in all regions?")
-                    }
-                  >
-                    Flow meters in all regions
-                  </button>
-                  <button
-                    className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
-                    onClick={() =>
-                      handlePredefinedQuery("How many ESRs and villages are in Nagpur region?")
-                    }
-                  >
-                    ESRs and villages in Nagpur
-                  </button>
-                  <button
-                    className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
-                    onClick={() => 
-                      handlePredefinedQuery("Show summary statistics")
-                    }
-                  >
-                    Summary statistics
-                  </button>
-                  <button
-                    className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
-                    onClick={() => 
-                      handlePredefinedQuery("How many flow meters in Bidgaon Tarodi scheme?")
-                    }
-                  >
-                    Flow meters in Bidgaon Tarodi
-                  </button>
+            <>
+              {/* Display the voice assistant guide */}
+              <ChatbotGuide />
+              
+              {/* Example queries */}
+              <div className="mb-2 flex justify-start">
+                <div className="bg-gray-100 p-3 rounded-lg max-w-[90%]">
+                  <p className="text-sm font-medium mb-2">Try asking me:</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
+                      onClick={() =>
+                        handlePredefinedQuery("How many flow meters are there in all regions?")
+                      }
+                    >
+                      Flow meters in all regions
+                    </button>
+                    <button
+                      className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
+                      onClick={() =>
+                        handlePredefinedQuery("How many ESRs and villages are in Nagpur region?")
+                      }
+                    >
+                      ESRs and villages in Nagpur
+                    </button>
+                    <button
+                      className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
+                      onClick={() => 
+                        handlePredefinedQuery("Show summary statistics")
+                      }
+                    >
+                      Summary statistics
+                    </button>
+                    <button
+                      className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
+                      onClick={() => 
+                        handlePredefinedQuery("How many flow meters in Bidgaon Tarodi scheme?")
+                      }
+                    >
+                      Flow meters in Bidgaon Tarodi
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+            </>
           )}
 
           <div ref={messagesEndRef} />
