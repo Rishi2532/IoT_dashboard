@@ -13,6 +13,8 @@ import {
   Filter,
   MapPin,
 } from "lucide-react";
+// Import Voice Recognition component
+import VoiceRecognition from "./VoiceRecognition";
 
 // Create a context to manage dashboard filter state
 interface DashboardFilterContext {
@@ -352,6 +354,20 @@ const CustomChatbot = () => {
               <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11h2a1 1 0 001-1v-4.571a1 1 0 00-.725-.962l-5-1.429a1 1 0 00-1.17 1.409l7 14z" />
             </svg>
           </button>
+        </div>
+        
+        {/* Voice recognition component */}
+        <div className="mt-2 flex justify-between items-center">
+          <div className="text-xs text-gray-500">
+            Use voice to ask questions
+          </div>
+          <VoiceRecognition 
+            onTranscript={(text) => {
+              setInput(text);
+              handleSendMessage(text);
+            }}
+            isDisabled={loading}
+          />
         </div>
       </div>
     </div>
