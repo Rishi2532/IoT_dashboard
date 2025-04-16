@@ -106,13 +106,49 @@ class MessageParser {
       return this.actionProvider.handleESRQuery(lowerCaseMessage);
     }
 
+    // Extract region from message if present
+    const regionNames = [
+      'amravati', 
+      'nagpur', 
+      'chhatrapati sambhajinagar', 
+      'nashik', 
+      'pune', 
+      'konkan',
+      'mumbai'
+    ];
+    
+    let matchedRegion = null;
+    for (const region of regionNames) {
+      if (lowerCaseMessage.includes(region)) {
+        matchedRegion = region;
+        break;
+      }
+    }
+
     // Handle flow meter queries
     if (
       lowerCaseMessage.includes('flow meter') ||
       lowerCaseMessage.includes('meter') ||
       lowerCaseMessage.includes('flow')
     ) {
-      return this.actionProvider.handleFlowMeterQuery(lowerCaseMessage);
+      return this.actionProvider.handleFlowMeterQuery(lowerCaseMessage, matchedRegion);
+    }
+
+    // Handle chlorine analyzer queries
+    if (
+      lowerCaseMessage.includes('chlorine') ||
+      lowerCaseMessage.includes('rca') ||
+      lowerCaseMessage.includes('analyzer')
+    ) {
+      return this.actionProvider.handleRCAQuery(lowerCaseMessage, matchedRegion);
+    }
+
+    // Handle pressure transmitter queries
+    if (
+      lowerCaseMessage.includes('pressure') ||
+      lowerCaseMessage.includes('transmitter')
+    ) {
+      return this.actionProvider.handlePressureTransmitterQuery(lowerCaseMessage, matchedRegion);
     }
 
     // Handle comparing regions
