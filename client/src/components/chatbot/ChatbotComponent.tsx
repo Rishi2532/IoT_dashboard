@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 // Import Voice Recognition component
 import VoiceRecognition from "./VoiceRecognition";
+import TextToSpeech from "./TextToSpeech";
 
 // Create a context to manage dashboard filter state
 interface DashboardFilterContext {
