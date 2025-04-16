@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import SpeechRecognition, { useSpeechRecognition } from 'react-speech-recognition';
 import { Mic, MicOff, RefreshCcw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -8,12 +8,23 @@ interface VoiceRecognitionProps {
   isDisabled?: boolean;
 }
 
+// List of supported languages for speech recognition
+const SUPPORTED_LANGUAGES = [
+  { code: 'en-US', name: 'English (US)' },
+  { code: 'en-IN', name: 'English (India)' },
+  { code: 'hi-IN', name: 'Hindi' },
+  { code: 'mr-IN', name: 'Marathi' }
+];
+
 const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({ 
   onTranscript, 
   isDisabled = false 
 }) => {
   const [isListening, setIsListening] = useState(false);
   const [showError, setShowError] = useState(false);
+  const [language, setLanguage] = useState('en-IN'); // Default to English (India)
+  const [autoStopTimeout, setAutoStopTimeout] = useState<NodeJS.Timeout | null>(null);
+  const previousTranscriptRef = useRef('');
 
   const {
     transcript,
@@ -28,12 +39,46 @@ const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
     setIsListening(listening);
   }, [listening]);
 
+  // Auto-submit when transcript changes and there's a pause in speaking
+  useEffect(() => {
+    if (transcript && transcript !== previousTranscriptRef.current && listening) {
+      previousTranscriptRef.current = transcript;
+      
+      // Clear previous timeout
+      if (autoStopTimeout) {
+        clearTimeout(autoStopTimeout);
+      }
+      
+      // Set new timeout - auto-submit after 1.5 seconds of silence
+      const timeout = setTimeout(() => {
+        if (transcript.trim()) {
+          handleSubmitTranscript();
+        }
+      }, 1500);
+      
+      setAutoStopTimeout(timeout);
+    }
+    
+    // Cleanup on unmount
+    return () => {
+      if (autoStopTimeout) {
+        clearTimeout(autoStopTimeout);
+      }
+    };
+  }, [transcript, listening]);
+
   // Handle submit of transcript
   const handleSubmitTranscript = () => {
     if (transcript.trim()) {
       onTranscript(transcript);
       resetTranscript();
       SpeechRecognition.stopListening();
+      
+      // Clear any pending auto-stop timeout
+      if (autoStopTimeout) {
+        clearTimeout(autoStopTimeout);
+        setAutoStopTimeout(null);
+      }
     }
   };
 
@@ -41,9 +86,37 @@ const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
   const toggleListening = () => {
     if (listening) {
       SpeechRecognition.stopListening();
+      
+      // Clear any pending auto-stop timeout
+      if (autoStopTimeout) {
+        clearTimeout(autoStopTimeout);
+        setAutoStopTimeout(null);
+      }
     } else {
       setShowError(false);
-      SpeechRecognition.startListening({ continuous: true, language: 'en-US' });
+      resetTranscript();
+      previousTranscriptRef.current = '';
+      SpeechRecognition.startListening({ 
+        continuous: true, 
+        language: language 
+      });
+    }
+  };
+  
+  // Change recognition language
+  const changeLanguage = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const newLanguage = event.target.value;
+    setLanguage(newLanguage);
+    
+    // If currently listening, restart with new language
+    if (listening) {
+      SpeechRecognition.stopListening();
+      setTimeout(() => {
+        SpeechRecognition.startListening({ 
+          continuous: true, 
+          language: newLanguage 
+        });
+      }, 100);
     }
   };
 
@@ -110,6 +183,19 @@ const VoiceRecognition: React.FC<VoiceRecognitionProps> = ({
           <Mic className="h-4 w-4" />
         )}
       </Button>
+      
+      <select 
+        className="text-xs border rounded p-1 bg-white"
+        value={language}
+        onChange={changeLanguage}
+        disabled={isListening}
+      >
+        {SUPPORTED_LANGUAGES.map(lang => (
+          <option key={lang.code} value={lang.code}>
+            {lang.name}
+          </option>
+        ))}
+      </select>
       
       {isListening && (
         <div className="text-xs text-blue-500">
