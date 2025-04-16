@@ -60,6 +60,9 @@ const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // API routes
+  
+  // Mount AI routes
+  app.use("/api/ai", aiRoutes);
 
   // Register endpoint
   app.post("/api/auth/register", async (req, res) => {
