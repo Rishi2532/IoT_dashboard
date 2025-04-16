@@ -114,6 +114,17 @@ export default function SchemeDetailsModal({
                   {scheme.total_number_of_esr || 0}
                 </p>
               </div>
+              <div>
+                <a
+                  href="https://14.99.99.166:18099/PIVision/#/Displays/10108/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD?hidetoolbar=true&hidesidebar=true&mode=kiosk&rootpath=%5C%5CDemoAF%5CJJM%5CJJM%5CMaharashtra%5CRegion-Nagpur%5CCircle-Nagpur%5CDivision-Nagpur%5CSub%20Division-Nagpur%5CBlock-Kamptee%5CScheme-7940695%20-%20Bidgaon%20Tarodi%20wss%3F48487708-9037-11ef-96dd-ecf4bbe0f1d4"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <h4 className="text-xs font-medium text-blue-500 hover:underline cursor-pointer">
+                    JJM Dashboard
+                  </h4>
+                </a>
+              </div>
             </div>
           </div>
 
