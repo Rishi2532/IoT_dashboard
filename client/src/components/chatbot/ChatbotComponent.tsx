@@ -110,9 +110,30 @@ const CustomChatbot = () => {
         const lowerText = text.toLowerCase();
         const region = extractRegion(text);
         
-        // Extract scheme ID or name if present
-        const schemeMatches = text.match(/scheme\s+([A-Za-z0-9\s-]+)/i);
-        const schemeId = schemeMatches ? schemeMatches[1].trim() : null;
+        // Extract scheme ID or name if present - try different pattern matches
+        let schemeId = null;
+        
+        // Try pattern "in scheme X" or "scheme X"
+        const schemeMatch1 = text.match(/(?:in\s+)?scheme\s+([A-Za-z0-9\s-]+)/i);
+        if (schemeMatch1) {
+          schemeId = schemeMatch1[1].trim();
+        }
+        
+        // Try pattern "in X scheme" or "X scheme"
+        if (!schemeId) {
+          const schemeMatch2 = text.match(/(?:in\s+)?([A-Za-z0-9\s-]+)\s+scheme/i);
+          if (schemeMatch2) {
+            schemeId = schemeMatch2[1].trim();
+          }
+        }
+        
+        // Try direct numeric scheme ID
+        if (!schemeId) {
+          const schemeMatch3 = text.match(/\b(\d{5,})\b/);
+          if (schemeMatch3) {
+            schemeId = schemeMatch3[1].trim();
+          }
+        }
         
         // Flag for specific query types
         const isHowManyQuery = lowerText.includes("how many") || lowerText.includes("number of") || lowerText.includes("count");
@@ -155,19 +176,46 @@ const CustomChatbot = () => {
             }
             
             // Determine which API to call based on filters
-            if (isRegionSpecific || isSchemeSpecific) {
-              // Fetch region or scheme specific data
-              let endpoint = '/api/regions/summary';
+            try {
               if (isRegionSpecific && region) {
-                endpoint = `/api/regions/${encodeURIComponent(region)}/summary`;
+                // Fetch region-specific data using dedicated region endpoint
+                console.log(`Fetching data for region: ${region}`);
+                const response = await fetch(`/api/regions/${encodeURIComponent(region)}/summary`);
+                if (!response.ok) {
+                  throw new Error(`Failed to fetch data for region: ${region}`);
+                }
+                queryResult = await response.json();
+              } else if (isSchemeSpecific && schemeId) {
+                // Fetch scheme-specific data
+                console.log(`Fetching data for scheme: ${schemeId}`);
+                const response = await fetch(`/api/schemes/${encodeURIComponent(schemeId)}`);
+                if (!response.ok) {
+                  throw new Error(`Failed to fetch data for scheme: ${schemeId}`);
+                }
+                const schemeData = await response.json();
+                
+                // Convert scheme data to a summary format
+                queryResult = {
+                  flow_meter_integrated: schemeData.flow_meters_connected || 0,
+                  rca_integrated: schemeData.residual_chlorine_analyzer_connected || 0,
+                  pressure_transmitter_integrated: schemeData.pressure_transmitter_connected || 0,
+                  total_esr_integrated: schemeData.esr || 0,
+                  fully_completed_esr: schemeData.esr_completed || 0,
+                  total_villages_integrated: schemeData.villages || 0,
+                  fully_completed_villages: schemeData.villages_completed || 0
+                };
+              } else {
+                // Fetch global summary for all regions
+                console.log("Fetching global summary");
+                const response = await fetch('/api/regions/summary');
+                if (!response.ok) {
+                  throw new Error("Failed to fetch global summary");
+                }
+                queryResult = await response.json();
               }
-              
-              queryResult = await fetch(endpoint);
-              queryResult = await queryResult.json();
-            } else {
-              // Fetch global summary for all regions
-              queryResult = await fetch('/api/regions/summary');
-              queryResult = await queryResult.json();
+            } catch (error) {
+              console.error("Error fetching data:", error);
+              throw error;
             }
             
             // Build response based on requested components
@@ -321,24 +369,29 @@ const CustomChatbot = () => {
                 }`}
               >
                 {msg.text.split("\n").map((line: string, j: number) => {
-                  // Check if the message contains only numbers and common separators
-                  const hasOnlyNumbers = /^[\d\s,.:]+$/.test(line.trim());
-                  const numbers = line.match(/\d+([.,]\d+)?/g);
-
                   return (
                     <React.Fragment key={j}>
-                      {hasOnlyNumbers ? (
-                        <span className="font-mono">{line}</span>
-                      ) : numbers ? (
+                      {/* Check for markdown bold syntax (**number**) and render it as bold text */}
+                      {line.includes('**') ? (
+                        <span>
+                          {line.split(/(\*\*[^*]+\*\*)/).map((part, k) => {
+                            if (part.startsWith('**') && part.endsWith('**')) {
+                              // Extract content between ** markers and make it bold
+                              const content = part.slice(2, -2);
+                              return <span key={k} className="font-bold text-black">{content}</span>;
+                            }
+                            return <span key={k}>{part}</span>;
+                          })}
+                        </span>
+                      ) : (
+                        // For lines without markdown, still check for numbers
                         <span>
                           {line.split(/(\d+([.,]\d+)?)/).map((part, k) => (
                             /\d+([.,]\d+)?/.test(part) ? 
-                              <span key={k} className="font-mono text-blue-500">{part}</span> : 
+                              <span key={k} className="font-bold text-black">{part}</span> : 
                               <span key={k}>{part}</span>
                           ))}
                         </span>
-                      ) : (
-                        line
                       )}
                       {j < msg.text.split("\n").length - 1 && <br />}
                     </React.Fragment>
@@ -420,10 +473,10 @@ const CustomChatbot = () => {
                   <button
                     className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
                     onClick={() => 
-                      handlePredefinedQuery("How many chlorine analyzers and pressure transmitters?")
+                      handlePredefinedQuery("How many flow meters in Bidgaon Tarodi scheme?")
                     }
                   >
-                    Analyzers and transmitters count
+                    Flow meters in Bidgaon Tarodi
                   </button>
                 </div>
               </div>

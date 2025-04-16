@@ -185,6 +185,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch region summary" });
     }
   });
+  
+  // Get summary for a specific region by name (used by chatbot)
+  app.get("/api/regions/:name/summary", async (req, res) => {
+    try {
+      const regionName = req.params.name;
+      const summary = await storage.getRegionSummary(regionName);
+      res.json(summary);
+    } catch (error) {
+      console.error(`Error fetching summary for region ${req.params.name}:`, error);
+      res.status(500).json({ message: "Failed to fetch region summary" });
+    }
+  });
 
   // Get today's updates (new and completed items)
   app.get("/api/updates/today", async (req, res) => {
