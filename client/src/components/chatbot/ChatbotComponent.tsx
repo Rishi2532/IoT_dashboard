@@ -50,9 +50,18 @@ export const FilterContextProvider: React.FC<{
   );
 };
 
+// Define message types for proper type checking
+interface ChatMessage {
+  type: "user" | "bot";
+  text: string;
+  fromVoice?: boolean;
+  filters?: { region?: string; status?: string };
+  autoSpeak?: boolean;
+}
+
 // Custom Chatbot Components for simplicity - avoiding JSX in widget functions
 const CustomChatbot = () => {
-  const [messages, setMessages] = React.useState([
+  const [messages, setMessages] = React.useState<ChatMessage[]>([
     {
       type: "bot",
       text: "Hello! I'm your JJM Assistant. How can I help you today?",
@@ -325,6 +334,11 @@ const CustomChatbot = () => {
         // Apply filters if available
         if (filterContext && (filters.region || filters.status)) {
           filterContext.applyFilters(filters);
+          
+          // Check if previous message was from voice input to enable auto-speak
+          const prevMessage = messages[messages.length - 1];
+          const autoSpeak = prevMessage?.fromVoice === true;
+          
           // Add visual indication of filter application
           setMessages((prev) => [
             ...prev,
@@ -332,6 +346,7 @@ const CustomChatbot = () => {
               type: "bot",
               text: response,
               filters: filters, // Store applied filters for reference
+              autoSpeak // Pass flag to trigger automatic text-to-speech
             },
           ]);
         } else {
@@ -367,7 +382,7 @@ const CustomChatbot = () => {
     <div className="flex-1 overflow-hidden flex flex-col bg-white">
       <div className="flex-1 overflow-y-auto p-4">
         <div className="message-container">
-          {messages.map((msg: any, i) => (
+          {messages.map((msg: ChatMessage, i) => (
             <div
               key={i}
               className={`mb-4 flex ${msg.type === "user" ? "justify-end" : "justify-start"}`}
@@ -382,7 +397,7 @@ const CustomChatbot = () => {
                 {/* Add text-to-speech button for bot messages */}
                 {msg.type === "bot" && (
                   <div className="flex justify-end mb-1">
-                    <TextToSpeech text={msg.text} />
+                    <TextToSpeech text={msg.text} autoSpeak={msg.autoSpeak} />
                   </div>
                 )}
                 {msg.text.split("\n").map((line: string, j: number) => {
