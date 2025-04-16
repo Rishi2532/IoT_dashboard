@@ -209,12 +209,30 @@ const CustomChatbot = () => {
                     : "bg-blue-600 text-white"
                 }`}
               >
-                {msg.text.split("\n").map((line: string, j: number) => (
-                  <React.Fragment key={j}>
-                    {line}
-                    {j < msg.text.split("\n").length - 1 && <br />}
-                  </React.Fragment>
-                ))}
+                {msg.text.split("\n").map((line: string, j: number) => {
+                  // Check if the message contains only numbers and common separators
+                  const hasOnlyNumbers = /^[\d\s,.:]+$/.test(line.trim());
+                  const numbers = line.match(/\d+([.,]\d+)?/g);
+
+                  return (
+                    <React.Fragment key={j}>
+                      {hasOnlyNumbers ? (
+                        <span className="font-mono">{line}</span>
+                      ) : numbers ? (
+                        <span>
+                          {line.split(/(\d+([.,]\d+)?)/).map((part, k) => (
+                            /\d+([.,]\d+)?/.test(part) ? 
+                              <span key={k} className="font-mono text-blue-500">{part}</span> : 
+                              <span key={k}>{part}</span>
+                          ))}
+                        </span>
+                      ) : (
+                        line
+                      )}
+                      {j < msg.text.split("\n").length - 1 && <br />}
+                    </React.Fragment>
+                  );
+                })}
 
                 {/* Add filter indication if the message applied filters */}
                 {msg.filters && (
