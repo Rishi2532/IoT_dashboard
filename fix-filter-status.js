@@ -2,60 +2,60 @@
  * Fix script for the "Fully Completed" filter not working correctly 
  * in the storage.ts file
  */
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-// Get current directory as __dirname equivalent
+// Get current directory
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Path to the storage.ts file
-const storageFilePath = path.join(__dirname, 'server', 'storage.ts');
-
-// Function to fix the filter logic
 async function fixFilterLogic() {
+  console.log('Fixing filter logic in storage.ts...');
+  
+  // Path to the storage.ts file
+  const storageFilePath = path.join(__dirname, 'server', 'storage.ts');
+  
   try {
-    console.log('Reading storage.ts file...');
+    // Read the current file
+    let content = fs.readFileSync(storageFilePath, 'utf8');
     
-    // Read the current content of the file
-    const currentContent = fs.readFileSync(storageFilePath, 'utf8');
+    // Original problematic condition
+    const originalCondition = `// Handle Fully Completed status including "completed" and "Completed" values
+      else if (statusFilter === "Fully Completed") {
+        query = query.where(
+          sql\`\${schemeStatuses.fully_completion_scheme_status} IN ('Completed', 'Fully-Completed', 'Fully Completed')\`,
+        );
+      }`;
     
-    // The problematic SQL query that needs to be fixed
-    const oldFilter = `LOWER(\${schemeStatuses.fully_completion_scheme_status}) IN ('fully-completed', 'Completed', 'fully completed')`;
-    
-    // The updated SQL query that includes 'Fully Completed'
-    const newFilter = `\${schemeStatuses.fully_completion_scheme_status} = 'Fully Completed' OR LOWER(\${schemeStatuses.fully_completion_scheme_status}) IN ('fully-completed', 'completed', 'fully completed')`;
+    // Updated condition with LOWER function for case-insensitive comparison
+    const updatedCondition = `// Handle Fully Completed status including "completed" and "Completed" values - with case insensitivity
+      else if (statusFilter === "Fully Completed") {
+        query = query.where(
+          sql\`LOWER(\${schemeStatuses.fully_completion_scheme_status}) 
+              IN (LOWER('Completed'), LOWER('Fully-Completed'), LOWER('Fully Completed'), LOWER('fully completed'))\`,
+        );
+      }`;
     
     // Replace all occurrences
-    const updatedContent = currentContent.replace(new RegExp(oldFilter, 'g'), newFilter);
+    const updatedContent = content.replaceAll(originalCondition, updatedCondition);
     
-    if (currentContent === updatedContent) {
-      console.log('No changes were made to the file. The filter pattern might not be found.');
-      return false;
+    // Check if any replacements were made
+    if (content === updatedContent) {
+      console.log('No replacements needed or found. The file might have already been updated.');
+      return;
     }
     
     // Write the updated content back to the file
     fs.writeFileSync(storageFilePath, updatedContent, 'utf8');
     
-    console.log('Successfully updated filter logic in storage.ts');
-    return true;
+    console.log('Successfully updated filter logic in storage.ts!');
+    console.log('Restart the server to apply changes.');
+    
   } catch (error) {
     console.error('Error fixing filter logic:', error);
-    return false;
   }
 }
 
-// Run the fix function
-fixFilterLogic()
-  .then(success => {
-    if (success) {
-      console.log('Filter fix completed successfully!');
-      console.log('You should now be able to filter schemes with "Fully Completed" status.');
-    } else {
-      console.log('Filter fix did not complete. Please check the storage.ts file manually.');
-    }
-  })
-  .catch(err => {
-    console.error('Error executing fix script:', err);
-  });
+fixFilterLogic().catch(console.error);

@@ -246,10 +246,11 @@ export class PostgresStorage implements IStorage {
           sql`${schemeStatuses.fully_completion_scheme_status} IN ('Partial', 'In Progress')`,
         );
       }
-      // Handle Fully Completed status including "completed" and "Completed" values
+      // Handle Fully Completed status including "completed" and "Completed" values - with case insensitivity
       else if (statusFilter === "Fully Completed") {
         query = query.where(
-          sql`${schemeStatuses.fully_completion_scheme_status} IN ('Completed', 'Fully-Completed', 'Fully Completed')`,
+          sql`LOWER(${schemeStatuses.fully_completion_scheme_status}) 
+              IN (LOWER('Completed'), LOWER('Fully-Completed'), LOWER('Fully Completed'), LOWER('fully completed'))`,
         );
       } else {
         query = query.where(
@@ -287,10 +288,11 @@ export class PostgresStorage implements IStorage {
           sql`${schemeStatuses.fully_completion_scheme_status} IN ('Partial', 'In Progress')`,
         );
       }
-      // Handle Fully Completed status including "completed" and "Completed" values
+      // Handle Fully Completed status including "completed" and "Completed" values - with case insensitivity
       else if (statusFilter === "Fully Completed") {
         query = query.where(
-          sql`${schemeStatuses.fully_completion_scheme_status} IN ('Completed', 'Fully-Completed', 'Fully Completed')`,
+          sql`LOWER(${schemeStatuses.fully_completion_scheme_status}) 
+              IN (LOWER('Completed'), LOWER('Fully-Completed'), LOWER('Fully Completed'), LOWER('fully completed'))`,
         );
       } else {
         query = query.where(
