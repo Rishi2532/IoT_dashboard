@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
 
 interface TextToSpeechProps {
@@ -11,9 +11,9 @@ const TextToSpeech: React.FC<TextToSpeechProps> = ({ text, autoSpeak = false }) 
   const [speechSupported, setSpeechSupported] = useState(false);
   
   // Clean text by removing markdown and other formatting
-  const cleanTextForSpeech = (text: string) => {
+  const cleanTextForSpeech = useCallback((rawText: string) => {
     // Remove markdown formatting like **bold**
-    let cleanedText = text.replace(/\*\*(.*?)\*\*/g, '$1');
+    let cleanedText = rawText.replace(/\*\*(.*?)\*\*/g, '$1');
     
     // Remove bullet points and replace with "there are"
     cleanedText = cleanedText.replace(/•\s*/g, 'there are ');
@@ -22,28 +22,10 @@ const TextToSpeech: React.FC<TextToSpeechProps> = ({ text, autoSpeak = false }) 
     cleanedText = cleanedText.replace(/[\r\n]+/g, '. ');
     
     return cleanedText;
-  };
+  }, []);
 
-  useEffect(() => {
-    // Check if browser supports speech synthesis
-    if ('speechSynthesis' in window) {
-      setSpeechSupported(true);
-      
-      // If autoSpeak is enabled, speak the text automatically
-      if (autoSpeak) {
-        speak();
-      }
-    }
-    
-    // Cleanup function to stop speaking when component unmounts
-    return () => {
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, [text, autoSpeak]);
-
-  const speak = () => {
+  // Function to speak text
+  const speak = useCallback(() => {
     if (!speechSupported) return;
     
     // Clean the text for speech
@@ -79,15 +61,37 @@ const TextToSpeech: React.FC<TextToSpeechProps> = ({ text, autoSpeak = false }) 
     utterance.onend = () => {
       setIsSpeaking(false);
     };
-  };
+  }, [text, speechSupported, cleanTextForSpeech]);
 
-  const stopSpeaking = () => {
+  // Stop speaking function
+  const stopSpeaking = useCallback(() => {
     if (!speechSupported) return;
     
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
-  };
+  }, [speechSupported]);
 
+  // Check speech support and auto-speak on component mount or when props change
+  useEffect(() => {
+    // Check if browser supports speech synthesis
+    if ('speechSynthesis' in window) {
+      setSpeechSupported(true);
+      
+      // If autoSpeak is enabled, speak the text automatically
+      if (autoSpeak) {
+        speak();
+      }
+    }
+    
+    // Cleanup function to stop speaking when component unmounts
+    return () => {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, [text, autoSpeak, speak]);
+
+  // Don't render anything if speech synthesis is not supported
   if (!speechSupported) return null;
 
   return (

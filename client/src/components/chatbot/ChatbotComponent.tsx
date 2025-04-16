@@ -98,7 +98,9 @@ const CustomChatbot = () => {
     if (!text.trim()) return;
 
     // Add user message
-    setMessages((prev) => [...prev, { type: "user", text }]);
+    // Track if this message came from voice input
+    const fromVoice = text !== input; // If text doesn't match input, it came from voice
+    setMessages((prev) => [...prev, { type: "user", text, fromVoice }]);
     setInput("");
     setLoading(true);
 
@@ -333,7 +335,15 @@ const CustomChatbot = () => {
             },
           ]);
         } else {
-          setMessages((prev) => [...prev, { type: "bot", text: response }]);
+          // Check if previous message was from voice input to enable auto-speak
+          const prevMessage = messages[messages.length - 1];
+          const autoSpeak = prevMessage?.fromVoice === true;
+          
+          setMessages((prev) => [...prev, { 
+            type: "bot", 
+            text: response,
+            autoSpeak  // Pass flag to trigger automatic text-to-speech
+          }]);
         }
       } catch (error) {
         console.error("Error processing message:", error);
@@ -369,6 +379,12 @@ const CustomChatbot = () => {
                     : "bg-blue-600 text-white"
                 }`}
               >
+                {/* Add text-to-speech button for bot messages */}
+                {msg.type === "bot" && (
+                  <div className="flex justify-end mb-1">
+                    <TextToSpeech text={msg.text} />
+                  </div>
+                )}
                 {msg.text.split("\n").map((line: string, j: number) => {
                   return (
                     <React.Fragment key={j}>
