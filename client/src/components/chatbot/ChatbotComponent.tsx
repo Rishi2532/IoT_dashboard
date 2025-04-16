@@ -117,6 +117,10 @@ const CustomChatbot = () => {
       if (lowerText.includes("hello") || lowerText.includes("hi")) {
         response =
           "Hello! How can I help you with Maharashtra's water infrastructure today?";
+      } else if (lowerText.includes("how many flowmeter") || lowerText.includes("how many flow meter")) {
+        const summaryResponse = await fetch('/api/regions/summary');
+        const summary = await summaryResponse.json();
+        response = `There are ${summary.flow_meter_integrated} flow meters integrated across Maharashtra.`;
       } else if (hasStatusFilter) {
         // If region is specified, apply both filters
         if (region) {
