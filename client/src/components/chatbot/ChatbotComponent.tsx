@@ -105,30 +105,117 @@ const CustomChatbot = () => {
     setTimeout(async () => {
       try {
         let response = "";
-        let filters: { region?: string; status?: string } = {};
+        let filters: { region?: string; status?: string; schemeId?: string } = {};
 
         const lowerText = text.toLowerCase();
         const region = extractRegion(text);
-
-        // Check for status filters
+        
+        // Extract scheme ID or name if present
+        const schemeMatches = text.match(/scheme\s+([A-Za-z0-9\s-]+)/i);
+        const schemeId = schemeMatches ? schemeMatches[1].trim() : null;
+        
+        // Flag for specific query types
+        const isHowManyQuery = lowerText.includes("how many") || lowerText.includes("number of") || lowerText.includes("count");
+        
+        // Check for infrastructure components
+        const hasFlowMeters = lowerText.includes("flow meter") || lowerText.includes("flowmeter") || lowerText.includes("flow-meter");
+        const hasChlorineAnalyzers = lowerText.includes("chlorine") || lowerText.includes("analyzer") || lowerText.includes("rca");
+        const hasPressureTransmitters = lowerText.includes("pressure") || lowerText.includes("transmitter") || lowerText.includes("pt");
+        const hasESR = lowerText.includes("esr") || lowerText.includes("reservoir") || lowerText.includes("elevated");
+        const hasVillages = lowerText.includes("village") || lowerText.includes("settlement");
+        
+        // Status filter check
         const hasStatusFilter =
           lowerText.includes("fully completed") ||
           lowerText.includes("completed scheme") ||
           lowerText.includes("completed schemes");
 
-        // Simple pattern matching
+        // Handle greeting queries
         if (lowerText.includes("hello") || lowerText.includes("hi")) {
           response =
-            "Hello! How can I help you with Maharashtra's water infrastructure today?";
-        } else if (lowerText.includes("how many flowmeter") || lowerText.includes("how many flow meter")) {
+            "Hello! How can I help you with Maharashtra's water infrastructure today? You can ask me about flow meters, chlorine analyzers, ESRs, or villages in specific regions or schemes.";
+        } 
+        // Handle infrastructure queries
+        else if (isHowManyQuery) {
           try {
-            const summaryResponse = await fetch('/api/regions/summary');
-            const summary = await summaryResponse.json();
-            response = `There are ${summary.flow_meter_integrated} flow meters integrated across Maharashtra.`;
+            let queryResult;
+            const components = [];
+            let isRegionSpecific = false;
+            let isSchemeSpecific = false;
+            
+            // Set filter based on region or scheme
+            if (region) {
+              filters.region = region;
+              isRegionSpecific = true;
+            }
+            
+            if (schemeId) {
+              filters.schemeId = schemeId;
+              isSchemeSpecific = true;
+            }
+            
+            // Determine which API to call based on filters
+            if (isRegionSpecific || isSchemeSpecific) {
+              // Fetch region or scheme specific data
+              let endpoint = '/api/regions/summary';
+              if (isRegionSpecific && region) {
+                endpoint = `/api/regions/${encodeURIComponent(region)}/summary`;
+              }
+              
+              queryResult = await fetch(endpoint);
+              queryResult = await queryResult.json();
+            } else {
+              // Fetch global summary for all regions
+              queryResult = await fetch('/api/regions/summary');
+              queryResult = await queryResult.json();
+            }
+            
+            // Build response based on requested components
+            let locationDescription = "across Maharashtra";
+            if (isRegionSpecific && region) {
+              locationDescription = `in the ${region} region`;
+            } else if (isSchemeSpecific && schemeId) {
+              locationDescription = `in scheme ${schemeId}`;
+            }
+            
+            // Add components to response
+            if (hasFlowMeters) {
+              components.push(`**${queryResult.flow_meter_integrated || 0}** flow meters`);
+            }
+            
+            if (hasChlorineAnalyzers) {
+              components.push(`**${queryResult.rca_integrated || 0}** chlorine analyzers`);
+            }
+            
+            if (hasPressureTransmitters) {
+              components.push(`**${queryResult.pressure_transmitter_integrated || 0}** pressure transmitters`);
+            }
+            
+            if (hasESR) {
+              components.push(`**${queryResult.total_esr_integrated || 0}** ESRs (with **${queryResult.fully_completed_esr || 0}** fully completed)`);
+            }
+            
+            if (hasVillages) {
+              components.push(`**${queryResult.total_villages_integrated || 0}** villages (with **${queryResult.fully_completed_villages || 0}** fully completed)`);
+            }
+            
+            // If no specific components were asked for, give a comprehensive answer
+            if (components.length === 0) {
+              response = `${locationDescription.charAt(0).toUpperCase() + locationDescription.slice(1)}, there are:\n• **${queryResult.flow_meter_integrated || 0}** flow meters\n• **${queryResult.rca_integrated || 0}** chlorine analyzers\n• **${queryResult.pressure_transmitter_integrated || 0}** pressure transmitters\n• **${queryResult.total_esr_integrated || 0}** ESRs\n• **${queryResult.total_villages_integrated || 0}** villages`;
+            } else if (components.length === 1) {
+              response = `There are ${components[0]} ${locationDescription}.`;
+            } else {
+              const lastComponent = components.pop();
+              response = `There are ${components.join(', ')} and ${lastComponent} ${locationDescription}.`;
+            }
+            
           } catch (error) {
-            response = "Sorry, I couldn't fetch the flowmeter information at the moment.";
+            console.error("Error fetching infrastructure data:", error);
+            response = "Sorry, I couldn't fetch the requested infrastructure information at the moment.";
           }
-        } else if (hasStatusFilter) {
+        } 
+        // Handle status filter requests
+        else if (hasStatusFilter) {
           // If region is specified, apply both filters
           if (region) {
             filters = { region, status: "Fully Completed" };
@@ -139,43 +226,49 @@ const CustomChatbot = () => {
             response =
               "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
           }
-        } else if (region) {
+        } 
+        // Handle region filter requests
+        else if (region) {
           // Just filter by region
           filters = { region };
           response = `I've updated the dashboard to focus on ${region} region and its schemes.`;
-        } else if (
+        } 
+        // Handle summary requests
+        else if (
           lowerText.includes("summary") ||
           lowerText.includes("statistics") ||
           lowerText.includes("stats")
         ) {
-          response =
-            "Maharashtra Water Systems Summary:\n• Total Schemes: 69\n• Fully Completed: 16\n• Total Villages Integrated: 607\n• ESRs Integrated: 797\n• Flow Meters: 733";
-        } else if (lowerText.includes("esr") || lowerText.includes("reservoir")) {
-          response =
-            "There are 797 ESRs (Elevated Storage Reservoirs) integrated across Maharashtra, with 330 fully completed and 446 partially completed.";
-        } else if (
-          lowerText.includes("flow meter") ||
-          lowerText.includes("meter")
-        ) {
-          response =
-            "There are 733 flow meters integrated across all regions in Maharashtra.";
-        } else if (
+          try {
+            const summary = await fetch('/api/regions/summary').then(res => res.json());
+            response =
+              `Maharashtra Water Systems Summary:\n• Total Schemes: **${summary.total_schemes_integrated || 0}**\n• Fully Completed: **${summary.fully_completed_schemes || 0}**\n• Total Villages Integrated: **${summary.total_villages_integrated || 0}**\n• ESRs Integrated: **${summary.total_esr_integrated || 0}**\n• Flow Meters: **${summary.flow_meter_integrated || 0}**\n• Chlorine Analyzers: **${summary.rca_integrated || 0}**\n• Pressure Transmitters: **${summary.pressure_transmitter_integrated || 0}**`;
+          } catch (error) {
+            response = "Sorry, I couldn't fetch the summary information at the moment.";
+          }
+        } 
+        // Show all regions (reset region filter)
+        else if (
           lowerText.includes("all regions") ||
           lowerText.includes("show all")
         ) {
           filters = { region: "all" };
           response =
             "I've reset the region filter to show schemes from all regions.";
-        } else if (
+        } 
+        // Reset all filters
+        else if (
           lowerText.includes("reset") ||
           lowerText.includes("clear filters")
         ) {
           filters = { region: "all", status: "all" };
           response =
             "I've reset all filters. Now showing schemes from all regions with any status.";
-        } else {
+        } 
+        // Default response for unrecognized queries
+        else {
           response =
-            "I'm not sure I understand that query. Could you try rephrasing it? You can ask about schemes, regions, ESRs, or flow meters.";
+            "I'm not sure I understand that query. You can ask me about:\n• Flow meters, chlorine analyzers, pressure transmitters\n• ESRs (reservoirs) and villages\n• Filter by region (e.g., 'Schemes in Nagpur')\n• Filter by status (e.g., 'Show fully completed schemes')";
         }
 
         // Apply filters if available
@@ -303,24 +396,34 @@ const CustomChatbot = () => {
                   <button
                     className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
                     onClick={() =>
-                      handlePredefinedQuery("Show fully completed schemes")
+                      handlePredefinedQuery("How many flow meters are there in all regions?")
                     }
                   >
-                    Show fully completed schemes
+                    Flow meters in all regions
                   </button>
                   <button
                     className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
                     onClick={() =>
-                      handlePredefinedQuery("Region summary statistics")
+                      handlePredefinedQuery("How many ESRs and villages are in Nagpur region?")
                     }
                   >
-                    Region summary statistics
+                    ESRs and villages in Nagpur
                   </button>
                   <button
                     className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
-                    onClick={() => handlePredefinedQuery("Schemes in Nagpur")}
+                    onClick={() => 
+                      handlePredefinedQuery("Show summary statistics")
+                    }
                   >
-                    Schemes in Nagpur
+                    Summary statistics
+                  </button>
+                  <button
+                    className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
+                    onClick={() => 
+                      handlePredefinedQuery("How many chlorine analyzers and pressure transmitters?")
+                    }
+                  >
+                    Analyzers and transmitters count
                   </button>
                 </div>
               </div>
