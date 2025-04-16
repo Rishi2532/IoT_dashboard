@@ -16,6 +16,8 @@ import {
 // Import Voice Recognition component
 import VoiceRecognition from "./VoiceRecognition";
 import TextToSpeech from "./TextToSpeech";
+// Import OpenAI integration
+import { getOpenAICompletion, detectLanguage, translateText } from "@/services/openai-service";
 
 // Create a context to manage dashboard filter state
 interface DashboardFilterContext {
