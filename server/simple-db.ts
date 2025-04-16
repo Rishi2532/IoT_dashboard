@@ -1,20 +1,17 @@
 import pg from "pg";
 import { drizzle } from "drizzle-orm/node-postgres";
-import dotenv from 'dotenv';
-
-// Load environment variables
-dotenv.config();
+import { config } from './config';
 
 // Get PostgreSQL client
 export async function getClient() {
   const { Pool } = pg;
   
   // Log status of DATABASE_URL
-  console.log("DATABASE_URL is defined:", !!process.env.DATABASE_URL);
+  console.log("DATABASE_URL is set:", !!config.database.url);
   
   // Create pool with Neon DB connection info
   const pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: config.database.url,
     ssl: {
       require: true,
       rejectUnauthorized: false
@@ -37,6 +34,7 @@ export async function getClient() {
 
 // Get Drizzle ORM instance
 export async function getDB() {
+  console.log("Setting up database connection from getDB()...");
   const client = await getClient();
   return drizzle(client);
 }
