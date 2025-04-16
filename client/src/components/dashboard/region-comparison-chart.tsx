@@ -136,6 +136,16 @@ export default function RegionComparisonChart({
             grid: {
               color: "rgba(0,0,0,0.1)",
             },
+            // Increase max height of y-axis to accommodate labels
+            suggestedMax: function(context: any) {
+              let maxValue = 0;
+              if (context.chart && context.chart.data && context.chart.data.datasets) {
+                const allData = context.chart.data.datasets.flatMap((d: any) => d.data || []);
+                maxValue = Math.max(...allData.filter((v: any) => typeof v === 'number'));
+              }
+              // Add 20% padding for labels
+              return maxValue * 1.2;
+            },
           },
           x: {
             ticks: {
@@ -143,7 +153,7 @@ export default function RegionComparisonChart({
               maxRotation: 45,
               minRotation: 45,
               font: {
-                size: 20,
+                size: 14, // Reduced font size for better fit
               },
             },
             grid: {
@@ -202,20 +212,50 @@ export default function RegionComparisonChart({
             backgroundColor: "rgba(255, 255, 255, 0.7)",
             borderRadius: 4,
             padding: 2,
-            offset: 0,
             font: {
               weight: "bold",
-              size: 20,
+              size: 12, // Reduced font size for better fit
             },
-            formatter: (value: number) => {
+            formatter: (value: any) => {
+              // Always show the value, including zero
+              // Ensure zeros are shown consistently
+              if (value === 0 || value === '0' || !value) {
+                return '0';
+              }
               return value.toString();
             },
-            display: (context: any) => {
-              const value = context.dataset.data[context.dataIndex];
-              return typeof value === "number" && value > 0;
-            },
+            // Always display all labels including zero values
+            display: true,
             anchor: "end",
-            align: "top",
+            // Position the label vertically and horizontally based on dataset
+            align: function(context: any) {
+              const datasetIndex = context.datasetIndex || 0;
+              const value = Number(context.dataset.data[context.dataIndex] || 0);
+              
+              // Special positioning for high values to prevent overlap
+              if (datasetIndex === 0 && value > 300) {
+                return 'end';
+              } else if (value > 150) {
+                return 'start';
+              }
+              return 'top';
+            },
+            // Add space between label and bar
+            offset: function(context: any) {
+              const datasetIndex = context.datasetIndex || 0;
+              const value = Number(context.dataset.data[context.dataIndex] || 0);
+              
+              // Add more spacing for specific datasets to prevent overlap
+              if (datasetIndex === 0 && value > 300) {
+                return 15; // More space for very high values
+              } else if (value > 150) {
+                return 8;
+              } else if (value > 100) {
+                return 5;
+              }
+              
+              return 2; // Default offset
+            },
           },
         },
       },
