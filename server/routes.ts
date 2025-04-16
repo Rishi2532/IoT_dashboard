@@ -22,6 +22,7 @@ import { fileURLToPath } from "url";
 import * as cp from "child_process";
 import { promisify } from "util";
 import { importCsvHandler } from "./routes/admin/import-csv";
+import aiRoutes from "./routes/ai";
 
 const exec = promisify(cp.exec);
 
