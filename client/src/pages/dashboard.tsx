@@ -10,6 +10,7 @@ import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
+import ChatbotComponent from "@/components/chatbot/ChatbotComponent";
 import { Button } from "@/components/ui/button";
 import { Download, RefreshCw } from "lucide-react";
 import { Region, RegionSummary, SchemeStatus } from "@/types";
@@ -341,6 +342,9 @@ export default function Dashboard() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
       />
+      
+      {/* AI Assistant Chatbot */}
+      <ChatbotComponent />
     </DashboardLayout>
   );
 }
