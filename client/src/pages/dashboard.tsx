@@ -49,7 +49,7 @@ export default function Dashboard() {
 
   // State for status filter
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [mapMetric, setMapMetric] = useState<'completion' | 'esr' | 'villages'>('completion');
+  const [mapMetric, setMapMetric] = useState<'completion' | 'esr' | 'villages' | 'flow_meter'>('completion');
 
   // Fetch schemes data with region and status filters
   const {
@@ -276,7 +276,7 @@ export default function Dashboard() {
           <div className="mb-3">
             <MetricSelector
               value={mapMetric}
-              onChange={setMapMetric}
+              onChange={(newMetric) => setMapMetric(newMetric)}
             />
           </div>
           <div className="w-full overflow-x-auto flex-1">

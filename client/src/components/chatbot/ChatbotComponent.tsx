@@ -18,7 +18,7 @@ import VoiceRecognition from "./VoiceRecognition";
 import TextToSpeech from "./TextToSpeech";
 import ChatbotGuide from "./ChatbotGuide";
 // Import OpenAI integration
-import { getOpenAICompletion, detectLanguage, translateText } from "@/services/openai-service";
+import { getOpenAICompletion, detectLanguage, translateText, LANGUAGE_NAMES } from "@/services/openai-service";
 // Import Excel helper function
 import { triggerExcelExport } from "@/utils/excel-helper";
 
@@ -537,7 +537,18 @@ const CustomChatbot = () => {
             
             // Create enhanced context for OpenAI about Maharashtra Water Dashboard
             // Including specific instruction to respond in the same language
-            const languageName = LANGUAGE_NAMES[detectedLanguage] || 'English';
+            const languageMap: Record<string, string> = {
+              'en': 'English',
+              'hi': 'Hindi',
+              'mr': 'Marathi',
+              'ta': 'Tamil',
+              'te': 'Telugu',
+              'kn': 'Kannada',
+              'ml': 'Malayalam',
+              'gu': 'Gujarati',
+              'bn': 'Bengali'
+            };
+            const languageName = languageMap[detectedLanguage] || 'English';
             
             const contextPrompt = `
               User query: "${text}"

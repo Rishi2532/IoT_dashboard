@@ -20,7 +20,7 @@ interface GISMaharashtraMapProps {
   regions?: Region[];
   selectedRegion: string;
   onRegionClick: (region: string) => void;
-  metric: 'completion' | 'esr' | 'villages';
+  metric: 'completion' | 'esr' | 'villages' | 'flow_meter';
   isLoading?: boolean;
 }
 
