@@ -92,6 +92,7 @@ export default function Dashboard() {
     });
   };
 
+  // Make export function globally accessible for chatbot
   const handleExport = async () => {
     try {
       // Directly fetch all data with the appropriate filters
@@ -110,6 +111,9 @@ export default function Dashboard() {
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
+      
+      // Make export function available globally for chatbot
+      window.triggerDashboardExport = handleExport;
 
       // Show loading toast
       toast({

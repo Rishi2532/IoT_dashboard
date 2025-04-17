@@ -19,6 +19,8 @@ import TextToSpeech from "./TextToSpeech";
 import ChatbotGuide from "./ChatbotGuide";
 // Import OpenAI integration
 import { getOpenAICompletion, detectLanguage, translateText } from "@/services/openai-service";
+// Import Excel helper function
+import { triggerExcelExport } from "@/utils/excel-helper";
 
 // Create a context to manage dashboard filter state
 interface DashboardFilterContext {
@@ -420,6 +422,71 @@ const CustomChatbot = () => {
           filters = { region };
           response = `I've updated the dashboard to focus on ${region} region and its schemes.`;
         } 
+        // Handle Excel download requests
+        else if (
+          (lowerText.includes("excel") || 
+           lowerText.includes("download") || 
+           lowerText.includes("export") || 
+           lowerText.includes("get excel") || 
+           lowerText.includes("give me excel") ||
+           lowerText.includes("generate excel"))
+        ) {
+          console.log("Excel download request detected");
+          
+          // If region is specified, first apply the region filter
+          if (region) {
+            filters = { region };
+            
+            // Check if a specific status is also mentioned
+            if (lowerText.includes("fully completed") || 
+                lowerText.includes("complete") || 
+                lowerText.includes("completed schemes")) {
+              filters.status = "Fully Completed";
+              response = `I'll help you download an Excel file with fully completed schemes in ${region} region. The download will start shortly.`;
+            } 
+            else if (lowerText.includes("partial") || 
+                     lowerText.includes("ongoing") || 
+                     lowerText.includes("in progress")) {
+              filters.status = "Partial Integration";
+              response = `I'll help you download an Excel file with partially completed schemes in ${region} region. The download will start shortly.`;
+            }
+            else {
+              response = `I'll help you download an Excel file with all schemes in ${region} region. The download will start shortly.`;
+            }
+          }
+          // No region specified, check if status filter is needed
+          else if (lowerText.includes("fully completed") || 
+                  lowerText.includes("complete") || 
+                  lowerText.includes("completed schemes")) {
+            filters = { status: "Fully Completed" };
+            response = `I'll help you download an Excel file with fully completed schemes across Maharashtra. The download will start shortly.`;
+          }
+          else if (lowerText.includes("partial") || 
+                  lowerText.includes("ongoing") || 
+                  lowerText.includes("in progress")) {
+            filters = { status: "Partial Integration" };
+            response = `I'll help you download an Excel file with partially completed schemes across Maharashtra. The download will start shortly.`;
+          }
+          else {
+            response = `I'll help you download an Excel file with all water schemes across Maharashtra. The download will start shortly.`;
+          }
+          
+          // Apply filters if any were specified
+          if (filterContext && filters) {
+            filterContext.applyFilters(filters);
+          }
+          
+          // Trigger the Excel download with a slight delay to allow UI update
+          setTimeout(async () => {
+            try {
+              await triggerExcelExport();
+              console.log("Excel export triggered successfully");
+            } catch (error) {
+              console.error("Failed to trigger Excel export:", error);
+              // We don't need to update the UI here as the message is already sent
+            }
+          }, 1500);
+        }
         // Handle summary requests
         else if (
           lowerText.includes("summary") ||
