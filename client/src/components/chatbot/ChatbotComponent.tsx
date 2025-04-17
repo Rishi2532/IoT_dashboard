@@ -82,26 +82,93 @@ const CustomChatbot = () => {
     }
   }, [messages]);
 
-  // Extract region from query
+  // Enhanced region extraction from query with better pattern matching
   const extractRegion = (text: string): string | null => {
-    const lowerText = text.toLowerCase();
+    // Normalize text - convert to lowercase and remove punctuation
+    const normalizedText = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, " ");
+    
+    // Expanded region mapping with alternate spellings, typos, and local language variations
     const regionMap: Record<string, string> = {
+      // Standard region names
       amravati: "Amravati",
       nagpur: "Nagpur",
       nashik: "Nashik",
+      nasik: "Nashik", // Common misspelling
       pune: "Pune",
+      poona: "Pune", // Alternate historical name
       konkan: "Konkan",
       mumbai: "Mumbai",
+      bombay: "Mumbai", // Alternate historical name
       "chhatrapati sambhajinagar": "Chhatrapati Sambhajinagar",
       sambhajinagar: "Chhatrapati Sambhajinagar",
-      aurangabad: "Chhatrapati Sambhajinagar",
+      aurangabad: "Chhatrapati Sambhajinagar", // Historical name
+      
+      // Common word boundaries/patterns to improve accuracy
+      " amravati ": "Amravati",
+      " nagpur ": "Nagpur",
+      " nashik ": "Nashik",
+      " nasik ": "Nashik",
+      " pune ": "Pune",
+      " konkan ": "Konkan",
+      " mumbai ": "Mumbai",
+      
+      // Prefix patterns like "in Nagpur" or "for Pune"
+      "in nagpur": "Nagpur",
+      "in pune": "Pune",
+      "in nashik": "Nashik",
+      "in amravati": "Amravati",
+      "in konkan": "Konkan",
+      "in mumbai": "Mumbai",
+      "in aurangabad": "Chhatrapati Sambhajinagar",
+      "in sambhajinagar": "Chhatrapati Sambhajinagar",
+      
+      // Hindi/Marathi transliteration variations
+      "नागपूर": "Nagpur",
+      "पुणे": "Pune",
+      "नाशिक": "Nashik",
+      "अमरावती": "Amravati",
+      "कोंकण": "Konkan",
+      "मुंबई": "Mumbai",
+      "छत्रपती संभाजीनगर": "Chhatrapati Sambhajinagar",
+      "औरंगाबाद": "Chhatrapati Sambhajinagar",
     };
 
+    // Check for pattern like "X region" or "region of X"
+    const regionPatterns = [
+      /in\s+(\w+)\s+region/i,
+      /(\w+)\s+region/i,
+      /region\s+of\s+(\w+)/i
+    ];
+    
+    for (const pattern of regionPatterns) {
+      const match = normalizedText.match(pattern);
+      if (match && match[1]) {
+        const potentialRegion = match[1].toLowerCase();
+        // Check if the matched word is a known region
+        for (const [key, value] of Object.entries(regionMap)) {
+          if (key.includes(potentialRegion)) {
+            return value;
+          }
+        }
+      }
+    }
+
+    // Standard inclusion check - look for region names in the text
     for (const [key, value] of Object.entries(regionMap)) {
-      if (lowerText.includes(key)) {
+      // Add word boundary check for better precision with short region names
+      if (key.length <= 4) {
+        // For short names like Pune, check for word boundaries
+        const pattern = new RegExp(`\\b${key}\\b`, 'i');
+        if (pattern.test(normalizedText)) {
+          console.log(`Matched region '${key}' using pattern ${pattern}`);
+          return value;
+        }
+      } else if (normalizedText.includes(key)) {
+        console.log(`Matched region '${key}' using simple inclusion`);
         return value;
       }
     }
+    
     return null;
   };
 
@@ -123,7 +190,13 @@ const CustomChatbot = () => {
         let filters: { region?: string; status?: string; schemeId?: string } = {};
 
         const lowerText = text.toLowerCase();
+        console.log(`Processing query: "${lowerText}"`);
+        
+        // Extract region from query with enhanced detection
         const region = extractRegion(text);
+        if (region) {
+          console.log(`Detected region: ${region}`);
+        }
         
         // Extract scheme ID or name if present - try different pattern matches
         let schemeId = null;
@@ -150,15 +223,66 @@ const CustomChatbot = () => {
           }
         }
         
-        // Flag for specific query types
-        const isHowManyQuery = lowerText.includes("how many") || lowerText.includes("number of") || lowerText.includes("count");
+        // Try villages like "Bidgaon" or "Tarodi" mentioned in query
+        if (!schemeId && !region) {
+          const villageSchemeMatch = text.match(/\b(bidgaon|tarodi|in\s+\w+\s+village)\b/i);
+          if (villageSchemeMatch) {
+            // This would need to be replaced with actual village-to-scheme mapping
+            console.log(`Village keyword detected: ${villageSchemeMatch[0]}`);
+            // For demo purposes, we'll use a placeholder schemeId for Bidgaon 
+            if (lowerText.includes('bidgaon')) {
+              schemeId = '7890975'; // Example scheme ID for Bidgaon (should come from database)
+            } else if (lowerText.includes('tarodi')) {
+              schemeId = '9087653'; // Example scheme ID for Tarodi (should come from database)
+            }
+          }
+        }
         
-        // Check for infrastructure components
-        const hasFlowMeters = lowerText.includes("flow meter") || lowerText.includes("flowmeter") || lowerText.includes("flow-meter");
-        const hasChlorineAnalyzers = lowerText.includes("chlorine") || lowerText.includes("analyzer") || lowerText.includes("rca");
-        const hasPressureTransmitters = lowerText.includes("pressure") || lowerText.includes("transmitter") || lowerText.includes("pt");
-        const hasESR = lowerText.includes("esr") || lowerText.includes("reservoir") || lowerText.includes("elevated");
-        const hasVillages = lowerText.includes("village") || lowerText.includes("settlement");
+        if (schemeId) {
+          console.log(`Detected scheme ID/name: ${schemeId}`);
+        }
+        
+        // Flag for specific query types - enhanced to detect implicit questions
+        const isHowManyQuery = lowerText.includes("how many") || 
+                              lowerText.includes("number of") || 
+                              lowerText.includes("count") ||
+                              // Implicit queries that still expect a count
+                              (region && (
+                                lowerText.includes("flow meter") || 
+                                lowerText.includes("chlorine") ||
+                                lowerText.includes("esr") ||
+                                lowerText.includes("village")
+                              ));
+        
+        // Check for infrastructure components with expanded keywords
+        const hasFlowMeters = lowerText.includes("flow meter") || 
+                             lowerText.includes("flowmeter") || 
+                             lowerText.includes("flow-meter") ||
+                             lowerText.includes("flow") ||
+                             lowerText.match(/\bfm\b/i) !== null;
+                             
+        const hasChlorineAnalyzers = lowerText.includes("chlorine") || 
+                                    lowerText.includes("analyzer") || 
+                                    lowerText.includes("analyser") ||
+                                    lowerText.includes("rca") ||
+                                    lowerText.includes("residual") ||
+                                    lowerText.includes("chlorin");
+                                    
+        const hasPressureTransmitters = lowerText.includes("pressure") || 
+                                       lowerText.includes("transmitter") || 
+                                       lowerText.includes("pt") ||
+                                       lowerText.includes("transmit");
+                                       
+        const hasESR = lowerText.includes("esr") || 
+                      lowerText.includes("reservoir") || 
+                      lowerText.includes("elevated") ||
+                      lowerText.includes("storage") ||
+                      lowerText.includes("tank");
+                      
+        const hasVillages = lowerText.includes("village") || 
+                           lowerText.includes("settlement") ||
+                           lowerText.includes("gram") ||
+                           lowerText.includes("community");
         
         // Status filter check
         const hasStatusFilter =
@@ -407,9 +531,14 @@ const CustomChatbot = () => {
         }
       } catch (error) {
         console.error("Error processing message:", error);
+        // Check if previous message was from voice input to enable auto-speak
+        const prevMessage = messages[messages.length - 1];
+        const autoSpeak = prevMessage?.fromVoice === true;
+        
         setMessages((prev) => [...prev, { 
           type: "bot", 
-          text: "I encountered an error processing your request. Please try again." 
+          text: "I encountered an error processing your request. Please try again.",
+          autoSpeak // Always auto-speak error messages if the query was from voice
         }]);
       } finally {
         setLoading(false);
@@ -555,10 +684,18 @@ const CustomChatbot = () => {
                     <button
                       className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
                       onClick={() => 
-                        handlePredefinedQuery("How many flow meters in Bidgaon Tarodi scheme?")
+                        handlePredefinedQuery("How many flow meters in Bidgaon scheme?")
                       }
                     >
-                      Flow meters in Bidgaon Tarodi
+                      Flow meters in Bidgaon
+                    </button>
+                    <button
+                      className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
+                      onClick={() => 
+                        handlePredefinedQuery("How many chlorine analyzers in 105 villages?")
+                      }
+                    >
+                      Chlorine analyzers in villages
                     </button>
                   </div>
                 </div>
