@@ -1,136 +1,93 @@
-# VS Code Setup Guide for Maharashtra Water Dashboard
+# Setting Up and Running the Maharashtra Water Dashboard in VS Code
 
-This guide will help you set up and run the Maharashtra Water Dashboard application in Visual Studio Code with a local PostgreSQL database.
+## Pre-requisites
 
-## Prerequisites
+- [Visual Studio Code](https://code.visualstudio.com/) installed
+- [Node.js](https://nodejs.org/) (v14 or later) installed
+- [PostgreSQL](https://www.postgresql.org/download/) installed locally (optional, see database options below)
 
-1. **PostgreSQL**: Install PostgreSQL on your local machine (version 12 or higher recommended)
-2. **pgAdmin**: Install pgAdmin 4 for easy database management
-3. **Node.js**: Install Node.js (LTS version recommended)
-4. **Visual Studio Code**: Install VS Code with recommended extensions:
-   - ESLint
-   - Prettier
-   - TypeScript and JavaScript Language Features
+## Setup Process
 
-## Step 1: Clone the Repository
+### Step 1: Clone the Repository
 
-Clone the repository to your local machine using Git:
+Clone this repository to your local machine.
 
-```
-git clone <repository-url>
-cd maharashtra-water-dashboard
-```
+### Step 2: Run the Setup Script
 
-## Step 2: Set Up PostgreSQL Database
+Before opening the project in VS Code, run the setup script to prepare the environment:
 
-1. Open pgAdmin and create a new database called `water_scheme_dashboard`
-2. Note your PostgreSQL connection details:
-   - Host: localhost
-   - Port: 5432 (default)
-   - Username: postgres (or your custom username)
-   - Password: Your PostgreSQL password
-   - Database: water_scheme_dashboard
-
-## Step 3: Configure Environment Variables
-
-Create a `.env` file in the root directory of the project with your PostgreSQL credentials:
-
-```
-# PostgreSQL Connection
-DATABASE_URL=postgresql://postgres:YourPassword@localhost:5432/water_scheme_dashboard
-PGUSER=postgres
-PGHOST=localhost
-PGPASSWORD=YourPassword
-PGDATABASE=water_scheme_dashboard
-PGPORT=5432
-
-# App Configuration
-PORT=5000
-```
-
-Replace `YourPassword` with your actual PostgreSQL password.
-
-## Step 4: Install Dependencies
-
-Run the following command to install project dependencies:
-
-```
-npm install
-```
-
-## Step 5: Set Up Local Database
-
-The project includes several utility scripts to help set up your local database correctly:
-
-1. **Initial Setup**: This script creates all necessary tables and sample data
-
-```
+```bash
 node setup-vscode.js
 ```
 
-2. **Verify Database Connection**: Test your connection to the database
+This script will:
+- Create a `.env.local` file with all necessary environment variables
+- Set up VS Code launch and task configurations
+- Install required dependencies
 
-```
-node test-local-db.js
-```
+### Step 3: Configure Database
 
-3. **Fix Common Issues**: If you encounter any issues, run the fix script
+You have two options for the database:
 
-```
-node fix-local-setup.js
-```
+#### Option A: Use the Remote Database (Recommended)
+- The `.env.local` file already contains the connection details for the remote PostgreSQL database
+- No additional setup required
 
-## Step 6: Start the Application
+#### Option B: Set Up a Local PostgreSQL Database
+1. Create a new database in your local PostgreSQL installation
+2. Update the database connection details in the `.env.local` file
+3. Import the database schema and data using:
+   ```bash
+   psql -U your_username -d your_database_name -f database_backup.sql
+   ```
 
-Start the application using:
+### Step 4: Configure OpenAI API Key
 
-```
-npm run dev
-```
+For the chatbot to function properly, you need to set up an OpenAI API key:
 
-The application should now be running at [http://localhost:5000](http://localhost:5000)
+1. Get an API key from [OpenAI](https://platform.openai.com/account/api-keys)
+2. Add your key to the `.env.local` file:
+   ```
+   OPENAI_API_KEY=your_api_key_here
+   ```
 
-## Default Login
+### Step 5: Start the Application
 
-Use the following credentials to log in:
-- Username: admin
-- Password: admin123
+1. Open the project in VS Code
+2. Start the application using one of these methods:
+   - Press F5 to launch with the debugger
+   - Use the Terminal > Run Task... menu and select "Start App"
+   - Run `npm run dev` in the terminal
+
+The application will be available at http://localhost:5000
 
 ## Troubleshooting
 
-If you encounter any issues, try these steps:
+### Database Connection Issues
 
-1. **Database Connection Issues**:
-   - Check your PostgreSQL credentials in the `.env` file
-   - Ensure PostgreSQL service is running
-   - Run `node fix-local-setup.js` to fix common database issues
+If you encounter database connection problems:
 
-2. **Missing Tables or Data**:
-   - Run `node setup-vscode.js` to recreate tables and sample data
-
-3. **Application Errors**:
-   - Check the console for error messages
-   - Ensure all environment variables are correctly set in `.env`
-   - Restart the application with `npm run dev`
-
-4. **"Failed to fetch today's data" Error**:
-   - This error indicates the `updates` table is missing or empty
-   - Run `node fix-local-setup.js` to fix this issue
-
-## Importing Excel Data
-
-To import data from Excel files:
-
-1. Place your Excel file in the project root directory
-2. Run the appropriate import script:
+1. Check that the database credentials in `.env.local` are correct
+2. Ensure PostgreSQL is running
+3. Test the connection using:
    ```
-   node import-scheme-level-data.js YourExcelFile.xlsx
+   node test-db.js
    ```
 
-## Additional Information
+### ChatBot Issues
 
-- The application uses a PostgreSQL database for data storage
-- The backend is built with Express.js
-- The frontend is built with React and uses Tailwind CSS for styling
-- The map visualization uses Leaflet.js
-- All database interactions are managed through Drizzle ORM
+If the chatbot is not working properly:
+
+1. Verify your OpenAI API key is valid and has sufficient credits
+2. Check the browser console for errors
+3. Ensure your browser supports the Web Speech API (Chrome recommended)
+
+## Local Development Tips
+
+- The application uses Vite for development, which provides hot module replacement
+- Changes to most files should update immediately in the browser
+- When modifying server-side code, the server will automatically restart
+
+## Need Further Help?
+
+Refer to the README.md file for additional information about the application's features and how to use them.
