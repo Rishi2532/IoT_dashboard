@@ -211,9 +211,10 @@ const TextToSpeech: React.FC<TextToSpeechProps> = ({ text, autoSpeak = true }) =
     if ('speechSynthesis' in window) {
       setSpeechSupported(true);
       
-      // Only speak automatically if text is new and autoSpeak is enabled
-      if (autoSpeak && text && text !== previousTextRef.current) {
-        console.log('Auto-speaking new text');
+      // Always speak when text changes, regardless of autoSpeak flag
+      // This ensures all bot messages are spoken, including error messages
+      if (text && text !== previousTextRef.current) {
+        console.log('Speaking new text (auto-speak always on)');
         previousTextRef.current = text;
         
         // Small delay to ensure the UI has updated
@@ -235,7 +236,7 @@ const TextToSpeech: React.FC<TextToSpeechProps> = ({ text, autoSpeak = true }) =
         clearTimeout(speakTimeoutRef.current);
       }
     };
-  }, [text, autoSpeak, speak]);
+  }, [text, speak]);
 
   // Load voices when available
   useEffect(() => {

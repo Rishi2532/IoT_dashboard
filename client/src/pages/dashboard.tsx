@@ -193,13 +193,26 @@ export default function Dashboard() {
   // Make export function globally accessible
   useEffect(() => {
     // Expose the export function to window for the chatbot to use
-    (window as any).triggerDashboardExport = handleExport;
+    // We need to make sure the function is properly bound to the component
+    // and its filters, so we create a new function that calls our export
+    (window as any).triggerDashboardExport = () => {
+      console.log('Global Excel export triggered with filters:', {
+        region: selectedRegion, 
+        status: statusFilter
+      });
+      
+      // Execute the export function directly (not as a Promise)
+      handleExport();
+      
+      // Return a resolved promise for API consistency
+      return Promise.resolve();
+    };
     
     // Clean up when component unmounts
     return () => {
       (window as any).triggerDashboardExport = undefined;
     };
-  }, [selectedRegion, statusFilter]); // Re-bind when filters change
+  }, [selectedRegion, statusFilter, handleExport]); // Re-bind when filters or the handler changes
   
   return (
     <DashboardLayout>

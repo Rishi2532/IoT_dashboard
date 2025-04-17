@@ -471,21 +471,30 @@ const CustomChatbot = () => {
             response = `I'll help you download an Excel file with all water schemes across Maharashtra. The download will start shortly.`;
           }
           
-          // Apply filters if any were specified
+          // Apply filters first if any were specified
           if (filterContext && filters) {
             filterContext.applyFilters(filters);
           }
           
-          // Trigger the Excel download with a slight delay to allow UI update
-          setTimeout(async () => {
-            try {
+          // Directly trigger the Excel download (no need to wait for filters)
+          try {
+            // Direct call to manually trigger document click on export button
+            const exportButton = document.querySelector('button[aria-label="Export to Excel"], button:has(.lucide-download), button.border-blue-300');
+            
+            if (exportButton) {
+              console.log("Found export button, clicking it directly");
+              (exportButton as HTMLButtonElement).click();
+            } else {
+              // Fallback to the global method
+              console.log("No export button found, using global export method");
               await triggerExcelExport();
-              console.log("Excel export triggered successfully");
-            } catch (error) {
-              console.error("Failed to trigger Excel export:", error);
-              // We don't need to update the UI here as the message is already sent
             }
-          }, 1500);
+            
+            console.log("Excel export triggered successfully");
+          } catch (error) {
+            console.error("Failed to trigger Excel export:", error);
+            // We don't need to update the UI here as the message is already sent
+          }
         }
         // Handle summary requests
         else if (
@@ -526,30 +535,42 @@ const CustomChatbot = () => {
             const detectedLanguage = detectLanguage(text);
             console.log(`Detected language: ${detectedLanguage}`);
             
-            // Create context for OpenAI about Maharashtra Water Dashboard
+            // Create enhanced context for OpenAI about Maharashtra Water Dashboard
+            // Including specific instruction to respond in the same language
+            const languageName = LANGUAGE_NAMES[detectedLanguage] || 'English';
+            
             const contextPrompt = `
               User query: "${text}"
               
-              Context: The user is asking about the Maharashtra Water Dashboard, which tracks water infrastructure 
+              The user is asking about the Maharashtra Water Dashboard, which tracks water infrastructure 
               across Maharashtra, India. The dashboard monitors:
               - Elevated Storage Reservoirs (ESRs)
               - Villages with water access
               - Flow meters
-              - Chlorine analyzers
-              - Pressure transmitters
+              - Chlorine analyzers (RCA)
+              - Pressure transmitters (PT)
               
-              There are multiple regions: Nagpur, Pune, Nashik, Konkan, Amravati, and Chhatrapati Sambhajinagar.
+              Regions in the dashboard: Nagpur, Pune, Nashik, Konkan, Amravati, and Chhatrapati Sambhajinagar.
               
-              Answer the query briefly (max 3-4 sentences) based on context. If you don't know, suggest asking about 
-              specific regions or schemes instead. Don't make up information that's not in the context.
+              IMPORTANT: Respond ONLY in ${languageName} language, even if the user's input is partly in English.
+              If the user is speaking in Hindi, your response must be entirely in Hindi.
+              If the user is speaking in Tamil, your response must be entirely in Tamil.
+              If the user is speaking in Telugu, your response must be entirely in Telugu.
+              If the user is speaking in Marathi, your response must be entirely in Marathi.
+              
+              Answer the query briefly (2-3 sentences) based on context. If you don't know, suggest asking about 
+              specific regions or schemes. Don't make up information not in the context.
             `;
             
-            // Get response from OpenAI
+            // Log the language that will be used for the response
+            console.log(`Responding in ${languageName} (code: ${detectedLanguage})`);
+            
+            // Get response from OpenAI with enhanced language settings
             console.log("Calling OpenAI for assistance with unrecognized query");
             const openAIResponse = await getOpenAICompletion({
               prompt: contextPrompt,
-              maxTokens: 150,
-              temperature: 0.7,
+              maxTokens: 200,  // Increased for non-English responses
+              temperature: 0.5,  // Lower temperature for more consistent responses
               language: detectedLanguage
             });
             
