@@ -759,6 +759,14 @@ const CustomChatbot = () => {
                     <button
                       className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
                       onClick={() => 
+                        handlePredefinedQuery("Download Excel for fully completed schemes in Nagpur")
+                      }
+                    >
+                      Export Nagpur data to Excel
+                    </button>
+                    <button
+                      className="text-xs px-2 py-1 bg-blue-50 text-blue-700 rounded-md hover:bg-blue-100"
+                      onClick={() => 
                         handlePredefinedQuery("How many chlorine analyzers in 105 villages?")
                       }
                     >

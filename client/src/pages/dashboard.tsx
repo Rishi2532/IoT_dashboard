@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import DashboardLayout from "@/components/dashboard/dashboard-layout";
 import RegionFilter from "@/components/dashboard/region-filter";
@@ -92,7 +92,7 @@ export default function Dashboard() {
     });
   };
 
-  // Make export function globally accessible for chatbot
+  // Export function 
   const handleExport = async () => {
     try {
       // Directly fetch all data with the appropriate filters
@@ -111,9 +111,6 @@ export default function Dashboard() {
       if (params.toString()) {
         url += `?${params.toString()}`;
       }
-      
-      // Make export function available globally for chatbot
-      window.triggerDashboardExport = handleExport;
 
       // Show loading toast
       toast({
@@ -192,7 +189,18 @@ export default function Dashboard() {
   const handleStatusFilterChange = (status: string) => {
     setStatusFilter(status);
   };
-
+  
+  // Make export function globally accessible
+  useEffect(() => {
+    // Expose the export function to window for the chatbot to use
+    (window as any).triggerDashboardExport = handleExport;
+    
+    // Clean up when component unmounts
+    return () => {
+      (window as any).triggerDashboardExport = undefined;
+    };
+  }, [selectedRegion, statusFilter]); // Re-bind when filters change
+  
   return (
     <DashboardLayout>
       {/* Enhanced Dashboard Header with water-themed gradient */}
