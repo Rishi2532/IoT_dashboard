@@ -82,7 +82,7 @@ const LpcdDashboard = () => {
       }
       
       // Fetch water scheme data with filters
-      const url = \`/api/water-scheme-data?\${queryParams.toString()}\`;
+      const url = `/api/water-scheme-data?${queryParams.toString()}`;
       return apiRequest<WaterSchemeData[]>(url);
     }
   });

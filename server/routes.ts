@@ -27,6 +27,7 @@ import * as cp from "child_process";
 import { promisify } from "util";
 import { importCsvHandler } from "./routes/admin/import-csv";
 import aiRoutes from "./routes/ai";
+import waterSchemeRoutes from "./routes/water-scheme-routes";
 
 const exec = promisify(cp.exec);
 
