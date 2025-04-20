@@ -138,7 +138,10 @@ router.post('/import/csv', upload.single('file'), async (req, res) => {
 
 // Process Excel file and import data
 async function processExcelFile(filePath: string) {
-  const workbook = XLSX.readFile(filePath);
+  // Read file as buffer first
+  const fileBuffer = fs.readFileSync(filePath);
+  // Use read() instead of readFile()
+  const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
   const data = XLSX.utils.sheet_to_json(worksheet);
