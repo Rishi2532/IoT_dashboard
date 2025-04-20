@@ -285,7 +285,7 @@ const LpcdDashboard: React.FC = () => {
                   {currentPageData.map((scheme) => (
                     <TableRow key={`${scheme.scheme_id}-${scheme.village_name || 'unknown'}`}>
                       <TableCell>{scheme.region || 'N/A'}</TableCell>
-                      <TableCell>{scheme.scheme_id}</TableCell>
+                      <TableCell>{scheme.scheme_id.split('-')[0]}</TableCell>
                       <TableCell>{scheme.scheme_name || 'N/A'}</TableCell>
                       <TableCell>{scheme.village_name || 'N/A'}</TableCell>
                       <TableCell className="text-right">
@@ -314,33 +314,33 @@ const LpcdDashboard: React.FC = () => {
                                   View Weekly Data
                                 </DropdownMenuItem>
                               </DialogTrigger>
-                              <DialogContent className="max-w-4xl">
-                                <DialogHeader>
-                                  <DialogTitle>
-                                    {scheme.scheme_name || scheme.scheme_id} - {scheme.village_name} Weekly LPCD Data
+                              <DialogContent className="max-w-4xl bg-blue-50">
+                                <DialogHeader className="bg-blue-100 p-4 rounded-t-lg">
+                                  <DialogTitle className="text-blue-800">
+                                    {scheme.scheme_name || scheme.scheme_id.split('-')[0]} - {scheme.village_name} Weekly LPCD Data
                                   </DialogTitle>
-                                  <DialogDescription>
+                                  <DialogDescription className="text-blue-600">
                                     Water consumption and LPCD data for the past week (April 11-17, 2025)
                                   </DialogDescription>
                                 </DialogHeader>
                                 
                                 <div className="mt-4">
                                   <Table>
-                                    <TableHeader>
+                                    <TableHeader className="bg-blue-100">
                                       <TableRow>
-                                        <TableHead>Metric</TableHead>
-                                        <TableHead>Day 1 (Apr 11)</TableHead>
-                                        <TableHead>Day 2 (Apr 12)</TableHead>
-                                        <TableHead>Day 3 (Apr 13)</TableHead>
-                                        <TableHead>Day 4 (Apr 14)</TableHead>
-                                        <TableHead>Day 5 (Apr 15)</TableHead>
-                                        <TableHead>Day 6 (Apr 16)</TableHead>
-                                        <TableHead>Day 7 (Apr 17)</TableHead>
+                                        <TableHead className="text-blue-800">Metric</TableHead>
+                                        <TableHead className="text-blue-800">Day 1 (Apr 11)</TableHead>
+                                        <TableHead className="text-blue-800">Day 2 (Apr 12)</TableHead>
+                                        <TableHead className="text-blue-800">Day 3 (Apr 13)</TableHead>
+                                        <TableHead className="text-blue-800">Day 4 (Apr 14)</TableHead>
+                                        <TableHead className="text-blue-800">Day 5 (Apr 15)</TableHead>
+                                        <TableHead className="text-blue-800">Day 6 (Apr 16)</TableHead>
+                                        <TableHead className="text-blue-800">Day 7 (Apr 17)</TableHead>
                                       </TableRow>
                                     </TableHeader>
-                                    <TableBody>
-                                      <TableRow>
-                                        <TableCell className="font-medium">Water Consumption</TableCell>
+                                    <TableBody className="bg-white">
+                                      <TableRow className="hover:bg-blue-50">
+                                        <TableCell className="font-medium text-blue-800">Water Consumption</TableCell>
                                         <TableCell>
                                           {scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined 
                                             ? parseFloat(String(scheme.water_value_day1)).toFixed(1) 
@@ -373,8 +373,8 @@ const LpcdDashboard: React.FC = () => {
                                         </TableCell>
                                         <TableCell>N/A</TableCell>
                                       </TableRow>
-                                      <TableRow>
-                                        <TableCell className="font-medium">LPCD</TableCell>
+                                      <TableRow className="hover:bg-blue-50">
+                                        <TableCell className="font-medium text-blue-800">LPCD</TableCell>
                                         <TableCell>
                                           {scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined 
                                             ? parseFloat(String(scheme.lpcd_value_day1)).toFixed(1) 
@@ -411,8 +411,8 @@ const LpcdDashboard: React.FC = () => {
                                             : 'N/A'}
                                         </TableCell>
                                       </TableRow>
-                                      <TableRow>
-                                        <TableCell className="font-medium">Status</TableCell>
+                                      <TableRow className="hover:bg-blue-50">
+                                        <TableCell className="font-medium text-blue-800">Status</TableCell>
                                         <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day1)}</TableCell>
                                         <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day2)}</TableCell>
                                         <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day3)}</TableCell>
@@ -424,23 +424,23 @@ const LpcdDashboard: React.FC = () => {
                                     </TableBody>
                                   </Table>
                                   
-                                  <div className="mt-4 flex justify-between">
-                                    <div>
-                                      <p><strong>Village:</strong> {scheme.village_name}</p>
-                                      <p><strong>Region:</strong> {scheme.region}</p>
-                                      <p><strong>Population:</strong> {scheme.population || 'N/A'}</p>
+                                  <div className="mt-6 flex justify-between bg-blue-100 p-4 rounded-lg">
+                                    <div className="text-blue-800">
+                                      <p className="mb-2"><strong>Village:</strong> {scheme.village_name}</p>
+                                      <p className="mb-2"><strong>Region:</strong> {scheme.region}</p>
+                                      <p className="mb-2"><strong>Population:</strong> {scheme.population || 'N/A'}</p>
                                     </div>
-                                    <div>
-                                      <p>
-                                        <strong>Days above 55 LPCD:</strong> {scheme.above_55_lpcd_count || 0}
+                                    <div className="text-blue-800">
+                                      <p className="mb-2">
+                                        <strong>Days above 55 LPCD:</strong> <span className="text-green-600 font-semibold">{scheme.above_55_lpcd_count || 0}</span>
                                       </p>
-                                      <p>
-                                        <strong>Days below 55 LPCD:</strong> {scheme.below_55_lpcd_count || 0}
+                                      <p className="mb-2">
+                                        <strong>Days below 55 LPCD:</strong> <span className="text-red-600 font-semibold">{scheme.below_55_lpcd_count || 0}</span>
                                       </p>
-                                      <p>
-                                        <strong>Zero supply for a week:</strong> {
-                                          scheme.consistent_zero_lpcd_for_a_week ? 'Yes' : 'No'
-                                        }
+                                      <p className="mb-2">
+                                        <strong>Zero supply for a week:</strong> <span className={scheme.consistent_zero_lpcd_for_a_week ? "text-red-600 font-semibold" : "text-green-600 font-semibold"}>
+                                          {scheme.consistent_zero_lpcd_for_a_week ? 'Yes' : 'No'}
+                                        </span>
                                       </p>
                                     </div>
                                   </div>
