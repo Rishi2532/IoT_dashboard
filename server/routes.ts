@@ -74,6 +74,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount AI routes
   app.use("/api/ai", aiRoutes);
+  
+  // Mount water scheme routes
+  app.use("/api/water-scheme-data", waterSchemeRoutes);
 
   // Register endpoint
   app.post("/api/auth/register", async (req, res) => {

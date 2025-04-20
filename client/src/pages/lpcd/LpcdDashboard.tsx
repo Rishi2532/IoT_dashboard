@@ -147,11 +147,11 @@ const LpcdDashboard = () => {
     if (!lpcdValue && lpcdValue !== 0) return <Badge variant="outline">No data</Badge>;
     
     if (lpcdValue >= 55) {
-      return <Badge className="bg-green-500">Good (>55L)</Badge>;
+      return <Badge className="bg-green-500">Good ({'>'}55L)</Badge>;
     } else if (lpcdValue >= 40) {
       return <Badge className="bg-yellow-500">Average (40-55L)</Badge>;
     } else {
-      return <Badge className="bg-red-500">Low (<40L)</Badge>;
+      return <Badge className="bg-red-500">Low ({'<'}40L)</Badge>;
     }
   };
   

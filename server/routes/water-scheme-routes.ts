@@ -1,7 +1,7 @@
 import express from 'express';
-import { pool } from '../db';
+import * as db from '../db';
 import multer from 'multer';
-import { v4 as uuidv4 } from 'uuid';
+import * as uuid from 'uuid';
 import fs from 'fs';
 import path from 'path';
 import * as XLSX from 'xlsx';
@@ -21,7 +21,7 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     const fileExt = path.extname(file.originalname);
-    const uniqueFilename = `${uuidv4()}${fileExt}`;
+    const uniqueFilename = `${uuid.v4()}${fileExt}`;
     cb(null, uniqueFilename);
   },
 });
@@ -45,7 +45,7 @@ const upload = multer({
 router.get('/', async (req, res) => {
   try {
     const { region, minLpcd, maxLpcd, zeroSupplyForWeek } = req.query;
-    const client = await pool.connect();
+    const client = await db.getDB();
     
     try {
       let query = 'SELECT * FROM water_scheme_data';
@@ -175,7 +175,7 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
   let inserted = 0;
   let updated = 0;
   const errors: string[] = [];
-  const client = await pool.connect();
+  const client = await db.getDB();
   
   try {
     await client.query('BEGIN');
