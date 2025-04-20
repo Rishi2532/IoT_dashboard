@@ -40,9 +40,20 @@ interface WaterSchemeData {
   village_name?: string;
   population?: number;
   number_of_esr?: number;
-  water_value_day1?: number;
-  lpcd_value_day1?: number;
-  consistent_zero_lpcd_for_a_week?: boolean;
+  water_value_day1?: number | string;
+  water_value_day2?: number | string;
+  water_value_day3?: number | string;
+  water_value_day4?: number | string;
+  water_value_day5?: number | string;
+  water_value_day6?: number | string;
+  lpcd_value_day1?: number | string;
+  lpcd_value_day2?: number | string;
+  lpcd_value_day3?: number | string;
+  lpcd_value_day4?: number | string;
+  lpcd_value_day5?: number | string;
+  lpcd_value_day6?: number | string;
+  lpcd_value_day7?: number | string;
+  consistent_zero_lpcd_for_a_week?: number | boolean;
   below_55_lpcd_count?: number;
   above_55_lpcd_count?: number;
 }
@@ -123,13 +134,15 @@ const LpcdDashboard: React.FC = () => {
   const { totalItems, totalPages, startIndex, endIndex, currentPageData } = paginationData;
   
   // Get status badge for LPCD value
-  const getLpcdStatusBadge = (lpcdValue?: number) => {
-    if (lpcdValue === undefined || lpcdValue === null) 
+  const getLpcdStatusBadge = (lpcdValue?: number | string | null) => {
+    if (lpcdValue === undefined || lpcdValue === null || isNaN(Number(lpcdValue))) 
       return <Badge variant="outline">No data</Badge>;
     
-    if (lpcdValue >= 55) {
+    const numValue = Number(lpcdValue);
+    
+    if (numValue >= 55) {
       return <Badge className="bg-green-500">Good ({'>'}55L)</Badge>;
-    } else if (lpcdValue >= 40) {
+    } else if (numValue >= 40) {
       return <Badge className="bg-yellow-500">Average (40-55L)</Badge>;
     } else {
       return <Badge className="bg-red-500">Low ({'<'}40L)</Badge>;
@@ -267,8 +280,16 @@ const LpcdDashboard: React.FC = () => {
                       <TableCell>{scheme.scheme_id}</TableCell>
                       <TableCell>{scheme.scheme_name || 'N/A'}</TableCell>
                       <TableCell>{scheme.village_name || 'N/A'}</TableCell>
-                      <TableCell className="text-right">{scheme.water_value_day1?.toFixed(1) || 'N/A'}</TableCell>
-                      <TableCell className="text-right">{scheme.lpcd_value_day1?.toFixed(1) || 'N/A'}</TableCell>
+                      <TableCell className="text-right">
+                        {scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined 
+                          ? parseFloat(String(scheme.water_value_day1)).toFixed(1) 
+                          : 'N/A'}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined 
+                          ? parseFloat(String(scheme.lpcd_value_day1)).toFixed(1) 
+                          : 'N/A'}
+                      </TableCell>
                       <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day1)}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
