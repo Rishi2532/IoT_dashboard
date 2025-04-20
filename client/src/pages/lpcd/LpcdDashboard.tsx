@@ -91,9 +91,40 @@ const LpcdDashboard: React.FC = () => {
     data: waterSchemeData = [], 
     isLoading: isLoadingSchemes, 
     isError: isSchemesError, 
-    error: schemesError 
+    error: schemesError,
+    refetch
   } = useQuery<WaterSchemeData[]>({
-    queryKey: ['/api/water-scheme-data', filters],
+    queryKey: ['/api/water-scheme-data'],
+    queryFn: async () => {
+      // Build query params for filtering
+      const params = new URLSearchParams();
+      
+      if (filters.region && filters.region !== 'all') {
+        params.append('region', filters.region);
+      }
+      
+      if (filters.minLpcd) {
+        params.append('minLpcd', filters.minLpcd);
+      }
+      
+      if (filters.maxLpcd) {
+        params.append('maxLpcd', filters.maxLpcd);
+      }
+      
+      if (filters.zeroSupplyForWeek) {
+        params.append('zeroSupplyForWeek', 'true');
+      }
+      
+      const queryString = params.toString();
+      const url = `/api/water-scheme-data${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch water scheme data');
+      }
+      
+      return response.json();
+    }
   });
   
   // Regions data query
@@ -112,6 +143,11 @@ const LpcdDashboard: React.FC = () => {
     }));
     // Reset to first page when filters change
     setPage(1);
+    
+    // Refetch data with new filters
+    setTimeout(() => {
+      refetch();
+    }, 0);
   };
   
   // LPCD range selection
@@ -126,6 +162,11 @@ const LpcdDashboard: React.FC = () => {
       setFilters(prev => ({ ...prev, minLpcd: '', maxLpcd: '' }));
     }
     setPage(1);
+    
+    // Refetch data with new filters
+    setTimeout(() => {
+      refetch();
+    }, 0);
   };
   
   // Calculate pagination data
@@ -156,6 +197,11 @@ const LpcdDashboard: React.FC = () => {
       return <Badge className="bg-red-500">Low ({'<'}40L)</Badge>;
     }
   };
+  
+  // Refresh data when filters change
+  useEffect(() => {
+    refetch();
+  }, [filters, refetch]);
   
   // Show error toast if data fetching fails
   useEffect(() => {
