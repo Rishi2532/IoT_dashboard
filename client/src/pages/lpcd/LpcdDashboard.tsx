@@ -22,11 +22,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { MoreHorizontal, ChevronDown, Filter } from 'lucide-react';
+import { MoreHorizontal, ChevronDown, Filter, Info } from 'lucide-react';
 
 // Define TypeScript interfaces
 interface WaterSchemeData {
@@ -267,8 +275,8 @@ const LpcdDashboard: React.FC = () => {
                     <TableHead>Scheme ID</TableHead>
                     <TableHead>Scheme Name</TableHead>
                     <TableHead>Village</TableHead>
-                    <TableHead className="text-right">Water Consumption (Day 1)</TableHead>
-                    <TableHead className="text-right">LPCD (Day 1)</TableHead>
+                    <TableHead className="text-right">Water Consumption (Latest)</TableHead>
+                    <TableHead className="text-right">LPCD (Latest)</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -281,16 +289,16 @@ const LpcdDashboard: React.FC = () => {
                       <TableCell>{scheme.scheme_name || 'N/A'}</TableCell>
                       <TableCell>{scheme.village_name || 'N/A'}</TableCell>
                       <TableCell className="text-right">
-                        {scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined 
-                          ? parseFloat(String(scheme.water_value_day1)).toFixed(1) 
+                        {scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined 
+                          ? parseFloat(String(scheme.water_value_day6)).toFixed(1) 
                           : 'N/A'}
                       </TableCell>
                       <TableCell className="text-right">
-                        {scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined 
-                          ? parseFloat(String(scheme.lpcd_value_day1)).toFixed(1) 
+                        {scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined 
+                          ? parseFloat(String(scheme.lpcd_value_day7)).toFixed(1) 
                           : 'N/A'}
                       </TableCell>
-                      <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day1)}</TableCell>
+                      <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day7)}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -300,7 +308,145 @@ const LpcdDashboard: React.FC = () => {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem>View Details</DropdownMenuItem>
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                  View Weekly Data
+                                </DropdownMenuItem>
+                              </DialogTrigger>
+                              <DialogContent className="max-w-4xl">
+                                <DialogHeader>
+                                  <DialogTitle>
+                                    {scheme.scheme_name || scheme.scheme_id} - {scheme.village_name} Weekly LPCD Data
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Water consumption and LPCD data for the past week (April 11-17, 2025)
+                                  </DialogDescription>
+                                </DialogHeader>
+                                
+                                <div className="mt-4">
+                                  <Table>
+                                    <TableHeader>
+                                      <TableRow>
+                                        <TableHead>Metric</TableHead>
+                                        <TableHead>Day 1 (Apr 11)</TableHead>
+                                        <TableHead>Day 2 (Apr 12)</TableHead>
+                                        <TableHead>Day 3 (Apr 13)</TableHead>
+                                        <TableHead>Day 4 (Apr 14)</TableHead>
+                                        <TableHead>Day 5 (Apr 15)</TableHead>
+                                        <TableHead>Day 6 (Apr 16)</TableHead>
+                                        <TableHead>Day 7 (Apr 17)</TableHead>
+                                      </TableRow>
+                                    </TableHeader>
+                                    <TableBody>
+                                      <TableRow>
+                                        <TableCell className="font-medium">Water Consumption</TableCell>
+                                        <TableCell>
+                                          {scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined 
+                                            ? parseFloat(String(scheme.water_value_day1)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.water_value_day2 !== null && scheme.water_value_day2 !== undefined 
+                                            ? parseFloat(String(scheme.water_value_day2)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.water_value_day3 !== null && scheme.water_value_day3 !== undefined 
+                                            ? parseFloat(String(scheme.water_value_day3)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.water_value_day4 !== null && scheme.water_value_day4 !== undefined 
+                                            ? parseFloat(String(scheme.water_value_day4)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.water_value_day5 !== null && scheme.water_value_day5 !== undefined 
+                                            ? parseFloat(String(scheme.water_value_day5)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined 
+                                            ? parseFloat(String(scheme.water_value_day6)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>N/A</TableCell>
+                                      </TableRow>
+                                      <TableRow>
+                                        <TableCell className="font-medium">LPCD</TableCell>
+                                        <TableCell>
+                                          {scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined 
+                                            ? parseFloat(String(scheme.lpcd_value_day1)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.lpcd_value_day2 !== null && scheme.lpcd_value_day2 !== undefined 
+                                            ? parseFloat(String(scheme.lpcd_value_day2)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined 
+                                            ? parseFloat(String(scheme.lpcd_value_day3)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.lpcd_value_day4 !== null && scheme.lpcd_value_day4 !== undefined 
+                                            ? parseFloat(String(scheme.lpcd_value_day4)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.lpcd_value_day5 !== null && scheme.lpcd_value_day5 !== undefined 
+                                            ? parseFloat(String(scheme.lpcd_value_day5)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.lpcd_value_day6 !== null && scheme.lpcd_value_day6 !== undefined 
+                                            ? parseFloat(String(scheme.lpcd_value_day6)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                        <TableCell>
+                                          {scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined 
+                                            ? parseFloat(String(scheme.lpcd_value_day7)).toFixed(1) 
+                                            : 'N/A'}
+                                        </TableCell>
+                                      </TableRow>
+                                      <TableRow>
+                                        <TableCell className="font-medium">Status</TableCell>
+                                        <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day1)}</TableCell>
+                                        <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day2)}</TableCell>
+                                        <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day3)}</TableCell>
+                                        <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day4)}</TableCell>
+                                        <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day5)}</TableCell>
+                                        <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day6)}</TableCell>
+                                        <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day7)}</TableCell>
+                                      </TableRow>
+                                    </TableBody>
+                                  </Table>
+                                  
+                                  <div className="mt-4 flex justify-between">
+                                    <div>
+                                      <p><strong>Village:</strong> {scheme.village_name}</p>
+                                      <p><strong>Region:</strong> {scheme.region}</p>
+                                      <p><strong>Population:</strong> {scheme.population || 'N/A'}</p>
+                                    </div>
+                                    <div>
+                                      <p>
+                                        <strong>Days above 55 LPCD:</strong> {scheme.above_55_lpcd_count || 0}
+                                      </p>
+                                      <p>
+                                        <strong>Days below 55 LPCD:</strong> {scheme.below_55_lpcd_count || 0}
+                                      </p>
+                                      <p>
+                                        <strong>Zero supply for a week:</strong> {
+                                          scheme.consistent_zero_lpcd_for_a_week ? 'Yes' : 'No'
+                                        }
+                                      </p>
+                                    </div>
+                                  </div>
+                                </div>
+                              </DialogContent>
+                            </Dialog>
                             <DropdownMenuItem>Edit</DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
