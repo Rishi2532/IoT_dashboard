@@ -6,6 +6,7 @@ import fs from 'fs';
 import path from 'path';
 import * as XLSX from 'xlsx';
 import { parse } from 'csv-parse';
+import pg from 'pg';
 
 const router = express.Router();
 
@@ -47,8 +48,7 @@ router.get('/', async (req, res) => {
     const { region, minLpcd, maxLpcd, zeroSupplyForWeek } = req.query;
     
     // Use pg directly for this route
-    const { Pool } = require('pg');
-    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const pool = new db.pool();
     const client = await pool.connect();
     
     try {
@@ -180,9 +180,8 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
   let updated = 0;
   const errors: string[] = [];
   
-  // Use pg directly for this route
-  const { Pool } = require('pg');
-  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  // Use the db pool from our imported module
+  const pool = new db.pool();
   const client = await pool.connect();
   
   try {
