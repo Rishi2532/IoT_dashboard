@@ -45,7 +45,11 @@ const upload = multer({
 router.get('/', async (req, res) => {
   try {
     const { region, minLpcd, maxLpcd, zeroSupplyForWeek } = req.query;
-    const client = await db.getDB();
+    
+    // Use pg directly for this route
+    const { Pool } = require('pg');
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
     
     try {
       let query = 'SELECT * FROM water_scheme_data';
@@ -175,7 +179,11 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
   let inserted = 0;
   let updated = 0;
   const errors: string[] = [];
-  const client = await db.getDB();
+  
+  // Use pg directly for this route
+  const { Pool } = require('pg');
+  const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  const client = await pool.connect();
   
   try {
     await client.query('BEGIN');
@@ -252,8 +260,6 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
     await client.query('ROLLBACK');
     console.error('Database import error:', error);
     throw new Error(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
-  } finally {
-    client.release();
   }
 }
 
