@@ -8,6 +8,7 @@ import {
   timestamp,
   varchar,
   decimal,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -131,7 +132,7 @@ export const waterSchemeData = pgTable("water_scheme_data", {
   block: text("block"),
   
   // Scheme identification
-  scheme_id: varchar("scheme_id", { length: 100 }).primaryKey(),
+  scheme_id: varchar("scheme_id", { length: 100 }),
   scheme_name: text("scheme_name"),
   village_name: text("village_name"),
   
@@ -177,6 +178,10 @@ export const waterSchemeData = pgTable("water_scheme_data", {
   consistent_zero_lpcd_for_a_week: integer("consistent_zero_lpcd_for_a_week"),
   below_55_lpcd_count: integer("below_55_lpcd_count"),
   above_55_lpcd_count: integer("above_55_lpcd_count"),
+}, (table) => {
+  return {
+    pk: primaryKey({ columns: [table.scheme_id, table.village_name] }),
+  };
 });
 
 export const insertWaterSchemeDataSchema = createInsertSchema(waterSchemeData);

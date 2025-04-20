@@ -210,41 +210,61 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
           continue;
         }
         
-        // Check if record exists
-        const checkResult = await client.query(
-          'SELECT scheme_id, village_name FROM water_scheme_data WHERE scheme_id = $1 AND village_name = $2',
-          [record.scheme_id, record.village_name]
-        );
-        
-        if (checkResult.rows.length > 0) {
-          // Update existing record
-          const updateFields = Object.keys(record).filter(key => key !== 'scheme_id');
-          const updateQuery = `
-            UPDATE water_scheme_data 
-            SET ${updateFields.map((key, idx) => `${key} = $${idx + 2}`).join(', ')} 
-            WHERE scheme_id = $1 AND village_name = $2
-          `;
+        // Ensure both scheme_id and village_name are present
+        if (!record.scheme_id || !record.village_name) {
+          errors.push(`Skipped row - missing required fields: ${!record.scheme_id ? 'scheme_id' : ''} ${!record.village_name ? 'village_name' : ''}`);
+          continue;
+        }
+
+        try {
+          // Check if record exists
+          const checkResult = await client.query(
+            'SELECT scheme_id, village_name FROM water_scheme_data WHERE scheme_id = $1 AND village_name = $2',
+            [record.scheme_id, record.village_name]
+          );
           
-          const updateValues = [record.scheme_id, record.village_name];
-          updateFields.forEach(key => {
-            if (key !== 'village_name') {
-              updateValues.push(record[key]);
+          if (checkResult.rows.length > 0) {
+            // Update existing record - exclude primary key fields from the update
+            const updateFields = Object.keys(record).filter(key => key !== 'scheme_id' && key !== 'village_name');
+            
+            if (updateFields.length === 0) {
+              // No fields to update other than the primary key
+              continue;
             }
-          });
-          
-          await client.query(updateQuery, updateValues);
-          updated++;
-        } else {
-          // Insert new record
-          const fields = Object.keys(record);
-          const insertQuery = `
-            INSERT INTO water_scheme_data (${fields.join(', ')}) 
-            VALUES (${fields.map((_, idx) => `$${idx + 1}`).join(', ')})
-          `;
-          
-          const insertValues = fields.map(field => record[field]);
-          await client.query(insertQuery, insertValues);
-          inserted++;
+            
+            const updateQuery = `
+              UPDATE water_scheme_data 
+              SET ${updateFields.map((key, idx) => `${key} = $${idx + 3}`).join(', ')} 
+              WHERE scheme_id = $1 AND village_name = $2
+            `;
+            
+            const updateValues = [record.scheme_id, record.village_name];
+            updateFields.forEach(key => {
+              updateValues.push(record[key]);
+            });
+            
+            await client.query(updateQuery, updateValues);
+            updated++;
+          } else {
+            // Insert new record
+            const fields = Object.keys(record);
+            const insertQuery = `
+              INSERT INTO water_scheme_data (${fields.join(', ')}) 
+              VALUES (${fields.map((_, idx) => `$${idx + 1}`).join(', ')})
+            `;
+            
+            const insertValues = fields.map(field => record[field]);
+            await client.query(insertQuery, insertValues);
+            inserted++;
+          }
+        } catch (error: any) {
+          // Handle specific errors
+          if (error.code === '23505') {
+            // Duplicate key error
+            errors.push(`Duplicate key error for scheme_id: ${record.scheme_id}, village_name: ${record.village_name}`);
+          } else {
+            throw error; // Re-throw other errors to be caught by the outer try-catch
+          }
         }
       } catch (rowError) {
         console.error('Error processing row:', rowError);
