@@ -6,6 +6,8 @@ import {
   boolean,
   jsonb,
   timestamp,
+  varchar,
+  decimal,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
@@ -118,3 +120,70 @@ export const insertAppStateSchema = createInsertSchema(appState);
 
 export type InsertAppState = z.infer<typeof insertAppStateSchema>;
 export type AppState = typeof appState.$inferSelect;
+
+// Water Scheme Data table for LPCD tracking
+export const waterSchemeData = pgTable("water_scheme_data", {
+  // Region information
+  region: text("region"),
+  circle: text("circle"),
+  division: text("division"),
+  sub_division: text("sub_division"),
+  block: text("block"),
+  
+  // Scheme identification
+  scheme_id: varchar("scheme_id", { length: 100 }).primaryKey(),
+  scheme_name: text("scheme_name"),
+  village_name: text("village_name"),
+  
+  // Population and infrastructure
+  population: integer("population"),
+  number_of_esr: integer("number_of_esr"),
+  
+  // Water values for different days
+  water_value_day1: decimal("water_value_day1", { precision: 10, scale: 2 }),
+  water_value_day2: decimal("water_value_day2", { precision: 10, scale: 2 }),
+  water_value_day3: decimal("water_value_day3", { precision: 10, scale: 2 }),
+  water_value_day4: decimal("water_value_day4", { precision: 10, scale: 2 }),
+  water_value_day5: decimal("water_value_day5", { precision: 10, scale: 2 }),
+  water_value_day6: decimal("water_value_day6", { precision: 10, scale: 2 }),
+  
+  // LPCD values for different days
+  lpcd_value_day1: decimal("lpcd_value_day1", { precision: 10, scale: 2 }),
+  lpcd_value_day2: decimal("lpcd_value_day2", { precision: 10, scale: 2 }),
+  lpcd_value_day3: decimal("lpcd_value_day3", { precision: 10, scale: 2 }),
+  lpcd_value_day4: decimal("lpcd_value_day4", { precision: 10, scale: 2 }),
+  lpcd_value_day5: decimal("lpcd_value_day5", { precision: 10, scale: 2 }),
+  lpcd_value_day6: decimal("lpcd_value_day6", { precision: 10, scale: 2 }),
+  lpcd_value_day7: decimal("lpcd_value_day7", { precision: 10, scale: 2 }),
+  
+  // Dates for water measurements
+  water_date_day1: varchar("water_date_day1", { length: 20 }),
+  water_date_day2: varchar("water_date_day2", { length: 20 }),
+  water_date_day3: varchar("water_date_day3", { length: 20 }),
+  water_date_day4: varchar("water_date_day4", { length: 20 }),
+  water_date_day5: varchar("water_date_day5", { length: 20 }),
+  water_date_day6: varchar("water_date_day6", { length: 20 }),
+  
+  // Dates for LPCD measurements
+  lpcd_date_day1: varchar("lpcd_date_day1", { length: 20 }),
+  lpcd_date_day2: varchar("lpcd_date_day2", { length: 20 }),
+  lpcd_date_day3: varchar("lpcd_date_day3", { length: 20 }),
+  lpcd_date_day4: varchar("lpcd_date_day4", { length: 20 }),
+  lpcd_date_day5: varchar("lpcd_date_day5", { length: 20 }),
+  lpcd_date_day6: varchar("lpcd_date_day6", { length: 20 }),
+  lpcd_date_day7: varchar("lpcd_date_day7", { length: 20 }),
+  
+  // Status counters
+  consistent_zero_lpcd_for_a_week: integer("consistent_zero_lpcd_for_a_week"),
+  below_55_lpcd_count: integer("below_55_lpcd_count"),
+  above_55_lpcd_count: integer("above_55_lpcd_count"),
+});
+
+export const insertWaterSchemeDataSchema = createInsertSchema(waterSchemeData);
+export const updateWaterSchemeDataSchema = createInsertSchema(waterSchemeData).omit({
+  scheme_id: true
+});
+
+export type InsertWaterSchemeData = z.infer<typeof insertWaterSchemeDataSchema>;
+export type UpdateWaterSchemeData = z.infer<typeof updateWaterSchemeDataSchema>;
+export type WaterSchemeData = typeof waterSchemeData.$inferSelect;

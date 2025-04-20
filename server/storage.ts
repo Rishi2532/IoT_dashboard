@@ -3,12 +3,16 @@ import {
   regions,
   schemeStatuses,
   appState,
+  waterSchemeData,
   type User,
   type InsertUser,
   type Region,
   type InsertRegion,
   type SchemeStatus,
   type InsertSchemeStatus,
+  type WaterSchemeData,
+  type InsertWaterSchemeData,
+  type UpdateWaterSchemeData,
 } from "@shared/schema";
 import { getDB, initializeDatabase } from "./db";
 import { eq, sql } from "drizzle-orm";
@@ -25,6 +29,14 @@ declare global {
     rca: number;
     pt: number;
   } | null;
+}
+
+// Filter type for water scheme data queries
+export interface WaterSchemeDataFilter {
+  region?: string;
+  minLpcd?: number;
+  maxLpcd?: number;
+  zeroSupplyForWeek?: boolean;
 }
 
 // Interface for storage operations
@@ -62,12 +74,114 @@ export interface IStorage {
 
   // Updates operations
   getTodayUpdates(): Promise<any[]>;
+  
+  // Water Scheme Data operations
+  getAllWaterSchemeData(
+    filter?: WaterSchemeDataFilter
+  ): Promise<WaterSchemeData[]>;
+  getWaterSchemeDataById(schemeId: string): Promise<WaterSchemeData | undefined>;
+  createWaterSchemeData(data: InsertWaterSchemeData): Promise<WaterSchemeData>;
+  updateWaterSchemeData(schemeId: string, data: UpdateWaterSchemeData): Promise<WaterSchemeData>;
+  deleteWaterSchemeData(schemeId: string): Promise<boolean>;
+  importWaterSchemeDataFromExcel(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    errors: string[];
+  }>;
+  importWaterSchemeDataFromCSV(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    errors: string[];
+  }>;
 }
 
 // PostgreSQL implementation
 export class PostgresStorage implements IStorage {
   private db: any;
   private initialized: Promise<void>;
+  private excelColumnMapping: Record<string, string> = {
+    "Region": "region",
+    "Circle": "circle",
+    "Division": "division",
+    "Sub Division": "sub_division",
+    "Block": "block",
+    "Scheme ID": "scheme_id",
+    "Scheme Name": "scheme_name",
+    "Village Name": "village_name",
+    "Population": "population",
+    "Number of ESR": "number_of_esr",
+    "water value day1": "water_value_day1",
+    "water value day2": "water_value_day2",
+    "water value day3": "water_value_day3",
+    "water value day4": "water_value_day4",
+    "water value day5": "water_value_day5",
+    "water value day6": "water_value_day6",
+    "lpcd value day1": "lpcd_value_day1",
+    "lpcd value day2": "lpcd_value_day2",
+    "lpcd value day3": "lpcd_value_day3",
+    "lpcd value day4": "lpcd_value_day4",
+    "lpcd value day5": "lpcd_value_day5",
+    "lpcd value day6": "lpcd_value_day6",
+    "lpcd value day7": "lpcd_value_day7",
+    "water date day1": "water_date_day1",
+    "water date day2": "water_date_day2",
+    "water date day3": "water_date_day3",
+    "water date day4": "water_date_day4",
+    "water date day5": "water_date_day5",
+    "water date day6": "water_date_day6",
+    "lpcd date day1": "lpcd_date_day1",
+    "lpcd date day2": "lpcd_date_day2",
+    "lpcd date day3": "lpcd_date_day3",
+    "lpcd date day4": "lpcd_date_day4",
+    "lpcd date day5": "lpcd_date_day5",
+    "lpcd date day6": "lpcd_date_day6",
+    "lpcd date day7": "lpcd_date_day7",
+    "Consistent Zero LPCD for a week": "consistent_zero_lpcd_for_a_week",
+    "Consistent <55 LPCD for a week": "below_55_lpcd_count",
+    "Consistent >55 LPCD for a week": "above_55_lpcd_count"
+  };
+  
+  private csvColumnMapping: Record<number, string> = {
+    0: "region",
+    1: "circle",
+    2: "division",
+    3: "sub_division",
+    4: "block",
+    5: "scheme_id",
+    6: "scheme_name",
+    7: "village_name",
+    8: "population",
+    9: "number_of_esr",
+    10: "water_value_day1",
+    11: "water_value_day2",
+    12: "water_value_day3",
+    13: "water_value_day4",
+    14: "water_value_day5",
+    15: "water_value_day6",
+    16: "lpcd_value_day1",
+    17: "lpcd_value_day2",
+    18: "lpcd_value_day3",
+    19: "lpcd_value_day4",
+    20: "lpcd_value_day5",
+    21: "lpcd_value_day6",
+    22: "lpcd_value_day7",
+    23: "water_date_day1",
+    24: "water_date_day2",
+    25: "water_date_day3",
+    26: "water_date_day4",
+    27: "water_date_day5",
+    28: "water_date_day6",
+    29: "lpcd_date_day1",
+    30: "lpcd_date_day2",
+    31: "lpcd_date_day3",
+    32: "lpcd_date_day4",
+    33: "lpcd_date_day5",
+    34: "lpcd_date_day6",
+    35: "lpcd_date_day7",
+    36: "consistent_zero_lpcd_for_a_week",
+    37: "below_55_lpcd_count",
+    38: "above_55_lpcd_count"
+  };
 
   constructor() {
     this.initialized = this.initializeDb().catch((error) => {
