@@ -470,6 +470,224 @@ export class PostgresStorage implements IStorage {
     return true;
   }
 
+  // Water Scheme Data operations
+  async getAllWaterSchemeData(filter?: WaterSchemeDataFilter): Promise<WaterSchemeData[]> {
+    const db = await this.ensureInitialized();
+    let query = db.select().from(waterSchemeData);
+    
+    if (filter) {
+      // Apply region filter if provided
+      if (filter.region) {
+        query = query.where(eq(waterSchemeData.region, filter.region));
+      }
+      
+      // Apply LPCD filters if provided
+      if (filter.minLpcd !== undefined) {
+        // Get latest lpcd value (day1 is most recent)
+        query = query.where(sql`${waterSchemeData.lpcd_value_day1} >= ${filter.minLpcd}`);
+      }
+      
+      if (filter.maxLpcd !== undefined) {
+        // Get latest lpcd value (day1 is most recent)
+        query = query.where(sql`${waterSchemeData.lpcd_value_day1} <= ${filter.maxLpcd}`);
+      }
+      
+      // Filter for schemes with zero water supply for a week
+      if (filter.zeroSupplyForWeek) {
+        query = query.where(sql`${waterSchemeData.consistent_zero_lpcd_for_a_week} = 1`);
+      }
+    }
+    
+    return query.orderBy(waterSchemeData.region, waterSchemeData.scheme_name);
+  }
+  
+  async getWaterSchemeDataById(schemeId: string): Promise<WaterSchemeData | undefined> {
+    const db = await this.ensureInitialized();
+    const result = await db
+      .select()
+      .from(waterSchemeData)
+      .where(eq(waterSchemeData.scheme_id, schemeId));
+    return result.length > 0 ? result[0] : undefined;
+  }
+  
+  async createWaterSchemeData(data: InsertWaterSchemeData): Promise<WaterSchemeData> {
+    const db = await this.ensureInitialized();
+    const result = await db.insert(waterSchemeData).values(data).returning();
+    return result[0];
+  }
+  
+  async updateWaterSchemeData(schemeId: string, data: UpdateWaterSchemeData): Promise<WaterSchemeData> {
+    const db = await this.ensureInitialized();
+    await db
+      .update(waterSchemeData)
+      .set(data)
+      .where(eq(waterSchemeData.scheme_id, schemeId));
+    
+    // Fetch and return the updated record
+    const updated = await this.getWaterSchemeDataById(schemeId);
+    if (!updated) {
+      throw new Error(`Failed to retrieve updated water scheme data for scheme ID: ${schemeId}`);
+    }
+    return updated;
+  }
+  
+  async deleteWaterSchemeData(schemeId: string): Promise<boolean> {
+    const db = await this.ensureInitialized();
+    await db
+      .delete(waterSchemeData)
+      .where(eq(waterSchemeData.scheme_id, schemeId));
+    return true;
+  }
+  
+  async importWaterSchemeDataFromExcel(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    errors: string[];
+  }> {
+    const db = await this.ensureInitialized();
+    const errors: string[] = [];
+    let inserted = 0;
+    let updated = 0;
+    
+    try {
+      // Import xlsx library
+      const xlsx = require('xlsx');
+      
+      // Parse Excel file
+      const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+      const sheetName = workbook.SheetNames[0]; // Use first sheet
+      const worksheet = workbook.Sheets[sheetName];
+      const jsonData = xlsx.utils.sheet_to_json(worksheet);
+      
+      // Process each row
+      for (const row of jsonData) {
+        try {
+          // Map Excel columns to database fields
+          const schemeData: Partial<InsertWaterSchemeData> = {};
+          
+          // Validate and extract scheme_id (required field)
+          const schemeIdHeader = Object.keys(this.excelColumnMapping).find(
+            key => this.excelColumnMapping[key] === 'scheme_id'
+          );
+          
+          if (!schemeIdHeader || !row[schemeIdHeader]) {
+            errors.push(`Row missing required field: ${schemeIdHeader || 'Scheme ID'}`);
+            continue;
+          }
+          
+          // Map fields from Excel to database schema
+          for (const [excelHeader, dbField] of Object.entries(this.excelColumnMapping)) {
+            if (row[excelHeader] !== undefined) {
+              // Convert string values to numbers for numeric fields
+              if (dbField.includes('value') || 
+                  dbField === 'population' || 
+                  dbField === 'number_of_esr' ||
+                  dbField.includes('count')) {
+                schemeData[dbField] = Number(row[excelHeader]);
+              } else {
+                schemeData[dbField] = row[excelHeader];
+              }
+            }
+          }
+          
+          // Check if scheme already exists
+          const existingScheme = await this.getWaterSchemeDataById(schemeData.scheme_id);
+          
+          if (existingScheme) {
+            // Update existing scheme
+            await this.updateWaterSchemeData(schemeData.scheme_id, schemeData);
+            updated++;
+          } else {
+            // Insert new scheme
+            await this.createWaterSchemeData(schemeData as InsertWaterSchemeData);
+            inserted++;
+          }
+        } catch (rowError) {
+          errors.push(`Error processing row: ${rowError.message}`);
+        }
+      }
+      
+      return { inserted, updated, errors };
+    } catch (error) {
+      errors.push(`Excel import error: ${error.message}`);
+      return { inserted, updated, errors };
+    }
+  }
+  
+  async importWaterSchemeDataFromCSV(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    errors: string[];
+  }> {
+    const db = await this.ensureInitialized();
+    const errors: string[] = [];
+    let inserted = 0;
+    let updated = 0;
+    
+    try {
+      // Import csv-parse library
+      const { parse } = require('csv-parse/sync');
+      
+      // Parse CSV file (no headers)
+      const records = parse(fileBuffer, {
+        delimiter: ',',
+        columns: false, // No headers in CSV
+        skip_empty_lines: true
+      });
+      
+      // Process each row
+      for (const record of records) {
+        try {
+          // Map CSV columns to database fields based on index
+          const schemeData: Partial<InsertWaterSchemeData> = {};
+          
+          // Check if we have the scheme_id (required field)
+          const schemeIdIndex = 5; // According to the mapping, scheme_id is at index 5
+          if (!record[schemeIdIndex]) {
+            errors.push(`Row missing required field: scheme_id at column ${schemeIdIndex}`);
+            continue;
+          }
+          
+          // Map fields from CSV to database schema based on column index
+          for (const [indexStr, dbField] of Object.entries(this.csvColumnMapping)) {
+            const index = parseInt(indexStr);
+            if (record[index] !== undefined) {
+              // Convert string values to numbers for numeric fields
+              if (dbField.includes('value') || 
+                  dbField === 'population' || 
+                  dbField === 'number_of_esr' ||
+                  dbField.includes('count')) {
+                schemeData[dbField] = Number(record[index]);
+              } else {
+                schemeData[dbField] = record[index];
+              }
+            }
+          }
+          
+          // Check if scheme already exists
+          const existingScheme = await this.getWaterSchemeDataById(schemeData.scheme_id);
+          
+          if (existingScheme) {
+            // Update existing scheme
+            await this.updateWaterSchemeData(schemeData.scheme_id, schemeData);
+            updated++;
+          } else {
+            // Insert new scheme
+            await this.createWaterSchemeData(schemeData as InsertWaterSchemeData);
+            inserted++;
+          }
+        } catch (rowError) {
+          errors.push(`Error processing row: ${rowError.message}`);
+        }
+      }
+      
+      return { inserted, updated, errors };
+    } catch (error) {
+      errors.push(`CSV import error: ${error.message}`);
+      return { inserted, updated, errors };
+    }
+  }
+
   // We're now using global variables instead of static class variables
   // This makes the data accessible across different instances and module reloads
 

@@ -8,6 +8,10 @@ import {
   loginSchema,
   registerUserSchema,
   InsertSchemeStatus,
+  insertWaterSchemeDataSchema,
+  waterSchemeData,
+  InsertWaterSchemeData,
+  UpdateWaterSchemeData,
 } from "@shared/schema";
 import { z } from "zod";
 import { updateRegionSummaries, resetRegionData, getDB } from "./db";
