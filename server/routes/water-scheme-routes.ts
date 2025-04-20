@@ -190,10 +190,11 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
   const client = await pool.connect();
   
   try {
-    await client.query('BEGIN');
-    
+    // Process each row in its own transaction
     for (const row of data) {
       try {
+        await client.query('BEGIN');
+        
         let record: any;
         
         if (isExcel) {
@@ -207,12 +208,14 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
         // Skip rows without scheme_id
         if (!record.scheme_id) {
           errors.push(`Skipped row - missing scheme_id: ${JSON.stringify(row)}`);
+          await client.query('COMMIT'); // End this row's transaction
           continue;
         }
         
         // Ensure both scheme_id and village_name are present
         if (!record.scheme_id || !record.village_name) {
           errors.push(`Skipped row - missing required fields: ${!record.scheme_id ? 'scheme_id' : ''} ${!record.village_name ? 'village_name' : ''}`);
+          await client.query('COMMIT'); // End this row's transaction
           continue;
         }
 
@@ -229,6 +232,7 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
             
             if (updateFields.length === 0) {
               // No fields to update other than the primary key
+              await client.query('COMMIT'); // End this row's transaction
               continue;
             }
             
@@ -257,22 +261,25 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
             await client.query(insertQuery, insertValues);
             inserted++;
           }
+          
+          await client.query('COMMIT'); // Commit this row's transaction
         } catch (error: any) {
+          await client.query('ROLLBACK'); // Rollback just this row's transaction
+          
           // Handle specific errors
           if (error.code === '23505') {
             // Duplicate key error
             errors.push(`Duplicate key error for scheme_id: ${record.scheme_id}, village_name: ${record.village_name}`);
           } else {
-            throw error; // Re-throw other errors to be caught by the outer try-catch
+            errors.push(`Error processing row: ${error.message || 'Unknown error'}`);
           }
         }
-      } catch (rowError) {
+      } catch (rowError: any) {
+        await client.query('ROLLBACK'); // Make sure to rollback if there was an error
         console.error('Error processing row:', rowError);
-        errors.push(`Failed to import row: ${rowError instanceof Error ? rowError.message : String(rowError)}`);
+        errors.push(`Failed to import row: ${rowError.message || String(rowError)}`);
       }
     }
-    
-    await client.query('COMMIT');
     
     return {
       message: `Successfully processed ${inserted + updated} records.`,
@@ -280,10 +287,11 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
       updated,
       errors
     };
-  } catch (error) {
-    await client.query('ROLLBACK');
+  } catch (error: any) {
     console.error('Database import error:', error);
-    throw new Error(`Import failed: ${error instanceof Error ? error.message : String(error)}`);
+    throw new Error(`Import failed: ${error.message || String(error)}`);
+  } finally {
+    client.release(); // Make sure to release the client back to the pool
   }
 }
 
