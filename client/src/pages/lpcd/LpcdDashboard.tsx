@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { apiRequest } from '@/lib/queryClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,6 +28,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { MoreHorizontal, ChevronDown, Filter } from 'lucide-react';
 
+// Define TypeScript interfaces
 interface WaterSchemeData {
   scheme_id: string;
   region?: string;
@@ -47,7 +47,12 @@ interface WaterSchemeData {
   above_55_lpcd_count?: number;
 }
 
-const LpcdDashboard = () => {
+interface RegionData {
+  region_id: number;
+  region_name: string;
+}
+
+const LpcdDashboard: React.FC = () => {
   const { toast } = useToast();
   
   // Filter state
@@ -62,37 +67,22 @@ const LpcdDashboard = () => {
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  // Query to fetch water scheme data
-  const { data, isLoading, isError, error } = useQuery({
+  // Water scheme data query
+  const { 
+    data: waterSchemeData = [], 
+    isLoading: isLoadingSchemes, 
+    isError: isSchemesError, 
+    error: schemesError 
+  } = useQuery<WaterSchemeData[]>({
     queryKey: ['/api/water-scheme-data', filters],
-    queryFn: async () => {
-      // Build query params for filtering
-      const queryParams = new URLSearchParams();
-      if (filters.region && filters.region !== 'all') {
-        queryParams.append('region', filters.region);
-      }
-      if (filters.minLpcd) {
-        queryParams.append('minLpcd', filters.minLpcd);
-      }
-      if (filters.maxLpcd) {
-        queryParams.append('maxLpcd', filters.maxLpcd);
-      }
-      if (filters.zeroSupplyForWeek) {
-        queryParams.append('zeroSupplyForWeek', 'true');
-      }
-      
-      // Fetch water scheme data with filters
-      const url = `/api/water-scheme-data?${queryParams.toString()}`;
-      return apiRequest<WaterSchemeData[]>(url);
-    }
   });
   
-  // Query to fetch regions for filter dropdown
-  const { data: regions } = useQuery({
+  // Regions data query
+  const { 
+    data: regionsData = [], 
+    isLoading: isLoadingRegions 
+  } = useQuery<RegionData[]>({
     queryKey: ['/api/regions'],
-    queryFn: async () => {
-      return apiRequest('/api/regions');
-    }
   });
   
   // Handle filter changes
@@ -105,58 +95,37 @@ const LpcdDashboard = () => {
     setPage(1);
   };
   
-  // Select specific filters for LPCD range
+  // LPCD range selection
   const handleLpcdRangeSelect = (range: string) => {
     if (range === 'above55') {
-      setFilters(prev => ({
-        ...prev,
-        minLpcd: '55',
-        maxLpcd: ''
-      }));
+      setFilters(prev => ({ ...prev, minLpcd: '55', maxLpcd: '' }));
     } else if (range === 'below55') {
-      setFilters(prev => ({
-        ...prev,
-        minLpcd: '',
-        maxLpcd: '55'
-      }));
+      setFilters(prev => ({ ...prev, minLpcd: '', maxLpcd: '55' }));
     } else if (range === '40to55') {
-      setFilters(prev => ({
-        ...prev,
-        minLpcd: '40',
-        maxLpcd: '55'
-      }));
+      setFilters(prev => ({ ...prev, minLpcd: '40', maxLpcd: '55' }));
     } else {
-      setFilters(prev => ({
-        ...prev,
-        minLpcd: '',
-        maxLpcd: ''
-      }));
+      setFilters(prev => ({ ...prev, minLpcd: '', maxLpcd: '' }));
     }
     setPage(1);
   };
   
-  // Calculate pagination - using useMemo to prevent recalculation on every render
-  const paginationData = React.useMemo(() => {
-    const totalItems = data?.length || 0;
+  // Calculate pagination data
+  const paginationData = useMemo(() => {
+    const totalItems = waterSchemeData.length;
     const totalPages = Math.ceil(totalItems / itemsPerPage);
     const startIndex = (page - 1) * itemsPerPage;
     const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-    const currentPageData = data?.slice(startIndex, endIndex) || [];
+    const currentPageData = waterSchemeData.slice(startIndex, endIndex);
     
-    return {
-      totalItems,
-      totalPages,
-      startIndex,
-      endIndex,
-      currentPageData
-    };
-  }, [data, page, itemsPerPage]);
+    return { totalItems, totalPages, startIndex, endIndex, currentPageData };
+  }, [waterSchemeData, page, itemsPerPage]);
   
   const { totalItems, totalPages, startIndex, endIndex, currentPageData } = paginationData;
   
   // Get status badge for LPCD value
   const getLpcdStatusBadge = (lpcdValue?: number) => {
-    if (!lpcdValue && lpcdValue !== 0) return <Badge variant="outline">No data</Badge>;
+    if (lpcdValue === undefined || lpcdValue === null) 
+      return <Badge variant="outline">No data</Badge>;
     
     if (lpcdValue >= 55) {
       return <Badge className="bg-green-500">Good ({'>'}55L)</Badge>;
@@ -167,14 +136,16 @@ const LpcdDashboard = () => {
     }
   };
   
-  // Show error toast if query fails
-  if (isError) {
-    toast({
-      title: "Error fetching water scheme data",
-      description: (error as Error)?.message || "Unknown error occurred",
-      variant: "destructive"
-    });
-  }
+  // Show error toast if data fetching fails
+  useEffect(() => {
+    if (isSchemesError && schemesError) {
+      toast({
+        title: "Error fetching water scheme data",
+        description: (schemesError as Error)?.message || "Unknown error occurred",
+        variant: "destructive"
+      });
+    }
+  }, [isSchemesError, schemesError, toast]);
 
   return (
     <div className="container mx-auto py-6">
@@ -184,6 +155,7 @@ const LpcdDashboard = () => {
           <CardDescription>View and analyze LPCD (Liters Per Capita per Day) metrics for water schemes</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* Filters Section */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
               <Select 
@@ -195,7 +167,7 @@ const LpcdDashboard = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Regions</SelectItem>
-                  {regions?.map((region: any) => (
+                  {regionsData.map((region) => (
                     <SelectItem key={region.region_id} value={region.region_name}>
                       {region.region_name}
                     </SelectItem>
@@ -263,7 +235,8 @@ const LpcdDashboard = () => {
             </div>
           </div>
           
-          {isLoading ? (
+          {/* Data Table Section */}
+          {isLoadingSchemes ? (
             <div className="space-y-3">
               {[...Array(5)].map((_, i) => (
                 <Skeleton key={i} className="w-full h-12" />
@@ -289,10 +262,10 @@ const LpcdDashboard = () => {
                 </TableHeader>
                 <TableBody>
                   {currentPageData.map((scheme) => (
-                    <TableRow key={`${scheme.scheme_id}-${scheme.village_name}`}>
-                      <TableCell>{scheme.region}</TableCell>
+                    <TableRow key={`${scheme.scheme_id}-${scheme.village_name || 'unknown'}`}>
+                      <TableCell>{scheme.region || 'N/A'}</TableCell>
                       <TableCell>{scheme.scheme_id}</TableCell>
-                      <TableCell>{scheme.scheme_name}</TableCell>
+                      <TableCell>{scheme.scheme_name || 'N/A'}</TableCell>
                       <TableCell>{scheme.village_name || 'N/A'}</TableCell>
                       <TableCell className="text-right">{scheme.water_value_day1?.toFixed(1) || 'N/A'}</TableCell>
                       <TableCell className="text-right">{scheme.lpcd_value_day1?.toFixed(1) || 'N/A'}</TableCell>
@@ -316,6 +289,7 @@ const LpcdDashboard = () => {
                 </TableBody>
               </Table>
               
+              {/* Pagination */}
               {totalPages > 1 && (
                 <Pagination className="mt-4">
                   <PaginationContent>
@@ -328,19 +302,16 @@ const LpcdDashboard = () => {
                     
                     {[...Array(Math.min(5, totalPages))].map((_, i) => {
                       let pageNum: number;
+                      
                       if (totalPages <= 5) {
-                        // Show all pages if 5 or fewer
                         pageNum = i + 1;
                       } else if (page <= 3) {
-                        // Near the start
                         pageNum = i + 1;
                         if (i === 4) pageNum = totalPages;
                       } else if (page >= totalPages - 2) {
-                        // Near the end
                         pageNum = totalPages - 4 + i;
                         if (i === 0) pageNum = 1;
                       } else {
-                        // In the middle
                         pageNum = page - 2 + i;
                         if (i === 0) pageNum = 1;
                         if (i === 4) pageNum = totalPages;
