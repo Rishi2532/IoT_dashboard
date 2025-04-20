@@ -63,6 +63,12 @@ const requireAdmin = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Configure file upload middleware with memory storage
+  const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  });
+  
   // API routes
   
   // Mount AI routes
@@ -431,6 +437,200 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // --------------------- Water Scheme Data API Routes ---------------------
+
+  // Get all water scheme data with optional filters
+  app.get("/api/water-scheme-data", async (req, res) => {
+    try {
+      // Extract query parameters for filtering
+      const region = req.query.region as string | undefined;
+      const minLpcd = req.query.minLpcd ? parseInt(req.query.minLpcd as string) : undefined;
+      const maxLpcd = req.query.maxLpcd ? parseInt(req.query.maxLpcd as string) : undefined;
+      const zeroSupplyForWeek = req.query.zeroSupplyForWeek === 'true';
+
+      // Build filter object
+      const filter: {
+        region?: string;
+        minLpcd?: number;
+        maxLpcd?: number;
+        zeroSupplyForWeek?: boolean;
+      } = {};
+      
+      if (region && region !== 'all') {
+        filter.region = region;
+      }
+      
+      if (!isNaN(minLpcd as number)) {
+        filter.minLpcd = minLpcd;
+      }
+      
+      if (!isNaN(maxLpcd as number)) {
+        filter.maxLpcd = maxLpcd;
+      }
+      
+      if (zeroSupplyForWeek) {
+        filter.zeroSupplyForWeek = true;
+      }
+
+      // Get data with the provided filters
+      const waterSchemeData = await storage.getAllWaterSchemeData(filter);
+      
+      // Return the filtered data
+      res.json(waterSchemeData);
+    } catch (error) {
+      console.error("Error fetching water scheme data:", error);
+      res.status(500).json({ message: "Failed to fetch water scheme data" });
+    }
+  });
+
+  // Get water scheme data by scheme ID
+  app.get("/api/water-scheme-data/:id", async (req, res) => {
+    try {
+      const schemeId = req.params.id;
+
+      if (!schemeId || schemeId.trim() === "") {
+        return res.status(400).json({ message: "Invalid scheme ID" });
+      }
+
+      const waterSchemeData = await storage.getWaterSchemeDataById(schemeId);
+
+      if (!waterSchemeData) {
+        return res.status(404).json({ message: "Water scheme data not found" });
+      }
+
+      res.json(waterSchemeData);
+    } catch (error) {
+      console.error("Error fetching water scheme data:", error);
+      res.status(500).json({ message: "Failed to fetch water scheme data" });
+    }
+  });
+
+  // Create new water scheme data
+  app.post("/api/water-scheme-data", requireAdmin, async (req, res) => {
+    try {
+      const waterSchemeData = insertWaterSchemeDataSchema.parse(req.body);
+      const newWaterSchemeData = await storage.createWaterSchemeData(waterSchemeData);
+      res.status(201).json(newWaterSchemeData);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({
+          message: "Invalid water scheme data",
+          errors: error.errors,
+        });
+      }
+      console.error("Error creating water scheme data:", error);
+      res.status(500).json({ message: "Failed to create water scheme data" });
+    }
+  });
+
+  // Update existing water scheme data
+  app.put("/api/water-scheme-data/:id", requireAdmin, async (req, res) => {
+    try {
+      const schemeId = req.params.id;
+
+      if (!schemeId || schemeId.trim() === "") {
+        return res.status(400).json({ message: "Invalid scheme ID" });
+      }
+
+      // Validate the scheme ID exists
+      const existingWaterSchemeData = await storage.getWaterSchemeDataById(schemeId);
+      if (!existingWaterSchemeData) {
+        return res.status(404).json({ message: "Water scheme data not found" });
+      }
+
+      // Validate the update data
+      const updateData = req.body;
+      
+      // Ensure the scheme_id in the request body matches the path parameter
+      if (updateData.scheme_id && updateData.scheme_id !== schemeId) {
+        return res.status(400).json({ message: "Scheme ID mismatch" });
+      }
+
+      // Update the water scheme data
+      const updatedWaterSchemeData = await storage.updateWaterSchemeData(
+        schemeId,
+        updateData
+      );
+
+      res.json(updatedWaterSchemeData);
+    } catch (error) {
+      console.error("Error updating water scheme data:", error);
+      res.status(500).json({ message: "Failed to update water scheme data" });
+    }
+  });
+
+  // Delete water scheme data (admin only)
+  app.delete("/api/water-scheme-data/:id", requireAdmin, async (req, res) => {
+    try {
+      const schemeId = req.params.id;
+
+      if (!schemeId || schemeId.trim() === "") {
+        return res.status(400).json({ message: "Invalid scheme ID" });
+      }
+
+      const existingWaterSchemeData = await storage.getWaterSchemeDataById(schemeId);
+
+      if (!existingWaterSchemeData) {
+        return res.status(404).json({ message: "Water scheme data not found" });
+      }
+
+      await storage.deleteWaterSchemeData(schemeId);
+
+      res.json({
+        success: true,
+        message: `Water scheme data for ID '${schemeId}' has been deleted successfully`,
+        deletedSchemeId: schemeId,
+      });
+    } catch (error) {
+      console.error("Error deleting water scheme data:", error);
+      res.status(500).json({ message: "Failed to delete water scheme data" });
+    }
+  });
+
+  // Import water scheme data from Excel file (admin only)
+  app.post("/api/water-scheme-data/import/excel", requireAdmin, upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const fileBuffer = req.file.buffer;
+      const importResult = await storage.importWaterSchemeDataFromExcel(fileBuffer);
+
+      res.json({
+        message: `Excel data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated.`,
+        inserted: importResult.inserted,
+        updated: importResult.updated,
+        errors: importResult.errors,
+      });
+    } catch (error) {
+      console.error("Error importing Excel water scheme data:", error);
+      res.status(500).json({ message: "Failed to import Excel water scheme data" });
+    }
+  });
+
+  // Import water scheme data from CSV file (admin only)
+  app.post("/api/water-scheme-data/import/csv", requireAdmin, upload.single("file"), async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: "No file uploaded" });
+      }
+
+      const fileBuffer = req.file.buffer;
+      const importResult = await storage.importWaterSchemeDataFromCSV(fileBuffer);
+
+      res.json({
+        message: `CSV data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated.`,
+        inserted: importResult.inserted,
+        updated: importResult.updated,
+        errors: importResult.errors,
+      });
+    } catch (error) {
+      console.error("Error importing CSV water scheme data:", error);
+      res.status(500).json({ message: "Failed to import CSV water scheme data" });
+    }
+  });
+
   // Update region summaries based on current scheme data
   app.post(
     "/api/admin/update-region-summaries",
@@ -613,12 +813,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         .status(500)
         .json({ message: "Failed to fetch component integration data" });
     }
-  });
-
-  // Configure file upload middleware with memory storage
-  const upload = multer({
-    storage: multer.memoryStorage(),
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   });
 
   // Import CSV with column mapping (for admin use only)

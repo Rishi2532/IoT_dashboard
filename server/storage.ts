@@ -99,10 +99,15 @@ export interface IStorage {
 export class PostgresStorage implements IStorage {
   private db: any;
   private initialized: Promise<void>;
+  
+  // Excel column mapping for water scheme data
   private excelColumnMapping: Record<string, string> = {
+    // Excel header -> Database field
+    // Upper case variations
     "Region": "region",
     "Circle": "circle",
     "Division": "division",
+    "Sub-Division": "sub_division",
     "Sub Division": "sub_division",
     "Block": "block",
     "Scheme ID": "scheme_id",
@@ -110,12 +115,41 @@ export class PostgresStorage implements IStorage {
     "Village Name": "village_name",
     "Population": "population",
     "Number of ESR": "number_of_esr",
+    
+    // Water value fields - uppercase
+    "Water Value Day 1": "water_value_day1",
+    "Water Value Day 2": "water_value_day2",
+    "Water Value Day 3": "water_value_day3",
+    "Water Value Day 4": "water_value_day4",
+    "Water Value Day 5": "water_value_day5",
+    "Water Value Day 6": "water_value_day6",
+    "Water Value Day 7": "water_value_day7",
+    
+    // LPCD value fields - uppercase
+    "LPCD Value Day 1": "lpcd_value_day1",
+    "LPCD Value Day 2": "lpcd_value_day2",
+    "LPCD Value Day 3": "lpcd_value_day3",
+    "LPCD Value Day 4": "lpcd_value_day4",
+    "LPCD Value Day 5": "lpcd_value_day5",
+    "LPCD Value Day 6": "lpcd_value_day6",
+    "LPCD Value Day 7": "lpcd_value_day7",
+    
+    // Other uppercase fields
+    "Last Updated": "last_updated",
+    "Zero Supply Count": "zero_supply_count",
+    "Consistent Zero LPCD For A Week": "consistent_zero_lpcd_for_a_week",
+    "Below 40 LPCD Count": "below_40_lpcd_count",
+    "Between 40 55 LPCD Count": "between_40_55_lpcd_count",
+    "Above 55 LPCD Count": "above_55_lpcd_count",
+    
+    // Lowercase variations
     "water value day1": "water_value_day1",
     "water value day2": "water_value_day2",
     "water value day3": "water_value_day3",
     "water value day4": "water_value_day4",
     "water value day5": "water_value_day5",
     "water value day6": "water_value_day6",
+    
     "lpcd value day1": "lpcd_value_day1",
     "lpcd value day2": "lpcd_value_day2",
     "lpcd value day3": "lpcd_value_day3",
@@ -123,12 +157,15 @@ export class PostgresStorage implements IStorage {
     "lpcd value day5": "lpcd_value_day5",
     "lpcd value day6": "lpcd_value_day6",
     "lpcd value day7": "lpcd_value_day7",
+    
+    // Date fields
     "water date day1": "water_date_day1",
     "water date day2": "water_date_day2",
     "water date day3": "water_date_day3",
     "water date day4": "water_date_day4",
     "water date day5": "water_date_day5",
     "water date day6": "water_date_day6",
+    
     "lpcd date day1": "lpcd_date_day1",
     "lpcd date day2": "lpcd_date_day2",
     "lpcd date day3": "lpcd_date_day3",
@@ -136,6 +173,8 @@ export class PostgresStorage implements IStorage {
     "lpcd date day5": "lpcd_date_day5",
     "lpcd date day6": "lpcd_date_day6",
     "lpcd date day7": "lpcd_date_day7",
+    
+    // Other variations
     "Consistent Zero LPCD for a week": "consistent_zero_lpcd_for_a_week",
     "Consistent <55 LPCD for a week": "below_55_lpcd_count",
     "Consistent >55 LPCD for a week": "above_55_lpcd_count"
