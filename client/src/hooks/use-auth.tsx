@@ -33,8 +33,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const checkAuthStatus = async () => {
       try {
         const response = await apiRequest('/api/auth/status');
-        setIsAuthenticated(!!response.user);
-        setIsAdmin(!!response.isAdmin);
+        setIsAuthenticated(response.isLoggedIn || false);
+        setIsAdmin(response.isAdmin || false);
         setUser(response.user || null);
       } catch (err) {
         setIsAuthenticated(false);
@@ -112,5 +112,3 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
-
-export default useAuth;
