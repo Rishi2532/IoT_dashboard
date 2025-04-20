@@ -12,6 +12,7 @@ const navigationItems = [
   { name: "Schemes", href: "/schemes", icon: GitBranchPlus },
   { name: "Regions", href: "/regions", icon: MapPin },
   { name: "Reports", href: "/reports", icon: BarChart2 },
+  { name: "LPCD Dashboard", href: "/lpcd", icon: BarChart2 },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 

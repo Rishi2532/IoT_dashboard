@@ -135,12 +135,24 @@ const LpcdDashboard = () => {
     setPage(1);
   };
   
-  // Calculate pagination
-  const totalItems = data?.length || 0;
-  const totalPages = Math.ceil(totalItems / itemsPerPage);
-  const startIndex = (page - 1) * itemsPerPage;
-  const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
-  const currentPageData = data?.slice(startIndex, endIndex) || [];
+  // Calculate pagination - using useMemo to prevent recalculation on every render
+  const paginationData = React.useMemo(() => {
+    const totalItems = data?.length || 0;
+    const totalPages = Math.ceil(totalItems / itemsPerPage);
+    const startIndex = (page - 1) * itemsPerPage;
+    const endIndex = Math.min(startIndex + itemsPerPage, totalItems);
+    const currentPageData = data?.slice(startIndex, endIndex) || [];
+    
+    return {
+      totalItems,
+      totalPages,
+      startIndex,
+      endIndex,
+      currentPageData
+    };
+  }, [data, page, itemsPerPage]);
+  
+  const { totalItems, totalPages, startIndex, endIndex, currentPageData } = paginationData;
   
   // Get status badge for LPCD value
   const getLpcdStatusBadge = (lpcdValue?: number) => {
