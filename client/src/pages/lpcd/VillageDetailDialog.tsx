@@ -179,64 +179,110 @@ const VillageDetailDialog: React.FC<VillageDetailDialogProps> = ({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {[1, 2, 3, 4, 5, 6, 7].map((day) => {
-                    const lpcdValue = scheme[`lpcd_value_day${day}` as keyof WaterSchemeData];
-                    const waterValue = day <= 6 ? scheme[`water_value_day${day}` as keyof WaterSchemeData] : null;
-                    const lpcdDate = scheme[`lpcd_date_day${day}` as keyof WaterSchemeData];
-                    const waterDate = day <= 6 ? scheme[`water_date_day${day}` as keyof WaterSchemeData] : null;
+                  {(() => {
+                    // Collect all water and LPCD data with their dates
+                    const dataEntries: {
+                      date: Date | null;
+                      dateStr: string;
+                      waterValue: number | null;
+                      lpcdValue: number | null;
+                      dayNumber: number;
+                    }[] = [];
                     
-                    // Format date if it exists
-                    let formattedDate = `Day ${day}`;
-                    
-                    if (lpcdDate && typeof lpcdDate === 'string') {
-                      try {
-                        formattedDate = new Date(lpcdDate).toLocaleDateString('en-GB', { 
-                          day: 'numeric', 
-                          month: 'short' 
-                        });
-                      } catch (e) {
-                        console.error("Error formatting LPCD date:", e);
+                    // Extract and parse all available dates with values
+                    for (let day = 1; day <= 7; day++) {
+                      const lpcdValue = scheme[`lpcd_value_day${day}` as keyof WaterSchemeData];
+                      const waterValue = day <= 6 ? scheme[`water_value_day${day}` as keyof WaterSchemeData] : null;
+                      const lpcdDateStr = scheme[`lpcd_date_day${day}` as keyof WaterSchemeData];
+                      const waterDateStr = day <= 6 ? scheme[`water_date_day${day}` as keyof WaterSchemeData] : null;
+                      
+                      // Convert values to numbers or null
+                      const numericLpcdValue = lpcdValue !== undefined && lpcdValue !== null && lpcdValue !== '' && !isNaN(Number(lpcdValue)) 
+                        ? Number(lpcdValue) 
+                        : null;
+                        
+                      const numericWaterValue = waterValue !== undefined && waterValue !== null && waterValue !== '' && !isNaN(Number(waterValue)) 
+                        ? Number(waterValue) 
+                        : null;
+                      
+                      // Process date
+                      let date: Date | null = null;
+                      let dateStr = '';
+                      
+                      // Try to parse lpcd date first
+                      if (lpcdDateStr && typeof lpcdDateStr === 'string') {
+                        try {
+                          date = new Date(lpcdDateStr);
+                          dateStr = date.toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short' 
+                          });
+                        } catch (e) {
+                          console.error("Error parsing LPCD date:", e);
+                        }
+                      } 
+                      // If lpcd date failed, try water date
+                      else if (waterDateStr && typeof waterDateStr === 'string') {
+                        try {
+                          date = new Date(waterDateStr);
+                          dateStr = date.toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short' 
+                          });
+                        } catch (e) {
+                          console.error("Error parsing water date:", e);
+                        }
                       }
-                    } else if (waterDate && typeof waterDate === 'string') {
-                      try {
-                        formattedDate = new Date(waterDate).toLocaleDateString('en-GB', { 
-                          day: 'numeric', 
-                          month: 'short' 
-                        });
-                      } catch (e) {
-                        console.error("Error formatting water date:", e);
+                      
+                      // If still no date, use day number
+                      if (!dateStr) {
+                        dateStr = `Day ${day}`;
                       }
+                      
+                      // Add to entries array
+                      dataEntries.push({
+                        date,
+                        dateStr,
+                        waterValue: numericWaterValue,
+                        lpcdValue: numericLpcdValue,
+                        dayNumber: day
+                      });
                     }
                     
-                    const numericLpcdValue = lpcdValue !== undefined && lpcdValue !== null && lpcdValue !== '' && !isNaN(Number(lpcdValue)) 
-                      ? Number(lpcdValue) 
-                      : null;
+                    // Sort entries by date - most recent first
+                    // Entries with null dates will be at the end
+                    dataEntries.sort((a, b) => {
+                      // Handle null dates
+                      if (a.date === null && b.date === null) return 0;
+                      if (a.date === null) return 1;
+                      if (b.date === null) return -1;
                       
-                    const numericWaterValue = waterValue !== undefined && waterValue !== null && waterValue !== '' && !isNaN(Number(waterValue)) 
-                      ? Number(waterValue) 
-                      : null;
+                      // Sort by date descending (most recent first)
+                      return b.date.getTime() - a.date.getTime();
+                    });
                     
-                    return (
-                      <TableRow key={`lpcd-day-${day}`}>
-                        <TableCell>{formattedDate}</TableCell>
+                    // Return the table rows
+                    return dataEntries.map((entry, index) => (
+                      <TableRow key={`lpcd-day-${entry.dayNumber}-${index}`}>
+                        <TableCell>{entry.dateStr}</TableCell>
                         <TableCell className="text-right">
-                          {numericWaterValue !== null ? numericWaterValue : (
+                          {entry.waterValue !== null ? entry.waterValue : (
                             <Badge variant="outline" className="bg-gray-100">
                               <span className="text-gray-600 text-sm">No data</span>
                             </Badge>
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          {numericLpcdValue !== null ? numericLpcdValue : (
+                          {entry.lpcdValue !== null ? entry.lpcdValue : (
                             <Badge variant="outline" className="bg-gray-100">
                               <span className="text-gray-600 text-sm">No data</span>
                             </Badge>
                           )}
                         </TableCell>
-                        <TableCell>{getLpcdStatusBadge(numericLpcdValue)}</TableCell>
+                        <TableCell>{getLpcdStatusBadge(entry.lpcdValue)}</TableCell>
                       </TableRow>
-                    );
-                  })}
+                    ));
+                  })()}
                 </TableBody>
               </Table>
             </div>
