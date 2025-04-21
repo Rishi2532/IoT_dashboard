@@ -75,7 +75,7 @@ router.get('/', async (req, res) => {
       
       if (zeroSupplyForWeek === 'true') {
         conditions.push('consistent_zero_lpcd_for_a_week = $' + (queryParams.length + 1));
-        queryParams.push(true);
+        queryParams.push(1); // Using 1 instead of true since the field is an integer
       }
       
       // Build final query with conditions
@@ -476,8 +476,12 @@ function mapCsvFields(row: string[]) {
         // Convert to boolean/integer for database
         if (typeof value === 'string') {
           record[field] = ['true', 'yes', '1', 'y'].includes(value.toLowerCase()) ? 1 : 0;
-        } else {
+        } else if (typeof value === 'boolean') {
           record[field] = value ? 1 : 0;
+        } else if (typeof value === 'number') {
+          record[field] = value > 0 ? 1 : 0;
+        } else {
+          record[field] = 0; // Default to 0 for null or undefined
         }
       } else {
         // Keep as string but handle null/undefined
