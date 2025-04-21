@@ -17,16 +17,16 @@ dotenv.config();
 
 // Configuration
 const columnMapping = {
-  'region': 'region',
-  'circle': 'circle',
-  'division': 'division',
-  'sub division': 'sub_division',
-  'block': 'block',
-  'scheme id': 'scheme_id',
-  'scheme name': 'scheme_name',
-  'village name': 'village_name',
-  'population': 'population',
-  'number of esr': 'number_of_esr',
+  'Region': 'region',
+  'Circle': 'circle',
+  'Division': 'division',
+  'Sub Division': 'sub_division',
+  'Block': 'block',
+  'Scheme ID': 'scheme_id',
+  'Scheme Name': 'scheme_name',
+  'Village Name': 'village_name',
+  'Population': 'population',
+  'Number of ESR': 'number_of_esr',
   'water value day1': 'water_value_day1',
   'water value day2': 'water_value_day2',
   'water value day3': 'water_value_day3',
@@ -53,9 +53,9 @@ const columnMapping = {
   'lpcd date day5': 'lpcd_date_day5',
   'lpcd date day6': 'lpcd_date_day6',
   'lpcd date day7': 'lpcd_date_day7',
-  'consistent zero lpcd for a week': 'consistent_zero_lpcd_for_a_week',
-  'below 55 lpcd count': 'below_55_lpcd_count',
-  'above 55 lpcd count': 'above_55_lpcd_count'
+  'Consistent Zero LPCD for a week': 'consistent_zero_lpcd_for_a_week',
+  'Consistent <55 LPCD for a week': 'below_55_lpcd_count',
+  'Consistent >55 LPCD for a week': 'above_55_lpcd_count'
 };
 
 // Function to safely convert various cell values to numbers
@@ -177,7 +177,27 @@ async function importLpcdDataFromExcel(filePath) {
       
       // Map each column according to the mapping
       for (const [excelCol, dbCol] of Object.entries(columnMapping)) {
-        // Look for case-insensitive match in the Excel header
+        // Try exact match first
+        if (row[excelCol] !== undefined) {
+          let value = row[excelCol];
+          
+          // Convert numeric fields to proper numbers
+          if ([
+            'population', 'number_of_esr',
+            'water_value_day1', 'water_value_day2', 'water_value_day3', 
+            'water_value_day4', 'water_value_day5', 'water_value_day6',
+            'lpcd_value_day1', 'lpcd_value_day2', 'lpcd_value_day3', 
+            'lpcd_value_day4', 'lpcd_value_day5', 'lpcd_value_day6', 'lpcd_value_day7',
+            'consistent_zero_lpcd_for_a_week', 'below_55_lpcd_count', 'above_55_lpcd_count'
+          ].includes(dbCol)) {
+            value = getNumericValue(value);
+          }
+          
+          processedRow[dbCol] = value;
+          continue; // Move to next column after successful match
+        }
+        
+        // If exact match fails, try case-insensitive match
         const excelColCaseInsensitive = Object.keys(row).find(
           key => key.toLowerCase() === excelCol.toLowerCase()
         );
