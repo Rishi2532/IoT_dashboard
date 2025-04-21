@@ -110,13 +110,28 @@ function getNumericValue(value) {
   
   // If it's a string, try to convert it
   if (typeof value === 'string') {
+    // Handle empty strings and non-numeric strings
+    if (value.trim() === '' || value.toLowerCase() === 'n/a') {
+      return null;
+    }
+    
     // Remove any non-numeric characters except decimal point
     const cleanedValue = value.replace(/[^0-9.]/g, '');
     if (cleanedValue === '') {
       return null;
     }
+    
+    // Parse to float and ensure it's a valid number
     const numValue = parseFloat(cleanedValue);
-    return isNaN(numValue) ? null : numValue;
+    
+    // If we got NaN but had a non-empty string, it's a format issue
+    if (isNaN(numValue)) {
+      console.log(`Warning: Could not parse numeric value from: ${value}`);
+      return null;
+    }
+    
+    // Ensure it's actually a finite number
+    return isFinite(numValue) ? numValue : null;
   }
   
   return null;
@@ -171,7 +186,13 @@ router.post('/import-lpcd', upload.single('file'), async (req, res) => {
     const sheet = workbook.Sheets[sheetName];
     
     // Convert to JSON with headers
-    const data = XLSX.utils.sheet_to_json(sheet, { raw: false, defval: null });
+    // Using raw: true to get actual numeric values where possible, but still handling strings
+    const data = XLSX.utils.sheet_to_json(sheet, { 
+      raw: true, 
+      defval: null,
+      // This ensures dates are properly parsed
+      dateNF: 'yyyy-mm-dd'
+    });
     
     if (!data || data.length === 0) {
       return res.status(400).json({ message: 'No data found in Excel file' });

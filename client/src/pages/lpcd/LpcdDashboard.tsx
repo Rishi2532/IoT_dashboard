@@ -337,16 +337,24 @@ const LpcdDashboard: React.FC = () => {
                       <TableCell>{scheme.scheme_name || 'N/A'}</TableCell>
                       <TableCell>{scheme.village_name || 'N/A'}</TableCell>
                       <TableCell className="text-right">
-                        {scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined && scheme.water_value_day6 !== '' 
-                          ? parseFloat(String(scheme.water_value_day6)).toFixed(1) 
-                          : 'N/A'}
+                        {scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined && scheme.water_value_day1 !== '' 
+                          ? parseFloat(String(scheme.water_value_day1)).toFixed(1) 
+                          : (scheme.water_value_day2 !== null && scheme.water_value_day2 !== undefined && scheme.water_value_day2 !== '' 
+                            ? parseFloat(String(scheme.water_value_day2)).toFixed(1)
+                            : (scheme.water_value_day3 !== null && scheme.water_value_day3 !== undefined && scheme.water_value_day3 !== '' 
+                              ? parseFloat(String(scheme.water_value_day3)).toFixed(1)
+                              : 'N/A'))}
                       </TableCell>
                       <TableCell className="text-right">
-                        {scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined && scheme.lpcd_value_day7 !== '' 
-                          ? parseFloat(String(scheme.lpcd_value_day7)).toFixed(1) 
-                          : 'N/A'}
+                        {scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined && scheme.lpcd_value_day1 !== '' 
+                          ? parseFloat(String(scheme.lpcd_value_day1)).toFixed(1) 
+                          : (scheme.lpcd_value_day2 !== null && scheme.lpcd_value_day2 !== undefined && scheme.lpcd_value_day2 !== '' 
+                            ? parseFloat(String(scheme.lpcd_value_day2)).toFixed(1)
+                            : (scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined && scheme.lpcd_value_day3 !== '' 
+                              ? parseFloat(String(scheme.lpcd_value_day3)).toFixed(1)
+                              : 'N/A'))}
                       </TableCell>
-                      <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day7)}</TableCell>
+                      <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day1 || scheme.lpcd_value_day2 || scheme.lpcd_value_day3)}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
