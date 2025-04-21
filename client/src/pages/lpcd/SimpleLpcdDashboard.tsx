@@ -274,11 +274,11 @@ const SimpleLpcdDashboard: React.FC = () => {
       return <Badge variant="outline">No data</Badge>;
     
     if (lpcdValue >= 55) {
-      return <Badge className="bg-green-500">Good ({'>'}55L)</Badge>;
+      return <Badge className="bg-green-500">Good (&gt;55L)</Badge>;
     } else if (lpcdValue >= 40) {
       return <Badge className="bg-yellow-500">Average (40-55L)</Badge>;
     } else if (lpcdValue > 0) {
-      return <Badge className="bg-red-500">Low ({'<'}40L)</Badge>;
+      return <Badge className="bg-red-500">Low (&lt;40L)</Badge>;
     } else {
       return <Badge className="bg-gray-500">Zero Supply</Badge>;
     }
@@ -309,7 +309,7 @@ const SimpleLpcdDashboard: React.FC = () => {
             <Card className="bg-green-50 border-green-200">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-green-700">Villages with LPCD > 55L</h3>
+                  <h3 className="text-lg font-semibold text-green-700">Villages with LPCD &gt; 55L</h3>
                   <p className="text-3xl font-bold text-green-600 mt-2">
                     {allWaterSchemeData.filter(scheme => {
                       const lpcdValue = getLatestLpcdValue(scheme);
@@ -353,7 +353,7 @@ const SimpleLpcdDashboard: React.FC = () => {
             <Card className="bg-red-50 border-red-200">
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-red-700">Villages with LPCD < 40L</h3>
+                  <h3 className="text-lg font-semibold text-red-700">Villages with LPCD &lt; 40L</h3>
                   <p className="text-3xl font-bold text-red-600 mt-2">
                     {allWaterSchemeData.filter(scheme => {
                       const lpcdValue = getLatestLpcdValue(scheme);
@@ -563,35 +563,58 @@ const SimpleLpcdDashboard: React.FC = () => {
                                     
                                     <Separator className="my-4" />
                                     
-                                    <h3 className="text-lg font-semibold mb-2">LPCD Values (Last 7 Days)</h3>
+                                    <h3 className="text-lg font-semibold mb-2">LPCD Values & Water Consumption (Last 7 Days)</h3>
                                     
                                     <div className="overflow-x-auto">
                                       <Table>
                                         <TableHeader>
                                           <TableRow>
-                                            <TableHead>Day</TableHead>
+                                            <TableHead>Date</TableHead>
+                                            <TableHead className="text-right">Water Consumption</TableHead>
                                             <TableHead className="text-right">LPCD Value</TableHead>
                                             <TableHead>Status</TableHead>
                                           </TableRow>
                                         </TableHeader>
                                         <TableBody>
                                           {[1, 2, 3, 4, 5, 6, 7].map((day) => {
-                                            const value = scheme[`lpcd_value_day${day}` as keyof WaterSchemeData];
-                                            const numericValue = value !== undefined && value !== null && value !== '' && !isNaN(Number(value)) 
-                                              ? Number(value) 
+                                            const lpcdValue = scheme[`lpcd_value_day${day}` as keyof WaterSchemeData];
+                                            const waterValue = day <= 6 ? scheme[`water_value_day${day}` as keyof WaterSchemeData] : null;
+                                            const lpcdDate = scheme[`lpcd_date_day${day}` as keyof WaterSchemeData];
+                                            const waterDate = day <= 6 ? scheme[`water_date_day${day}` as keyof WaterSchemeData] : null;
+                                            
+                                            // Format date if it exists
+                                            const formattedDate = lpcdDate 
+                                              ? new Date(lpcdDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                                              : (waterDate 
+                                                ? new Date(waterDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
+                                                : `Day ${day}`);
+                                            
+                                            const numericLpcdValue = lpcdValue !== undefined && lpcdValue !== null && lpcdValue !== '' && !isNaN(Number(lpcdValue)) 
+                                              ? Number(lpcdValue) 
+                                              : null;
+                                              
+                                            const numericWaterValue = waterValue !== undefined && waterValue !== null && waterValue !== '' && !isNaN(Number(waterValue)) 
+                                              ? Number(waterValue) 
                                               : null;
                                             
                                             return (
                                               <TableRow key={`lpcd-day-${day}`}>
-                                                <TableCell>Day {day}</TableCell>
+                                                <TableCell>{formattedDate}</TableCell>
                                                 <TableCell className="text-right">
-                                                  {numericValue !== null ? numericValue : (
+                                                  {numericWaterValue !== null ? numericWaterValue : (
                                                     <Badge variant="outline" className="bg-gray-100">
                                                       <span className="text-gray-600 text-sm">No data</span>
                                                     </Badge>
                                                   )}
                                                 </TableCell>
-                                                <TableCell>{getLpcdStatusBadge(numericValue)}</TableCell>
+                                                <TableCell className="text-right">
+                                                  {numericLpcdValue !== null ? numericLpcdValue : (
+                                                    <Badge variant="outline" className="bg-gray-100">
+                                                      <span className="text-gray-600 text-sm">No data</span>
+                                                    </Badge>
+                                                  )}
+                                                </TableCell>
+                                                <TableCell>{getLpcdStatusBadge(numericLpcdValue)}</TableCell>
                                               </TableRow>
                                             );
                                           })}
