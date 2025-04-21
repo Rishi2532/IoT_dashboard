@@ -6,11 +6,8 @@
       "request": "launch",
       "name": "Launch Server",
       "runtimeExecutable": "npm",
-      "runtimeArgs": [
-        "run",
-        "dev"
-      ],
-      "envFile": "${workspaceFolder}/.env.local",
+      "runtimeArgs": ["run", "dev"],
+      "envFile": "${workspaceFolder}/.env.vscode",
       "console": "integratedTerminal"
     }
   ]

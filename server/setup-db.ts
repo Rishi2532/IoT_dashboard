@@ -1,16 +1,40 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
+import fs from 'fs';
+import path from 'path';
 import { regions, schemeStatuses, users, waterSchemeData } from "@shared/schema";
 
 const { Pool } = pg;
 
+// Detect if running in VS Code with pgAdmin configuration
+function isVSCodePgAdmin() {
+  try {
+    const envVscodePath = path.join(process.cwd(), '.env.vscode');
+    return fs.existsSync(envVscodePath);
+  } catch (error) {
+    return false;
+  }
+}
+
 // Create a new pool instance using the DATABASE_URL
 export function setupDatabase() {
   console.log("Setting up database connection...");
+  
+  // Check if running in VS Code with pgAdmin configuration
+  const isVSCode = isVSCodePgAdmin();
+  if (isVSCode) {
+    console.log("VS Code pgAdmin configuration detected!");
+  }
 
   // Ensure DATABASE_URL is available
   if (!process.env.DATABASE_URL) {
     console.error("DATABASE_URL environment variable is not set!");
+    
+    // If in VS Code, suggest using the pgAdmin setup
+    if (isVSCode) {
+      console.log("Try running the application with F5 in VS Code or use the .env.vscode file");
+    }
+    
     throw new Error("DATABASE_URL environment variable is not set!");
   }
 
@@ -18,6 +42,11 @@ export function setupDatabase() {
     // Only log the database host for security reasons
     const dbUrl = new URL(process.env.DATABASE_URL);
     console.log(`Connecting to: ${dbUrl.host}`);
+    
+    // If connecting to localhost, it's likely pgAdmin
+    if (dbUrl.host === 'localhost') {
+      console.log("Using local database (likely pgAdmin)");
+    }
   } catch (e) {
     console.log('Connecting to database...');
   }
@@ -27,8 +56,11 @@ export function setupDatabase() {
     connectionString: process.env.DATABASE_URL
   };
   
-  // Only add SSL config in production
-  if (process.env.NODE_ENV === 'production') {
+  // Only add SSL config in production and not for localhost/pgAdmin connections
+  const isLocalHost = process.env.DATABASE_URL.includes('localhost') || 
+                      process.env.DATABASE_URL.includes('127.0.0.1');
+                      
+  if (process.env.NODE_ENV === 'production' && !isLocalHost) {
     poolConfig.ssl = {
       require: true,
       rejectUnauthorized: false, // Important for Neon DB connections
