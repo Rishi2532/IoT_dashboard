@@ -64,8 +64,6 @@ interface WaterSchemeData {
   consistent_zero_lpcd_for_a_week?: number | boolean;
   below_55_lpcd_count?: number;
   above_55_lpcd_count?: number;
-  // Extended property for filtering
-  latestLpcdValue?: number | null;
 }
 
 // Define interface for region data
@@ -124,7 +122,7 @@ const LpcdDashboardFixed: React.FC = () => {
     });
   };
   
-  // Apply different filter types to the data - SUPER SIMPLE APPROACH
+  // Apply different filter types to the data - SUPER SIMPLE APPROACH (without latestLpcdValue property)
   const filteredData = useMemo(() => {
     console.log('Current filter:', currentFilter);
     let result = [...allWaterSchemeData];
@@ -134,40 +132,37 @@ const LpcdDashboardFixed: React.FC = () => {
       result = result.filter(scheme => scheme.region === selectedRegion);
     }
     
-    // Get the latest LPCD value for filtering
-    result = result.map(scheme => {
-      // Calculate the latest LPCD value for display
-      const latestLpcd = getLatestLpcdValue(scheme);
-      return { ...scheme, latestLpcdValue: latestLpcd };
-    });
-    
-    // Apply LPCD filters based ONLY on the latest LPCD value
+    // Apply LPCD filters based directly on the getLatestLpcdValue function
     switch (currentFilter) {
       case 'above55':
         // Super simple: only include schemes with latest LPCD value >= 55
         result = result.filter(scheme => {
-          return scheme.latestLpcdValue !== null && scheme.latestLpcdValue >= 55;
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue !== null && lpcdValue >= 55;
         });
         break;
         
       case 'below55':
         // Super simple: only include schemes with latest LPCD value < 55 and > 0
         result = result.filter(scheme => {
-          return scheme.latestLpcdValue !== null && scheme.latestLpcdValue > 0 && scheme.latestLpcdValue < 55;
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 55;
         });
         break;
         
       case '40to55':
         // Super simple: only include schemes with latest LPCD value between 40-55
         result = result.filter(scheme => {
-          return scheme.latestLpcdValue !== null && scheme.latestLpcdValue >= 40 && scheme.latestLpcdValue <= 55;
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue !== null && lpcdValue >= 40 && lpcdValue <= 55;
         });
         break;
         
       case 'zerosupply':
         // Super simple: only include schemes with latest LPCD value = 0
         result = result.filter(scheme => {
-          return scheme.latestLpcdValue === 0;
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue === 0;
         });
         break;
         
