@@ -8,9 +8,6 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import {
-  DropdownMenuItem,
-} from '@/components/ui/dropdown-menu';
-import {
   Table,
   TableBody,
   TableCell,
@@ -19,7 +16,9 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
+import { Eye } from 'lucide-react';
 
 // Import the interface type from parent component
 interface WaterSchemeData {
@@ -87,11 +86,12 @@ const VillageDetailDialog: React.FC<VillageDetailDialogProps> = ({
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-          View Details
-        </DropdownMenuItem>
+        <Button size="sm" variant="outline" className="flex items-center gap-1">
+          <Eye className="h-4 w-4" />
+          View
+        </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-6xl w-[90vw]">
         <DialogHeader className="bg-blue-100 p-4 rounded-t-lg">
           <DialogTitle className="text-blue-800 text-xl">
             {scheme.village_name} - {scheme.scheme_name}

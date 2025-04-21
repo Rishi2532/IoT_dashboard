@@ -36,7 +36,8 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Filter, MoreHorizontal, ChevronDown } from 'lucide-react';
+import { Filter, Download, FileSpreadsheet, MoreHorizontal, ChevronDown } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 // Import the Village Detail Dialog component
 import VillageDetailDialog from './VillageDetailDialog';
@@ -289,6 +290,67 @@ const SimpleLpcdDashboard: React.FC = () => {
       });
     }
   }, [schemesError, toast]);
+  
+  // Function to export data to Excel
+  const exportToExcel = (data: WaterSchemeData[], filename: string) => {
+    try {
+      // Format data for Excel
+      const worksheetData = data.map((scheme) => {
+        const latestLpcd = getLatestLpcdValue(scheme);
+        const latestWater = getLatestWaterValue(scheme);
+        const { daysAbove55, daysBelow55, hasConsistentZeroSupply } = calculateLpcdCounts(scheme);
+        
+        return {
+          'Scheme ID': scheme.scheme_id,
+          'Village Name': scheme.village_name || 'N/A',
+          'Scheme Name': scheme.scheme_name || 'N/A',
+          'Region': scheme.region || 'N/A',
+          'Circle': scheme.circle || 'N/A',
+          'Division': scheme.division || 'N/A',
+          'Sub Division': scheme.sub_division || 'N/A',
+          'Block': scheme.block || 'N/A',
+          'Population': scheme.population || 0,
+          'Latest LPCD Value': latestLpcd !== null ? latestLpcd : 'No data',
+          'Latest Water Consumption': latestWater !== null ? latestWater : 'No data',
+          'Days Above 55 LPCD': daysAbove55,
+          'Days Below 55 LPCD': daysBelow55,
+          'Zero Supply for a Week': hasConsistentZeroSupply ? 'Yes' : 'No',
+          'LPCD Status': latestLpcd !== null 
+            ? (latestLpcd >= 55 
+                ? 'Good (>55L)' 
+                : latestLpcd >= 40 
+                  ? 'Average (40-55L)' 
+                  : latestLpcd > 0 
+                    ? 'Low (<40L)' 
+                    : 'Zero Supply')
+            : 'No data'
+        };
+      });
+      
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      
+      // Create workbook and add the worksheet
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'LPCD Data');
+      
+      // Generate Excel file and trigger download
+      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      
+      toast({
+        title: "Export Successful",
+        description: `${worksheetData.length} records exported to Excel`,
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export data to Excel. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   return (
     <div className="container mx-auto py-6">
@@ -418,6 +480,33 @@ const SimpleLpcdDashboard: React.FC = () => {
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
+              
+              {/* Excel Export Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="bg-green-50 hover:bg-green-100 text-green-700 border-green-200">
+                    <FileSpreadsheet className="mr-2 h-4 w-4" />
+                    Export Excel
+                    <ChevronDown className="ml-2 h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuLabel>Export Options</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={() => exportToExcel(filteredData, `LPCD_Data_${currentFilter}_${selectedRegion}_${new Date().toISOString().split('T')[0]}`)}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Export Filtered Data
+                  </DropdownMenuItem>
+                  <DropdownMenuItem 
+                    onClick={() => exportToExcel(allWaterSchemeData, `LPCD_All_Villages_${new Date().toISOString().split('T')[0]}`)}
+                  >
+                    <Download className="mr-2 h-4 w-4" />
+                    Export All Villages
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           
@@ -472,24 +561,14 @@ const SimpleLpcdDashboard: React.FC = () => {
                           )}
                         </TableCell>
                         <TableCell>{getLpcdStatusBadge(latestLpcd)}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" className="h-8 w-8 p-0">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <VillageDetailDialog 
-                                scheme={scheme}
-                                latestLpcd={latestLpcd}
-                                getLatestLpcdValue={getLatestLpcdValue}
-                                calculateLpcdCounts={calculateLpcdCounts}
-                                getLpcdStatusBadge={getLpcdStatusBadge}
-                              />
-                            </DropdownMenuContent>
-                          </DropdownMenu>
+                        <TableCell>
+                          <VillageDetailDialog 
+                            scheme={scheme}
+                            latestLpcd={latestLpcd}
+                            getLatestLpcdValue={getLatestLpcdValue}
+                            calculateLpcdCounts={calculateLpcdCounts}
+                            getLpcdStatusBadge={getLpcdStatusBadge}
+                          />
                         </TableCell>
                       </TableRow>
                     );
