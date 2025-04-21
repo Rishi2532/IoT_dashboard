@@ -14,16 +14,26 @@ export function setupDatabase() {
     throw new Error("DATABASE_URL environment variable is not set!");
   }
 
-  console.log(`Connecting to: ${process.env.DATABASE_URL.split('@')[1]}`);
+  try {
+    // Only log the database host for security reasons
+    const dbUrl = new URL(process.env.DATABASE_URL);
+    console.log(`Connecting to: ${dbUrl.host}`);
+  } catch (e) {
+    console.log('Connecting to database...');
+  }
 
   // Create the pool with correct options
   const poolConfig: any = {
-    connectionString: process.env.DATABASE_URL,
-    ssl: {
+    connectionString: process.env.DATABASE_URL
+  };
+  
+  // Only add SSL config in production
+  if (process.env.NODE_ENV === 'production') {
+    poolConfig.ssl = {
       require: true,
       rejectUnauthorized: false, // Important for Neon DB connections
-    }
-  };
+    };
+  }
   
   const pool = new Pool(poolConfig);
 
