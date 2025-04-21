@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import { regions, schemeStatuses, users } from "@shared/schema";
+import { regions, schemeStatuses, users, waterSchemeData } from "@shared/schema";
 
 const { Pool } = pg;
 
@@ -113,6 +113,52 @@ export async function initializeTables(db: any) {
         "key" TEXT PRIMARY KEY,
         "value" JSONB NOT NULL,
         "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    
+    // Create water_scheme_data table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "water_scheme_data" (
+        "region" TEXT,
+        "circle" TEXT,
+        "division" TEXT,
+        "sub_division" TEXT,
+        "block" TEXT,
+        "scheme_id" VARCHAR(100),
+        "scheme_name" TEXT,
+        "village_name" TEXT,
+        "population" INTEGER,
+        "number_of_esr" INTEGER,
+        "water_value_day1" DECIMAL(10,2),
+        "water_value_day2" DECIMAL(10,2),
+        "water_value_day3" DECIMAL(10,2),
+        "water_value_day4" DECIMAL(10,2),
+        "water_value_day5" DECIMAL(10,2),
+        "water_value_day6" DECIMAL(10,2),
+        "lpcd_value_day1" DECIMAL(10,2),
+        "lpcd_value_day2" DECIMAL(10,2),
+        "lpcd_value_day3" DECIMAL(10,2),
+        "lpcd_value_day4" DECIMAL(10,2),
+        "lpcd_value_day5" DECIMAL(10,2),
+        "lpcd_value_day6" DECIMAL(10,2),
+        "lpcd_value_day7" DECIMAL(10,2),
+        "water_date_day1" VARCHAR(20),
+        "water_date_day2" VARCHAR(20),
+        "water_date_day3" VARCHAR(20),
+        "water_date_day4" VARCHAR(20),
+        "water_date_day5" VARCHAR(20),
+        "water_date_day6" VARCHAR(20),
+        "lpcd_date_day1" VARCHAR(20),
+        "lpcd_date_day2" VARCHAR(20),
+        "lpcd_date_day3" VARCHAR(20),
+        "lpcd_date_day4" VARCHAR(20),
+        "lpcd_date_day5" VARCHAR(20),
+        "lpcd_date_day6" VARCHAR(20),
+        "lpcd_date_day7" VARCHAR(20),
+        "consistent_zero_lpcd_for_a_week" INTEGER,
+        "below_55_lpcd_count" INTEGER,
+        "above_55_lpcd_count" INTEGER,
+        PRIMARY KEY ("scheme_id", "village_name")
       );
     `);
     
