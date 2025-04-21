@@ -180,108 +180,74 @@ const VillageDetailDialog: React.FC<VillageDetailDialogProps> = ({
                 </TableHeader>
                 <TableBody>
                   {(() => {
-                    // Collect all water and LPCD data with their dates
-                    const dataEntries: {
-                      date: Date | null;
-                      dateStr: string;
-                      waterValue: number | null;
-                      lpcdValue: number | null;
-                      dayNumber: number;
-                    }[] = [];
+                    // Get all dates from LPCD 
+                    const allDates: (Date | null)[] = [];
+                    const dateStrings: string[] = [];
                     
-                    // Extract and parse all available dates with values
+                    // First collect all lpcd dates (days 1-7)
                     for (let day = 1; day <= 7; day++) {
-                      const lpcdValue = scheme[`lpcd_value_day${day}` as keyof WaterSchemeData];
-                      const waterValue = day <= 6 ? scheme[`water_value_day${day}` as keyof WaterSchemeData] : null;
                       const lpcdDateStr = scheme[`lpcd_date_day${day}` as keyof WaterSchemeData];
-                      const waterDateStr = day <= 6 ? scheme[`water_date_day${day}` as keyof WaterSchemeData] : null;
                       
-                      // Convert values to numbers or null
+                      if (lpcdDateStr && typeof lpcdDateStr === 'string') {
+                        try {
+                          const date = new Date(lpcdDateStr);
+                          allDates.push(date);
+                          dateStrings.push(date.toLocaleDateString('en-GB', { 
+                            day: 'numeric', 
+                            month: 'short' 
+                          }));
+                        } catch (e) {
+                          console.error("Error parsing LPCD date:", e);
+                          allDates.push(null);
+                          dateStrings.push(`Day ${day}`);
+                        }
+                      } else {
+                        allDates.push(null);
+                        dateStrings.push(`Day ${day}`);
+                      }
+                    }
+                    
+                    // Render rows by going backwards from day 7 to day 1 (newer to older)
+                    // This displays days in reverse order (most recent first)
+                    return [...Array(7)].map((_, index) => {
+                      const day = 7 - index; // Start from day 7, then 6, 5, etc.
+                      
+                      // Get LPCD value for this day
+                      const lpcdValue = scheme[`lpcd_value_day${day}` as keyof WaterSchemeData];
                       const numericLpcdValue = lpcdValue !== undefined && lpcdValue !== null && lpcdValue !== '' && !isNaN(Number(lpcdValue)) 
                         ? Number(lpcdValue) 
                         : null;
-                        
+                      
+                      // Get water value for this day (only days 1-6 have water values)
+                      const waterValue = day <= 6 ? scheme[`water_value_day${day}` as keyof WaterSchemeData] : null;
                       const numericWaterValue = waterValue !== undefined && waterValue !== null && waterValue !== '' && !isNaN(Number(waterValue)) 
                         ? Number(waterValue) 
                         : null;
                       
-                      // Process date
-                      let date: Date | null = null;
-                      let dateStr = '';
+                      // Format date for display
+                      const dateStr = dateStrings[day - 1] || `Day ${day}`;
                       
-                      // Try to parse lpcd date first
-                      if (lpcdDateStr && typeof lpcdDateStr === 'string') {
-                        try {
-                          date = new Date(lpcdDateStr);
-                          dateStr = date.toLocaleDateString('en-GB', { 
-                            day: 'numeric', 
-                            month: 'short' 
-                          });
-                        } catch (e) {
-                          console.error("Error parsing LPCD date:", e);
-                        }
-                      } 
-                      // If lpcd date failed, try water date
-                      else if (waterDateStr && typeof waterDateStr === 'string') {
-                        try {
-                          date = new Date(waterDateStr);
-                          dateStr = date.toLocaleDateString('en-GB', { 
-                            day: 'numeric', 
-                            month: 'short' 
-                          });
-                        } catch (e) {
-                          console.error("Error parsing water date:", e);
-                        }
-                      }
-                      
-                      // If still no date, use day number
-                      if (!dateStr) {
-                        dateStr = `Day ${day}`;
-                      }
-                      
-                      // Add to entries array
-                      dataEntries.push({
-                        date,
-                        dateStr,
-                        waterValue: numericWaterValue,
-                        lpcdValue: numericLpcdValue,
-                        dayNumber: day
-                      });
-                    }
-                    
-                    // Sort entries by date - most recent first
-                    // Entries with null dates will be at the end
-                    dataEntries.sort((a, b) => {
-                      // Handle null dates
-                      if (a.date === null && b.date === null) return 0;
-                      if (a.date === null) return 1;
-                      if (b.date === null) return -1;
-                      
-                      // Sort by date descending (most recent first)
-                      return b.date.getTime() - a.date.getTime();
+                      return (
+                        <TableRow key={`lpcd-day-${day}`}>
+                          <TableCell>{dateStr}</TableCell>
+                          <TableCell className="text-right">
+                            {numericWaterValue !== null ? numericWaterValue : (
+                              <Badge variant="outline" className="bg-gray-100">
+                                <span className="text-gray-600 text-sm">No data</span>
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {numericLpcdValue !== null ? numericLpcdValue : (
+                              <Badge variant="outline" className="bg-gray-100">
+                                <span className="text-gray-600 text-sm">No data</span>
+                              </Badge>
+                            )}
+                          </TableCell>
+                          <TableCell>{getLpcdStatusBadge(numericLpcdValue)}</TableCell>
+                        </TableRow>
+                      );
                     });
-                    
-                    // Return the table rows
-                    return dataEntries.map((entry, index) => (
-                      <TableRow key={`lpcd-day-${entry.dayNumber}-${index}`}>
-                        <TableCell>{entry.dateStr}</TableCell>
-                        <TableCell className="text-right">
-                          {entry.waterValue !== null ? entry.waterValue : (
-                            <Badge variant="outline" className="bg-gray-100">
-                              <span className="text-gray-600 text-sm">No data</span>
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          {entry.lpcdValue !== null ? entry.lpcdValue : (
-                            <Badge variant="outline" className="bg-gray-100">
-                              <span className="text-gray-600 text-sm">No data</span>
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>{getLpcdStatusBadge(entry.lpcdValue)}</TableCell>
-                      </TableRow>
-                    ));
                   })()}
                 </TableBody>
               </Table>
