@@ -93,7 +93,7 @@ interface RegionData {
 }
 
 // Define filter types
-type LpcdFilterType = 'all' | 'above55' | 'below55' | '40to55' | 'zerosupply';
+type LpcdFilterType = 'all' | 'above55' | 'below55' | '40to55' | 'zerosupply' | 'below40';
 
 const SimpleLpcdDashboard: React.FC = () => {
   const { toast } = useToast();
@@ -171,6 +171,14 @@ const SimpleLpcdDashboard: React.FC = () => {
         result = result.filter(scheme => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 55;
+        });
+        break;
+        
+      case 'below40':
+        // Only include schemes with latest LPCD value < 40 and > 0
+        result = result.filter(scheme => {
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 40;
         });
         break;
         
