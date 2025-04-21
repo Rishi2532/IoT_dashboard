@@ -76,6 +76,10 @@ async function importAmravatiData(filePath) {
     // Read the Excel file
     const workbook = xlsx.readFile(filePath);
     
+    // Initialize counters for total inserts and updates
+    let totalInserted = 0;
+    let totalUpdated = 0;
+    
     // Process each sheet in the workbook
     for (const sheetName of workbook.SheetNames) {
       console.log(`Processing sheet: ${sheetName}`);
@@ -93,17 +97,20 @@ async function importAmravatiData(filePath) {
       }
       
       console.log(`Found ${data.length} rows in sheet: ${sheetName}`);
-      console.log('First row sample:', JSON.stringify(data[0]).substring(0, 200));
       
-      // Get the column headers to understand the structure
-      const headers = Object.keys(data[0]);
-      console.log('Excel headers:', headers);
-      
-      let inserted = 0;
-      let updated = 0;
+      if (data.length > 0) {
+        console.log('First row sample:', JSON.stringify(data[0]).substring(0, 200));
+        
+        // Get the column headers to understand the structure
+        const headers = Object.keys(data[0]);
+        console.log('Excel headers:', headers);
+      }
       
       // Start a transaction
       const client = await pool.connect();
+      let sheetInserted = 0;
+      let sheetUpdated = 0;
+      
       try {
         await client.query('BEGIN');
         
@@ -149,16 +156,6 @@ async function importAmravatiData(filePath) {
             `water_consumption=${waterConsumption}, lpcd=${lpcdValue}`
           );
           
-          // Prepare data object
-          const waterSchemeData = {
-            region,
-            scheme_id: schemeId,
-            scheme_name: schemeName,
-            village_name: villageName,
-            water_value_day1: waterConsumption,
-            lpcd_value_day1: lpcdValue
-          };
-          
           // Check if record exists
           const checkResult = await client.query(
             'SELECT scheme_id FROM water_scheme_data WHERE scheme_id = $1 AND village_name = $2',
@@ -186,7 +183,7 @@ async function importAmravatiData(filePath) {
               villageName
             ]);
             
-            updated++;
+            sheetUpdated++;
             console.log(`Updated record for scheme ${schemeId}, village ${villageName}`);
           } else {
             // Insert new record
@@ -205,13 +202,17 @@ async function importAmravatiData(filePath) {
               lpcdValue
             ]);
             
-            inserted++;
+            sheetInserted++;
             console.log(`Inserted new record for scheme ${schemeId}, village ${villageName}`);
           }
         }
         
         await client.query('COMMIT');
-        console.log(`Import completed: ${inserted} records inserted, ${updated} records updated`);
+        console.log(`Sheet import completed: ${sheetInserted} records inserted, ${sheetUpdated} records updated`);
+        
+        // Update total counts
+        totalInserted += sheetInserted;
+        totalUpdated += sheetUpdated;
       } catch (error) {
         await client.query('ROLLBACK');
         console.error('Error processing data:', error);
@@ -220,12 +221,14 @@ async function importAmravatiData(filePath) {
       }
     }
     
+    console.log(`Total import results: ${totalInserted} records inserted, ${totalUpdated} records updated`);
+    
     await pool.end();
     return {
       success: true,
       message: 'Import completed successfully',
-      inserted: inserted,
-      updated: updated,
+      inserted: totalInserted,
+      updated: totalUpdated,
       errors: []
     };
   } catch (error) {
