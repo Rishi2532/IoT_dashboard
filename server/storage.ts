@@ -846,6 +846,122 @@ export class PostgresStorage implements IStorage {
     return true;
   }
   
+  // Function to safely convert various cell values to numbers
+  private getNumericValue(value: any): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    
+    // If already a number, return it
+    if (typeof value === 'number') {
+      return value;
+    }
+    
+    // If it's a string, try to convert it
+    if (typeof value === 'string') {
+      // Handle empty strings and non-numeric strings
+      if (value.trim() === '' || value.toLowerCase() === 'n/a') {
+        return null;
+      }
+      
+      // Remove any non-numeric characters except decimal point
+      const cleanedValue = value.replace(/[^0-9.]/g, '');
+      if (cleanedValue === '') {
+        return null;
+      }
+      
+      // Parse to float and ensure it's a valid number
+      const numValue = parseFloat(cleanedValue);
+      
+      // If we got NaN but had a non-empty string, it's a format issue
+      if (isNaN(numValue)) {
+        console.log(`Warning: Could not parse numeric value from: ${value}`);
+        return null;
+      }
+      
+      // Ensure it's actually a finite number
+      return isFinite(numValue) ? numValue : null;
+    }
+    
+    return null;
+  }
+  
+  // Function to calculate derived values like consistent zeros, below/above LPCD counts
+  private calculateDerivedValues(data: any): any {
+    // Extract LPCD values
+    const lpcdValues = [
+      this.getNumericValue(data.lpcd_value_day1),
+      this.getNumericValue(data.lpcd_value_day2),
+      this.getNumericValue(data.lpcd_value_day3),
+      this.getNumericValue(data.lpcd_value_day4),
+      this.getNumericValue(data.lpcd_value_day5),
+      this.getNumericValue(data.lpcd_value_day6),
+      this.getNumericValue(data.lpcd_value_day7)
+    ].filter(val => val !== null);
+    
+    // If no LPCD values, set derived values to 0
+    if (lpcdValues.length === 0) {
+      data.consistent_zero_lpcd_for_a_week = 0;
+      data.below_55_lpcd_count = 0;
+      data.above_55_lpcd_count = 0;
+      return data;
+    }
+    
+    // Calculate consistent zero LPCD
+    const allZeros = lpcdValues.every(val => val === 0);
+    data.consistent_zero_lpcd_for_a_week = allZeros && lpcdValues.length >= 7 ? 1 : 0;
+    
+    // Calculate below and above 55 LPCD counts
+    data.below_55_lpcd_count = lpcdValues.filter(val => val && val < 55).length;
+    data.above_55_lpcd_count = lpcdValues.filter(val => val && val >= 55).length;
+    
+    return data;
+  }
+  
+  // Enhanced column mapping for the positional data format
+  private positionalColumnMapping: { [key: number]: string } = {
+    // Assuming position matches the Excel columns (0-based)
+    0: 'region',
+    1: 'circle',
+    2: 'division',
+    3: 'sub_division',
+    4: 'block',
+    5: 'scheme_id',
+    6: 'scheme_name',
+    7: 'village_name',
+    8: 'population',
+    9: 'number_of_esr',
+    10: 'water_value_day1',
+    11: 'water_value_day2',
+    12: 'water_value_day3',
+    13: 'water_value_day4',
+    14: 'water_value_day5',
+    15: 'water_value_day6',
+    16: 'lpcd_value_day1',
+    17: 'lpcd_value_day2',
+    18: 'lpcd_value_day3',
+    19: 'lpcd_value_day4',
+    20: 'lpcd_value_day5',
+    21: 'lpcd_value_day6',
+    22: 'lpcd_value_day7',
+    23: 'water_date_day1',
+    24: 'water_date_day2',
+    25: 'water_date_day3',
+    26: 'water_date_day4',
+    27: 'water_date_day5',
+    28: 'water_date_day6',
+    29: 'lpcd_date_day1',
+    30: 'lpcd_date_day2',
+    31: 'lpcd_date_day3',
+    32: 'lpcd_date_day4',
+    33: 'lpcd_date_day5',
+    34: 'lpcd_date_day6',
+    35: 'lpcd_date_day7',
+    36: 'consistent_zero_lpcd_for_a_week',
+    37: 'below_55_lpcd_count',
+    38: 'above_55_lpcd_count'
+  };
+  
   async importWaterSchemeDataFromExcel(fileBuffer: Buffer): Promise<{
     inserted: number;
     updated: number;
@@ -863,59 +979,139 @@ export class PostgresStorage implements IStorage {
       // Parse Excel file
       const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
       const sheetName = workbook.SheetNames[0]; // Use first sheet
+      
+      console.log(`Processing Excel file, sheet: ${sheetName}`);
       const worksheet = workbook.Sheets[sheetName];
-      const jsonData = xlsx.utils.sheet_to_json(worksheet);
+      
+      // Convert to JSON with raw values to preserve numbers
+      const jsonData = xlsx.utils.sheet_to_json(worksheet, { 
+        raw: true, 
+        defval: null,
+        dateNF: 'yyyy-mm-dd'
+      });
+      
+      // Log first row to see what column headers are available
+      if (jsonData.length > 0) {
+        console.log("Excel first row column headers:", Object.keys(jsonData[0]));
+      } else {
+        console.log("No data found in Excel file");
+        return { inserted: 0, updated: 0, errors: ["No data found in Excel file"] };
+      }
+      
+      // Determine if the file uses numeric positional columns or named headers
+      // This handles both types of Excel files
+      const firstRow = jsonData[0];
+      const hasPositionalColumns = Object.keys(firstRow).some(key => !isNaN(Number(key)));
+      
+      console.log(`Excel format: ${hasPositionalColumns ? 'Positional' : 'Named headers'}`);
       
       // Process each row
       for (const row of jsonData) {
         try {
-          // Map Excel columns to database fields
-          const schemeData: Partial<InsertWaterSchemeData> = {};
+          // Map to database schema format
+          const schemeData: Record<string, any> = {};
           
-          // Validate and extract scheme_id (required field)
-          const schemeIdHeader = Object.keys(this.excelColumnMapping).find(
-            key => this.excelColumnMapping[key] === 'scheme_id'
-          );
-          
-          if (!schemeIdHeader || !row[schemeIdHeader]) {
-            errors.push(`Row missing required field: ${schemeIdHeader || 'Scheme ID'}`);
-            continue;
-          }
-          
-          // Map fields from Excel to database schema
-          for (const [excelHeader, dbField] of Object.entries(this.excelColumnMapping)) {
-            if (row[excelHeader] !== undefined) {
-              // Convert string values to numbers for numeric fields
-              if (dbField.includes('value') || 
-                  dbField === 'population' || 
-                  dbField === 'number_of_esr' ||
-                  dbField.includes('count')) {
-                schemeData[dbField] = Number(row[excelHeader]);
-              } else {
-                schemeData[dbField] = row[excelHeader];
+          if (hasPositionalColumns) {
+            // Handle positional format (column numbers as keys)
+            for (const [position, dbField] of Object.entries(this.positionalColumnMapping)) {
+              if (row[position] !== undefined) {
+                // Convert numeric fields properly
+                if (dbField.includes('value') || 
+                    dbField === 'population' || 
+                    dbField === 'number_of_esr' ||
+                    dbField.includes('count')) {
+                  schemeData[dbField] = this.getNumericValue(row[position]);
+                } else {
+                  schemeData[dbField] = row[position];
+                }
+              }
+            }
+          } else {
+            // Handle named header format
+            // First try exact column matches
+            for (const [excelHeader, dbField] of Object.entries(this.excelColumnMapping)) {
+              if (row[excelHeader] !== undefined) {
+                // Convert numeric fields properly
+                if (dbField.includes('value') || 
+                    dbField === 'population' || 
+                    dbField === 'number_of_esr' ||
+                    dbField.includes('count')) {
+                  schemeData[dbField] = this.getNumericValue(row[excelHeader]);
+                } else {
+                  schemeData[dbField] = row[excelHeader];
+                }
+              }
+            }
+            
+            // Try case-insensitive matching if regular mapping failed
+            if (!schemeData.scheme_id) {
+              for (const origHeader of Object.keys(row)) {
+                const lowerHeader = origHeader.toLowerCase();
+                // Find matching schema field
+                for (const [excelHeader, dbField] of Object.entries(this.excelColumnMapping)) {
+                  if (excelHeader.toLowerCase() === lowerHeader) {
+                    // Convert numeric fields properly
+                    if (dbField.includes('value') || 
+                        dbField === 'population' || 
+                        dbField === 'number_of_esr' ||
+                        dbField.includes('count')) {
+                      schemeData[dbField] = this.getNumericValue(row[origHeader]);
+                    } else {
+                      schemeData[dbField] = row[origHeader];
+                    }
+                    break;
+                  }
+                }
               }
             }
           }
           
-          // Check if scheme already exists
-          const existingScheme = await this.getWaterSchemeDataById(schemeData.scheme_id);
-          
-          if (existingScheme) {
-            // Update existing scheme
-            await this.updateWaterSchemeData(schemeData.scheme_id, schemeData);
-            updated++;
-          } else {
-            // Insert new scheme
-            await this.createWaterSchemeData(schemeData as InsertWaterSchemeData);
-            inserted++;
+          // Validate required fields
+          if (!schemeData.scheme_id || !schemeData.village_name) {
+            console.log('Skipping row with missing scheme_id or village_name:', 
+              JSON.stringify({scheme_id: schemeData.scheme_id, village_name: schemeData.village_name}));
+            continue;
           }
-        } catch (rowError) {
+          
+          // Calculate derived values (consistency metrics)
+          this.calculateDerivedValues(schemeData);
+          
+          console.log(`Processed record for scheme_id ${schemeData.scheme_id}, village ${schemeData.village_name}: ` +
+                     `water_value_day1=${schemeData.water_value_day1}, lpcd_value_day1=${schemeData.lpcd_value_day1}`);
+          
+          // Check if scheme already exists
+          let existingScheme;
+          try {
+            existingScheme = await this.getWaterSchemeDataById(schemeData.scheme_id);
+          } catch (error) {
+            console.error(`Error checking for existing scheme: ${error}`);
+            existingScheme = null;
+          }
+          
+          try {
+            if (existingScheme) {
+              // Update existing scheme
+              await this.updateWaterSchemeData(schemeData.scheme_id, schemeData);
+              updated++;
+            } else {
+              // Insert new scheme
+              await this.createWaterSchemeData(schemeData as InsertWaterSchemeData);
+              inserted++;
+            }
+          } catch (saveError: any) {
+            console.error(`Error saving data: ${saveError.message}`);
+            errors.push(`Error saving data for ${schemeData.scheme_id}: ${saveError.message}`);
+          }
+        } catch (rowError: any) {
+          console.error(`Row processing error: ${rowError.message}`);
           errors.push(`Error processing row: ${rowError.message}`);
         }
       }
       
+      console.log(`Successfully processed water scheme data: ${inserted} inserted, ${updated} updated`);
       return { inserted, updated, errors };
-    } catch (error) {
+    } catch (error: any) {
+      console.error(`Excel import error: ${error.message}`);
       errors.push(`Excel import error: ${error.message}`);
       return { inserted, updated, errors };
     }
