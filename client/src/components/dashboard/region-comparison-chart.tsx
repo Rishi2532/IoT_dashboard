@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Region } from "@/types";
 import Chart from "chart.js/auto";
@@ -15,6 +15,8 @@ export default function RegionComparisonChart({
 }: RegionComparisonChartProps) {
   const chartRef = useRef<HTMLCanvasElement>(null);
   const chartInstance = useRef<Chart | null>(null);
+  const [activeDatasets, setActiveDatasets] = useState<Set<number>>(new Set());
+  const [showAllDatasets, setShowAllDatasets] = useState<boolean>(true);
 
   useEffect(() => {
     if (isLoading || !regions.length || !chartRef.current) return;
@@ -121,6 +123,9 @@ export default function RegionComparisonChart({
             left: 20, // Increased left padding for better visibility
           },
         },
+        onClick: function(event, elements) {
+          // This is needed for legend click handler to work properly
+        },
         scales: {
           y: {
             beginAtZero: true,
@@ -164,6 +169,57 @@ export default function RegionComparisonChart({
         plugins: {
           legend: {
             position: "top",
+            onClick: function(e, legendItem, legend) {
+              const index = legendItem.datasetIndex;
+              
+              if (index === undefined) return;
+              
+              // Toggle the clicked dataset
+              if (showAllDatasets) {
+                // First click on any legend - show only this dataset
+                setShowAllDatasets(false);
+                setActiveDatasets(new Set([index]));
+                
+                // Update visibility for all datasets
+                legend.chart.data.datasets.forEach((dataset, i) => {
+                  const meta = legend.chart.getDatasetMeta(i);
+                  meta.hidden = i !== index;
+                });
+              } else {
+                // Toggle the clicked dataset in our active set
+                const newActiveDatasets = new Set(activeDatasets);
+                
+                if (newActiveDatasets.has(index)) {
+                  // If this was the only active dataset, show all datasets again
+                  if (newActiveDatasets.size === 1) {
+                    setShowAllDatasets(true);
+                    // Show all datasets
+                    legend.chart.data.datasets.forEach((dataset, i) => {
+                      const meta = legend.chart.getDatasetMeta(i);
+                      meta.hidden = false;
+                    });
+                  } else {
+                    // Remove from active set
+                    newActiveDatasets.delete(index);
+                    setActiveDatasets(newActiveDatasets);
+                    
+                    // Hide this dataset
+                    const meta = legend.chart.getDatasetMeta(index);
+                    meta.hidden = true;
+                  }
+                } else {
+                  // Add to active set
+                  newActiveDatasets.add(index);
+                  setActiveDatasets(newActiveDatasets);
+                  
+                  // Show this dataset
+                  const meta = legend.chart.getDatasetMeta(index);
+                  meta.hidden = false;
+                }
+              }
+              
+              legend.chart.update();
+            },
             labels: {
               boxWidth: 15,
               padding: 10,
@@ -186,7 +242,7 @@ export default function RegionComparisonChart({
             },
             title: {
               display: true,
-              text: "Region Wise Project Status",
+              text: "Region Wise Project Status (Click to Toggle)",
               font: {
                 size: 18,
                 weight: "bold",
@@ -266,13 +322,39 @@ export default function RegionComparisonChart({
         chartInstance.current.destroy();
       }
     };
-  }, [regions, isLoading]);
+  }, [regions, isLoading, activeDatasets, showAllDatasets]);
+
+  // Reset function to show all datasets
+  const resetChart = () => {
+    if (!showAllDatasets && chartInstance.current) {
+      setShowAllDatasets(true);
+      setActiveDatasets(new Set());
+      
+      // Show all datasets
+      chartInstance.current.data.datasets.forEach((dataset, i) => {
+        const meta = chartInstance.current?.getDatasetMeta(i);
+        if (meta) meta.hidden = false;
+      });
+      
+      chartInstance.current.update();
+    }
+  };
 
   return (
     <div
       className="h-full flex flex-col"
       style={{ height: "550px", maxHeight: "600px" }}
     >
+      {!showAllDatasets && (
+        <div className="flex justify-end mb-2">
+          <button
+            onClick={resetChart}
+            className="px-2 py-1 text-xs bg-blue-100 hover:bg-blue-200 text-blue-700 rounded-md transition-colors"
+          >
+            Show All Data
+          </button>
+        </div>
+      )}
       {isLoading ? (
         <div className="animate-pulse h-full w-full bg-gray-200 rounded flex-1"></div>
       ) : (
