@@ -28,6 +28,7 @@ import { promisify } from "util";
 import { importCsvHandler } from "./routes/admin/import-csv";
 import aiRoutes from "./routes/ai";
 import waterSchemeRoutes from "./routes/water-scheme-routes";
+import lpcdImportRoutes from "./routes/admin/import-lpcd";
 
 const exec = promisify(cp.exec);
 
@@ -77,6 +78,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount water scheme routes
   app.use("/api/water-scheme-data", waterSchemeRoutes);
+  
+  // Mount LPCD import routes (admin-only)
+  app.use("/api/admin", requireAdmin, lpcdImportRoutes);
 
   // Register endpoint
   app.post("/api/auth/register", async (req, res) => {
