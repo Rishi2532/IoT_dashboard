@@ -433,12 +433,12 @@ const LpcdDashboard: React.FC = () => {
                                         </TableCell>
                                         <TableCell>
                                           {scheme.water_value_day5 !== null && scheme.water_value_day5 !== undefined && scheme.water_value_day5 !== '' 
-                                            ? Number(scheme.water_value_day5) 
+                                            ? parseFloat(String(scheme.water_value_day5)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
                                           {scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined && scheme.water_value_day6 !== '' 
-                                            ? Number(scheme.water_value_day6) 
+                                            ? parseFloat(String(scheme.water_value_day6)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell><span className="text-gray-500 text-sm">No data</span></TableCell>
@@ -447,37 +447,37 @@ const LpcdDashboard: React.FC = () => {
                                         <TableCell className="font-medium text-blue-800">LPCD</TableCell>
                                         <TableCell>
                                           {scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined && scheme.lpcd_value_day1 !== '' 
-                                            ? Number(scheme.lpcd_value_day1) 
+                                            ? parseFloat(String(scheme.lpcd_value_day1)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
                                           {scheme.lpcd_value_day2 !== null && scheme.lpcd_value_day2 !== undefined && scheme.lpcd_value_day2 !== '' 
-                                            ? Number(scheme.lpcd_value_day2) 
+                                            ? parseFloat(String(scheme.lpcd_value_day2)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
                                           {scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined && scheme.lpcd_value_day3 !== '' 
-                                            ? Number(scheme.lpcd_value_day3) 
+                                            ? parseFloat(String(scheme.lpcd_value_day3)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
                                           {scheme.lpcd_value_day4 !== null && scheme.lpcd_value_day4 !== undefined && scheme.lpcd_value_day4 !== '' 
-                                            ? Number(scheme.lpcd_value_day4) 
+                                            ? parseFloat(String(scheme.lpcd_value_day4)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
                                           {scheme.lpcd_value_day5 !== null && scheme.lpcd_value_day5 !== undefined && scheme.lpcd_value_day5 !== '' 
-                                            ? Number(scheme.lpcd_value_day5) 
+                                            ? parseFloat(String(scheme.lpcd_value_day5)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
                                           {scheme.lpcd_value_day6 !== null && scheme.lpcd_value_day6 !== undefined && scheme.lpcd_value_day6 !== '' 
-                                            ? Number(scheme.lpcd_value_day6) 
+                                            ? parseFloat(String(scheme.lpcd_value_day6)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
                                           {scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined && scheme.lpcd_value_day7 !== '' 
-                                            ? Number(scheme.lpcd_value_day7) 
+                                            ? parseFloat(String(scheme.lpcd_value_day7)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                       </TableRow>
