@@ -207,21 +207,21 @@ router.get('/template', (req, res) => {
         'PU-001',              // Scheme ID
         'Pune Rural Supply',   // Scheme Name
         'Wagholi',             // Village Name
-        5000,                  // Population
-        2,                     // Number of ESR
-        120.5,                 // Water Value Day 1
-        115.3,                 // Water Value Day 2
-        110.2,                 // Water Value Day 3
-        118.7,                 // Water Value Day 4
-        122.1,                 // Water Value Day 5
-        119.8,                 // Water Value Day 6
-        65.2,                  // LPCD Value Day 1
-        62.3,                  // LPCD Value Day 2
-        59.5,                  // LPCD Value Day 3
-        64.1,                  // LPCD Value Day 4
-        66.0,                  // LPCD Value Day 5
-        64.8,                  // LPCD Value Day 6
-        63.9,                  // LPCD Value Day 7
+        '5000',                // Population (as string for template)
+        '2',                   // Number of ESR (as string for template)
+        '120.5',               // Water Value Day 1
+        '115.3',               // Water Value Day 2
+        '110.2',               // Water Value Day 3
+        '118.7',               // Water Value Day 4
+        '122.1',               // Water Value Day 5
+        '119.8',               // Water Value Day 6
+        '65.2',                // LPCD Value Day 1
+        '62.3',                // LPCD Value Day 2
+        '59.5',                // LPCD Value Day 3
+        '64.1',                // LPCD Value Day 4
+        '66.0',                // LPCD Value Day 5
+        '64.8',                // LPCD Value Day 6
+        '63.9',                // LPCD Value Day 7
         '11-Apr',              // Water Date Day 1
         '12-Apr',              // Water Date Day 2
         '13-Apr',              // Water Date Day 3
@@ -236,8 +236,8 @@ router.get('/template', (req, res) => {
         '15-Apr',              // LPCD Date Day 6
         '16-Apr',              // LPCD Date Day 7
         'No',                  // Consistent Zero LPCD For A Week
-        0,                     // Below 55 LPCD Count
-        7                      // Above 55 LPCD Count
+        '0',                   // Below 55 LPCD Count (as string for template)
+        '7'                    // Above 55 LPCD Count (as string for template)
       ]);
       
       // Create the worksheet
@@ -288,21 +288,25 @@ async function processExcelFile(filePath: string) {
   // Analyze the file to detect if it's our custom LPCD template or a different format
   let isLpcdTemplate = false;
   
-  if (data.length > 0) {
-    const firstRow = data[0];
-    const headers = Object.keys(firstRow);
+  if (data && data.length > 0) {
+    const firstRow = data[0] as Record<string, unknown>;
     
-    // Check for the presence of water and LPCD value columns
-    const waterValueColumns = headers.filter(h => h.includes('Water Value'));
-    const lpcdValueColumns = headers.filter(h => h.includes('LPCD Value'));
+    // Check if firstRow is an object we can analyze
+    if (firstRow && typeof firstRow === 'object') {
+      const headers = Object.keys(firstRow);
+      
+      // Check for the presence of water and LPCD value columns
+      const waterValueColumns = headers.filter(h => h.includes('Water Value'));
+      const lpcdValueColumns = headers.filter(h => h.includes('LPCD Value'));
     
-    isLpcdTemplate = waterValueColumns.length > 0 || lpcdValueColumns.length > 0;
-    
-    console.log('Excel import analysis:');
-    console.log('- Headers:', headers);
-    console.log('- Water value columns:', waterValueColumns);
-    console.log('- LPCD value columns:', lpcdValueColumns);
-    console.log('- Is LPCD template:', isLpcdTemplate);
+      isLpcdTemplate = waterValueColumns.length > 0 || lpcdValueColumns.length > 0;
+      
+      console.log('Excel import analysis:');
+      console.log('- Headers:', headers);
+      console.log('- Water value columns:', waterValueColumns);
+      console.log('- LPCD value columns:', lpcdValueColumns);
+      console.log('- Is LPCD template:', isLpcdTemplate);
+    }
   }
   
   return importDataToDatabase(data, true, isLpcdTemplate);

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UploadCloud, FileCheck, AlertCircle, XCircle, CheckCircle } from 'lucide-react';
+import { Loader2, UploadCloud, FileCheck, AlertCircle, XCircle, CheckCircle, Download } from 'lucide-react';
 
 interface ImportResult {
   message: string;
@@ -125,13 +125,35 @@ const LpcdImport = () => {
   const handleCsvImport = () => {
     csvMutation.mutate();
   };
+  
+  // Handle template download
+  const handleTemplateDownload = () => {
+    // Create a link to download the template
+    window.open('/api/water-scheme-data/template', '_blank');
+    
+    toast({
+      title: 'Template Download',
+      description: 'LPCD data template is being downloaded. Please use this template for importing your data.',
+      variant: 'default',
+    });
+  };
 
   return (
     <div className="container mx-auto py-6">
       <Card>
-        <CardHeader>
-          <CardTitle>Import Water Scheme Data</CardTitle>
-          <CardDescription>Upload Excel or CSV files to update water scheme data</CardDescription>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <div>
+            <CardTitle>Import Water Scheme Data</CardTitle>
+            <CardDescription>Upload Excel or CSV files to update water scheme data</CardDescription>
+          </div>
+          <Button 
+            variant="outline" 
+            onClick={handleTemplateDownload} 
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Download Template
+          </Button>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="excel">
@@ -153,6 +175,9 @@ const LpcdImport = () => {
                       <li>Water Value Day 1-7, LPCD Value Day 1-7</li>
                       <li>Water Date Day 1-6, LPCD Date Day 1-7</li>
                     </ul>
+                    <p className="mt-2 font-medium text-primary">
+                      Use the "Download Template" button above to get a properly formatted Excel file.
+                    </p>
                   </AlertDescription>
                 </Alert>
                 
