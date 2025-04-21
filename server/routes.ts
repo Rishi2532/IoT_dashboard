@@ -602,8 +602,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const fileBuffer = req.file.buffer;
-      const importResult = await storage.importWaterSchemeDataFromExcel(fileBuffer);
+      // Save the file to disk temporarily for processing 
+      const tempDir = path.join(process.cwd(), 'temp_uploads');
+      
+      // Create temp directory if it doesn't exist
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      
+      const tempFilePath = path.join(tempDir, `upload_${Date.now()}.xlsx`);
+      fs.writeFileSync(tempFilePath, req.file.buffer);
+      
+      console.log(`Saved temp file to ${tempFilePath} for processing`);
+      
+      // Try specialized Amravati importer first if the filename contains relevant keywords
+      const fileName = req.file.originalname.toLowerCase();
+      const isAmravatiFile = 
+        fileName.includes('amravati') || 
+        fileName.includes('village') || 
+        fileName.includes('lpcd') ||
+        (req.body && req.body.region && req.body.region.toLowerCase() === 'amravati');
+      
+      let importResult;
+      let usedSpecialImporter = false;
+      
+      try {
+        if (isAmravatiFile) {
+          console.log('Using special Amravati importer');
+          // Use dynamic import to load the special importer
+          const specialImporter = await import('../special-amravati-import.js');
+          const amravatiResult = await specialImporter.importAmravatiData(tempFilePath);
+          
+          importResult = {
+            inserted: amravatiResult.inserted || 0,
+            updated: amravatiResult.updated || 0,
+            errors: amravatiResult.errors || []
+          };
+          usedSpecialImporter = true;
+        }
+      } catch (importError) {
+        console.error('Error using special importer:', importError);
+        // Fall back to standard importer
+      }
+      
+      // If special importer wasn't used or failed, use standard importer
+      if (!usedSpecialImporter) {
+        console.log('Using standard water scheme data importer');
+        importResult = await storage.importWaterSchemeDataFromExcel(req.file.buffer);
+      }
+      
+      // Clean up temp file
+      try {
+        if (fs.existsSync(tempFilePath)) {
+          fs.unlinkSync(tempFilePath);
+          console.log(`Temp file ${tempFilePath} deleted`);
+        }
+      } catch (e) {
+        console.warn('Error cleaning up temp file:', e);
+      }
 
       res.json({
         message: `Excel data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated.`,
