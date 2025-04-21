@@ -497,29 +497,120 @@ const SimpleLpcdDashboard: React.FC = () => {
                 </TableBody>
               </Table>
               
-              {/* Pagination Controls */}
+              {/* Enhanced Pagination Controls */}
               {totalPages > 1 && (
-                <div className="flex justify-between items-center mt-4">
-                  <div>
+                <div className="flex flex-col items-center mt-6 space-y-4">
+                  <div className="flex justify-center items-center space-x-2">
                     <Button
                       variant="outline"
+                      size="sm"
+                      onClick={() => setPage(1)}
+                      disabled={page === 1}
+                    >
+                      First
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => setPage(page => Math.max(1, page - 1))}
                       disabled={page === 1}
                     >
                       Previous
                     </Button>
-                  </div>
-                  <div className="text-sm">
-                    Page {page} of {totalPages}
-                  </div>
-                  <div>
+                    
+                    <div className="flex items-center space-x-1">
+                      {(() => {
+                        const pageButtons = [];
+                        const maxVisiblePages = 5;
+                        let startPage = Math.max(1, page - Math.floor(maxVisiblePages / 2));
+                        let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+                        
+                        // Adjust start page if we're near the end
+                        if (endPage - startPage < maxVisiblePages - 1) {
+                          startPage = Math.max(1, endPage - maxVisiblePages + 1);
+                        }
+                        
+                        // Show ellipsis for first pages if needed
+                        if (startPage > 1) {
+                          pageButtons.push(
+                            <Button
+                              key="first-ellipsis"
+                              variant="ghost"
+                              size="sm"
+                              className="w-9 px-0"
+                              onClick={() => setPage(1)}
+                            >
+                              1
+                            </Button>
+                          );
+                          
+                          if (startPage > 2) {
+                            pageButtons.push(
+                              <span key="ellipsis-1" className="mx-1">...</span>
+                            );
+                          }
+                        }
+                        
+                        // Create number buttons
+                        for (let i = startPage; i <= endPage; i++) {
+                          pageButtons.push(
+                            <Button
+                              key={`page-${i}`}
+                              variant={page === i ? "default" : "outline"}
+                              size="sm"
+                              className="w-9 px-0"
+                              onClick={() => setPage(i)}
+                            >
+                              {i}
+                            </Button>
+                          );
+                        }
+                        
+                        // Show ellipsis for last pages if needed
+                        if (endPage < totalPages) {
+                          if (endPage < totalPages - 1) {
+                            pageButtons.push(
+                              <span key="ellipsis-2" className="mx-1">...</span>
+                            );
+                          }
+                          
+                          pageButtons.push(
+                            <Button
+                              key="last-page"
+                              variant="ghost"
+                              size="sm"
+                              className="w-9 px-0"
+                              onClick={() => setPage(totalPages)}
+                            >
+                              {totalPages}
+                            </Button>
+                          );
+                        }
+                        
+                        return pageButtons;
+                      })()}
+                    </div>
+                    
                     <Button
                       variant="outline"
+                      size="sm"
                       onClick={() => setPage(page => Math.min(totalPages, page + 1))}
                       disabled={page === totalPages}
                     >
                       Next
                     </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setPage(totalPages)}
+                      disabled={page === totalPages}
+                    >
+                      Last
+                    </Button>
+                  </div>
+                  
+                  <div className="text-sm text-gray-500">
+                    Showing {startIndex + 1} to {endIndex} of {totalItems} villages
                   </div>
                 </div>
               )}
