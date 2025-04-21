@@ -12,6 +12,7 @@ import path from 'path';
 import fs from 'fs';
 import pg from 'pg';
 import { fileURLToPath } from 'url';
+import { importAmravatiData } from '../../../special-import-amravati.js';
 
 const { Pool } = pg;
 
@@ -200,6 +201,42 @@ function calculateDerivedValues(data) {
 }
 
 // POST endpoint to upload and import LPCD data
+// Special Amravati format import
+router.post('/import-amravati', upload.single('file'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ message: 'No file uploaded' });
+  }
+  
+  try {
+    console.log(`Processing Amravati format file: ${req.file.path}`);
+    
+    // Use the specialized Amravati import function
+    const result = await importAmravatiData(req.file.path);
+    
+    // Delete the temporary file
+    fs.unlinkSync(req.file.path);
+    
+    return res.json(result);
+  } catch (error) {
+    console.error('Error importing Amravati data:', error);
+    
+    // Try to delete the temporary file if it exists
+    try {
+      if (req.file && fs.existsSync(req.file.path)) {
+        fs.unlinkSync(req.file.path);
+      }
+    } catch (unlinkError) {
+      console.error('Error deleting temporary file:', unlinkError);
+    }
+    
+    return res.status(500).json({
+      message: `Error importing Amravati data: ${error.message}`,
+      error: error.toString()
+    });
+  }
+});
+
+// Standard LPCD import
 router.post('/import-lpcd', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ message: 'No file uploaded' });

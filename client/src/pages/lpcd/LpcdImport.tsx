@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, UploadCloud, FileCheck, AlertCircle, XCircle, CheckCircle, Download } from 'lucide-react';
+import { Loader2, UploadCloud, FileCheck, AlertCircle, XCircle, CheckCircle, Download, FileSpreadsheet } from 'lucide-react';
 
 interface ImportResult {
   message: string;
@@ -21,6 +21,7 @@ const LpcdImport = () => {
   const queryClient = useQueryClient();
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [amravatiFile, setAmravatiFile] = useState<File | null>(null);
   
   // Import Excel mutation
   const excelMutation = useMutation({
@@ -32,7 +33,7 @@ const LpcdImport = () => {
       const formData = new FormData();
       formData.append('file', excelFile);
       
-      return apiRequest<ImportResult>('/api/water-scheme-data/import/excel', {
+      return apiRequest('/api/water-scheme-data/import/excel', {
         method: 'POST',
         body: formData,
         headers: {
@@ -72,7 +73,7 @@ const LpcdImport = () => {
       const formData = new FormData();
       formData.append('file', csvFile);
       
-      return apiRequest<ImportResult>('/api/water-scheme-data/import/csv', {
+      return apiRequest('/api/water-scheme-data/import/csv', {
         method: 'POST',
         body: formData,
         headers: {
@@ -102,6 +103,46 @@ const LpcdImport = () => {
     },
   });
   
+  // Import Amravati Excel mutation
+  const amravatiMutation = useMutation({
+    mutationFn: async () => {
+      if (!amravatiFile) {
+        throw new Error('No Excel file selected');
+      }
+      
+      const formData = new FormData();
+      formData.append('file', amravatiFile);
+      
+      return apiRequest('/api/water-scheme-data/import/amravati', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          // Don't set Content-Type here, it will be automatically set with the boundary
+        },
+      });
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Amravati Excel Import Successful',
+        description: data.message,
+        variant: 'default',
+      });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/water-scheme-data'] });
+      
+      // Reset file input
+      setAmravatiFile(null);
+    },
+    onError: (error) => {
+      toast({
+        title: 'Amravati Excel Import Failed',
+        description: (error as Error)?.message || 'An unknown error occurred',
+        variant: 'destructive',
+      });
+    },
+  });
+  
   // Handle file change for Excel
   const handleExcelFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -116,6 +157,13 @@ const LpcdImport = () => {
     }
   };
   
+  // Handle file change for Amravati Excel
+  const handleAmravatiFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setAmravatiFile(e.target.files[0]);
+    }
+  };
+  
   // Handle Excel import
   const handleExcelImport = () => {
     excelMutation.mutate();
@@ -124,6 +172,11 @@ const LpcdImport = () => {
   // Handle CSV import
   const handleCsvImport = () => {
     csvMutation.mutate();
+  };
+  
+  // Handle Amravati Excel import
+  const handleAmravatiImport = () => {
+    amravatiMutation.mutate();
   };
   
   // Handle template download
@@ -160,6 +213,7 @@ const LpcdImport = () => {
             <TabsList className="mb-6">
               <TabsTrigger value="excel">Excel (With Headers)</TabsTrigger>
               <TabsTrigger value="csv">CSV (No Headers)</TabsTrigger>
+              <TabsTrigger value="amravati">Amravati Format</TabsTrigger>
             </TabsList>
             
             <TabsContent value="excel">
@@ -354,6 +408,104 @@ const LpcdImport = () => {
                     <AlertTitle>Import Failed</AlertTitle>
                     <AlertDescription>
                       {(csvMutation.error as Error)?.message || 'An unknown error occurred'}
+                    </AlertDescription>
+                  </Alert>
+                )}
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="amravati">
+              <div className="space-y-6">
+                <Alert className="bg-amber-50 border-amber-200">
+                  <FileSpreadsheet className="h-4 w-4 text-amber-700" />
+                  <AlertTitle className="text-amber-800">Special Amravati Excel Format</AlertTitle>
+                  <AlertDescription className="text-amber-800">
+                    <p>This import option is specially designed for Amravati Excel file format with the following structure:</p>
+                    <ul className="list-disc list-inside mt-2 space-y-1">
+                      <li><strong>Columns 1-6:</strong> Region, Circle, Division, Sub-Division, Block, Scheme ID</li>
+                      <li><strong>Column 7:</strong> Scheme Name</li>
+                      <li><strong>Column 8:</strong> Village Name</li>
+                      <li><strong>Column 9:</strong> Population</li>
+                      <li><strong>Column 10:</strong> Number of ESR</li>
+                      <li><strong>Columns 11-16:</strong> Water values (day 1-6)</li>
+                      <li><strong>Columns 17-23:</strong> LPCD values (day 1-7)</li>
+                      <li><strong>Columns 38-40:</strong> Consistency statistics</li>
+                    </ul>
+                    <p className="mt-2 font-medium text-amber-900">
+                      Use this option if your Excel file matches this exact layout from Amravati region.
+                    </p>
+                  </AlertDescription>
+                </Alert>
+                
+                <div className="flex flex-col space-y-4">
+                  <div>
+                    <Input
+                      type="file"
+                      accept=".xlsx,.xls"
+                      onChange={handleAmravatiFileChange}
+                      disabled={amravatiMutation.isPending}
+                      className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-amber-600 file:text-white hover:file:bg-amber-700"
+                    />
+                    <p className="text-sm text-muted-foreground mt-1">
+                      {amravatiFile ? `Selected: ${amravatiFile.name}` : 'No file selected'}
+                    </p>
+                  </div>
+                  
+                  <Button
+                    onClick={handleAmravatiImport}
+                    disabled={!amravatiFile || amravatiMutation.isPending}
+                    className="w-fit bg-amber-600 hover:bg-amber-700 text-white"
+                  >
+                    {amravatiMutation.isPending ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Importing...
+                      </>
+                    ) : (
+                      <>
+                        <UploadCloud className="mr-2 h-4 w-4" />
+                        Import Amravati Excel
+                      </>
+                    )}
+                  </Button>
+                </div>
+                
+                {amravatiMutation.isSuccess && (
+                  <div className="mt-4">
+                    <Alert className="bg-green-50">
+                      <CheckCircle className="h-4 w-4 text-green-600" />
+                      <AlertTitle className="text-green-600">Import Successful</AlertTitle>
+                      <AlertDescription className="text-green-800">
+                        <p>{amravatiMutation.data.message}</p>
+                        <p className="mt-2">
+                          Created: {amravatiMutation.data.inserted} records | 
+                          Updated: {amravatiMutation.data.updated} records
+                        </p>
+                        
+                        {amravatiMutation.data.errors && amravatiMutation.data.errors.length > 0 && (
+                          <div className="mt-2">
+                            <p className="font-semibold">Errors ({amravatiMutation.data.errors.length}):</p>
+                            <ul className="list-disc list-inside mt-1">
+                              {amravatiMutation.data.errors.slice(0, 5).map((error, index) => (
+                                <li key={index} className="text-red-600">{error}</li>
+                              ))}
+                              {amravatiMutation.data.errors.length > 5 && (
+                                <li>...and {amravatiMutation.data.errors.length - 5} more errors</li>
+                              )}
+                            </ul>
+                          </div>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  </div>
+                )}
+                
+                {amravatiMutation.isError && (
+                  <Alert variant="destructive">
+                    <XCircle className="h-4 w-4" />
+                    <AlertTitle>Import Failed</AlertTitle>
+                    <AlertDescription>
+                      {(amravatiMutation.error as Error)?.message || 'An unknown error occurred'}
                     </AlertDescription>
                   </Alert>
                 )}
