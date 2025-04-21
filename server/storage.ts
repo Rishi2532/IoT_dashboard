@@ -877,6 +877,8 @@ export class PostgresStorage implements IStorage {
     const db = await this.ensureInitialized();
     let query = db.select().from(waterSchemeData);
     
+    console.log("Filter received:", filter); // Debug log
+    
     if (filter) {
       // Apply region filter if provided
       if (filter.region) {
@@ -888,21 +890,28 @@ export class PostgresStorage implements IStorage {
         // Apply minimum LPCD filter
         // Make sure to use the most recent day with data (try day7, then day6, etc.)
         const minLpcdValue = parseFloat(filter.minLpcd.toString());
+        console.log("minLpcdValue:", minLpcdValue); // Debug log
         
-        // Important: When filtering for values above 55, also ensure values are not zero
+        // Important fix: FIRST exclude all records that have zero LPCDs for the entire week
+        // This is the key change that fixes the filtering issue
+        query = query.where(sql`(${waterSchemeData.consistent_zero_lpcd_for_a_week} = 0 OR ${waterSchemeData.consistent_zero_lpcd_for_a_week} IS NULL)`);
+        
+        // Important: When filtering for values above 55, ensure values are not zero
         if (minLpcdValue >= 55) {
-          // For threshold like 55, ensure we get non-zero values
+          // For threshold like 55, ensure we get records with at least one value >= 55
           query = query.where(
             sql`(
-              (${waterSchemeData.lpcd_value_day7} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day7} > 0) OR
-              (${waterSchemeData.lpcd_value_day6} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day6} > 0) OR
-              (${waterSchemeData.lpcd_value_day5} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day5} > 0) OR
-              (${waterSchemeData.lpcd_value_day4} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day4} > 0) OR
-              (${waterSchemeData.lpcd_value_day3} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day3} > 0) OR
-              (${waterSchemeData.lpcd_value_day2} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day2} > 0) OR
-              (${waterSchemeData.lpcd_value_day1} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day1} > 0)
+              ${waterSchemeData.lpcd_value_day7} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day6} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day5} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day4} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day3} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day2} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day1} >= ${minLpcdValue}
             )`
           );
+          
+          console.log("Applying Above 55 LPCD filter"); // Debug log
         } else {
           // For other minimum thresholds
           query = query.where(
@@ -922,18 +931,41 @@ export class PostgresStorage implements IStorage {
       if (filter.maxLpcd !== undefined) {
         // Apply maximum LPCD filter (for any day)
         const maxLpcdValue = parseFloat(filter.maxLpcd.toString());
+        console.log("maxLpcdValue:", maxLpcdValue); // Debug log
         
-        query = query.where(
-          sql`(
-            ${waterSchemeData.lpcd_value_day7} <= ${maxLpcdValue} OR
-            ${waterSchemeData.lpcd_value_day6} <= ${maxLpcdValue} OR
-            ${waterSchemeData.lpcd_value_day5} <= ${maxLpcdValue} OR
-            ${waterSchemeData.lpcd_value_day4} <= ${maxLpcdValue} OR
-            ${waterSchemeData.lpcd_value_day3} <= ${maxLpcdValue} OR
-            ${waterSchemeData.lpcd_value_day2} <= ${maxLpcdValue} OR
-            ${waterSchemeData.lpcd_value_day1} <= ${maxLpcdValue}
-          )`
-        );
+        // If filtering for below 55, also ensure we exclude zero values
+        // Unless we're specifically filtering for zero supply
+        if (maxLpcdValue <= 55 && !filter.zeroSupplyForWeek) {
+          // Ensure we're excluding zero values (should have at least one non-zero value below the threshold)
+          query = query.where(sql`(${waterSchemeData.consistent_zero_lpcd_for_a_week} = 0 OR ${waterSchemeData.consistent_zero_lpcd_for_a_week} IS NULL)`);
+          
+          query = query.where(
+            sql`(
+              (${waterSchemeData.lpcd_value_day7} <= ${maxLpcdValue} AND ${waterSchemeData.lpcd_value_day7} > 0) OR
+              (${waterSchemeData.lpcd_value_day6} <= ${maxLpcdValue} AND ${waterSchemeData.lpcd_value_day6} > 0) OR
+              (${waterSchemeData.lpcd_value_day5} <= ${maxLpcdValue} AND ${waterSchemeData.lpcd_value_day5} > 0) OR
+              (${waterSchemeData.lpcd_value_day4} <= ${maxLpcdValue} AND ${waterSchemeData.lpcd_value_day4} > 0) OR
+              (${waterSchemeData.lpcd_value_day3} <= ${maxLpcdValue} AND ${waterSchemeData.lpcd_value_day3} > 0) OR
+              (${waterSchemeData.lpcd_value_day2} <= ${maxLpcdValue} AND ${waterSchemeData.lpcd_value_day2} > 0) OR
+              (${waterSchemeData.lpcd_value_day1} <= ${maxLpcdValue} AND ${waterSchemeData.lpcd_value_day1} > 0)
+            )`
+          );
+          
+          console.log("Applying Below 55 LPCD filter with zero exclusions"); // Debug log
+        } else {
+          // For other maximum thresholds apply standard filter
+          query = query.where(
+            sql`(
+              ${waterSchemeData.lpcd_value_day7} <= ${maxLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day6} <= ${maxLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day5} <= ${maxLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day4} <= ${maxLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day3} <= ${maxLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day2} <= ${maxLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day1} <= ${maxLpcdValue}
+            )`
+          );
+        }
       }
       
       // Filter for schemes with zero water supply for a week
