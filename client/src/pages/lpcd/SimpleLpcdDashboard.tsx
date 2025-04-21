@@ -353,10 +353,10 @@ const SimpleLpcdDashboard: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto py-6">
+    <div className="w-full py-6">
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>Simple LPCD Dashboard</CardTitle>
+          <CardTitle>LPCD Dashboard</CardTitle>
           <CardDescription>View and analyze LPCD (Liters Per Capita per Day) metrics for water schemes</CardDescription>
         </CardHeader>
         <CardContent>
