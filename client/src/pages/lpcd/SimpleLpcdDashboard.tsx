@@ -71,6 +71,20 @@ interface WaterSchemeData {
   lpcd_value_day5?: number | string;
   lpcd_value_day6?: number | string;
   lpcd_value_day7?: number | string;
+  // Date fields
+  water_date_day1?: string;
+  water_date_day2?: string;
+  water_date_day3?: string;
+  water_date_day4?: string;
+  water_date_day5?: string;
+  water_date_day6?: string;
+  lpcd_date_day1?: string;
+  lpcd_date_day2?: string;
+  lpcd_date_day3?: string;
+  lpcd_date_day4?: string;
+  lpcd_date_day5?: string;
+  lpcd_date_day6?: string;
+  lpcd_date_day7?: string;
   consistent_zero_lpcd_for_a_week?: number | boolean;
   below_55_lpcd_count?: number;
   above_55_lpcd_count?: number;
@@ -289,6 +303,75 @@ const SimpleLpcdDashboard: React.FC = () => {
           <CardDescription>View and analyze LPCD (Liters Per Capita per Day) metrics for water schemes</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* LPCD Statistics Overview */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+            {/* Villages with LPCD > 55L */}
+            <Card className="bg-green-50 border-green-200">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-green-700">Villages with LPCD > 55L</h3>
+                  <p className="text-3xl font-bold text-green-600 mt-2">
+                    {allWaterSchemeData.filter(scheme => {
+                      const lpcdValue = getLatestLpcdValue(scheme);
+                      return lpcdValue !== null && lpcdValue > 55;
+                    }).length}
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    className="mt-2 text-green-700 hover:text-green-800 hover:bg-green-100"
+                    onClick={() => handleFilterChange('above55')}
+                  >
+                    View Villages
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Villages with LPCD between 40-55L */}
+            <Card className="bg-yellow-50 border-yellow-200">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-yellow-700">Villages with LPCD 40-55L</h3>
+                  <p className="text-3xl font-bold text-yellow-600 mt-2">
+                    {allWaterSchemeData.filter(scheme => {
+                      const lpcdValue = getLatestLpcdValue(scheme);
+                      return lpcdValue !== null && lpcdValue >= 40 && lpcdValue <= 55;
+                    }).length}
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    className="mt-2 text-yellow-700 hover:text-yellow-800 hover:bg-yellow-100"
+                    onClick={() => handleFilterChange('40to55')}
+                  >
+                    View Villages
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Villages with LPCD < 40L */}
+            <Card className="bg-red-50 border-red-200">
+              <CardContent className="pt-6">
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold text-red-700">Villages with LPCD < 40L</h3>
+                  <p className="text-3xl font-bold text-red-600 mt-2">
+                    {allWaterSchemeData.filter(scheme => {
+                      const lpcdValue = getLatestLpcdValue(scheme);
+                      return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 40;
+                    }).length}
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    className="mt-2 text-red-700 hover:text-red-800 hover:bg-red-100"
+                    onClick={() => handleFilterChange('below55')}
+                  >
+                    View Villages
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          
           {/* Filters Section */}
           <div className="flex flex-col md:flex-row gap-4 mb-6">
             <div className="flex-1">
