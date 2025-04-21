@@ -428,7 +428,7 @@ const SimpleLpcdDashboard: React.FC = () => {
                   <Button 
                     variant="ghost" 
                     className="mt-2 text-red-700 hover:text-red-800 hover:bg-red-100"
-                    onClick={() => handleFilterChange('below55')}
+                    onClick={() => handleFilterChange('below40')}
                   >
                     View Villages
                   </Button>
@@ -478,6 +478,9 @@ const SimpleLpcdDashboard: React.FC = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleFilterChange('below55')}>
                     Below 55 LPCD
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleFilterChange('below40')}>
+                    Below 40 LPCD
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleFilterChange('40to55')}>
                     Between 40-55 LPCD

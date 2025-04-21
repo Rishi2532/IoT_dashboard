@@ -1,4 +1,4 @@
-import { Switch, Route } from "wouter";
+import { Switch, Route, useLocation } from "wouter";
 import Dashboard from "./pages/dashboard";
 import Schemes from "./pages/schemes";
 import Regions from "./pages/regions";
@@ -19,6 +19,25 @@ import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
 import ChatbotComponent from "./components/chatbot/ChatbotComponent";
 
 function App() {
+  const [location] = useLocation();
+  
+  // Check if current route is login, register, forgot password, or admin page
+  // These are the pages where we don't want to show the chatbot
+  const hideChatbotRoutes = [
+    '/', 
+    '/login', 
+    '/user-login',
+    '/register', 
+    '/forgot-password', 
+    '/admin'
+  ];
+  
+  // Check if current route starts with /admin/
+  const isAdminRoute = location.startsWith('/admin/');
+  
+  // Determine if chatbot should be hidden
+  const shouldHideChatbot = hideChatbotRoutes.includes(location) || isAdminRoute;
+  
   return (
     <AuthProvider>
       <>
@@ -80,13 +99,15 @@ function App() {
           <Route component={NotFound} />
         </Switch>
         
-        {/* JJM Assistant Chatbot (available on all pages) */}
-        <FilterContextProvider 
-          setSelectedRegion={() => {}} 
-          setStatusFilter={() => {}}
-        >
-          <ChatbotComponent />
-        </FilterContextProvider>
+        {/* JJM Assistant Chatbot (conditionally rendered based on route) */}
+        {!shouldHideChatbot && (
+          <FilterContextProvider 
+            setSelectedRegion={() => {}} 
+            setStatusFilter={() => {}}
+          >
+            <ChatbotComponent />
+          </FilterContextProvider>
+        )}
       </>
     </AuthProvider>
   );
