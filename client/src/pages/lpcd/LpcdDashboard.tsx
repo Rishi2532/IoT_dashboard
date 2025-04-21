@@ -163,15 +163,19 @@ const LpcdDashboard: React.FC = () => {
     // Set specific filters based on selection
     if (range === 'above55') {
       newFilters.minLpcd = '55';
+      // The server will handle ensuring non-zero values
     } else if (range === 'below55') {
       newFilters.maxLpcd = '55';
       // Only include non-zero values for below55
-      newFilters.minLpcd = '0.1'; // Ensure we exclude zero values
+      newFilters.minLpcd = '0.1'; // Ensure we exclude zero values 
     } else if (range === '40to55') {
       newFilters.minLpcd = '40';
       newFilters.maxLpcd = '55';
     } else if (range === 'zerosupply') {
       newFilters.zeroSupplyForWeek = true;
+      // Clear other filters when selecting zero supply
+      newFilters.minLpcd = '';
+      newFilters.maxLpcd = '';
     }
     
     setFilters(newFilters);

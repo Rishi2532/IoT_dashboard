@@ -885,13 +885,55 @@ export class PostgresStorage implements IStorage {
       
       // Apply LPCD filters if provided
       if (filter.minLpcd !== undefined) {
-        // Get latest lpcd value (day1 is most recent)
-        query = query.where(sql`${waterSchemeData.lpcd_value_day1} >= ${filter.minLpcd}`);
+        // Apply minimum LPCD filter
+        // Make sure to use the most recent day with data (try day7, then day6, etc.)
+        const minLpcdValue = parseFloat(filter.minLpcd.toString());
+        
+        // Important: When filtering for values above 55, also ensure values are not zero
+        if (minLpcdValue >= 55) {
+          // For threshold like 55, ensure we get non-zero values
+          query = query.where(
+            sql`(
+              (${waterSchemeData.lpcd_value_day7} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day7} > 0) OR
+              (${waterSchemeData.lpcd_value_day6} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day6} > 0) OR
+              (${waterSchemeData.lpcd_value_day5} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day5} > 0) OR
+              (${waterSchemeData.lpcd_value_day4} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day4} > 0) OR
+              (${waterSchemeData.lpcd_value_day3} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day3} > 0) OR
+              (${waterSchemeData.lpcd_value_day2} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day2} > 0) OR
+              (${waterSchemeData.lpcd_value_day1} >= ${minLpcdValue} AND ${waterSchemeData.lpcd_value_day1} > 0)
+            )`
+          );
+        } else {
+          // For other minimum thresholds
+          query = query.where(
+            sql`(
+              ${waterSchemeData.lpcd_value_day7} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day6} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day5} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day4} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day3} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day2} >= ${minLpcdValue} OR
+              ${waterSchemeData.lpcd_value_day1} >= ${minLpcdValue}
+            )`
+          );
+        }
       }
       
       if (filter.maxLpcd !== undefined) {
-        // Get latest lpcd value (day1 is most recent)
-        query = query.where(sql`${waterSchemeData.lpcd_value_day1} <= ${filter.maxLpcd}`);
+        // Apply maximum LPCD filter (for any day)
+        const maxLpcdValue = parseFloat(filter.maxLpcd.toString());
+        
+        query = query.where(
+          sql`(
+            ${waterSchemeData.lpcd_value_day7} <= ${maxLpcdValue} OR
+            ${waterSchemeData.lpcd_value_day6} <= ${maxLpcdValue} OR
+            ${waterSchemeData.lpcd_value_day5} <= ${maxLpcdValue} OR
+            ${waterSchemeData.lpcd_value_day4} <= ${maxLpcdValue} OR
+            ${waterSchemeData.lpcd_value_day3} <= ${maxLpcdValue} OR
+            ${waterSchemeData.lpcd_value_day2} <= ${maxLpcdValue} OR
+            ${waterSchemeData.lpcd_value_day1} <= ${maxLpcdValue}
+          )`
+        );
       }
       
       // Filter for schemes with zero water supply for a week
