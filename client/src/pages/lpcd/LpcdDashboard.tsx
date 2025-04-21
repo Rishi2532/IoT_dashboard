@@ -184,7 +184,7 @@ const LpcdDashboard: React.FC = () => {
   
   // Get status badge for LPCD value
   const getLpcdStatusBadge = (lpcdValue?: number | string | null) => {
-    if (lpcdValue === undefined || lpcdValue === null || isNaN(Number(lpcdValue))) 
+    if (lpcdValue === undefined || lpcdValue === null || lpcdValue === '' || isNaN(Number(lpcdValue))) 
       return <Badge variant="outline">No data</Badge>;
     
     const numValue = Number(lpcdValue);
@@ -193,8 +193,10 @@ const LpcdDashboard: React.FC = () => {
       return <Badge className="bg-green-500">Good ({'>'}55L)</Badge>;
     } else if (numValue >= 40) {
       return <Badge className="bg-yellow-500">Average (40-55L)</Badge>;
-    } else {
+    } else if (numValue > 0) {
       return <Badge className="bg-red-500">Low ({'<'}40L)</Badge>;
+    } else {
+      return <Badge className="bg-gray-500">Zero Supply</Badge>;
     }
   };
   
@@ -335,12 +337,12 @@ const LpcdDashboard: React.FC = () => {
                       <TableCell>{scheme.scheme_name || 'N/A'}</TableCell>
                       <TableCell>{scheme.village_name || 'N/A'}</TableCell>
                       <TableCell className="text-right">
-                        {scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined 
+                        {scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined && scheme.water_value_day6 !== '' 
                           ? parseFloat(String(scheme.water_value_day6)).toFixed(1) 
                           : 'N/A'}
                       </TableCell>
                       <TableCell className="text-right">
-                        {scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined 
+                        {scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined && scheme.lpcd_value_day7 !== '' 
                           ? parseFloat(String(scheme.lpcd_value_day7)).toFixed(1) 
                           : 'N/A'}
                       </TableCell>
@@ -388,32 +390,32 @@ const LpcdDashboard: React.FC = () => {
                                       <TableRow className="hover:bg-blue-50">
                                         <TableCell className="font-medium text-blue-800">Water Consumption</TableCell>
                                         <TableCell>
-                                          {scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined 
+                                          {scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined && scheme.water_value_day1 !== '' 
                                             ? parseFloat(String(scheme.water_value_day1)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.water_value_day2 !== null && scheme.water_value_day2 !== undefined 
+                                          {scheme.water_value_day2 !== null && scheme.water_value_day2 !== undefined && scheme.water_value_day2 !== '' 
                                             ? parseFloat(String(scheme.water_value_day2)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.water_value_day3 !== null && scheme.water_value_day3 !== undefined 
+                                          {scheme.water_value_day3 !== null && scheme.water_value_day3 !== undefined && scheme.water_value_day3 !== '' 
                                             ? parseFloat(String(scheme.water_value_day3)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.water_value_day4 !== null && scheme.water_value_day4 !== undefined 
+                                          {scheme.water_value_day4 !== null && scheme.water_value_day4 !== undefined && scheme.water_value_day4 !== '' 
                                             ? parseFloat(String(scheme.water_value_day4)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.water_value_day5 !== null && scheme.water_value_day5 !== undefined 
+                                          {scheme.water_value_day5 !== null && scheme.water_value_day5 !== undefined && scheme.water_value_day5 !== '' 
                                             ? parseFloat(String(scheme.water_value_day5)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined 
+                                          {scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined && scheme.water_value_day6 !== '' 
                                             ? parseFloat(String(scheme.water_value_day6)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
@@ -422,37 +424,37 @@ const LpcdDashboard: React.FC = () => {
                                       <TableRow className="hover:bg-blue-50">
                                         <TableCell className="font-medium text-blue-800">LPCD</TableCell>
                                         <TableCell>
-                                          {scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined 
+                                          {scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined && scheme.lpcd_value_day1 !== '' 
                                             ? parseFloat(String(scheme.lpcd_value_day1)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.lpcd_value_day2 !== null && scheme.lpcd_value_day2 !== undefined 
+                                          {scheme.lpcd_value_day2 !== null && scheme.lpcd_value_day2 !== undefined && scheme.lpcd_value_day2 !== '' 
                                             ? parseFloat(String(scheme.lpcd_value_day2)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined 
+                                          {scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined && scheme.lpcd_value_day3 !== '' 
                                             ? parseFloat(String(scheme.lpcd_value_day3)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.lpcd_value_day4 !== null && scheme.lpcd_value_day4 !== undefined 
+                                          {scheme.lpcd_value_day4 !== null && scheme.lpcd_value_day4 !== undefined && scheme.lpcd_value_day4 !== '' 
                                             ? parseFloat(String(scheme.lpcd_value_day4)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.lpcd_value_day5 !== null && scheme.lpcd_value_day5 !== undefined 
+                                          {scheme.lpcd_value_day5 !== null && scheme.lpcd_value_day5 !== undefined && scheme.lpcd_value_day5 !== '' 
                                             ? parseFloat(String(scheme.lpcd_value_day5)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.lpcd_value_day6 !== null && scheme.lpcd_value_day6 !== undefined 
+                                          {scheme.lpcd_value_day6 !== null && scheme.lpcd_value_day6 !== undefined && scheme.lpcd_value_day6 !== '' 
                                             ? parseFloat(String(scheme.lpcd_value_day6)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
                                         <TableCell>
-                                          {scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined 
+                                          {scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined && scheme.lpcd_value_day7 !== '' 
                                             ? parseFloat(String(scheme.lpcd_value_day7)).toFixed(1) 
                                             : 'N/A'}
                                         </TableCell>
