@@ -68,12 +68,14 @@ router.get('/', async (req, res) => {
       }
       
       if (minLpcd) {
-        conditions.push('lpcd_value_day1 >= $' + (queryParams.length + 1));
+        // When setting a minimum LPCD, exclude zero/null values and ensure it's greater than the min value
+        conditions.push('(lpcd_value_day1 > 0 AND lpcd_value_day1 >= $' + (queryParams.length + 1) + ')');
         queryParams.push(Number(minLpcd));
       }
       
       if (maxLpcd) {
-        conditions.push('lpcd_value_day1 <= $' + (queryParams.length + 1));
+        // When setting a maximum, include only values less than or equal to max but greater than 0
+        conditions.push('(lpcd_value_day1 > 0 AND lpcd_value_day1 <= $' + (queryParams.length + 1) + ')');
         queryParams.push(Number(maxLpcd));
       }
       

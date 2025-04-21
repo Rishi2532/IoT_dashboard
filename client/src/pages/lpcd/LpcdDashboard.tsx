@@ -152,15 +152,29 @@ const LpcdDashboard: React.FC = () => {
   
   // LPCD range selection
   const handleLpcdRangeSelect = (range: string) => {
+    // Reset all filters first
+    let newFilters = {
+      ...filters,
+      minLpcd: '',
+      maxLpcd: '',
+      zeroSupplyForWeek: false
+    };
+    
+    // Set specific filters based on selection
     if (range === 'above55') {
-      setFilters(prev => ({ ...prev, minLpcd: '55', maxLpcd: '' }));
+      newFilters.minLpcd = '55';
     } else if (range === 'below55') {
-      setFilters(prev => ({ ...prev, minLpcd: '', maxLpcd: '55' }));
+      newFilters.maxLpcd = '55';
+      // Only include non-zero values for below55
+      newFilters.minLpcd = '0.1'; // Ensure we exclude zero values
     } else if (range === '40to55') {
-      setFilters(prev => ({ ...prev, minLpcd: '40', maxLpcd: '55' }));
-    } else {
-      setFilters(prev => ({ ...prev, minLpcd: '', maxLpcd: '' }));
+      newFilters.minLpcd = '40';
+      newFilters.maxLpcd = '55';
+    } else if (range === 'zerosupply') {
+      newFilters.zeroSupplyForWeek = true;
     }
+    
+    setFilters(newFilters);
     setPage(1);
     
     // Refetch data with new filters
@@ -269,19 +283,12 @@ const LpcdDashboard: React.FC = () => {
                   <DropdownMenuItem onClick={() => handleLpcdRangeSelect('40to55')}>
                     Between 40-55 LPCD
                   </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleLpcdRangeSelect('zerosupply')}>
+                    Zero supply for a week
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              
-              <div className="flex items-center gap-2">
-                <Checkbox 
-                  id="zeroSupply"
-                  checked={filters.zeroSupplyForWeek}
-                  onCheckedChange={(checked) => handleFilterChange('zeroSupplyForWeek', !!checked)}
-                />
-                <label htmlFor="zeroSupply" className="text-sm">
-                  Zero supply for a week
-                </label>
-              </div>
             </div>
             
             <div className="flex gap-2">
