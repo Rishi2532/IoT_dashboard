@@ -64,6 +64,8 @@ interface WaterSchemeData {
   consistent_zero_lpcd_for_a_week?: number | boolean;
   below_55_lpcd_count?: number;
   above_55_lpcd_count?: number;
+  // Extended property for filtering
+  latestLpcdValue?: number | null;
 }
 
 // Define interface for region data
@@ -122,7 +124,7 @@ const LpcdDashboardFixed: React.FC = () => {
     });
   };
   
-  // Apply different filter types to the data
+  // Apply different filter types to the data - SUPER SIMPLE APPROACH
   const filteredData = useMemo(() => {
     console.log('Current filter:', currentFilter);
     let result = [...allWaterSchemeData];
@@ -132,54 +134,40 @@ const LpcdDashboardFixed: React.FC = () => {
       result = result.filter(scheme => scheme.region === selectedRegion);
     }
     
-    // Apply LPCD filters
+    // Get the latest LPCD value for filtering
+    result = result.map(scheme => {
+      // Calculate the latest LPCD value for display
+      const latestLpcd = getLatestLpcdValue(scheme);
+      return { ...scheme, latestLpcdValue: latestLpcd };
+    });
+    
+    // Apply LPCD filters based ONLY on the latest LPCD value
     switch (currentFilter) {
       case 'above55':
-        // Include only schemes with at least one day above 55 LPCD and not zero-supply
+        // Super simple: only include schemes with latest LPCD value >= 55
         result = result.filter(scheme => {
-          // First exclude zero-supply villages
-          if (scheme.consistent_zero_lpcd_for_a_week === 1) {
-            return false;
-          }
-          
-          // Then check if any LPCD value is >= 55
-          const lpcdValues = extractLpcdValues(scheme);
-          return lpcdValues.some(val => val >= 55);
+          return scheme.latestLpcdValue !== null && scheme.latestLpcdValue >= 55;
         });
         break;
         
       case 'below55':
-        // Include only schemes with at least one day below 55 LPCD and not zero-supply
+        // Super simple: only include schemes with latest LPCD value < 55 and > 0
         result = result.filter(scheme => {
-          // First exclude zero-supply villages
-          if (scheme.consistent_zero_lpcd_for_a_week === 1) {
-            return false;
-          }
-          
-          // Then check if any LPCD value is > 0 and < 55
-          const lpcdValues = extractLpcdValues(scheme);
-          return lpcdValues.some(val => val > 0 && val < 55);
+          return scheme.latestLpcdValue !== null && scheme.latestLpcdValue > 0 && scheme.latestLpcdValue < 55;
         });
         break;
         
       case '40to55':
-        // Include only schemes with at least one day between 40-55 LPCD and not zero-supply
+        // Super simple: only include schemes with latest LPCD value between 40-55
         result = result.filter(scheme => {
-          // First exclude zero-supply villages
-          if (scheme.consistent_zero_lpcd_for_a_week === 1) {
-            return false;
-          }
-          
-          // Then check if any LPCD value is between 40 and 55
-          const lpcdValues = extractLpcdValues(scheme);
-          return lpcdValues.some(val => val >= 40 && val <= 55);
+          return scheme.latestLpcdValue !== null && scheme.latestLpcdValue >= 40 && scheme.latestLpcdValue <= 55;
         });
         break;
         
       case 'zerosupply':
-        // Include only schemes with consistent zero supply for a week
+        // Super simple: only include schemes with latest LPCD value = 0
         result = result.filter(scheme => {
-          return scheme.consistent_zero_lpcd_for_a_week === 1;
+          return scheme.latestLpcdValue === 0;
         });
         break;
         
