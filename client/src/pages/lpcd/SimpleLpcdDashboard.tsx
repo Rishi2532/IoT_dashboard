@@ -23,14 +23,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import {
   Table,
   TableBody,
   TableCaption,
@@ -45,6 +37,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Filter, MoreHorizontal, ChevronDown } from 'lucide-react';
+
+// Import the Village Detail Dialog component
+import VillageDetailDialog from './VillageDetailDialog';
 
 // Define interface for water scheme data
 interface WaterSchemeData {
@@ -486,144 +481,13 @@ const SimpleLpcdDashboard: React.FC = () => {
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
                               <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                                    View Details
-                                  </DropdownMenuItem>
-                                </DialogTrigger>
-                                <DialogContent className="max-w-3xl">
-                                  <DialogHeader className="bg-blue-100 p-4 rounded-t-lg">
-                                    <DialogTitle className="text-blue-800">
-                                      {scheme.village_name} - {scheme.scheme_name}
-                                    </DialogTitle>
-                                    <DialogDescription className="text-blue-700">
-                                      Scheme ID: {scheme.scheme_id.split('-')[0]}
-                                    </DialogDescription>
-                                  </DialogHeader>
-                                  
-                                  <div className="p-4">
-                                    <h3 className="text-lg font-semibold mb-2">Water Scheme Details</h3>
-                                    
-                                    <div className="grid grid-cols-2 gap-4 mb-4">
-                                      <div>
-                                        <p className="text-sm text-gray-500">Region</p>
-                                        <p className="font-medium">{scheme.region || 'N/A'}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-gray-500">Circle</p>
-                                        <p className="font-medium">{scheme.circle || 'N/A'}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-gray-500">Division</p>
-                                        <p className="font-medium">{scheme.division || 'N/A'}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-gray-500">Sub Division</p>
-                                        <p className="font-medium">{scheme.sub_division || 'N/A'}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-gray-500">Block</p>
-                                        <p className="font-medium">{scheme.block || 'N/A'}</p>
-                                      </div>
-                                      <div>
-                                        <p className="text-sm text-gray-500">Population</p>
-                                        <p className="font-medium">{scheme.population || 'N/A'}</p>
-                                      </div>
-                                    </div>
-                                    
-                                    <Separator className="my-4" />
-                                    
-                                    <h3 className="text-lg font-semibold mb-2">LPCD Statistics</h3>
-                                    
-                                    {(() => {
-                                      const { daysAbove55, daysBelow55, hasConsistentZeroSupply } = calculateLpcdCounts(scheme);
-                                      
-                                      return (
-                                        <div className="grid grid-cols-2 gap-4 mb-4">
-                                          <div>
-                                            <p className="text-sm text-gray-500">Days above 55 LPCD</p>
-                                            <p className="font-medium">{daysAbove55}</p>
-                                          </div>
-                                          <div>
-                                            <p className="text-sm text-gray-500">Days below 55 LPCD</p>
-                                            <p className="font-medium">{daysBelow55}</p>
-                                          </div>
-                                          <div>
-                                            <p className="text-sm text-gray-500">Zero supply for a week</p>
-                                            <p className="font-medium">{hasConsistentZeroSupply ? 'Yes' : 'No'}</p>
-                                          </div>
-                                          <div>
-                                            <p className="text-sm text-gray-500">Current Status</p>
-                                            <div className="font-medium">{getLpcdStatusBadge(latestLpcd)}</div>
-                                          </div>
-                                        </div>
-                                      );
-                                    })()}
-                                    
-                                    <Separator className="my-4" />
-                                    
-                                    <h3 className="text-lg font-semibold mb-2">LPCD Values & Water Consumption (Last 7 Days)</h3>
-                                    
-                                    <div className="overflow-x-auto">
-                                      <Table>
-                                        <TableHeader>
-                                          <TableRow>
-                                            <TableHead>Date</TableHead>
-                                            <TableHead className="text-right">Water Consumption</TableHead>
-                                            <TableHead className="text-right">LPCD Value</TableHead>
-                                            <TableHead>Status</TableHead>
-                                          </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                          {[1, 2, 3, 4, 5, 6, 7].map((day) => {
-                                            const lpcdValue = scheme[`lpcd_value_day${day}` as keyof WaterSchemeData];
-                                            const waterValue = day <= 6 ? scheme[`water_value_day${day}` as keyof WaterSchemeData] : null;
-                                            const lpcdDate = scheme[`lpcd_date_day${day}` as keyof WaterSchemeData];
-                                            const waterDate = day <= 6 ? scheme[`water_date_day${day}` as keyof WaterSchemeData] : null;
-                                            
-                                            // Format date if it exists
-                                            const formattedDate = lpcdDate 
-                                              ? new Date(lpcdDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                                              : (waterDate 
-                                                ? new Date(waterDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-                                                : `Day ${day}`);
-                                            
-                                            const numericLpcdValue = lpcdValue !== undefined && lpcdValue !== null && lpcdValue !== '' && !isNaN(Number(lpcdValue)) 
-                                              ? Number(lpcdValue) 
-                                              : null;
-                                              
-                                            const numericWaterValue = waterValue !== undefined && waterValue !== null && waterValue !== '' && !isNaN(Number(waterValue)) 
-                                              ? Number(waterValue) 
-                                              : null;
-                                            
-                                            return (
-                                              <TableRow key={`lpcd-day-${day}`}>
-                                                <TableCell>{formattedDate}</TableCell>
-                                                <TableCell className="text-right">
-                                                  {numericWaterValue !== null ? numericWaterValue : (
-                                                    <Badge variant="outline" className="bg-gray-100">
-                                                      <span className="text-gray-600 text-sm">No data</span>
-                                                    </Badge>
-                                                  )}
-                                                </TableCell>
-                                                <TableCell className="text-right">
-                                                  {numericLpcdValue !== null ? numericLpcdValue : (
-                                                    <Badge variant="outline" className="bg-gray-100">
-                                                      <span className="text-gray-600 text-sm">No data</span>
-                                                    </Badge>
-                                                  )}
-                                                </TableCell>
-                                                <TableCell>{getLpcdStatusBadge(numericLpcdValue)}</TableCell>
-                                              </TableRow>
-                                            );
-                                          })}
-                                        </TableBody>
-                                      </Table>
-                                    </div>
-                                  </div>
-                                </DialogContent>
-                              </Dialog>
+                              <VillageDetailDialog 
+                                scheme={scheme}
+                                latestLpcd={latestLpcd}
+                                getLatestLpcdValue={getLatestLpcdValue}
+                                calculateLpcdCounts={calculateLpcdCounts}
+                                getLpcdStatusBadge={getLpcdStatusBadge}
+                              />
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
