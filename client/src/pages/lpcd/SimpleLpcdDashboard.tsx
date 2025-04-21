@@ -1,19 +1,19 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
-  Pagination,
-  PaginationContent,
-  PaginationEllipsis,
-  PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
-} from '@/components/ui/pagination';
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,11 +30,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Table,
+  TableBody,
+  TableCaption,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Filter, MoreHorizontal, ChevronDown, Search } from 'lucide-react';
+import { Filter, MoreHorizontal, ChevronDown } from 'lucide-react';
 
 // Define interface for water scheme data
 interface WaterSchemeData {
@@ -75,7 +85,7 @@ interface RegionData {
 // Define filter types
 type LpcdFilterType = 'all' | 'above55' | 'below55' | '40to55' | 'zerosupply';
 
-const LpcdDashboardFixed: React.FC = () => {
+const SimpleLpcdDashboard: React.FC = () => {
   const { toast } = useToast();
   
   // Filter state
@@ -90,21 +100,19 @@ const LpcdDashboardFixed: React.FC = () => {
   const { 
     data: allWaterSchemeData = [], 
     isLoading: isLoadingSchemes, 
-    error: schemesError,
-    refetch
+    error: schemesError
   } = useQuery<WaterSchemeData[]>({
     queryKey: ['/api/water-scheme-data'],
   });
   
   // Fetch region data
   const { 
-    data: regionsData = [], 
-    isLoading: isLoadingRegions 
+    data: regionsData = []
   } = useQuery<RegionData[]>({
     queryKey: ['/api/regions'],
   });
   
-  // Get latest LPCD value - define this function first
+  // Helper function to get the latest LPCD value
   const getLatestLpcdValue = (scheme: WaterSchemeData): number | null => {
     // Try to get the latest non-null value
     for (const day of [7, 6, 5, 4, 3, 2, 1]) {
@@ -116,25 +124,19 @@ const LpcdDashboardFixed: React.FC = () => {
     return null;
   };
   
-  // Extract LPCD values function - handles all types of inputs
-  const extractLpcdValues = (scheme: WaterSchemeData): number[] => {
-    return [
-      scheme.lpcd_value_day1,
-      scheme.lpcd_value_day2,
-      scheme.lpcd_value_day3,
-      scheme.lpcd_value_day4,
-      scheme.lpcd_value_day5,
-      scheme.lpcd_value_day6,
-      scheme.lpcd_value_day7
-    ].map(val => {
-      if (val === undefined || val === null || val === '' || isNaN(Number(val))) {
-        return 0;
+  // Helper function to get the latest water value
+  const getLatestWaterValue = (scheme: WaterSchemeData): number | null => {
+    // Try to get the latest non-null value
+    for (const day of [6, 5, 4, 3, 2, 1]) {
+      const value = scheme[`water_value_day${day}` as keyof WaterSchemeData];
+      if (value !== undefined && value !== null && value !== '' && !isNaN(Number(value))) {
+        return Number(value);
       }
-      return Number(val);
-    });
+    }
+    return null;
   };
   
-  // Apply different filter types to the data - SUPER SIMPLE APPROACH (without latestLpcdValue property)
+  // Apply different filter types to the data
   const filteredData = useMemo(() => {
     console.log('Current filter:', currentFilter);
     let result = [...allWaterSchemeData];
@@ -144,10 +146,10 @@ const LpcdDashboardFixed: React.FC = () => {
       result = result.filter(scheme => scheme.region === selectedRegion);
     }
     
-    // Apply LPCD filters based directly on the getLatestLpcdValue function
+    // Apply LPCD filters
     switch (currentFilter) {
       case 'above55':
-        // Super simple: only include schemes with latest LPCD value >= 55
+        // Only include schemes with latest LPCD value >= 55
         result = result.filter(scheme => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue >= 55;
@@ -155,7 +157,7 @@ const LpcdDashboardFixed: React.FC = () => {
         break;
         
       case 'below55':
-        // Super simple: only include schemes with latest LPCD value < 55 and > 0
+        // Only include schemes with latest LPCD value < 55 and > 0
         result = result.filter(scheme => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 55;
@@ -163,7 +165,7 @@ const LpcdDashboardFixed: React.FC = () => {
         break;
         
       case '40to55':
-        // Super simple: only include schemes with latest LPCD value between 40-55
+        // Only include schemes with latest LPCD value between 40-55
         result = result.filter(scheme => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue >= 40 && lpcdValue <= 55;
@@ -171,7 +173,7 @@ const LpcdDashboardFixed: React.FC = () => {
         break;
         
       case 'zerosupply':
-        // Super simple: only include schemes with latest LPCD value = 0
+        // Only include schemes with latest LPCD value = 0
         result = result.filter(scheme => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue === 0;
@@ -215,6 +217,24 @@ const LpcdDashboardFixed: React.FC = () => {
     setCurrentFilter(filter);
   };
   
+  // Extract LPCD values function
+  const extractLpcdValues = (scheme: WaterSchemeData): number[] => {
+    return [
+      scheme.lpcd_value_day1,
+      scheme.lpcd_value_day2,
+      scheme.lpcd_value_day3,
+      scheme.lpcd_value_day4,
+      scheme.lpcd_value_day5,
+      scheme.lpcd_value_day6,
+      scheme.lpcd_value_day7
+    ].map(val => {
+      if (val === undefined || val === null || val === '' || isNaN(Number(val))) {
+        return 0;
+      }
+      return Number(val);
+    });
+  };
+  
   // Calculate LPCD counts for detail view
   const calculateLpcdCounts = (scheme: WaterSchemeData) => {
     const lpcdValues = extractLpcdValues(scheme);
@@ -232,20 +252,6 @@ const LpcdDashboardFixed: React.FC = () => {
       daysBelow55,
       hasConsistentZeroSupply
     };
-  };
-  
-  // This is now defined at the beginning of the component
-  
-  // Get latest water value
-  const getLatestWaterValue = (scheme: WaterSchemeData): number | null => {
-    // Try to get the latest non-null value
-    for (const day of [6, 5, 4, 3, 2, 1]) {
-      const value = scheme[`water_value_day${day}` as keyof WaterSchemeData];
-      if (value !== undefined && value !== null && value !== '' && !isNaN(Number(value))) {
-        return Number(value);
-      }
-    }
-    return null;
   };
   
   // Get status badge for LPCD value
@@ -279,7 +285,7 @@ const LpcdDashboardFixed: React.FC = () => {
     <div className="container mx-auto py-6">
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>LPCD Dashboard (Fixed)</CardTitle>
+          <CardTitle>Simple LPCD Dashboard</CardTitle>
           <CardDescription>View and analyze LPCD (Liters Per Capita per Day) metrics for water schemes</CardDescription>
         </CardHeader>
         <CardContent>
@@ -465,7 +471,7 @@ const LpcdDashboardFixed: React.FC = () => {
                                             <p className="font-medium">{hasConsistentZeroSupply ? 'Yes' : 'No'}</p>
                                           </div>
                                           <div>
-                                            <p className="text-sm text-gray-500">Status</p>
+                                            <p className="text-sm text-gray-500">Current Status</p>
                                             <div className="font-medium">{getLpcdStatusBadge(latestLpcd)}</div>
                                           </div>
                                         </div>
@@ -474,40 +480,40 @@ const LpcdDashboardFixed: React.FC = () => {
                                     
                                     <Separator className="my-4" />
                                     
-                                    <h3 className="text-lg font-semibold mb-2">Recent LPCD Values</h3>
+                                    <h3 className="text-lg font-semibold mb-2">LPCD Values (Last 7 Days)</h3>
                                     
-                                    <div className="grid grid-cols-7 gap-2 mb-4">
-                                      {[1, 2, 3, 4, 5, 6, 7].map((day) => {
-                                        const value = scheme[`lpcd_value_day${day}` as keyof WaterSchemeData];
-                                        const numValue = value !== undefined && value !== null && value !== '' ? Number(value) : null;
-                                        
-                                        return (
-                                          <div key={`lpcd-day-${day}`} className="bg-gray-50 p-2 rounded text-center">
-                                            <p className="text-xs text-gray-500">Day {day}</p>
-                                            <p className="font-medium">
-                                              {numValue !== null ? numValue : '-'}
-                                            </p>
-                                          </div>
-                                        );
-                                      })}
-                                    </div>
-                                    
-                                    <h3 className="text-lg font-semibold mb-2">Recent Water Consumption Values (kL)</h3>
-                                    
-                                    <div className="grid grid-cols-6 gap-2">
-                                      {[1, 2, 3, 4, 5, 6].map((day) => {
-                                        const value = scheme[`water_value_day${day}` as keyof WaterSchemeData];
-                                        const numValue = value !== undefined && value !== null && value !== '' ? Number(value) : null;
-                                        
-                                        return (
-                                          <div key={`water-day-${day}`} className="bg-gray-50 p-2 rounded text-center">
-                                            <p className="text-xs text-gray-500">Day {day}</p>
-                                            <p className="font-medium">
-                                              {numValue !== null ? numValue : '-'}
-                                            </p>
-                                          </div>
-                                        );
-                                      })}
+                                    <div className="overflow-x-auto">
+                                      <Table>
+                                        <TableHeader>
+                                          <TableRow>
+                                            <TableHead>Day</TableHead>
+                                            <TableHead className="text-right">LPCD Value</TableHead>
+                                            <TableHead>Status</TableHead>
+                                          </TableRow>
+                                        </TableHeader>
+                                        <TableBody>
+                                          {[1, 2, 3, 4, 5, 6, 7].map((day) => {
+                                            const value = scheme[`lpcd_value_day${day}` as keyof WaterSchemeData];
+                                            const numericValue = value !== undefined && value !== null && value !== '' && !isNaN(Number(value)) 
+                                              ? Number(value) 
+                                              : null;
+                                            
+                                            return (
+                                              <TableRow key={`lpcd-day-${day}`}>
+                                                <TableCell>Day {day}</TableCell>
+                                                <TableCell className="text-right">
+                                                  {numericValue !== null ? numericValue : (
+                                                    <Badge variant="outline" className="bg-gray-100">
+                                                      <span className="text-gray-600 text-sm">No data</span>
+                                                    </Badge>
+                                                  )}
+                                                </TableCell>
+                                                <TableCell>{getLpcdStatusBadge(numericValue)}</TableCell>
+                                              </TableRow>
+                                            );
+                                          })}
+                                        </TableBody>
+                                      </Table>
                                     </div>
                                   </div>
                                 </DialogContent>
@@ -521,62 +527,30 @@ const LpcdDashboardFixed: React.FC = () => {
                 </TableBody>
               </Table>
               
-              {/* Pagination */}
+              {/* Pagination Controls */}
               {totalPages > 1 && (
-                <div className="mt-4 flex justify-center">
-                  <Pagination>
-                    <PaginationContent>
-                      <PaginationItem>
-                        <PaginationPrevious 
-                          onClick={() => setPage(p => Math.max(1, p - 1))}
-                          className={page === 1 ? 'pointer-events-none opacity-50' : ''}
-                        />
-                      </PaginationItem>
-                      
-                      {[...Array(totalPages)].map((_, i) => {
-                        const pageNum = i + 1;
-                        
-                        // Show first page, last page, and pages around current page
-                        if (
-                          pageNum === 1 || 
-                          pageNum === totalPages || 
-                          (pageNum >= page - 2 && pageNum <= page + 2)
-                        ) {
-                          return (
-                            <PaginationItem key={`page-${pageNum}`}>
-                              <PaginationLink
-                                onClick={() => setPage(pageNum)}
-                                isActive={page === pageNum}
-                              >
-                                {pageNum}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                        }
-                        
-                        // Show ellipsis for skipped pages
-                        if (
-                          (pageNum === 2 && page > 4) || 
-                          (pageNum === totalPages - 1 && page < totalPages - 3)
-                        ) {
-                          return (
-                            <PaginationItem key={`ellipsis-${pageNum}`}>
-                              <PaginationEllipsis />
-                            </PaginationItem>
-                          );
-                        }
-                        
-                        return null;
-                      })}
-                      
-                      <PaginationItem>
-                        <PaginationNext 
-                          onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                          className={page === totalPages ? 'pointer-events-none opacity-50' : ''}
-                        />
-                      </PaginationItem>
-                    </PaginationContent>
-                  </Pagination>
+                <div className="flex justify-between items-center mt-4">
+                  <div>
+                    <Button
+                      variant="outline"
+                      onClick={() => setPage(page => Math.max(1, page - 1))}
+                      disabled={page === 1}
+                    >
+                      Previous
+                    </Button>
+                  </div>
+                  <div className="text-sm">
+                    Page {page} of {totalPages}
+                  </div>
+                  <div>
+                    <Button
+                      variant="outline"
+                      onClick={() => setPage(page => Math.min(totalPages, page + 1))}
+                      disabled={page === totalPages}
+                    >
+                      Next
+                    </Button>
+                  </div>
                 </div>
               )}
             </>
@@ -587,4 +561,4 @@ const LpcdDashboardFixed: React.FC = () => {
   );
 };
 
-export default LpcdDashboardFixed;
+export default SimpleLpcdDashboard;

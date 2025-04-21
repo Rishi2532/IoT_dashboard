@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import LpcdDashboardFixed from './lpcd/LpcdDashboardFixed';
+import SimpleLpcdDashboard from './lpcd/SimpleLpcdDashboard';
 import LpcdImport from './lpcd/LpcdImport';
 import { useAuth } from '@/hooks/use-auth';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
@@ -30,7 +30,7 @@ const LpcdPage = () => {
             </TabsList>
             
             <TabsContent value="dashboard">
-              <LpcdDashboardFixed />
+              <SimpleLpcdDashboard />
             </TabsContent>
             
             {isAdmin && (
