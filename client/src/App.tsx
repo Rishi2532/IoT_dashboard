@@ -15,7 +15,8 @@ import ForgotPasswordPage from "./pages/forgot-password";
 import LpcdPage from "./pages/LpcdPage";
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
-import JjmAssistantChatbot from "./components/JjmAssistantChatbot";
+import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
+import ChatbotComponent from "./components/chatbot/ChatbotComponent";
 
 function App() {
   return (
@@ -80,7 +81,7 @@ function App() {
         </Switch>
         
         {/* JJM Assistant Chatbot (available on all pages) */}
-        <JjmAssistantChatbot />
+        <ChatbotComponent />
       </>
     </AuthProvider>
   );
