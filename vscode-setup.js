@@ -5,7 +5,10 @@
  * Run this script once before starting the application in VS Code.
  */
 
-import { Pool } from 'pg';
+// Fix for CommonJS module import
+import pkg from 'pg';
+const { Pool } = pkg;
+
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';

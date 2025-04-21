@@ -5,7 +5,10 @@
  * and checks if the necessary tables exist.
  */
 
-import { Pool } from 'pg';
+// Fix for CommonJS module import
+import pkg from 'pg';
+const { Pool } = pkg;
+
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
