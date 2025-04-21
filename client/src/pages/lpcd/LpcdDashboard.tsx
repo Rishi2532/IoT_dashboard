@@ -337,12 +337,12 @@ const LpcdDashboard: React.FC = () => {
                       <TableCell>{scheme.scheme_name || 'N/A'}</TableCell>
                       <TableCell>{scheme.village_name || 'N/A'}</TableCell>
                       <TableCell className="text-right">
-                        {scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined && scheme.water_value_day1 !== '' 
-                          ? Number(scheme.water_value_day1) 
-                          : (scheme.water_value_day2 !== null && scheme.water_value_day2 !== undefined && scheme.water_value_day2 !== '' 
-                            ? Number(scheme.water_value_day2)
-                            : (scheme.water_value_day3 !== null && scheme.water_value_day3 !== undefined && scheme.water_value_day3 !== '' 
-                              ? Number(scheme.water_value_day3)
+                        {scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined && scheme.water_value_day6 !== '' 
+                          ? parseFloat(String(scheme.water_value_day6)) 
+                          : (scheme.water_value_day5 !== null && scheme.water_value_day5 !== undefined && scheme.water_value_day5 !== '' 
+                            ? parseFloat(String(scheme.water_value_day5))
+                            : (scheme.water_value_day4 !== null && scheme.water_value_day4 !== undefined && scheme.water_value_day4 !== '' 
+                              ? parseFloat(String(scheme.water_value_day4))
                               : (
                                 <Badge variant="outline" className="bg-gray-100">
                                   <span className="text-gray-600 text-sm">No data recorded</span>
@@ -353,12 +353,12 @@ const LpcdDashboard: React.FC = () => {
                         }
                       </TableCell>
                       <TableCell className="text-right">
-                        {scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined && scheme.lpcd_value_day1 !== '' 
-                          ? Number(scheme.lpcd_value_day1) 
-                          : (scheme.lpcd_value_day2 !== null && scheme.lpcd_value_day2 !== undefined && scheme.lpcd_value_day2 !== '' 
-                            ? Number(scheme.lpcd_value_day2)
-                            : (scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined && scheme.lpcd_value_day3 !== '' 
-                              ? Number(scheme.lpcd_value_day3)
+                        {scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined && scheme.lpcd_value_day7 !== '' 
+                          ? parseFloat(String(scheme.lpcd_value_day7)) 
+                          : (scheme.lpcd_value_day6 !== null && scheme.lpcd_value_day6 !== undefined && scheme.lpcd_value_day6 !== '' 
+                            ? parseFloat(String(scheme.lpcd_value_day6))
+                            : (scheme.lpcd_value_day5 !== null && scheme.lpcd_value_day5 !== undefined && scheme.lpcd_value_day5 !== '' 
+                              ? parseFloat(String(scheme.lpcd_value_day5))
                               : (
                                 <Badge variant="outline" className="bg-gray-100">
                                   <span className="text-gray-600 text-sm">No data recorded</span>
@@ -368,7 +368,7 @@ const LpcdDashboard: React.FC = () => {
                           )
                         }
                       </TableCell>
-                      <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day1 || scheme.lpcd_value_day2 || scheme.lpcd_value_day3)}</TableCell>
+                      <TableCell>{getLpcdStatusBadge(scheme.lpcd_value_day7 || scheme.lpcd_value_day6 || scheme.lpcd_value_day5)}</TableCell>
                       <TableCell className="text-right">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
@@ -413,22 +413,22 @@ const LpcdDashboard: React.FC = () => {
                                         <TableCell className="font-medium text-blue-800">Water Consumption</TableCell>
                                         <TableCell>
                                           {scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined && scheme.water_value_day1 !== '' 
-                                            ? Number(scheme.water_value_day1) 
+                                            ? parseFloat(String(scheme.water_value_day1)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
                                           {scheme.water_value_day2 !== null && scheme.water_value_day2 !== undefined && scheme.water_value_day2 !== '' 
-                                            ? Number(scheme.water_value_day2) 
+                                            ? parseFloat(String(scheme.water_value_day2)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
                                           {scheme.water_value_day3 !== null && scheme.water_value_day3 !== undefined && scheme.water_value_day3 !== '' 
-                                            ? Number(scheme.water_value_day3) 
+                                            ? parseFloat(String(scheme.water_value_day3)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
                                           {scheme.water_value_day4 !== null && scheme.water_value_day4 !== undefined && scheme.water_value_day4 !== '' 
-                                            ? Number(scheme.water_value_day4) 
+                                            ? parseFloat(String(scheme.water_value_day4)) 
                                             : <span className="text-gray-500 text-sm">No data</span>}
                                         </TableCell>
                                         <TableCell>
