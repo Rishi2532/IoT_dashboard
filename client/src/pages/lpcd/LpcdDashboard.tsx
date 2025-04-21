@@ -86,9 +86,9 @@ const LpcdDashboard: React.FC = () => {
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   
-  // Water scheme data query
+  // Water scheme data query - Get ALL data then filter client-side
   const { 
-    data: waterSchemeData = [], 
+    data: allWaterSchemeData = [], 
     isLoading: isLoadingSchemes, 
     isError: isSchemesError, 
     error: schemesError,
@@ -96,23 +96,11 @@ const LpcdDashboard: React.FC = () => {
   } = useQuery<WaterSchemeData[]>({
     queryKey: ['/api/water-scheme-data'],
     queryFn: async () => {
-      // Build query params for filtering
+      // Only apply region filter on server-side for performance
       const params = new URLSearchParams();
       
       if (filters.region && filters.region !== 'all') {
         params.append('region', filters.region);
-      }
-      
-      if (filters.minLpcd) {
-        params.append('minLpcd', filters.minLpcd);
-      }
-      
-      if (filters.maxLpcd) {
-        params.append('maxLpcd', filters.maxLpcd);
-      }
-      
-      if (filters.zeroSupplyForWeek) {
-        params.append('zeroSupplyForWeek', 'true');
       }
       
       const queryString = params.toString();
@@ -126,6 +114,136 @@ const LpcdDashboard: React.FC = () => {
       return response.json();
     }
   });
+
+  // Apply client-side filtering for better accuracy
+  const waterSchemeData = useMemo(() => {
+    let filteredData = [...allWaterSchemeData];
+    
+    // Apply LPCD minimum filter
+    if (filters.minLpcd) {
+      const minValue = parseFloat(filters.minLpcd);
+      
+      // Special handling for Between 40-55 range (handled together with max filter)
+      if (minValue === 40 && filters.maxLpcd === '55') {
+        // This case will be handled with the maxLpcd filter - do nothing here
+      }
+      // For "Above 55 LPCD" filter: Ensure at least one day has LPCD >= 55 AND no zero supply for week
+      else if (minValue >= 55) {
+        filteredData = filteredData.filter(scheme => {
+          // First check if this is NOT a zero-supply village
+          if (scheme.consistent_zero_lpcd_for_a_week === 1) {
+            return false;
+          }
+          
+          // Then check if at least one day has LPCD value >= 55
+          const lpcdValues = [
+            scheme.lpcd_value_day1,
+            scheme.lpcd_value_day2,
+            scheme.lpcd_value_day3,
+            scheme.lpcd_value_day4,
+            scheme.lpcd_value_day5,
+            scheme.lpcd_value_day6,
+            scheme.lpcd_value_day7
+          ].map(val => Number(val) || 0);
+          
+          // Check if any value is >= 55
+          return lpcdValues.some(val => val >= minValue);
+        });
+      } else {
+        // For other min values
+        filteredData = filteredData.filter(scheme => {
+          // Exclude zero-supply villages unless specifically looking for them
+          if (scheme.consistent_zero_lpcd_for_a_week === 1 && !filters.zeroSupplyForWeek) {
+            return false;
+          }
+          
+          const lpcdValues = [
+            scheme.lpcd_value_day1,
+            scheme.lpcd_value_day2,
+            scheme.lpcd_value_day3,
+            scheme.lpcd_value_day4,
+            scheme.lpcd_value_day5,
+            scheme.lpcd_value_day6,
+            scheme.lpcd_value_day7
+          ].map(val => Number(val) || 0);
+          
+          return lpcdValues.some(val => val > 0 && val >= minValue);
+        });
+      }
+    }
+    
+    // Apply LPCD maximum filter
+    if (filters.maxLpcd) {
+      const maxValue = parseFloat(filters.maxLpcd);
+      
+      // Special case for "Between 40-55 LPCD" filter
+      if (filters.minLpcd === '40' && maxValue === 55) {
+        filteredData = filteredData.filter(scheme => {
+          // Exclude zero-supply villages
+          if (scheme.consistent_zero_lpcd_for_a_week === 1) {
+            return false;
+          }
+          
+          const lpcdValues = [
+            scheme.lpcd_value_day1,
+            scheme.lpcd_value_day2,
+            scheme.lpcd_value_day3,
+            scheme.lpcd_value_day4,
+            scheme.lpcd_value_day5,
+            scheme.lpcd_value_day6,
+            scheme.lpcd_value_day7
+          ].map(val => Number(val) || 0);
+          
+          // Must have at least one value between 40 and 55 (inclusive)
+          return lpcdValues.some(val => val >= 40 && val <= 55);
+        });
+      }
+      // For "Below 55 LPCD" filter: Exclude zero supply villages
+      else if (maxValue <= 55 && !filters.zeroSupplyForWeek) {
+        filteredData = filteredData.filter(scheme => {
+          // Exclude zero-supply villages
+          if (scheme.consistent_zero_lpcd_for_a_week === 1) {
+            return false;
+          }
+          
+          const lpcdValues = [
+            scheme.lpcd_value_day1,
+            scheme.lpcd_value_day2,
+            scheme.lpcd_value_day3,
+            scheme.lpcd_value_day4,
+            scheme.lpcd_value_day5,
+            scheme.lpcd_value_day6,
+            scheme.lpcd_value_day7
+          ].map(val => Number(val) || 0);
+          
+          // Must have at least one NON-ZERO value <= maxValue
+          return lpcdValues.some(val => val > 0 && val <= maxValue);
+        });
+      } else {
+        // For other max values
+        filteredData = filteredData.filter(scheme => {
+          const lpcdValues = [
+            scheme.lpcd_value_day1,
+            scheme.lpcd_value_day2,
+            scheme.lpcd_value_day3,
+            scheme.lpcd_value_day4,
+            scheme.lpcd_value_day5,
+            scheme.lpcd_value_day6,
+            scheme.lpcd_value_day7
+          ].map(val => Number(val) || 0);
+          
+          return lpcdValues.some(val => val <= maxValue);
+        });
+      }
+    }
+    
+    // Apply zero supply filter
+    if (filters.zeroSupplyForWeek) {
+      filteredData = filteredData.filter(scheme => scheme.consistent_zero_lpcd_for_a_week === 1);
+    }
+    
+    return filteredData;
+  }, [allWaterSchemeData, filters]);
   
   // Regions data query
   const { 
@@ -150,7 +268,7 @@ const LpcdDashboard: React.FC = () => {
     }, 0);
   };
   
-  // LPCD range selection
+  // LPCD range selection with clear labels
   const handleLpcdRangeSelect = (range: string) => {
     // Reset all filters first
     let newFilters = {
@@ -163,11 +281,10 @@ const LpcdDashboard: React.FC = () => {
     // Set specific filters based on selection
     if (range === 'above55') {
       newFilters.minLpcd = '55';
-      // The server will handle ensuring non-zero values
+      // Client-side filtering will handle excluding zero values
     } else if (range === 'below55') {
       newFilters.maxLpcd = '55';
-      // Only include non-zero values for below55
-      newFilters.minLpcd = '0.1'; // Ensure we exclude zero values 
+      newFilters.minLpcd = '0.1'; // Ensure we exclude zero values
     } else if (range === '40to55') {
       newFilters.minLpcd = '40';
       newFilters.maxLpcd = '55';
