@@ -214,6 +214,39 @@ const LpcdDashboard: React.FC = () => {
     }
   };
   
+  // Calculate correct LPCD counts for display in detail view
+  const calculateLpcdCounts = (scheme: WaterSchemeData) => {
+    // Extract and convert all LPCD values
+    const lpcdValues = [
+      scheme.lpcd_value_day1,
+      scheme.lpcd_value_day2,
+      scheme.lpcd_value_day3,
+      scheme.lpcd_value_day4,
+      scheme.lpcd_value_day5,
+      scheme.lpcd_value_day6,
+      scheme.lpcd_value_day7
+    ].map(val => {
+      if (val === undefined || val === null || val === '' || isNaN(Number(val))) {
+        return null;
+      }
+      return Number(val);
+    }).filter(val => val !== null) as number[];
+    
+    // Count days above and below 55 LPCD, exclude zero values
+    const daysAbove55 = lpcdValues.filter(val => val > 0 && val >= 55).length;
+    const daysBelow55 = lpcdValues.filter(val => val > 0 && val < 55).length;
+    
+    // Check for consistent zero supply
+    const zeroCount = lpcdValues.filter(val => val === 0).length;
+    const hasConsistentZeroSupply = zeroCount === 7;
+    
+    return {
+      daysAbove55,
+      daysBelow55,
+      hasConsistentZeroSupply
+    };
+  };
+  
   // Refresh data when filters change
   useEffect(() => {
     refetch();
@@ -508,17 +541,26 @@ const LpcdDashboard: React.FC = () => {
                                       <p className="mb-2"><strong>Population:</strong> {scheme.population || 'N/A'}</p>
                                     </div>
                                     <div className="text-blue-800">
-                                      <p className="mb-2">
-                                        <strong>Days above 55 LPCD:</strong> <span className="text-green-600 font-semibold">{scheme.above_55_lpcd_count || 0}</span>
-                                      </p>
-                                      <p className="mb-2">
-                                        <strong>Days below 55 LPCD:</strong> <span className="text-red-600 font-semibold">{scheme.below_55_lpcd_count || 0}</span>
-                                      </p>
-                                      <p className="mb-2">
-                                        <strong>Zero supply for a week:</strong> <span className={scheme.consistent_zero_lpcd_for_a_week ? "text-red-600 font-semibold" : "text-green-600 font-semibold"}>
-                                          {scheme.consistent_zero_lpcd_for_a_week ? 'Yes' : 'No'}
-                                        </span>
-                                      </p>
+                                      {(() => {
+                                        // Calculate accurate counts on-the-fly
+                                        const { daysAbove55, daysBelow55, hasConsistentZeroSupply } = calculateLpcdCounts(scheme);
+                                        
+                                        return (
+                                          <>
+                                            <p className="mb-2">
+                                              <strong>Days above 55 LPCD:</strong> <span className="text-green-600 font-semibold">{daysAbove55}</span>
+                                            </p>
+                                            <p className="mb-2">
+                                              <strong>Days below 55 LPCD:</strong> <span className="text-red-600 font-semibold">{daysBelow55}</span>
+                                            </p>
+                                            <p className="mb-2">
+                                              <strong>Zero supply for a week:</strong> <span className={hasConsistentZeroSupply ? "text-red-600 font-semibold" : "text-green-600 font-semibold"}>
+                                                {hasConsistentZeroSupply ? 'Yes' : 'No'}
+                                              </span>
+                                            </p>
+                                          </>
+                                        );
+                                      })()}
                                     </div>
                                   </div>
                                 </div>
