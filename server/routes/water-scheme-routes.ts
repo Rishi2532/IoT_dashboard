@@ -190,94 +190,113 @@ async function importDataToDatabase(data: any[], isExcel: boolean) {
   const client = await pool.connect();
   
   try {
-    // Process each row in its own transaction
+    // Performance optimization: process in batches
+    const BATCH_SIZE = 25; // Number of records to process in a single batch
+    let currentBatch: any[] = [];
+    
+    // Pre-process and validate all records first
+    const validRecords: any[] = [];
     for (const row of data) {
-      try {
+      let record: any;
+        
+      if (isExcel) {
+        // Excel file with headers
+        record = mapExcelFields(row);
+      } else {
+        // CSV file without headers
+        record = mapCsvFields(row);
+      }
+      
+      // Skip rows without scheme_id
+      if (!record.scheme_id) {
+        errors.push(`Skipped row - missing scheme_id: ${JSON.stringify(row)}`);
+        continue;
+      }
+      
+      // Ensure both scheme_id and village_name are present
+      if (!record.scheme_id || !record.village_name) {
+        errors.push(`Skipped row - missing required fields: ${!record.scheme_id ? 'scheme_id' : ''} ${!record.village_name ? 'village_name' : ''}`);
+        continue;
+      }
+      
+      validRecords.push(record);
+    }
+    
+    // Process in batches
+    for (let i = 0; i < validRecords.length; i++) {
+      const record = validRecords[i];
+      currentBatch.push(record);
+      
+      // Process batch when it reaches the batch size or at the end of the data
+      if (currentBatch.length >= BATCH_SIZE || i === validRecords.length - 1) {
         await client.query('BEGIN');
         
-        let record: any;
-        
-        if (isExcel) {
-          // Excel file with headers
-          record = mapExcelFields(row);
-        } else {
-          // CSV file without headers
-          record = mapCsvFields(row);
-        }
-        
-        // Skip rows without scheme_id
-        if (!record.scheme_id) {
-          errors.push(`Skipped row - missing scheme_id: ${JSON.stringify(row)}`);
-          await client.query('COMMIT'); // End this row's transaction
-          continue;
-        }
-        
-        // Ensure both scheme_id and village_name are present
-        if (!record.scheme_id || !record.village_name) {
-          errors.push(`Skipped row - missing required fields: ${!record.scheme_id ? 'scheme_id' : ''} ${!record.village_name ? 'village_name' : ''}`);
-          await client.query('COMMIT'); // End this row's transaction
-          continue;
-        }
-
         try {
-          // Check if record exists
-          const checkResult = await client.query(
-            'SELECT scheme_id, village_name FROM water_scheme_data WHERE scheme_id = $1 AND village_name = $2',
-            [record.scheme_id, record.village_name]
-          );
-          
-          if (checkResult.rows.length > 0) {
-            // Update existing record - exclude primary key fields from the update
-            const updateFields = Object.keys(record).filter(key => key !== 'scheme_id' && key !== 'village_name');
-            
-            if (updateFields.length === 0) {
-              // No fields to update other than the primary key
-              await client.query('COMMIT'); // End this row's transaction
-              continue;
+          // Process each record in the batch
+          for (const batchRecord of currentBatch) {
+            try {
+              // Check if record exists
+              const checkResult = await client.query(
+                'SELECT scheme_id, village_name FROM water_scheme_data WHERE scheme_id = $1 AND village_name = $2',
+                [batchRecord.scheme_id, batchRecord.village_name]
+              );
+              
+              if (checkResult.rows.length > 0) {
+                // Update existing record - exclude primary key fields from the update
+                const updateFields = Object.keys(batchRecord).filter(key => key !== 'scheme_id' && key !== 'village_name');
+                
+                if (updateFields.length === 0) {
+                  // No fields to update other than the primary key
+                  continue;
+                }
+                
+                const updateQuery = `
+                  UPDATE water_scheme_data 
+                  SET ${updateFields.map((key, idx) => `${key} = $${idx + 3}`).join(', ')} 
+                  WHERE scheme_id = $1 AND village_name = $2
+                `;
+                
+                const updateValues = [batchRecord.scheme_id, batchRecord.village_name];
+                updateFields.forEach(key => {
+                  updateValues.push(batchRecord[key]);
+                });
+                
+                await client.query(updateQuery, updateValues);
+                updated++;
+              } else {
+                // Insert new record
+                const fields = Object.keys(batchRecord);
+                const insertQuery = `
+                  INSERT INTO water_scheme_data (${fields.join(', ')}) 
+                  VALUES (${fields.map((_, idx) => `$${idx + 1}`).join(', ')})
+                `;
+                
+                const insertValues = fields.map(field => batchRecord[field]);
+                await client.query(insertQuery, insertValues);
+                inserted++;
+              }
+            } catch (error: any) {
+              // Handle specific errors but don't rollback the whole batch
+              if (error.code === '23505') {
+                // Duplicate key error
+                errors.push(`Duplicate key error for scheme_id: ${batchRecord.scheme_id}, village_name: ${batchRecord.village_name}`);
+              } else {
+                errors.push(`Error processing row: ${error.message || 'Unknown error'}`);
+              }
             }
-            
-            const updateQuery = `
-              UPDATE water_scheme_data 
-              SET ${updateFields.map((key, idx) => `${key} = $${idx + 3}`).join(', ')} 
-              WHERE scheme_id = $1 AND village_name = $2
-            `;
-            
-            const updateValues = [record.scheme_id, record.village_name];
-            updateFields.forEach(key => {
-              updateValues.push(record[key]);
-            });
-            
-            await client.query(updateQuery, updateValues);
-            updated++;
-          } else {
-            // Insert new record
-            const fields = Object.keys(record);
-            const insertQuery = `
-              INSERT INTO water_scheme_data (${fields.join(', ')}) 
-              VALUES (${fields.map((_, idx) => `$${idx + 1}`).join(', ')})
-            `;
-            
-            const insertValues = fields.map(field => record[field]);
-            await client.query(insertQuery, insertValues);
-            inserted++;
           }
           
-          await client.query('COMMIT'); // Commit this row's transaction
-        } catch (error: any) {
-          await client.query('ROLLBACK'); // Rollback just this row's transaction
+          // Commit the batch transaction
+          await client.query('COMMIT');
           
-          // Handle specific errors
-          if (error.code === '23505') {
-            // Duplicate key error
-            errors.push(`Duplicate key error for scheme_id: ${record.scheme_id}, village_name: ${record.village_name}`);
-          } else {
-            errors.push(`Error processing row: ${error.message || 'Unknown error'}`);
-          }
+          // Clear the batch for the next round
+          currentBatch = [];
+        } catch (batchError: any) {
+          // Rollback the entire batch if there was an error
+          await client.query('ROLLBACK');
+          console.error('Error processing batch:', batchError);
+          errors.push(`Failed to process batch: ${batchError.message || String(batchError)}`);
         }
-      } catch (rowError: any) {
-        await client.query('ROLLBACK'); // Make sure to rollback if there was an error
-        console.error('Error processing row:', rowError);
-        errors.push(`Failed to import row: ${rowError.message || String(rowError)}`);
       }
     }
     

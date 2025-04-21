@@ -26,6 +26,7 @@ import DashboardLayout from '@/components/dashboard/dashboard-layout';
 import ProtectedRoute from '@/components/auth/protected-route';
 import RegionImporter from '@/components/admin/region-importer';
 import SchemeImporter from '@/components/admin/scheme-importer';
+import LpcdImport from '@/pages/lpcd/LpcdImport';
 import {
   Table,
   TableHeader,
@@ -464,7 +465,7 @@ export default function AdminDashboard() {
 
         <div className="px-6">
           <Tabs defaultValue="region-import" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="region-import" className="flex items-center">
                 <Database className="h-4 w-4 mr-2" />
                 Import Region Data
@@ -472,6 +473,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="scheme-import" className="flex items-center">
                 <FileUp className="h-4 w-4 mr-2" />
                 Import Scheme Data
+              </TabsTrigger>
+              <TabsTrigger value="lpcd-import" className="flex items-center">
+                <FileText className="h-4 w-4 mr-2" />
+                Import LPCD Data
               </TabsTrigger>
               <TabsTrigger value="manage-schemes" className="flex items-center">
                 <Cog className="h-4 w-4 mr-2" />
@@ -485,6 +490,20 @@ export default function AdminDashboard() {
             
             <TabsContent value="scheme-import" className="mt-0">
               <SchemeImporter />
+            </TabsContent>
+            
+            <TabsContent value="lpcd-import" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Import LPCD Data</CardTitle>
+                  <CardDescription>
+                    Upload Excel or CSV files containing LPCD (Liters Per Capita per Day) data for water schemes.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <LpcdImport />
+                </CardContent>
+              </Card>
             </TabsContent>
             
             <TabsContent value="manage-schemes" className="mt-0">
