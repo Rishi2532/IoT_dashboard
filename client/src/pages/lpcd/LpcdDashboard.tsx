@@ -344,7 +344,9 @@ const LpcdDashboard: React.FC = () => {
                             : (scheme.water_value_day3 !== null && scheme.water_value_day3 !== undefined && scheme.water_value_day3 !== '' 
                               ? parseFloat(String(scheme.water_value_day3)).toFixed(1)
                               : (
-                                <span className="text-gray-500 text-sm">No data</span>
+                                <Badge variant="outline" className="bg-gray-100">
+                                  <span className="text-gray-600 text-sm">No data recorded</span>
+                                </Badge>
                               )
                             )
                           )
@@ -358,7 +360,9 @@ const LpcdDashboard: React.FC = () => {
                             : (scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined && scheme.lpcd_value_day3 !== '' 
                               ? parseFloat(String(scheme.lpcd_value_day3)).toFixed(1)
                               : (
-                                <span className="text-gray-500 text-sm">No data</span>
+                                <Badge variant="outline" className="bg-gray-100">
+                                  <span className="text-gray-600 text-sm">No data recorded</span>
+                                </Badge>
                               )
                             )
                           )
