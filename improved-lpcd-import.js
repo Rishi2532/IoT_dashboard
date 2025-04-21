@@ -5,7 +5,7 @@
  * and proper handling of numeric values.
  */
 
-import * as XLSX from 'xlsx';
+import xlsx from 'xlsx';
 import pg from 'pg';
 const { Pool } = pg;
 import path from 'path';
@@ -19,18 +19,41 @@ dotenv.config();
 const columnMapping = {
   // Standard mappings for region and scheme info
   'Region': 'region',
+  'region': 'region',
   'Circle': 'circle',
+  'circle': 'circle',
   'Division': 'division',
+  'division': 'division',
   'Sub Division': 'sub_division',
+  'sub_division': 'sub_division',
+  'sub division': 'sub_division',
   'Block': 'block',
+  'block': 'block',
   'Scheme ID': 'scheme_id',
+  'Scheme Id': 'scheme_id',
+  'scheme_id': 'scheme_id',
+  'SchemeID': 'scheme_id',
+  'scheme id': 'scheme_id',
   'Scheme Name': 'scheme_name',
+  'scheme_name': 'scheme_name',
+  'scheme name': 'scheme_name',
+  'Village': 'village_name',
   'Village Name': 'village_name',
+  'village': 'village_name',
+  'village_name': 'village_name',
   'Population': 'population',
+  'population': 'population',
   'Number of ESR': 'number_of_esr',
+  'number_of_esr': 'number_of_esr',
+  'Number ESR': 'number_of_esr',
+  'ESR Count': 'number_of_esr',
   
-  // Water consumption value mappings - match exact columns in Excel
-  // These are the exact column names from the Excel file
+  // Water consumption value mappings - matches different naming patterns
+  'Water Consumption': 'water_value_day1',
+  'Water Consumption (Latest)': 'water_value_day1', 
+  'water consumption': 'water_value_day1',
+  'water_value_day1': 'water_value_day1',
+  'Water Value Day 1': 'water_value_day1',
   'water value day1': 'water_value_day1',
   'water value day2': 'water_value_day2',
   'water value day3': 'water_value_day3',
@@ -38,7 +61,8 @@ const columnMapping = {
   'water value day5': 'water_value_day5',
   'water value day6': 'water_value_day6',
   
-  // Also accept numerical positional columns (11-16) from the Excel
+  // Also accept numerical positional columns (10-16) from the Excel
+  '10': 'water_value_day1',
   '11': 'water_value_day1', 
   '12': 'water_value_day2',
   '13': 'water_value_day3',
@@ -46,7 +70,12 @@ const columnMapping = {
   '15': 'water_value_day5',
   '16': 'water_value_day6',
   
-  // LPCD value mappings
+  // LPCD value mappings with multiple naming patterns
+  'LPCD': 'lpcd_value_day1',
+  'LPCD (Latest)': 'lpcd_value_day1',
+  'lpcd': 'lpcd_value_day1',
+  'lpcd_value_day1': 'lpcd_value_day1',
+  'LPCD Value Day 1': 'lpcd_value_day1',
   'lpcd value day1': 'lpcd_value_day1',
   'lpcd value day2': 'lpcd_value_day2',
   'lpcd value day3': 'lpcd_value_day3',
@@ -55,7 +84,7 @@ const columnMapping = {
   'lpcd value day6': 'lpcd_value_day6',
   'lpcd value day7': 'lpcd_value_day7',
   
-  // Also accept numerical positional columns (17-23) from the Excel
+  // Also accept numerical positional columns (16-23) from the Excel
   '17': 'lpcd_value_day1',
   '18': 'lpcd_value_day2',
   '19': 'lpcd_value_day3',
@@ -102,11 +131,17 @@ function getNumericValue(value) {
   // If it's a string, try to convert it
   if (typeof value === 'string') {
     // Handle empty strings and non-numeric strings
-    if (value.trim() === '' || value.toLowerCase() === 'n/a') {
+    if (value.trim() === '' || 
+        value.toLowerCase() === 'n/a' || 
+        value.toLowerCase() === 'no data recorded' ||
+        value.toLowerCase() === 'no data' || 
+        value.toLowerCase() === '-' ||
+        value.toLowerCase() === 'nil') {
       return null;
     }
     
     // Remove any non-numeric characters except decimal point
+    // This will handle values with units like '15000 L' or '70 lpcd'
     const cleanedValue = value.replace(/[^0-9.]/g, '');
     if (cleanedValue === '') {
       return null;
@@ -121,8 +156,26 @@ function getNumericValue(value) {
       return null;
     }
     
-    // Ensure it's actually a finite number
-    return isFinite(numValue) ? numValue : null;
+    // Ensure it's actually a finite number and within reasonable limits
+    // Avoid extreme values that could be errors
+    if (isFinite(numValue)) {
+      // For water values (typically in thousands of liters)
+      if (numValue > 10000000) { // More than 10 million liters is likely an error
+        console.log(`Warning: Unusually high water value: ${numValue}, setting to null`);
+        return null;
+      }
+      
+      // For LPCD values (typically 0-500)
+      if (numValue > 1000) { // LPCD values over 1000 are likely errors
+        // This might be a water value mistakenly mapped to LPCD
+        console.log(`Warning: Unusually high LPCD value: ${numValue}, setting to null`);
+        return null;
+      }
+      
+      return numValue;
+    }
+    
+    return null;
   }
   
   return null;
@@ -166,7 +219,7 @@ async function importLpcdDataFromExcel(filePath) {
     console.log(`Reading Excel file: ${filePath}`);
     
     // Read the Excel file
-    const workbook = XLSX.readFile(filePath);
+    const workbook = xlsx.readFile(filePath);
     
     // Get the first sheet
     const sheetName = workbook.SheetNames[0];
@@ -174,7 +227,7 @@ async function importLpcdDataFromExcel(filePath) {
     
     // Convert to JSON
     // Using raw: true to get actual numeric values where possible, but still handling strings
-    const data = XLSX.utils.sheet_to_json(sheet, { 
+    const data = xlsx.utils.sheet_to_json(sheet, { 
       raw: true, 
       defval: null,
       // This ensures dates are properly parsed
@@ -356,9 +409,17 @@ async function main() {
 }
 
 // Run the main function if this script is executed directly
-if (require.main === module) {
-  main();
-}
+// In ES modules, we can't use require.main === module, so we use an IIFE
+(async () => {
+  // Only run main if this file is being run directly
+  if (import.meta.url.startsWith('file:')) {
+    const modulePath = new URL(import.meta.url).pathname;
+    const processPath = process.argv[1] ? new URL(process.argv[1], `file://${process.cwd()}/`).pathname : '';
+    if (modulePath === processPath) {
+      await main();
+    }
+  }
+})();
 
 // Export the function for use in other modules
 export { importLpcdDataFromExcel };
