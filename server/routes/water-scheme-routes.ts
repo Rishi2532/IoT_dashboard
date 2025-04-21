@@ -346,8 +346,43 @@ function mapExcelFields(row: any) {
   for (const excelField in row) {
     const dbField = fieldMapping[excelField];
     if (dbField) {
-      record[dbField] = row[excelField];
+      const value = row[excelField];
+      
+      // Convert numeric fields to proper number types
+      if (['population', 'number_of_esr', 'water_value_day1', 'water_value_day2', 'water_value_day3', 
+           'water_value_day4', 'water_value_day5', 'water_value_day6', 'lpcd_value_day1', 'lpcd_value_day2', 
+           'lpcd_value_day3', 'lpcd_value_day4', 'lpcd_value_day5', 'lpcd_value_day6', 'lpcd_value_day7',
+           'below_55_lpcd_count', 'above_55_lpcd_count'].includes(dbField)) {
+        // Handle different Excel value types
+        if (value === '' || value === null || value === undefined) {
+          record[dbField] = null;
+        } else {
+          // Parse numeric value - handle both string and number inputs
+          const numValue = typeof value === 'number' ? value : parseFloat(String(value).replace(/,/g, ''));
+          record[dbField] = isNaN(numValue) ? null : numValue;
+        }
+      } else if (dbField === 'consistent_zero_lpcd_for_a_week') {
+        // Convert to boolean/integer
+        if (typeof value === 'boolean') {
+          record[dbField] = value ? 1 : 0;
+        } else if (typeof value === 'number') {
+          record[dbField] = value > 0 ? 1 : 0;
+        } else if (typeof value === 'string') {
+          record[dbField] = ['true', 'yes', '1', 'y'].includes(value.toLowerCase()) ? 1 : 0;
+        } else {
+          record[dbField] = 0; // Default to false/0
+        }
+      } else {
+        // For text/string fields, ensure they're strings
+        record[dbField] = value !== null && value !== undefined ? String(value) : null;
+      }
     }
+  }
+  
+  // Log a sample of the processed record for debugging
+  if (record.scheme_id) {
+    console.log(`Processed record for scheme_id ${record.scheme_id}, village ${record.village_name}:`, 
+                `water_value_day1=${record.water_value_day1}, lpcd_value_day1=${record.lpcd_value_day1}`);
   }
   
   return record;
@@ -410,14 +445,24 @@ function mapCsvFields(row: string[]) {
            'water_value_day4', 'water_value_day5', 'water_value_day6', 'lpcd_value_day1', 'lpcd_value_day2', 
            'lpcd_value_day3', 'lpcd_value_day4', 'lpcd_value_day5', 'lpcd_value_day6', 'lpcd_value_day7',
            'below_55_lpcd_count', 'above_55_lpcd_count'].includes(field)) {
-        // Convert to number
-        record[field] = value === '' ? null : Number(value);
+        // Handle empty values
+        if (value === '' || value === null || value === undefined) {
+          record[field] = null;
+        } else {
+          // Parse numeric value - handle commas in numbers (e.g., "1,234.56")
+          const numValue = parseFloat(String(value).replace(/,/g, ''));
+          record[field] = isNaN(numValue) ? null : numValue;
+        }
       } else if (field === 'consistent_zero_lpcd_for_a_week') {
-        // Convert to boolean
-        record[field] = value === 'true' || value === '1' || value === 'yes';
+        // Convert to boolean/integer for database
+        if (typeof value === 'string') {
+          record[field] = ['true', 'yes', '1', 'y'].includes(value.toLowerCase()) ? 1 : 0;
+        } else {
+          record[field] = value ? 1 : 0;
+        }
       } else {
-        // Keep as string
-        record[field] = value;
+        // Keep as string but handle null/undefined
+        record[field] = value !== null && value !== undefined ? String(value) : null;
       }
     }
   });
