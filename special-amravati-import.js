@@ -5,7 +5,7 @@
  * Excel format with water consumption and LPCD values.
  */
 
-import * as XLSX from 'xlsx';
+import xlsx from 'xlsx';
 import pg from 'pg';
 const { Pool } = pg;
 import path from 'path';
@@ -74,7 +74,7 @@ async function importAmravatiData(filePath) {
     console.log('Connected to database');
     
     // Read the Excel file
-    const workbook = XLSX.readFile(filePath);
+    const workbook = xlsx.readFile(filePath);
     
     // Process each sheet in the workbook
     for (const sheetName of workbook.SheetNames) {
@@ -82,7 +82,7 @@ async function importAmravatiData(filePath) {
       const sheet = workbook.Sheets[sheetName];
       
       // Convert to JSON
-      const data = XLSX.utils.sheet_to_json(sheet, { 
+      const data = xlsx.utils.sheet_to_json(sheet, { 
         raw: true, 
         defval: null
       });
@@ -259,8 +259,16 @@ async function main() {
 }
 
 // Run the main function if this script is executed directly
-if (require.main === module) {
-  main();
-}
+// In ES modules, we can't use require.main === module, so we use an IIFE
+(async () => {
+  // Only run main if this file is being run directly
+  if (import.meta.url.startsWith('file:')) {
+    const modulePath = new URL(import.meta.url).pathname;
+    const processPath = process.argv[1] ? new URL(process.argv[1], `file://${process.cwd()}/`).pathname : '';
+    if (modulePath === processPath) {
+      await main();
+    }
+  }
+})();
 
 export { importAmravatiData };
