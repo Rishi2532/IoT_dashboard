@@ -7,6 +7,10 @@ import path from 'path';
 import * as XLSX from 'xlsx';
 import { parse } from 'csv-parse';
 import pg from 'pg';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
@@ -136,6 +140,141 @@ router.post('/import/csv', upload.single('file'), async (req, res) => {
   }
 });
 
+// Download LPCD data template
+router.get('/template', (req, res) => {
+  try {
+    // First, check if template exists in the templates directory
+    const templateDir = path.join(__dirname, '..', '..', 'templates');
+    const templatePath = path.join(templateDir, 'lpcd_data_template.xlsx');
+    
+    if (!fs.existsSync(templatePath)) {
+      // If template doesn't exist, create it on the fly
+      const wb = XLSX.utils.book_new();
+      
+      // Define the headers
+      const headers = [
+        'Region',
+        'Circle',
+        'Division',
+        'Sub Division',
+        'Block',
+        'Scheme ID',
+        'Scheme Name',
+        'Village Name', 
+        'Population',
+        'Number of ESR',
+        'Water Value Day 1',
+        'Water Value Day 2',
+        'Water Value Day 3',
+        'Water Value Day 4',
+        'Water Value Day 5',
+        'Water Value Day 6',
+        'LPCD Value Day 1',
+        'LPCD Value Day 2',
+        'LPCD Value Day 3',
+        'LPCD Value Day 4',
+        'LPCD Value Day 5',
+        'LPCD Value Day 6',
+        'LPCD Value Day 7',
+        'Water Date Day 1',
+        'Water Date Day 2',
+        'Water Date Day 3',
+        'Water Date Day 4',
+        'Water Date Day 5',
+        'Water Date Day 6',
+        'LPCD Date Day 1',
+        'LPCD Date Day 2',
+        'LPCD Date Day 3',
+        'LPCD Date Day 4',
+        'LPCD Date Day 5',
+        'LPCD Date Day 6',
+        'LPCD Date Day 7',
+        'Consistent Zero LPCD For A Week',
+        'Below 55 LPCD Count',
+        'Above 55 LPCD Count'
+      ];
+      
+      // Create an array to hold the worksheet data
+      const wsData = [headers];
+      
+      // Add a sample data row
+      wsData.push([
+        'Pune',                // Region
+        'Pune',                // Circle
+        'Pune Division',       // Division
+        'Pune East',           // Sub Division
+        'Wagholi',             // Block
+        'PU-001',              // Scheme ID
+        'Pune Rural Supply',   // Scheme Name
+        'Wagholi',             // Village Name
+        5000,                  // Population
+        2,                     // Number of ESR
+        120.5,                 // Water Value Day 1
+        115.3,                 // Water Value Day 2
+        110.2,                 // Water Value Day 3
+        118.7,                 // Water Value Day 4
+        122.1,                 // Water Value Day 5
+        119.8,                 // Water Value Day 6
+        65.2,                  // LPCD Value Day 1
+        62.3,                  // LPCD Value Day 2
+        59.5,                  // LPCD Value Day 3
+        64.1,                  // LPCD Value Day 4
+        66.0,                  // LPCD Value Day 5
+        64.8,                  // LPCD Value Day 6
+        63.9,                  // LPCD Value Day 7
+        '11-Apr',              // Water Date Day 1
+        '12-Apr',              // Water Date Day 2
+        '13-Apr',              // Water Date Day 3
+        '14-Apr',              // Water Date Day 4
+        '15-Apr',              // Water Date Day 5
+        '16-Apr',              // Water Date Day 6
+        '10-Apr',              // LPCD Date Day 1
+        '11-Apr',              // LPCD Date Day 2
+        '12-Apr',              // LPCD Date Day 3
+        '13-Apr',              // LPCD Date Day 4
+        '14-Apr',              // LPCD Date Day 5
+        '15-Apr',              // LPCD Date Day 6
+        '16-Apr',              // LPCD Date Day 7
+        'No',                  // Consistent Zero LPCD For A Week
+        0,                     // Below 55 LPCD Count
+        7                      // Above 55 LPCD Count
+      ]);
+      
+      // Create the worksheet
+      const ws = XLSX.utils.aoa_to_sheet(wsData);
+      
+      // Format the column widths for better readability
+      ws['!cols'] = headers.map(() => ({ wch: 15 })); // Default width of 15 for all columns
+      
+      // Set a wider width for specific columns
+      ws['!cols'][6] = { wch: 25 };  // Scheme Name
+      ws['!cols'][7] = { wch: 25 };  // Village Name
+      
+      // Add the worksheet to the workbook
+      XLSX.utils.book_append_sheet(wb, ws, 'LPCD_Data_Template');
+      
+      // Create the temp directory if it doesn't exist
+      if (!fs.existsSync(templateDir)) {
+        fs.mkdirSync(templateDir, { recursive: true });
+      }
+      
+      // Write the file to disk temporarily
+      XLSX.writeFile(wb, templatePath);
+    }
+    
+    // Set response headers
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', 'attachment; filename=lpcd_data_template.xlsx');
+    
+    // Stream the file to the response
+    const fileStream = fs.createReadStream(templatePath);
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error('Error generating template:', error);
+    res.status(500).json({ error: 'Failed to generate template' });
+  }
+});
+
 // Process Excel file and import data
 async function processExcelFile(filePath: string) {
   // Read file as buffer first
@@ -146,7 +285,27 @@ async function processExcelFile(filePath: string) {
   const worksheet = workbook.Sheets[sheetName];
   const data = XLSX.utils.sheet_to_json(worksheet);
   
-  return importDataToDatabase(data, true);
+  // Analyze the file to detect if it's our custom LPCD template or a different format
+  let isLpcdTemplate = false;
+  
+  if (data.length > 0) {
+    const firstRow = data[0];
+    const headers = Object.keys(firstRow);
+    
+    // Check for the presence of water and LPCD value columns
+    const waterValueColumns = headers.filter(h => h.includes('Water Value'));
+    const lpcdValueColumns = headers.filter(h => h.includes('LPCD Value'));
+    
+    isLpcdTemplate = waterValueColumns.length > 0 || lpcdValueColumns.length > 0;
+    
+    console.log('Excel import analysis:');
+    console.log('- Headers:', headers);
+    console.log('- Water value columns:', waterValueColumns);
+    console.log('- LPCD value columns:', lpcdValueColumns);
+    console.log('- Is LPCD template:', isLpcdTemplate);
+  }
+  
+  return importDataToDatabase(data, true, isLpcdTemplate);
 }
 
 // Process CSV file and import data
@@ -165,7 +324,30 @@ async function processCsvFile(filePath: string) {
     
     parser.on('end', async () => {
       try {
-        const result = await importDataToDatabase(data, false);
+        // Check if this is a properly formatted CSV with headers
+        let hasLpcdHeaders = false;
+        
+        if (data.length > 0) {
+          // Check the first row for possible headers
+          const firstRow = data[0];
+          if (Array.isArray(firstRow)) {
+            const headerRow = firstRow.map(h => String(h).trim());
+            const waterValueColumns = headerRow.filter(h => 
+              h.includes('Water Value') || h.includes('water value'));
+            const lpcdValueColumns = headerRow.filter(h => 
+              h.includes('LPCD Value') || h.includes('lpcd value'));
+              
+            hasLpcdHeaders = waterValueColumns.length > 0 || lpcdValueColumns.length > 0;
+            
+            console.log('CSV import analysis:');
+            console.log('- Headers:', headerRow);
+            console.log('- Water value columns:', waterValueColumns);
+            console.log('- LPCD value columns:', lpcdValueColumns);
+            console.log('- Has LPCD headers:', hasLpcdHeaders);
+          }
+        }
+        
+        const result = await importDataToDatabase(data, false, hasLpcdHeaders);
         resolve(result);
       } catch (error) {
         reject(error);
@@ -179,7 +361,7 @@ async function processCsvFile(filePath: string) {
 }
 
 // Import data to database
-async function importDataToDatabase(data: any[], isExcel: boolean) {
+async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplate: boolean = false) {
   let inserted = 0;
   let updated = 0;
   const errors: string[] = [];

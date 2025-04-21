@@ -95,18 +95,70 @@ const excelFiles = fs.readdirSync(assetDir)
 if (excelFiles.length === 0) {
   console.log('No Excel files found in attached_assets directory');
 } else {
-  // Let's check the scheme_level_datalink_report.xlsx file specifically
-  const targetFile = 'scheme_level_datalink_report.xlsx';
+  // Check all Excel files for water and LPCD value columns
+  console.log('Checking all Excel files for water and LPCD columns...\n');
   
-  if (excelFiles.includes(targetFile)) {
-    console.log(`Inspecting target file: ${targetFile}`);
-    inspectExcelFile(path.join(assetDir, targetFile));
-  } else {
-    // Fall back to the first file
-    inspectExcelFile(path.join(assetDir, excelFiles[0]));
+  let foundWaterAndLpcdColumns = false;
+  
+  for (const file of excelFiles) {
+    try {
+      console.log(`\n=============================================`);
+      console.log(`FILE: ${file}`);
+      console.log(`=============================================`);
+      
+      // Read the Excel file
+      const filePath = path.join(assetDir, file);
+      const fileBuffer = fs.readFileSync(filePath);
+      const workbook = XLSX.read(fileBuffer, { type: 'buffer' });
+      
+      console.log('Sheets:', workbook.SheetNames);
+      
+      // Check each sheet in the file
+      for (const sheetName of workbook.SheetNames) {
+        const worksheet = workbook.Sheets[sheetName];
+        const data = XLSX.utils.sheet_to_json(worksheet);
+        
+        if (data.length === 0) continue;
+        
+        // Get column headers
+        const headers = Object.keys(data[0]);
+        
+        // Check for water and LPCD columns
+        const waterColumns = headers.filter(h => 
+          h.includes('Water Value') || 
+          h.includes('water value') || 
+          h.includes('Water_Value') || 
+          h.includes('water_value'));
+          
+        const lpcdColumns = headers.filter(h => 
+          h.includes('LPCD Value') || 
+          h.includes('lpcd value') || 
+          h.includes('LPCD_Value') || 
+          h.includes('lpcd_value'));
+        
+        if (waterColumns.length > 0 || lpcdColumns.length > 0) {
+          console.log(`\nSheet "${sheetName}" contains water or LPCD columns!`);
+          console.log('Water columns:', waterColumns);
+          console.log('LPCD columns:', lpcdColumns);
+          
+          // Show the first row as a sample
+          if (data.length > 0) {
+            console.log('\nSample row:');
+            console.log(JSON.stringify(data[0], null, 2));
+          }
+          
+          foundWaterAndLpcdColumns = true;
+        }
+      }
+    } catch (error) {
+      console.error(`Error processing ${file}:`, error.message);
+    }
   }
   
-  // List all available Excel files
-  console.log('\nAll Excel files available:');
-  excelFiles.forEach(file => console.log(`  - ${file}`));
+  if (!foundWaterAndLpcdColumns) {
+    console.log('\nNo Excel files found with the expected water and LPCD columns.');
+    console.log('You need to create a template with proper column headers:');
+    console.log('  - Water Value Day 1, Water Value Day 2, etc.');
+    console.log('  - LPCD Value Day 1, LPCD Value Day 2, etc.');
+  }
 }
