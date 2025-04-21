@@ -197,7 +197,8 @@ router.get('/template', (req, res) => {
       // Create an array to hold the worksheet data
       const wsData = [headers];
       
-      // Add a sample data row
+      // Add sample data rows
+      // Sample 1: Pune
       wsData.push([
         'Pune',                // Region
         'Pune',                // Circle
@@ -238,6 +239,49 @@ router.get('/template', (req, res) => {
         'No',                  // Consistent Zero LPCD For A Week
         '0',                   // Below 55 LPCD Count (as string for template)
         '7'                    // Above 55 LPCD Count (as string for template)
+      ]);
+      
+      // Sample 2: Nagpur with lower LPCD
+      wsData.push([
+        'Nagpur',              // Region
+        'Nagpur',              // Circle
+        'Nagpur Division',     // Division
+        'Nagpur West',         // Sub Division
+        'Hingna',              // Block
+        'NG-001',              // Scheme ID
+        'Hingna Rural Supply', // Scheme Name
+        'Hingna',              // Village Name
+        '3200',                // Population
+        '1',                   // Number of ESR
+        '85.5',                // Water Value Day 1
+        '82.3',                // Water Value Day 2
+        '79.2',                // Water Value Day 3
+        '81.7',                // Water Value Day 4
+        '80.1',                // Water Value Day 5
+        '82.8',                // Water Value Day 6
+        '45.2',                // LPCD Value Day 1
+        '42.3',                // LPCD Value Day 2
+        '40.5',                // LPCD Value Day 3
+        '44.1',                // LPCD Value Day 4
+        '46.0',                // LPCD Value Day 5
+        '44.8',                // LPCD Value Day 6
+        '43.9',                // LPCD Value Day 7
+        '11-Apr',              // Water Date Day 1
+        '12-Apr',              // Water Date Day 2
+        '13-Apr',              // Water Date Day 3
+        '14-Apr',              // Water Date Day 4
+        '15-Apr',              // Water Date Day 5
+        '16-Apr',              // Water Date Day 6
+        '10-Apr',              // LPCD Date Day 1
+        '11-Apr',              // LPCD Date Day 2
+        '12-Apr',              // LPCD Date Day 3
+        '13-Apr',              // LPCD Date Day 4
+        '14-Apr',              // LPCD Date Day 5
+        '15-Apr',              // LPCD Date Day 6
+        '16-Apr',              // LPCD Date Day 7
+        'No',                  // Consistent Zero LPCD For A Week
+        '7',                   // Below 55 LPCD Count
+        '0'                    // Above 55 LPCD Count
       ]);
       
       // Create the worksheet
