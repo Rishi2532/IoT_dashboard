@@ -490,6 +490,101 @@ export class PostgresStorage implements IStorage {
     38: "above_55_lpcd_count"
   };
 
+  /**
+   * Improved numeric value parsing that handles various formats and validation
+   * @param value - The value to parse into a number
+   * @returns The parsed numeric value or null if invalid
+   */
+  private getNumericValue(value: any): number | null {
+    if (value === null || value === undefined) {
+      return null;
+    }
+    
+    // If already a number, return it (with validation)
+    if (typeof value === 'number') {
+      // Validate reasonable limits for water metrics
+      if (value > 100000000) { // More than 100 million liters is likely an error
+        console.log(`Warning: Extreme water value detected: ${value}, capping to null`);
+        return null;
+      }
+      return isFinite(value) ? value : null;
+    }
+    
+    // If it's a string, try to convert it
+    if (typeof value === 'string') {
+      // Handle empty strings and non-numeric strings
+      if (value.trim() === '' || 
+          value.toLowerCase() === 'n/a' || 
+          value.toLowerCase() === 'no data recorded' ||
+          value.toLowerCase() === 'no data' || 
+          value.toLowerCase() === '-' ||
+          value.toLowerCase() === 'nil') {
+        return null;
+      }
+      
+      // Remove any non-numeric characters except decimal point
+      // This will handle values with units like '15000 L' or '70 lpcd'
+      const cleanedValue = value.replace(/[^0-9.]/g, '');
+      if (cleanedValue === '') {
+        return null;
+      }
+      
+      // Parse to float and ensure it's a valid number
+      const numValue = parseFloat(cleanedValue);
+      
+      // If we got NaN but had a non-empty string, it's a format issue
+      if (isNaN(numValue)) {
+        console.log(`Warning: Could not parse numeric value from: ${value}`);
+        return null;
+      }
+      
+      // Ensure it's actually a finite number and within reasonable limits
+      if (!isFinite(numValue)) {
+        return null;
+      }
+      
+      // Validate reasonable limits for water consumption metrics
+      if (numValue > 100000000) { // More than 100 million liters is likely an error
+        console.log(`Warning: Extreme water value detected: ${numValue}, capping to null`);
+        return null;
+      }
+      
+      return numValue;
+    }
+    
+    return null;
+  }
+  
+  /**
+   * Calculate derived values based on water scheme data
+   * @param schemeData - The water scheme data object to calculate derived values for
+   */
+  private calculateDerivedValues(schemeData: Partial<InsertWaterSchemeData>): void {
+    // Count days with zero LPCD values
+    let zeroLpcdCount = 0;
+    let below55LpcdCount = 0;
+    let above55LpcdCount = 0;
+    
+    // Check each day's LPCD values
+    for (let i = 1; i <= 7; i++) {
+      const lpcdField = `lpcd_value_day${i}` as keyof InsertWaterSchemeData;
+      const lpcdValue = schemeData[lpcdField] as number | null;
+      
+      if (lpcdValue === 0 || lpcdValue === null) {
+        zeroLpcdCount++;
+      } else if (lpcdValue < 55) {
+        below55LpcdCount++;
+      } else if (lpcdValue >= 55) {
+        above55LpcdCount++;
+      }
+    }
+    
+    // Set the derived values
+    schemeData.consistent_zero_lpcd_for_a_week = zeroLpcdCount === 7 ? 1 : 0;
+    schemeData.below_55_lpcd_count = below55LpcdCount;
+    schemeData.above_55_lpcd_count = above55LpcdCount;
+  }
+
   constructor() {
     this.initialized = this.initializeDb().catch((error) => {
       console.error("Failed to initialize database in constructor:", error);
