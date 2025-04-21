@@ -26,7 +26,13 @@ import { triggerExcelExport } from "@/utils/excel-helper";
 interface DashboardFilterContext {
   setSelectedRegion: (region: string) => void;
   setStatusFilter: (status: string) => void;
-  applyFilters: (filters: { region?: string; status?: string }) => void;
+  applyFilters: (filters: { 
+    region?: string; 
+    status?: string;
+    minLpcd?: number;
+    maxLpcd?: number;
+    zeroSupplyForWeek?: boolean;
+  }) => void;
 }
 
 const FilterContext = createContext<DashboardFilterContext | null>(null);
@@ -36,13 +42,33 @@ export const FilterContextProvider: React.FC<{
   children: React.ReactNode;
   setSelectedRegion: (region: string) => void;
   setStatusFilter: (status: string) => void;
-}> = ({ children, setSelectedRegion, setStatusFilter }) => {
-  const applyFilters = (filters: { region?: string; status?: string }) => {
+  setLpcdFilters?: (filters: { minLpcd?: number; maxLpcd?: number; zeroSupplyForWeek?: boolean }) => void;
+}> = ({ children, setSelectedRegion, setStatusFilter, setLpcdFilters }) => {
+  const applyFilters = (filters: { 
+    region?: string; 
+    status?: string;
+    minLpcd?: number;
+    maxLpcd?: number;
+    zeroSupplyForWeek?: boolean;
+  }) => {
     if (filters.region) {
       setSelectedRegion(filters.region);
     }
     if (filters.status) {
       setStatusFilter(filters.status);
+    }
+    
+    // If we have LPCD filters and the setter function is available
+    if (setLpcdFilters && (
+      filters.minLpcd !== undefined || 
+      filters.maxLpcd !== undefined || 
+      filters.zeroSupplyForWeek !== undefined
+    )) {
+      setLpcdFilters({
+        minLpcd: filters.minLpcd,
+        maxLpcd: filters.maxLpcd,
+        zeroSupplyForWeek: filters.zeroSupplyForWeek
+      });
     }
   };
 
@@ -60,7 +86,13 @@ interface ChatMessage {
   type: "user" | "bot";
   text: string;
   fromVoice?: boolean;
-  filters?: { region?: string; status?: string };
+  filters?: { 
+    region?: string; 
+    status?: string;
+    minLpcd?: number;
+    maxLpcd?: number;
+    zeroSupplyForWeek?: boolean;
+  };
   autoSpeak?: boolean;
 }
 
@@ -189,7 +221,14 @@ const CustomChatbot = () => {
     setTimeout(async () => {
       try {
         let response = "";
-        let filters: { region?: string; status?: string; schemeId?: string } = {};
+        let filters: { 
+          region?: string; 
+          status?: string; 
+          schemeId?: string;
+          minLpcd?: number;
+          maxLpcd?: number;
+          zeroSupplyForWeek?: boolean;
+        } = {};
 
         const lowerText = text.toLowerCase();
         console.log(`Processing query: "${lowerText}"`);
@@ -253,7 +292,8 @@ const CustomChatbot = () => {
                                 lowerText.includes("flow meter") || 
                                 lowerText.includes("chlorine") ||
                                 lowerText.includes("esr") ||
-                                lowerText.includes("village")
+                                lowerText.includes("village") ||
+                                lowerText.includes("lpcd")
                               ));
         
         // Check for infrastructure components with expanded keywords
@@ -285,6 +325,40 @@ const CustomChatbot = () => {
                            lowerText.includes("settlement") ||
                            lowerText.includes("gram") ||
                            lowerText.includes("community");
+        
+        // LPCD related checks for statistics and filtering
+        const isLpcdQuery = lowerText.includes("lpcd") || 
+                           lowerText.includes("liters per capita") || 
+                           lowerText.includes("litres per capita") ||
+                           lowerText.includes("water consumption") || 
+                           lowerText.includes("water supply") ||
+                           lowerText.includes("water availability");
+        
+        const hasLpcdAbove55 = isLpcdQuery && (
+                               lowerText.includes("above 55") || 
+                               lowerText.includes(">55") || 
+                               lowerText.includes("greater than 55") ||
+                               lowerText.includes("more than 55") ||
+                               lowerText.includes("over 55") ||
+                               lowerText.match(/\b55\+\b/) !== null);
+                               
+        const hasLpcdBelow40 = isLpcdQuery && (
+                              lowerText.includes("below 40") || 
+                              lowerText.includes("<40") || 
+                              lowerText.includes("less than 40") ||
+                              lowerText.includes("under 40"));
+                              
+        const hasLpcdBetween40And55 = isLpcdQuery && (
+                                     lowerText.includes("between 40 and 55") || 
+                                     lowerText.includes("40-55") || 
+                                     lowerText.includes("40 to 55") ||
+                                     lowerText.includes("40 - 55"));
+                                     
+        const hasZeroLpcd = isLpcdQuery && (
+                           lowerText.includes("zero lpcd") || 
+                           lowerText.includes("no water") || 
+                           lowerText.includes("without water") ||
+                           lowerText.includes("0 lpcd"));
         
         // Status filter check
         const hasStatusFilter =
@@ -402,7 +476,83 @@ const CustomChatbot = () => {
             console.error("Error fetching infrastructure data:", error);
             response = "Sorry, I couldn't fetch the requested infrastructure information at the moment.";
           }
-        } 
+        }
+        // Handle LPCD statistics queries
+        else if (isLpcdQuery) {
+          try {
+            console.log("LPCD query detected");
+            
+            // Determine the region to filter by (if any)
+            let regionParam = '';
+            if (region) {
+              regionParam = `?region=${encodeURIComponent(region)}`;
+            }
+            
+            // Fetch LPCD statistics from the new API endpoint
+            const statsResponse = await fetch(`/api/water-scheme-data/lpcd-stats${regionParam}`);
+            if (!statsResponse.ok) {
+              throw new Error("Failed to fetch LPCD statistics");
+            }
+            const lpcdStats = await statsResponse.json();
+            
+            // Prepare location description for the response
+            let locationDesc = region ? `in the ${region} region` : "across Maharashtra";
+            
+            // Handle specific LPCD range queries
+            if (hasLpcdAbove55) {
+              // Query for villages with LPCD > 55
+              response = `There are **${lpcdStats.above_55_count}** villages with LPCD values above 55 liters per capita per day ${locationDesc}. This represents ${Math.round((lpcdStats.above_55_count / lpcdStats.total_villages) * 100)}% of all villages.`;
+              
+              // Set filter for the dashboard to show only villages with LPCD > 55
+              if (filterContext) {
+                filters = { minLpcd: 55 };
+                if (region) filters.region = region;
+              }
+            }
+            else if (hasLpcdBelow40) {
+              // Query for villages with LPCD < 40
+              response = `There are **${lpcdStats.below_40_count}** villages with LPCD values below 40 liters per capita per day ${locationDesc}. This represents ${Math.round((lpcdStats.below_40_count / lpcdStats.total_villages) * 100)}% of all villages.`;
+              
+              // Set filter for the dashboard to show only villages with LPCD < 40
+              if (filterContext) {
+                filters = { maxLpcd: 40 };
+                if (region) filters.region = region;
+              }
+            }
+            else if (hasLpcdBetween40And55) {
+              // Query for villages with LPCD between 40 and 55
+              response = `There are **${lpcdStats.between_40_55_count}** villages with LPCD values between 40 and 55 liters per capita per day ${locationDesc}. This represents ${Math.round((lpcdStats.between_40_55_count / lpcdStats.total_villages) * 100)}% of all villages.`;
+              
+              // Set filter for the dashboard to show only villages with LPCD between 40 and 55
+              if (filterContext) {
+                filters = { minLpcd: 40, maxLpcd: 55 };
+                if (region) filters.region = region;
+              }
+            }
+            else if (hasZeroLpcd) {
+              // Query for villages with zero LPCD
+              response = `There are **${lpcdStats.zero_lpcd_count}** villages with zero water supply (0 LPCD) ${locationDesc}. Among these, **${lpcdStats.consistent_zero_count}** villages have had no water supply for an entire week.`;
+              
+              // Set filter for the dashboard to show only villages with zero LPCD
+              if (filterContext) {
+                filters = { zeroSupplyForWeek: true };
+                if (region) filters.region = region;
+              }
+            }
+            else {
+              // General LPCD statistics summary
+              response = `LPCD Statistics ${locationDesc}:\n` +
+                         `• **${lpcdStats.above_55_count}** villages have good water supply (LPCD > 55L)\n` +
+                         `• **${lpcdStats.between_40_55_count}** villages have moderate water supply (LPCD between 40-55L)\n` +
+                         `• **${lpcdStats.below_40_count}** villages have low water supply (LPCD < 40L)\n` +
+                         `• **${lpcdStats.zero_lpcd_count}** villages have no water supply (LPCD = 0L)\n` +
+                         `• **${lpcdStats.consistent_zero_count}** villages have had no water for over a week`;
+            }
+          } catch (error) {
+            console.error("Error fetching LPCD statistics:", error);
+            response = "I'm sorry, I couldn't fetch the LPCD statistics at the moment. Please try again later.";
+          }
+        }
         // Handle status filter requests
         else if (hasStatusFilter) {
           // If region is specified, apply both filters
