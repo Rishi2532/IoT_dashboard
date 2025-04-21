@@ -27,9 +27,10 @@ export const API_KEYS = {
  * @returns The API key value or empty string if not found
  */
 export function getApiKey(key: keyof typeof API_KEYS): string {
-  // For Replit environment variables
-  if (typeof process !== 'undefined' && process.env && process.env[key]) {
-    return process.env[key] as string;
+  // For server-side environment access
+  // First check if we can access it directly
+  if (import.meta.env && import.meta.env[key]) {
+    return import.meta.env[key] as string;
   }
   
   // For Vite environment variables with VITE_ prefix
@@ -38,6 +39,6 @@ export function getApiKey(key: keyof typeof API_KEYS): string {
     return import.meta.env[viteKey] as string;
   }
   
-  // Fallback to hard-coded values (for VS Code)
-  return API_KEYS[key] || '';
+  // For direct API endpoint access
+  return '/api/config/' + key;
 }

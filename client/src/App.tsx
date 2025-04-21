@@ -81,7 +81,12 @@ function App() {
         </Switch>
         
         {/* JJM Assistant Chatbot (available on all pages) */}
-        <ChatbotComponent />
+        <FilterContextProvider 
+          setSelectedRegion={() => {}} 
+          setStatusFilter={() => {}}
+        >
+          <ChatbotComponent />
+        </FilterContextProvider>
       </>
     </AuthProvider>
   );
