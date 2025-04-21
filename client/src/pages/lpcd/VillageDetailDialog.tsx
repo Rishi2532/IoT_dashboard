@@ -243,10 +243,10 @@ const VillageDetailDialog: React.FC<VillageDetailDialogProps> = ({
                       }
                     }
                     
-                    // Sort dates in reverse chronological order (newest first)
+                    // Sort dates in chronological order (oldest first)
                     allDates.sort((a, b) => {
                       // Simple string comparison works for DD-MMM format
-                      return b.localeCompare(a);
+                      return a.localeCompare(b);
                     });
                     
                     // Generate table rows for each date
