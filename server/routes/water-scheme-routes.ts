@@ -102,6 +102,49 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get LPCD statistics - counts villages with different LPCD ranges
+router.get('/lpcd-stats', async (req, res) => {
+  try {
+    const { region } = req.query;
+    
+    // Use pg directly for this route
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      // Get statistics for the most recent LPCD day (day1)
+      // We count villages in different LPCD ranges
+      let baseQuery = `
+        SELECT 
+          COUNT(*) FILTER (WHERE lpcd_value_day1 > 55) AS above_55_count,
+          COUNT(*) FILTER (WHERE lpcd_value_day1 < 40 AND lpcd_value_day1 > 0) AS below_40_count,
+          COUNT(*) FILTER (WHERE lpcd_value_day1 >= 40 AND lpcd_value_day1 <= 55) AS between_40_55_count,
+          COUNT(*) FILTER (WHERE lpcd_value_day1 = 0 OR lpcd_value_day1 IS NULL) AS zero_lpcd_count,
+          COUNT(*) FILTER (WHERE consistent_zero_lpcd_for_a_week = 1) AS consistent_zero_count,
+          COUNT(*) AS total_villages
+        FROM water_scheme_data
+      `;
+      
+      // Add WHERE clause for region filtering
+      const queryParams: any[] = [];
+      if (region && region !== 'all') {
+        baseQuery += ' WHERE region = $1';
+        queryParams.push(region);
+      }
+      
+      // Execute query
+      const result = await client.query(baseQuery, queryParams);
+      res.json(result.rows[0]);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching LPCD statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch LPCD statistics' });
+  }
+});
+
 // Import data from Excel file
 router.post('/import/excel', upload.single('file'), async (req, res) => {
   if (!req.file) {
