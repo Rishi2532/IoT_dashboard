@@ -121,14 +121,61 @@ export default function MaharashtraTopoMap({
   useEffect(() => {
     async function loadTopoData() {
       try {
-        // Try to load the topoJSON data
+        console.log('Attempting to load topo data...');
+        
+        // Try the enhanced topo file first
+        try {
+          let response = await fetch('/enhanced-maharashtra.topo.json');
+          if (response.ok) {
+            const data = await response.json();
+            console.log('Successfully loaded enhanced TopoJSON data');
+            setTopoData(data);
+            return;
+          } else {
+            console.log('Enhanced file not found, trying original file...');
+          }
+        } catch (enhancedError) {
+          console.error('Error loading enhanced file:', enhancedError);
+        }
+        
+        // Fall back to original file
         let response = await fetch('/maharashtra.topo.json');
         if (!response.ok) {
-          console.error('Could not load Maharashtra topo data');
+          console.error('Could not load Maharashtra topo data, status:', response.status);
+          
+          // Create minimal fallback data directly if all files fail
+          console.log('Using minimal fallback data');
+          const fallbackData = {
+            type: "Topology",
+            objects: {
+              maharashtra: {
+                type: "GeometryCollection",
+                geometries: [
+                  {
+                    type: "Polygon",
+                    properties: { name: "Nagpur", region: "Nagpur", code: "MH09" },
+                    arcs: [[0]]
+                  },
+                  {
+                    type: "Polygon",
+                    properties: { name: "Amravati", region: "Amravati", code: "MH04" },
+                    arcs: [[1]]
+                  }
+                ]
+              }
+            },
+            arcs: [
+              [[79.10, 21.05], [79.40, 21.10], [79.70, 21.15], [79.90, 21.05], [79.10, 21.05]],
+              [[77.75, 21.25], [78.05, 21.30], [78.35, 21.25], [77.75, 21.25]]
+            ],
+            transform: { scale: [0.002, 0.002], translate: [72.5, 16.0] }
+          };
+          setTopoData(fallbackData);
           return;
         }
         
         const data = await response.json();
+        console.log('Successfully loaded original TopoJSON data');
         setTopoData(data);
       } catch (error) {
         console.error('Error loading Maharashtra topo data:', error);
@@ -140,147 +187,158 @@ export default function MaharashtraTopoMap({
 
   // Render map
   useEffect(() => {
-    if (!topoData || !svgRef.current || isLoading) return;
+    if (!topoData || !svgRef.current || isLoading) {
+      console.log('Skipping render - topoData, svg or loading state issue');
+      return;
+    }
     
-    const svg = d3.select(svgRef.current);
-    svg.selectAll("*").remove(); // Clear previous elements
-    
-    // Extract features from topoJSON
-    const maharashtraFeatures = feature(topoData, topoData.objects.maharashtra as any);
-    
-    // Set up projection and path generator
-    const width = containerRef.current?.clientWidth || 800;
-    const height = containerRef.current?.clientHeight || 600;
-    
-    const projection = geoMercator()
-      .fitSize([width, height], maharashtraFeatures as any)
-      .center([76.8, 19.0])  // Center coordinates for Maharashtra
-      .scale(2500 * zoom)
-      .translate([position[0], position[1]]);
-    
-    const pathGenerator = geoPath().projection(projection);
-    
-    // Create a container group for the map
-    const g = svg.append("g")
-      .attr("class", "map-container");
-    
-    // Add a base layer for water/background
-    g.append("rect")
-      .attr("width", width)
-      .attr("height", height)
-      .attr("fill", "#f0f8ff") // Light blue background
-      .attr("rx", 10)
-      .attr("ry", 10);
-    
-    // Add boundary lines with a subtle shadow
-    g.append("filter")
-      .attr("id", "drop-shadow")
-      .append("feDropShadow")
-      .attr("dx", 1)
-      .attr("dy", 1)
-      .attr("stdDeviation", 1.5)
-      .attr("flood-opacity", 0.3);
-    
-    // Draw the regions
-    g.selectAll("path")
-      .data(maharashtraFeatures.features)
-      .enter()
-      .append("path")
-      .attr("d", (d: any) => pathGenerator(d))
-      .attr("stroke", "#fff")
-      .attr("stroke-width", (d: any) => {
-        // Get the region name from properties
-        const regionName = d.properties.region;
-        return regionName === selectedRegion ? 2 : 0.5;
-      })
-      .attr("fill", (d: any) => {
-        // Get the region name from properties
-        const regionName = d.properties.region;
-        return getColor(regionName);
-      })
-      .attr("opacity", 0.85)
-      .attr("filter", "url(#drop-shadow)")
-      .attr("class", (d: any) => {
-        const regionName = d.properties.region;
-        return `region ${regionName === selectedRegion ? "selected" : ""}`;
-      })
-      .on("click", (event, d: any) => {
-        const regionName = d.properties.region;
-        onRegionClick(regionName);
-      })
-      .on("mouseover", (event, d: any) => {
-        const regionName = d.properties.region;
-        
-        // Highlight the region
-        d3.select(event.currentTarget)
-          .attr("stroke-width", 2)
-          .attr("opacity", 1);
-        
-        // Show tooltip
-        const tooltip = d3.select(tooltipRef.current);
-        tooltip.style("display", "block")
-          .style("left", `${event.pageX + 10}px`)
-          .style("top", `${event.pageY + 10}px`);
-        
-        const districtName = d.properties.name || regionName;
-        const metricName = 
-          metric === 'esr' ? 'ESR Integration' : 
-          metric === 'villages' ? 'Village Completion' : 
-          metric === 'flow_meter' ? 'Flow Meter Installation' :
-          'Scheme Completion';
-        
-        tooltip.html(`
-          <div class="tooltip-content">
-            <strong>${districtName}</strong><br>
-            Region: ${regionName}<br>
-            ${metricName}: ${getMetricValue(regionName)}
-          </div>
-        `);
-      })
-      .on("mousemove", (event) => {
-        // Update tooltip position
-        const tooltip = d3.select(tooltipRef.current);
-        tooltip.style("left", `${event.pageX + 10}px`)
-          .style("top", `${event.pageY + 10}px`);
-      })
-      .on("mouseout", (event, d: any) => {
-        const regionName = d.properties.region;
-        
-        // Restore normal appearance if not selected
-        if (regionName !== selectedRegion) {
+    try {
+      console.log('Starting map render with topoData:', topoData);
+      
+      const svg = d3.select(svgRef.current);
+      svg.selectAll("*").remove(); // Clear previous elements
+      
+      // Extract features from topoJSON
+      console.log('Extracting features from topoJSON:', topoData.objects);
+      const maharashtraFeatures = feature(topoData, topoData.objects.maharashtra as any);
+      console.log('Features extracted:', maharashtraFeatures);
+      
+      // Set up projection and path generator
+      const width = containerRef.current?.clientWidth || 800;
+      const height = containerRef.current?.clientHeight || 600;
+      console.log(`Container size: ${width}x${height}`);
+      
+      const projection = geoMercator()
+        .fitSize([width, height], maharashtraFeatures as any)
+        .center([76.8, 19.0])  // Center coordinates for Maharashtra
+        .scale(1500 * zoom)
+        .translate([width/2, height/2]);
+      
+      const pathGenerator = geoPath().projection(projection);
+      
+      // Create a container group for the map
+      const g = svg.append("g")
+        .attr("class", "map-container");
+      
+      // Add a base layer for water/background
+      g.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .attr("fill", "#f0f8ff") // Light blue background
+        .attr("rx", 10)
+        .attr("ry", 10);
+      
+      // Add boundary lines with a subtle shadow
+      g.append("filter")
+        .attr("id", "drop-shadow")
+        .append("feDropShadow")
+        .attr("dx", 1)
+        .attr("dy", 1)
+        .attr("stdDeviation", 1.5)
+        .attr("flood-opacity", 0.3);
+      
+      // Draw the regions
+      g.selectAll("path")
+        .data(maharashtraFeatures.features)
+        .enter()
+        .append("path")
+        .attr("d", (d: any) => pathGenerator(d))
+        .attr("stroke", "#fff")
+        .attr("stroke-width", (d: any) => {
+          // Get the region name from properties
+          const regionName = d.properties.region;
+          return regionName === selectedRegion ? 2 : 0.5;
+        })
+        .attr("fill", (d: any) => {
+          // Get the region name from properties
+          const regionName = d.properties.region;
+          return getColor(regionName);
+        })
+        .attr("opacity", 0.85)
+        .attr("filter", "url(#drop-shadow)")
+        .attr("class", (d: any) => {
+          const regionName = d.properties.region;
+          return `region ${regionName === selectedRegion ? "selected" : ""}`;
+        })
+        .on("click", (event, d: any) => {
+          const regionName = d.properties.region;
+          onRegionClick(regionName);
+        })
+        .on("mouseover", (event, d: any) => {
+          const regionName = d.properties.region;
+          
+          // Highlight the region
           d3.select(event.currentTarget)
-            .attr("stroke-width", 0.5)
-            .attr("opacity", 0.85);
-        }
-        
-        // Hide tooltip
-        d3.select(tooltipRef.current).style("display", "none");
-      });
-    
-    // Add region labels
-    g.selectAll("text")
-      .data(maharashtraFeatures.features)
-      .enter()
-      .append("text")
-      .attr("x", (d: any) => {
-        const [x, y] = pathGenerator.centroid(d);
-        return x;
-      })
-      .attr("y", (d: any) => {
-        const [x, y] = pathGenerator.centroid(d);
-        return y;
-      })
-      .attr("text-anchor", "middle")
-      .attr("font-size", "12px")
-      .attr("font-weight", "bold")
-      .attr("fill", "#333")
-      .attr("pointer-events", "none")
-      .text((d: any) => d.properties.region)
-      .attr("style", "text-shadow: 0 0 3px white, 0 0 3px white, 0 0 3px white, 0 0 3px white;");
-    
-    // Adjust the viewbox to match the container
-    setViewBox(`0 0 ${width} ${height}`);
-    
+            .attr("stroke-width", 2)
+            .attr("opacity", 1);
+          
+          // Show tooltip
+          const tooltip = d3.select(tooltipRef.current);
+          tooltip.style("display", "block")
+            .style("left", `${event.pageX + 10}px`)
+            .style("top", `${event.pageY + 10}px`);
+          
+          const districtName = d.properties.name || regionName;
+          const metricName = 
+            metric === 'esr' ? 'ESR Integration' : 
+            metric === 'villages' ? 'Village Completion' : 
+            metric === 'flow_meter' ? 'Flow Meter Installation' :
+            'Scheme Completion';
+          
+          tooltip.html(`
+            <div class="tooltip-content">
+              <strong>${districtName}</strong><br>
+              Region: ${regionName}<br>
+              ${metricName}: ${getMetricValue(regionName)}
+            </div>
+          `);
+        })
+        .on("mousemove", (event) => {
+          // Update tooltip position
+          const tooltip = d3.select(tooltipRef.current);
+          tooltip.style("left", `${event.pageX + 10}px`)
+            .style("top", `${event.pageY + 10}px`);
+        })
+        .on("mouseout", (event, d: any) => {
+          const regionName = d.properties.region;
+          
+          // Restore normal appearance if not selected
+          if (regionName !== selectedRegion) {
+            d3.select(event.currentTarget)
+              .attr("stroke-width", 0.5)
+              .attr("opacity", 0.85);
+          }
+          
+          // Hide tooltip
+          d3.select(tooltipRef.current).style("display", "none");
+        });
+      
+      // Add region labels
+      g.selectAll("text")
+        .data(maharashtraFeatures.features)
+        .enter()
+        .append("text")
+        .attr("x", (d: any) => {
+          const [x, y] = pathGenerator.centroid(d);
+          return x;
+        })
+        .attr("y", (d: any) => {
+          const [x, y] = pathGenerator.centroid(d);
+          return y;
+        })
+        .attr("text-anchor", "middle")
+        .attr("font-size", "12px")
+        .attr("font-weight", "bold")
+        .attr("fill", "#333")
+        .attr("pointer-events", "none")
+        .text((d: any) => d.properties.region)
+        .attr("style", "text-shadow: 0 0 3px white, 0 0 3px white, 0 0 3px white, 0 0 3px white;");
+      
+      // Adjust the viewbox to match the container
+      setViewBox(`0 0 ${width} ${height}`);
+    } catch (error) {
+      console.error('Error rendering map:', error);
+    }
   }, [topoData, svgRef, selectedRegion, isLoading, zoom, position, windowSize, metric, onRegionClick, regions]);
 
   // Handle zoom in
@@ -304,6 +362,23 @@ export default function MaharashtraTopoMap({
     return (
       <div className="relative w-full h-[500px] rounded-lg overflow-hidden">
         <Skeleton className="w-full h-full" />
+      </div>
+    );
+  }
+  
+  // If no topo data, show error
+  if (!topoData) {
+    return (
+      <div className="relative w-full h-[500px] rounded-lg overflow-hidden border border-gray-200 bg-white shadow-sm flex items-center justify-center flex-col">
+        <div className="text-red-500 mb-2">
+          <RefreshCw size={40} className="animate-spin" />
+        </div>
+        <p className="text-gray-500 text-sm">
+          Loading map data...
+        </p>
+        <p className="text-gray-400 text-xs mt-2">
+          If the map doesn't appear, please refresh the page
+        </p>
       </div>
     );
   }
