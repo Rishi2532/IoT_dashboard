@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { 
   Card, 
   CardContent, 
@@ -31,7 +31,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpDown, Filter, RefreshCw } from "lucide-react";
+import { 
+  ArrowUpDown, 
+  Download, 
+  Eye, 
+  FileSpreadsheet, 
+  Filter, 
+  RefreshCw, 
+  X 
+} from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Pagination } from "@/components/ui/pagination";
 
 // Types
@@ -368,13 +386,12 @@ const EnhancedLpcdDashboard: React.FC = () => {
     return "bg-gray-800 text-white";
   };
   
+  // Simplified status text (only High or Low)
   const getLpcdStatusText = (lpcdValue: number | null): string => {
     if (lpcdValue === null) return "No Data";
     if (lpcdValue === 0) return "No Water";
-    if (lpcdValue >= 55) return "Good";
-    if (lpcdValue >= 40) return "Moderate";
-    if (lpcdValue > 0) return "Low";
-    return "Unknown";
+    if (lpcdValue >= 55) return "High";
+    return "Low";
   };
   
   // Create LPCD badge component
@@ -386,6 +403,94 @@ const EnhancedLpcdDashboard: React.FC = () => {
         {value !== null ? `${value.toFixed(1)}L` : 'N/A'}
       </span>
     );
+  };
+
+  // Export to Excel
+  const exportToExcel = () => {
+    // Create workbook
+    import('xlsx').then(XLSX => {
+      // Filter data based on current filters
+      const dataToExport = filteredSchemes.map((scheme, index) => {
+        const lpcdValue = getLatestLpcdValue(scheme);
+        return {
+          'No.': index + 1,
+          'Region': scheme.region,
+          'Circle': scheme.circle,
+          'Division': scheme.division,
+          'Sub Division': scheme.sub_division,
+          'Block': scheme.block,
+          'Scheme ID': scheme.scheme_id,
+          'Scheme Name': scheme.scheme_name,
+          'Village Name': scheme.village_name,
+          'Population': scheme.population,
+          'Current LPCD': lpcdValue?.toFixed(2) || 'N/A',
+          'Status': getLpcdStatusText(lpcdValue),
+          'LPCD Day 1': scheme.lpcd_value_day1?.toFixed(2) || 'N/A',
+          'LPCD Day 2': scheme.lpcd_value_day2?.toFixed(2) || 'N/A',
+          'LPCD Day 3': scheme.lpcd_value_day3?.toFixed(2) || 'N/A',
+          'LPCD Day 4': scheme.lpcd_value_day4?.toFixed(2) || 'N/A',
+          'LPCD Day 5': scheme.lpcd_value_day5?.toFixed(2) || 'N/A',
+          'LPCD Day 6': scheme.lpcd_value_day6?.toFixed(2) || 'N/A',
+          'LPCD Day 7': scheme.lpcd_value_day7?.toFixed(2) || 'N/A',
+        };
+      });
+
+      // Create worksheet
+      const ws = XLSX.utils.json_to_sheet(dataToExport);
+      
+      // Set column widths
+      const columns = [
+        { wch: 5 }, // No.
+        { wch: 12 }, // Region
+        { wch: 12 }, // Circle
+        { wch: 15 }, // Division
+        { wch: 15 }, // Sub Division
+        { wch: 12 }, // Block
+        { wch: 12 }, // Scheme ID
+        { wch: 25 }, // Scheme Name
+        { wch: 20 }, // Village Name
+        { wch: 12 }, // Population
+        { wch: 15 }, // Current LPCD
+        { wch: 10 }, // Status
+        { wch: 12 }, // LPCD Day 1
+        { wch: 12 }, // LPCD Day 2
+        { wch: 12 }, // LPCD Day 3
+        { wch: 12 }, // LPCD Day 4
+        { wch: 12 }, // LPCD Day 5
+        { wch: 12 }, // LPCD Day 6
+        { wch: 12 }, // LPCD Day 7
+      ];
+      ws['!cols'] = columns;
+      
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'LPCD Data');
+      
+      // Generate filename
+      let filename = 'LPCD_Data';
+      if (selectedRegion !== 'all') {
+        filename += `_${selectedRegion}`;
+      }
+      if (currentFilter !== 'all') {
+        filename += `_${currentFilter}`;
+      }
+      filename += `_${new Date().toISOString().split('T')[0]}.xlsx`;
+      
+      // Save file
+      XLSX.writeFile(wb, filename);
+      
+      toast({
+        title: "Export Successful",
+        description: `${dataToExport.length} records exported to Excel`,
+      });
+    }).catch(error => {
+      console.error('Error exporting to Excel:', error);
+      toast({
+        title: "Export Failed",
+        description: "There was an error exporting to Excel. Please try again.",
+        variant: "destructive",
+      });
+    });
   };
   
   const NoDataMessage = () => (
@@ -416,6 +521,143 @@ const EnhancedLpcdDashboard: React.FC = () => {
     }
   }, [schemesError, toast]);
 
+  // State for village details dialog
+  const [selectedVillage, setSelectedVillage] = useState<WaterSchemeData | null>(null);
+  const [villageDetailsOpen, setVillageDetailsOpen] = useState(false);
+
+  // View village details
+  const handleViewVillage = (scheme: WaterSchemeData) => {
+    setSelectedVillage(scheme);
+    setVillageDetailsOpen(true);
+  };
+
+  // Village Details Component
+  const VillageDetailsDialog = () => {
+    if (!selectedVillage) return null;
+    
+    const lpcdValue = getLatestLpcdValue(selectedVillage);
+    const lpcdValues = [
+      { day: 1, value: selectedVillage.lpcd_value_day1, date: selectedVillage.lpcd_date_day1 },
+      { day: 2, value: selectedVillage.lpcd_value_day2, date: selectedVillage.lpcd_date_day2 },
+      { day: 3, value: selectedVillage.lpcd_value_day3, date: selectedVillage.lpcd_date_day3 },
+      { day: 4, value: selectedVillage.lpcd_value_day4, date: selectedVillage.lpcd_date_day4 },
+      { day: 5, value: selectedVillage.lpcd_value_day5, date: selectedVillage.lpcd_date_day5 },
+      { day: 6, value: selectedVillage.lpcd_value_day6, date: selectedVillage.lpcd_date_day6 },
+      { day: 7, value: selectedVillage.lpcd_value_day7, date: selectedVillage.lpcd_date_day7 },
+    ];
+    
+    return (
+      <Dialog open={villageDetailsOpen} onOpenChange={setVillageDetailsOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="text-xl flex items-center justify-between">
+              <span>{selectedVillage.village_name}</span>
+              <LpcdBadge value={lpcdValue} />
+            </DialogTitle>
+            <DialogDescription>
+              <div className="grid grid-cols-2 gap-4 mt-2">
+                <div>
+                  <span className="text-gray-500">Scheme:</span> {selectedVillage.scheme_name}
+                </div>
+                <div>
+                  <span className="text-gray-500">Scheme ID:</span> {selectedVillage.scheme_id}
+                </div>
+                <div>
+                  <span className="text-gray-500">Region:</span> {selectedVillage.region}
+                </div>
+                <div>
+                  <span className="text-gray-500">Population:</span> {selectedVillage.population?.toLocaleString() || 'N/A'}
+                </div>
+                <div>
+                  <span className="text-gray-500">Block:</span> {selectedVillage.block}
+                </div>
+                <div>
+                  <span className="text-gray-500">ESR Count:</span> {selectedVillage.number_of_esr || 'N/A'}
+                </div>
+              </div>
+            </DialogDescription>
+          </DialogHeader>
+          
+          <ScrollArea className="mt-4 max-h-[60vh]">
+            <div className="space-y-6">
+              {/* LPCD Values */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">LPCD Values (Last 7 Days)</h3>
+                <div className="grid grid-cols-7 gap-2">
+                  {lpcdValues.map((item, index) => {
+                    const value = item.value !== undefined && item.value !== null ? Number(item.value) : null;
+                    return (
+                      <div 
+                        key={`lpcd-day-${index+1}`} 
+                        className={`p-3 rounded-md text-center ${value !== null ? getLpcdStatusColor(value) : 'bg-gray-100'}`}
+                      >
+                        <p className="text-xs opacity-80">Day {item.day}</p>
+                        <p className="text-lg font-semibold">{value !== null ? value.toFixed(1) : '-'}</p>
+                        <p className="text-xs opacity-80">{item.date || '-'}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Water Consumption Values */}
+              <div>
+                <h3 className="text-lg font-semibold mb-3">Water Consumption (MLD)</h3>
+                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                  {[1, 2, 3, 4, 5, 6].map((day) => {
+                    const waterValue = selectedVillage[`water_value_day${day}` as keyof WaterSchemeData];
+                    const numValue = waterValue !== undefined && waterValue !== null ? Number(waterValue) : null;
+                    const dateValue = selectedVillage[`water_date_day${day}` as keyof WaterSchemeData];
+                    
+                    return (
+                      <div key={`water-day-${day}`} className="bg-blue-50 p-3 rounded-md text-center">
+                        <p className="text-xs text-blue-700">Day {day}</p>
+                        <p className="text-lg font-semibold text-blue-700">{numValue !== null ? numValue.toFixed(2) : '-'}</p>
+                        <p className="text-xs text-blue-700">{dateValue || '-'}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              {/* Stats */}
+              <div className="grid grid-cols-3 gap-4">
+                <Card className={`${selectedVillage.below_55_lpcd_count > 0 ? 'bg-red-50' : 'bg-gray-50'}`}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-gray-600">Days Below 55L LPCD</p>
+                    <p className={`text-2xl font-bold ${selectedVillage.below_55_lpcd_count > 0 ? 'text-red-600' : 'text-gray-600'}`}>
+                      {selectedVillage.below_55_lpcd_count || 0}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card className={`${selectedVillage.above_55_lpcd_count > 0 ? 'bg-green-50' : 'bg-gray-50'}`}>
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-gray-600">Days Above 55L LPCD</p>
+                    <p className={`text-2xl font-bold ${selectedVillage.above_55_lpcd_count > 0 ? 'text-green-600' : 'text-gray-600'}`}>
+                      {selectedVillage.above_55_lpcd_count || 0}
+                    </p>
+                  </CardContent>
+                </Card>
+                
+                <Card className={`${selectedVillage.consistent_zero_lpcd_for_a_week === 1 ? 'bg-gray-800' : 'bg-gray-50'}`}>
+                  <CardContent className="p-4 text-center">
+                    <p className={`text-sm ${selectedVillage.consistent_zero_lpcd_for_a_week === 1 ? 'text-gray-300' : 'text-gray-600'}`}>
+                      Zero Water for Week
+                    </p>
+                    <p className={`text-2xl font-bold ${selectedVillage.consistent_zero_lpcd_for_a_week === 1 ? 'text-white' : 'text-gray-600'}`}>
+                      {selectedVillage.consistent_zero_lpcd_for_a_week === 1 ? 'Yes' : 'No'}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+    );
+  };
+
   return (
     <div className="w-full py-6 container mx-auto px-4">
       <div className="flex justify-between items-center mb-6">
@@ -445,8 +687,19 @@ const EnhancedLpcdDashboard: React.FC = () => {
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={exportToExcel}
+            title="Export to Excel"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+          </Button>
         </div>
       </div>
+      
+      {/* Village details dialog */}
+      <VillageDetailsDialog />
       
       {isLoadingSchemes || isLoadingRegions ? (
         <div className="flex justify-center items-center h-[400px]">
@@ -640,6 +893,7 @@ const EnhancedLpcdDashboard: React.FC = () => {
                             <TableHead>Population</TableHead>
                             <TableHead>Current LPCD</TableHead>
                             <TableHead>Status</TableHead>
+                            <TableHead className="w-[80px]">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -659,6 +913,16 @@ const EnhancedLpcdDashboard: React.FC = () => {
                                   <Badge variant="outline" className={`${getLpcdStatusColor(lpcdValue)} border-0`}>
                                     {getLpcdStatusText(lpcdValue)}
                                   </Badge>
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleViewVillage(scheme)}
+                                    title="View Details"
+                                  >
+                                    <Eye className="h-4 w-4" />
+                                  </Button>
                                 </TableCell>
                               </TableRow>
                             );
