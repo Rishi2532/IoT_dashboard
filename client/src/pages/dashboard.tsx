@@ -25,6 +25,9 @@ export default function Dashboard() {
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
+  
+  // State for map type selection
+  const [mapType, setMapType] = useState<'gis' | 'detailed'>('gis');
 
   // Fetch regions data
   const {
@@ -271,9 +274,31 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
         {/* Map Column - Full width on mobile, 5/12 on desktop */}
         <div className="lg:col-span-5 bg-white p-3 sm:p-4 rounded-lg border-0 flex flex-col">
-          <h2 className="text-sm sm:text-base font-medium mb-2 sm:mb-3 text-blue-800">
-            Maharashtra Regional Status
-          </h2>
+          <div className="flex justify-between items-center mb-2 sm:mb-3">
+            <h2 className="text-sm sm:text-base font-medium text-blue-800">
+              Maharashtra Regional Status
+            </h2>
+            <div className="flex items-center space-x-2 text-xs">
+              <Button
+                variant={mapType === 'gis' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setMapType('gis')}
+                className="h-7 px-2 text-xs"
+              >
+                <Map className="mr-1 h-3 w-3" />
+                Basic Map
+              </Button>
+              <Button
+                variant={mapType === 'detailed' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setMapType('detailed')}
+                className="h-7 px-2 text-xs"
+              >
+                <Map className="mr-1 h-3 w-3" />
+                Detailed Map
+              </Button>
+            </div>
+          </div>
           <div className="mb-2 sm:mb-3">
             <MetricSelector
               value={mapMetric}
@@ -282,14 +307,25 @@ export default function Dashboard() {
           </div>
           <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
-              <GISMaharashtraMap
-                regionSummary={regionSummary}
-                regions={regions}
-                selectedRegion={selectedRegion}
-                onRegionClick={handleRegionChange}
-                metric={mapMetric}
-                isLoading={isRegionsLoading || isSummaryLoading}
-              />
+              {mapType === 'gis' ? (
+                <GISMaharashtraMap
+                  regionSummary={regionSummary}
+                  regions={regions}
+                  selectedRegion={selectedRegion}
+                  onRegionClick={handleRegionChange}
+                  metric={mapMetric}
+                  isLoading={isRegionsLoading || isSummaryLoading}
+                />
+              ) : (
+                <DetailedMaharashtraMap
+                  regionSummary={regionSummary}
+                  regions={regions}
+                  selectedRegion={selectedRegion}
+                  onRegionClick={handleRegionChange}
+                  metric={mapMetric}
+                  isLoading={isRegionsLoading || isSummaryLoading}
+                />
+              )}
             </div>
           </div>
         </div>

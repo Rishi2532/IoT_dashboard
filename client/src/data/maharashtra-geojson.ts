@@ -1,102 +1,18 @@
-import { Feature, FeatureCollection, Geometry } from 'geojson';
+/**
+ * Maharashtra GeoJSON Data
+ * This file contains utility data for Maharashtra regions used by the map components
+ */
 
-// Define the type for the GeoJSON data properties
-export interface MaharashtraFeatureProperties {
-  name: string;
-  region: string;
-  fid?: number;
-  ID_0?: number;
-  ISO?: string;
-  NAME_0?: string;
-  ID_1?: number;
-  NAME_1?: string;
-  ID_2?: number;
-  NAME_2?: string;
-  TYPE_2?: string;
-  ENGTYPE_2?: string;
-  NL_NAME_2?: any;
-  VARNAME_2?: string;
-}
-
-// Load the custom Maharashtra GeoJSON data
-export async function loadMaharashtraGeoJson(): Promise<FeatureCollection<Geometry, MaharashtraFeatureProperties>> {
-  try {
-    const response = await fetch('/maharastra.geojson');
-    const data = await response.json();
-    
-    // Process the data to ensure each feature has a proper region property
-    data.features.forEach((feature: any) => {
-      if (!feature.properties.region) {
-        // Map the district to its corresponding region if needed
-        const districtRegionMap: Record<string, string> = {
-          'Nagpur': 'Nagpur',
-          'Wardha': 'Nagpur',
-          'Bhandara': 'Nagpur',
-          'Gondiya': 'Nagpur',
-          'Chandrapur': 'Nagpur',
-          'Garhchiroli': 'Nagpur',
-          
-          'Amravati': 'Amravati',
-          'Akola': 'Amravati',
-          'Washim': 'Amravati',
-          'Buldana': 'Amravati',
-          'Yavatmal': 'Amravati',
-          
-          'Aurangabad': 'Chhatrapati Sambhajinagar',
-          'Jalna': 'Chhatrapati Sambhajinagar',
-          'Parbhani': 'Chhatrapati Sambhajinagar',
-          'Hingoli': 'Chhatrapati Sambhajinagar',
-          'Nanded': 'Chhatrapati Sambhajinagar',
-          'Bid': 'Chhatrapati Sambhajinagar',
-          'Latur': 'Chhatrapati Sambhajinagar',
-          'Osmanabad': 'Chhatrapati Sambhajinagar',
-          
-          'Nashik': 'Nashik',
-          'Dhule': 'Nashik',
-          'Nandurbar': 'Nashik',
-          'Jalgaon': 'Nashik',
-          
-          'Pune': 'Pune',
-          'Ahmednagar': 'Pune',
-          'Solapur': 'Pune',
-          'Satara': 'Pune',
-          'Sangli': 'Pune',
-          'Kolhapur': 'Pune',
-          
-          'Greater Bombay': 'Konkan',
-          'Mumbai': 'Konkan',
-          'Thane': 'Konkan',
-          'Raigarh': 'Konkan',
-          'Ratnagiri': 'Konkan',
-          'Sindhudurg': 'Konkan'
-        };
-        
-        // Set the region based on the district name
-        if (feature.properties.NAME_2) {
-          feature.properties.region = districtRegionMap[feature.properties.NAME_2] || 'Unknown';
-        }
-      }
-      
-      // Set name to district name for display
-      feature.properties.name = feature.properties.NAME_2 || feature.properties.name || 'Unknown';
-    });
-    
-    return data;
-  } catch (error) {
-    console.error('Error loading Maharashtra GeoJSON:', error);
-    return { type: 'FeatureCollection', features: [] };
-  }
-}
-
-// Fallback simplified geojson if the main one fails to load
-export const simplifiedMaharashtraGeoJson: FeatureCollection<Geometry, MaharashtraFeatureProperties> = {
+// Simplified GeoJSON data for Maharashtra (minimal version for performant rendering)
+export const simplifiedMaharashtraGeoJson = {
   "type": "FeatureCollection",
   "features": [
     {
       "type": "Feature",
       "properties": {
         "name": "Nagpur",
-        "region": "Nagpur"
+        "region": "Nagpur",
+        "code": "MH09"
       },
       "geometry": {
         "type": "Polygon",
@@ -107,7 +23,8 @@ export const simplifiedMaharashtraGeoJson: FeatureCollection<Geometry, Maharasht
       "type": "Feature",
       "properties": {
         "name": "Amravati",
-        "region": "Amravati"
+        "region": "Amravati",
+        "code": "MH04"
       },
       "geometry": {
         "type": "Polygon",
@@ -118,7 +35,8 @@ export const simplifiedMaharashtraGeoJson: FeatureCollection<Geometry, Maharasht
       "type": "Feature",
       "properties": {
         "name": "Chhatrapati Sambhajinagar",
-        "region": "Chhatrapati Sambhajinagar"
+        "region": "Chhatrapati Sambhajinagar",
+        "code": "MH20"
       },
       "geometry": {
         "type": "Polygon",
@@ -129,7 +47,8 @@ export const simplifiedMaharashtraGeoJson: FeatureCollection<Geometry, Maharasht
       "type": "Feature",
       "properties": {
         "name": "Nashik",
-        "region": "Nashik"
+        "region": "Nashik",
+        "code": "MH15"
       },
       "geometry": {
         "type": "Polygon",
@@ -140,7 +59,8 @@ export const simplifiedMaharashtraGeoJson: FeatureCollection<Geometry, Maharasht
       "type": "Feature",
       "properties": {
         "name": "Pune",
-        "region": "Pune"
+        "region": "Pune",
+        "code": "MH12"
       },
       "geometry": {
         "type": "Polygon",
@@ -151,72 +71,162 @@ export const simplifiedMaharashtraGeoJson: FeatureCollection<Geometry, Maharasht
       "type": "Feature",
       "properties": {
         "name": "Konkan",
-        "region": "Konkan"
+        "region": "Konkan",
+        "code": "MH13"
       },
       "geometry": {
         "type": "Polygon",
         "coordinates": [[[72.75, 19.15], [73.10, 19.15], [73.30, 19.05], [73.35, 18.85], [73.25, 18.65], [73.05, 18.55], [72.80, 18.55], [72.55, 18.65], [72.45, 18.85], [72.55, 19.05], [72.75, 19.15]]]
       }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Mumbai",
+        "region": "Konkan",
+        "code": "MH01"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[72.75, 19.05], [72.95, 19.10], [73.10, 19.05], [73.15, 18.95], [73.10, 18.85], [72.95, 18.80], [72.80, 18.85], [72.70, 18.95], [72.75, 19.05]]]
+      }
     }
   ]
 };
 
-// Helper function to get the center point of a feature
-export function getFeatureCenter(feature: Feature<Geometry, MaharashtraFeatureProperties>): [number, number] {
-  const geometry = feature.geometry;
-  
-  if (geometry.type === 'Polygon') {
-    // Calculate the centroid of the first polygon ring
-    const coordinates = geometry.coordinates[0];
-    let sumX = 0;
-    let sumY = 0;
-    
-    coordinates.forEach(coord => {
-      sumX += coord[0];
-      sumY += coord[1];
-    });
-    
-    return [sumX / coordinates.length, sumY / coordinates.length];
+// Load GeoJSON data from file (async)
+export async function loadMaharashtraGeoJson(): Promise<any> {
+  try {
+    const response = await fetch('/maharashtra_districts.geojson');
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error('Error loading Maharashtra GeoJSON:', error);
+    return simplifiedMaharashtraGeoJson;
   }
-  
-  // Default center for other geometry types
-  return [0, 0];
 }
 
-// Predefined list of region names since we need these before loading the GeoJSON
+// Get features for a specific region
+export function getFeaturesByRegion(geoJsonData: any, regionName: string): any[] {
+  if (!geoJsonData || !geoJsonData.features) return [];
+  
+  return geoJsonData.features.filter((feature: any) => 
+    feature.properties && feature.properties.region === regionName);
+}
+
+// Create a map of region names to their features
+export function getRegionToFeatureMap(geoJsonData: any): Record<string, any[]> {
+  const map: Record<string, any[]> = {};
+  
+  regionNames.forEach(region => {
+    map[region] = getFeaturesByRegion(geoJsonData, region);
+  });
+  
+  return map;
+}
+
+export interface MaharashtraFeatureProperties {
+  name: string;
+  region: string;
+  code: string;
+}
+
+// List of region names in Maharashtra
 export const regionNames = [
-  "Nagpur", 
-  "Amravati", 
-  "Chhatrapati Sambhajinagar", 
-  "Nashik", 
-  "Pune", 
-  "Konkan"
+  'Amravati',
+  'Nagpur',
+  'Chhatrapati Sambhajinagar',
+  'Nashik',
+  'Pune',
+  'Konkan'
 ];
 
-// Get features by region name
-export function getFeaturesByRegion(regionName: string, geoJsonData: FeatureCollection<Geometry, MaharashtraFeatureProperties>): Feature<Geometry, MaharashtraFeatureProperties>[] {
-  return geoJsonData.features.filter(feature => 
-    feature.properties.region === regionName
-  );
-}
-
-// Map region names to their primary feature - function that returns the mapping instead of a constant
-export function getRegionToFeatureMap(geoJsonData: FeatureCollection<Geometry, MaharashtraFeatureProperties>): Record<string, Feature<Geometry, MaharashtraFeatureProperties>> {
-  return regionNames.reduce((acc, regionName) => {
-    const features = getFeaturesByRegion(regionName, geoJsonData);
-    if (features.length > 0) {
-      acc[regionName] = features[0];
-    }
-    return acc;
-  }, {} as Record<string, Feature<Geometry, MaharashtraFeatureProperties>>);
-}
-
-// Color mapping for regions
+// Color mapping for Maharashtra regions on the map
 export const regionColors: Record<string, string> = {
-  'Nagpur': '#E8CEAD',
-  'Amravati': '#F8BFC7',
-  'Chhatrapati Sambhajinagar': '#C0D1F0',
-  'Nashik': '#F1E476',
-  'Pune': '#ADEBAD',
-  'Konkan': '#BFC0C0'
+  'Nashik': '#8CB3E2',         // Light blue
+  'Amravati': '#ff7300',       // Orange 
+  'Nagpur': '#E2B8B8',         // Light red/pink
+  'Chhatrapati Sambhajinagar': '#68A9A9', // Teal green
+  'Pune': '#FFC408',           // Yellow
+  'Konkan': '#4A77BB'          // Blue
 };
+
+// Mapping from district codes to their parent regions
+export const districtToRegion: Record<string, string> = {
+  // Amravati Region
+  'MH04': 'Amravati',
+  'MH05': 'Amravati',
+  'MH07': 'Amravati',
+  'MH19': 'Amravati',
+  'MH38': 'Amravati',
+  
+  // Nagpur Region
+  'MH09': 'Nagpur',
+  'MH10': 'Nagpur',
+  'MH33': 'Nagpur',
+  'MH35': 'Nagpur',
+  'MH36': 'Nagpur',
+  'MH37': 'Nagpur',
+  
+  // Chhatrapati Sambhajinagar Region
+  'MH20': 'Chhatrapati Sambhajinagar',
+  'MH21': 'Chhatrapati Sambhajinagar',
+  'MH22': 'Chhatrapati Sambhajinagar',
+  'MH23': 'Chhatrapati Sambhajinagar',
+  'MH24': 'Chhatrapati Sambhajinagar',
+  
+  // Nashik Region
+  'MH15': 'Nashik',
+  'MH16': 'Nashik',
+  'MH17': 'Nashik',
+  'MH18': 'Nashik',
+  'MH39': 'Nashik',
+  
+  // Pune Region
+  'MH11': 'Pune',
+  'MH12': 'Pune',
+  'MH13': 'Pune',
+  'MH14': 'Pune',
+  'MH42': 'Pune',
+  'MH43': 'Pune',
+  
+  // Konkan Region
+  'MH01': 'Konkan',
+  'MH02': 'Konkan',
+  'MH03': 'Konkan',
+  'MH06': 'Konkan',
+  'MH08': 'Konkan'
+};
+
+// Function to get region color by name
+export function getRegionColor(regionName: string): string {
+  return regionColors[regionName] || '#cccccc';
+}
+
+// Function to get region name from district code
+export function getRegionFromDistrict(districtCode: string): string {
+  return districtToRegion[districtCode] || 'Unknown';
+}
+
+// Calculate the center point of a GeoJSON feature with polygon geometry
+export function getFeatureCenter(coordinates: number[][][]): [number, number] {
+  if (!coordinates || coordinates.length === 0 || !coordinates[0] || coordinates[0].length === 0) {
+    return [76.5, 19.0]; // Default center of Maharashtra
+  }
+  
+  // Get the first polygon (in case of multipolygon)
+  const polygon = coordinates[0];
+  
+  // Calculate centroid
+  let sumLat = 0;
+  let sumLng = 0;
+  let count = 0;
+  
+  polygon.forEach((coord: number[]) => {
+    sumLng += coord[0];
+    sumLat += coord[1];
+    count++;
+  });
+  
+  return [sumLng / count, sumLat / count];
+}
