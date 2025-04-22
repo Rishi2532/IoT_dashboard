@@ -674,13 +674,25 @@ const EnhancedLpcdDashboard = () => {
         (item) => item.value !== undefined && item.value !== null,
       );
 
-      // Include the actual 0 values in the "below 55" count
-      const daysAbove = validValues.filter(
-        (item) => Number(item.value) >= 55,
-      ).length;
-      const daysBelow = validValues.filter(
-        (item) => Number(item.value) < 55,
-      ).length;
+      // Special handling for all-zero values
+      const allZeros = validValues.every((item) => Number(item.value) === 0);
+      
+      let daysAbove = 0;
+      let daysBelow = 0;
+      
+      if (allZeros && validValues.length > 0) {
+        // If all values are zero, count all days as "below 55"
+        daysAbove = 0;
+        daysBelow = validValues.length;
+      } else {
+        // Normal calculation for non-zero values
+        daysAbove = validValues.filter(
+          (item) => Number(item.value) >= 55,
+        ).length;
+        daysBelow = validValues.filter(
+          (item) => Number(item.value) < 55,
+        ).length;
+      }
 
       return {
         daysAbove,
