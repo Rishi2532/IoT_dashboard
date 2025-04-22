@@ -21,17 +21,17 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
   if (isLoading || !data) {
     return (
       <div className={layout === 'compact'
-        ? "grid grid-cols-2 gap-4" // Compact layout (2x2 grid as shown in example)
-        : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" // Normal layout (4 cards in a row)
+        ? "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4" // Compact layout (1 col on mobile, 2x2 grid on tablet+)
+        : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" // Normal layout
       }>
         {[...Array(4)].map((_, i) => (
           <Card
             key={i}
-            className="bg-white overflow-hidden rounded-lg border-0 shadow-sm rounded-lg"
+            className="bg-white overflow-hidden rounded-lg border-0 shadow-sm"
           >
-            <CardContent className="p-4">
-              <div className="h-24 flex items-center justify-center">
-                <div className="animate-pulse bg-gray-200 h-4 w-3/4 rounded"></div>
+            <CardContent className="p-3 sm:p-4">
+              <div className="h-16 sm:h-24 flex items-center justify-center">
+                <div className="animate-pulse bg-gray-200 h-3 sm:h-4 w-3/4 rounded"></div>
               </div>
             </CardContent>
           </Card>
@@ -63,8 +63,8 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
 
   return (
     <div className={layout === 'compact' 
-      ? "grid grid-cols-2 gap-4" // Compact layout matching reference image exactly
-      : "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" // Normal layout
+      ? "grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4" // Compact layout with 1 col on mobile, 2x2 on larger screens
+      : "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" // Normal layout
     }>
       {/* Total Schemes Card */}
       <Card className="bg-white overflow-hidden rounded-lg border-0 shadow-sm">

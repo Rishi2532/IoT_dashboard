@@ -266,21 +266,21 @@ export default function Dashboard() {
         />
       </div>
 
-      {/* Map and Stats Cards Layout (Map Left, Cards Right) - Exactly matching reference image */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-4">
-        {/* Map Column (Left) - 45% width */}
-        <div className="lg:w-[45%] bg-white p-4 rounded-lg border-0 h-full flex flex-col">
-          <h2 className="text-base font-medium mb-3 text-blue-800">
+      {/* Map and Stats Cards Layout (stacked on mobile, side-by-side on desktop) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 mb-4">
+        {/* Map Column - Full width on mobile, 5/12 on desktop */}
+        <div className="lg:col-span-5 bg-white p-3 sm:p-4 rounded-lg border-0 flex flex-col">
+          <h2 className="text-sm sm:text-base font-medium mb-2 sm:mb-3 text-blue-800">
             Maharashtra Regional Status
           </h2>
-          <div className="mb-3">
+          <div className="mb-2 sm:mb-3">
             <MetricSelector
               value={mapMetric}
               onChange={(newMetric) => setMapMetric(newMetric)}
             />
           </div>
-          <div className="w-full overflow-x-auto flex-1">
-            <div className="min-w-[300px] sm:min-w-full h-full">
+          <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
+            <div className="min-w-[280px] sm:min-w-full h-full">
               <GISMaharashtraMap
                 regionSummary={regionSummary}
                 regions={regions}
@@ -293,8 +293,8 @@ export default function Dashboard() {
           </div>
         </div>
         
-        {/* Stats Cards Area (Right) - 55% width with 2x2 grid layout */}
-        <div className="lg:w-[55%]">
+        {/* Stats Cards Area - Full width on mobile, 7/12 on desktop */}
+        <div className="lg:col-span-7">
           <StatsCards 
             data={regionSummary} 
             isLoading={isSummaryLoading} 
@@ -304,25 +304,33 @@ export default function Dashboard() {
       </div>
       
       {/* Enhanced Region Comparison Chart (Full Width) */}
-      <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all h-full flex flex-col mb-4 sm:mb-6">
-        <div className="flex justify-between items-center mb-3 sm:mb-4">
-          <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center">
+      <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all flex flex-col mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4">
+          <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center mb-2 sm:mb-0">
             <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
             Region Wise Project Status
           </h2>
-          <span className="hidden sm:inline-flex space-x-2 items-center">
+          <div className="flex flex-wrap space-x-2 sm:space-x-4 items-center text-[9px] sm:text-xs">
             <span className="flex items-center">
-              <span className="h-3 w-3 rounded-sm bg-blue-500 mr-1"></span>
-              <span className="text-xs text-blue-700">ESR Integration</span>
+              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-blue-500 mr-1"></span>
+              <span className="text-blue-700">ESR</span>
             </span>
-            <span className="flex items-center ml-3">
-              <span className="h-3 w-3 rounded-sm bg-green-500 mr-1"></span>
-              <span className="text-xs text-green-700">Village Coverage</span>
+            <span className="flex items-center">
+              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-green-500 mr-1"></span>
+              <span className="text-green-700">Completed ESR</span>
             </span>
-          </span>
+            <span className="flex items-center">
+              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-amber-500 mr-1"></span>
+              <span className="text-amber-700">Villages</span>
+            </span>
+            <span className="flex items-center">
+              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-purple-500 mr-1"></span>
+              <span className="text-purple-700">Schemes</span>
+            </span>
+          </div>
         </div>
-        <div className="w-full overflow-x-auto flex-1 flex flex-col bg-white rounded-lg p-3">
-          <div className="min-w-[300px] sm:min-w-full flex-1 flex flex-col">
+        <div className="w-full overflow-hidden flex-1 flex flex-col bg-white rounded-lg p-2 sm:p-3">
+          <div className="w-full flex-1 flex flex-col h-[400px] sm:h-[550px]">
             <RegionComparisonChart
               regions={regions || []}
               isLoading={isRegionsLoading}

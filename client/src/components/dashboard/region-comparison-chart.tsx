@@ -17,6 +17,17 @@ export default function RegionComparisonChart({
   const chartInstance = useRef<Chart | null>(null);
   const [selectedDatasets, setSelectedDatasets] = useState<number[]>([]);
   const [showResetButton, setShowResetButton] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(window.innerWidth);
+
+  // Update screen width on window resize
+  useEffect(() => {
+    const handleResize = () => {
+      setScreenWidth(window.innerWidth);
+    };
+    
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Generate datasets from region data
   const generateChartData = (regions: Region[]) => {
@@ -25,10 +36,28 @@ export default function RegionComparisonChart({
     );
 
     const labels = sortedRegions.map((region) => {
-      // Abbreviate long names to fit better on chart
-      if (region.region_name === "Chhatrapati Sambhajinagar")
-        return "C. Sambhajinagar";
-      return region.region_name;
+      // More aggressive abbreviation for mobile screens
+      if (screenWidth < 640) {
+        // Very small screens - use 3-4 letter abbreviations
+        if (region.region_name === "Chhatrapati Sambhajinagar") return "CSN";
+        if (region.region_name === "Amravati") return "AMR";
+        if (region.region_name === "Nashik") return "NSK";
+        if (region.region_name === "Nagpur") return "NGP";
+        if (region.region_name === "Konkan") return "KON";
+        if (region.region_name === "Pune") return "PUN";
+        return region.region_name.substring(0, 3);
+      } else if (screenWidth < 768) {
+        // Small screens - use shorter abbreviations
+        if (region.region_name === "Chhatrapati Sambhajinagar") return "C. Sbj";
+        return region.region_name.length > 6 
+          ? region.region_name.substring(0, 6) + "." 
+          : region.region_name;
+      } else {
+        // Regular abbreviation for larger screens
+        if (region.region_name === "Chhatrapati Sambhajinagar")
+          return "C. Sambhajinagar";
+        return region.region_name;
+      }
     });
 
     // Extract all required data from regions
@@ -127,6 +156,10 @@ export default function RegionComparisonChart({
 
     const chartData = generateChartData(regions);
 
+    // Adjust chart configuration based on screen size
+    const isMobile = screenWidth < 640;
+    const isTablet = screenWidth >= 640 && screenWidth < 1024;
+    
     chartInstance.current = new Chart(ctx, {
       type: "bar",
       data: chartData,
@@ -135,26 +168,34 @@ export default function RegionComparisonChart({
         maintainAspectRatio: false,
         layout: {
           padding: {
-            top: 20,
-            right: 20,
-            bottom: 60,
-            left: 20,
+            top: isMobile ? 10 : 20,
+            right: isMobile ? 10 : 20,
+            bottom: isMobile ? 30 : 60,
+            left: isMobile ? 10 : 20,
           },
         },
         scales: {
           y: {
             beginAtZero: true,
             title: {
-              display: true,
+              display: !isMobile, // Hide title on mobile
               text: "Count",
               font: {
-                size: 20,
+                size: isMobile ? 14 : isTablet ? 16 : 20,
                 weight: "bold",
               },
               padding: { top: 10, bottom: 10 },
             },
             grid: {
               color: "rgba(0,0,0,0.1)",
+            },
+            ticks: {
+              // Use smaller font on mobile
+              font: {
+                size: isMobile ? 10 : 12,
+              },
+              // Show fewer ticks on mobile
+              maxTicksLimit: isMobile ? 5 : 10,
             },
             suggestedMax: function(context: any) {
               let maxValue = 0;
@@ -167,11 +208,11 @@ export default function RegionComparisonChart({
           },
           x: {
             ticks: {
-              autoSkip: false,
-              maxRotation: 45,
-              minRotation: 45,
+              autoSkip: isMobile, // Enable autoskip on mobile
+              maxRotation: isMobile ? 90 : 45, // More rotation on mobile to save space
+              minRotation: isMobile ? 90 : 45,
               font: {
-                size: 14,
+                size: isMobile ? 10 : isTablet ? 12 : 14,
               },
             },
             grid: {
@@ -189,10 +230,10 @@ export default function RegionComparisonChart({
               }
             },
             labels: {
-              boxWidth: 15,
-              padding: 10,
+              boxWidth: isMobile ? 10 : 15,
+              padding: isMobile ? 5 : 10,
               font: {
-                size: 15,
+                size: isMobile ? 9 : isTablet ? 12 : 15,
                 weight: "bold",
               },
               usePointStyle: true,
@@ -214,49 +255,66 @@ export default function RegionComparisonChart({
                 return labels;
               }
             },
+            // Change legend display on mobile to save space
+            display: !isMobile || selectedDatasets.length > 0,
             title: {
-              display: true,
-              text: "Region Wise Project Status (Click to Toggle)",
+              display: !isMobile, // Hide on mobile
+              text: isMobile ? "Tap to filter" : "Region Wise Project Status (Click to Toggle)",
               font: {
-                size: 18,
+                size: isMobile ? 12 : isTablet ? 14 : 18,
                 weight: "bold",
               },
               padding: {
-                bottom: 15,
+                bottom: isMobile ? 5 : 15,
               },
             },
           },
           tooltip: {
             backgroundColor: "rgba(0, 0, 0, 0.8)",
             titleFont: {
-              size: 12,
+              size: isMobile ? 10 : 12,
             },
             bodyFont: {
-              size: 11,
+              size: isMobile ? 9 : 11,
             },
-            padding: 10,
+            padding: isMobile ? 6 : 10,
             displayColors: true,
           },
           datalabels: {
             color: "#000",
             backgroundColor: "rgba(255, 255, 255, 0.7)",
             borderRadius: 4,
-            padding: 2,
+            padding: isMobile ? 1 : 2,
             font: {
               weight: "bold",
-              size: 12,
+              size: isMobile ? 8 : 12,
             },
             formatter: (value: any) => {
               if (value === 0 || value === '0' || !value) {
                 return '0';
               }
+              // On mobile, abbreviate large numbers
+              if (isMobile && value > 999) {
+                return (value / 1000).toFixed(1) + 'k';
+              }
               return value.toString();
             },
-            display: true,
+            display: (context: any) => {
+              // On mobile, only show labels for larger values to avoid clutter
+              if (isMobile) {
+                const value = Number(context.dataset.data[context.dataIndex] || 0);
+                return value > 20; // Only show labels for values > 20 on mobile
+              }
+              return true;
+            },
             anchor: "end",
             align: function(context: any) {
               const datasetIndex = context.datasetIndex || 0;
               const value = Number(context.dataset.data[context.dataIndex] || 0);
+              
+              if (isMobile) {
+                return value > 100 ? 'end' : 'start';
+              }
               
               if (datasetIndex === 0 && value > 300) {
                 return 'end';
@@ -268,6 +326,10 @@ export default function RegionComparisonChart({
             offset: function(context: any) {
               const datasetIndex = context.datasetIndex || 0;
               const value = Number(context.dataset.data[context.dataIndex] || 0);
+              
+              if (isMobile) {
+                return value > 100 ? 8 : 2;
+              }
               
               if (datasetIndex === 0 && value > 300) {
                 return 15;
