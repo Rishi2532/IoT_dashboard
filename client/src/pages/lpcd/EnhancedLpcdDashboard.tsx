@@ -442,7 +442,7 @@ const EnhancedLpcdDashboard = () => {
       <span
         className={`px-2 py-1 rounded-full text-xs font-medium ${getLpcdStatusColor(value)}`}
       >
-        {value !== null ? `${value.toFixed(1)}L` : "N/A"}
+        {value !== null ? `${value.toFixed(2)}L` : "N/A"}
       </span>
     );
   };
@@ -643,13 +643,20 @@ const EnhancedLpcdDashboard = () => {
     const calculateDaysAboveBelow = () => {
       const validValues = lpcdValues.filter(item => item.value !== undefined && item.value !== null);
       
+      // Include the actual 0 values in the "below 55" count
       const daysAbove = validValues.filter(item => Number(item.value) >= 55).length;
       const daysBelow = validValues.filter(item => Number(item.value) < 55).length;
       
-      return { daysAbove, daysBelow };
+      return { 
+        daysAbove, 
+        daysBelow,
+        // For UI display, use these values
+        daysAboveCount: selectedVillage.above_55_lpcd_count || daysAbove,
+        daysBelowCount: selectedVillage.below_55_lpcd_count || daysBelow
+      };
     };
     
-    const { daysAbove, daysBelow } = calculateDaysAboveBelow();
+    const { daysAbove, daysBelow, daysAboveCount, daysBelowCount } = calculateDaysAboveBelow();
 
     return (
       <Dialog open={villageDetailsOpen} onOpenChange={setVillageDetailsOpen}>
@@ -1022,108 +1029,112 @@ const EnhancedLpcdDashboard = () => {
                 </CardContent>
 
                 {/* Subcategory cards for LPCD < 55L */}
-                <CardFooter className="pt-0 pb-4">
-                  <div className="w-full grid grid-cols-1 gap-2">
-                    <Card
-                      className="border-red-100"
-                      onClick={() => handleFilterChange("45to55")}
-                    >
-                      <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
-                        <span className="text-sm text-red-700">
-                          LPCD 45-55L
-                        </span>
-                        <span className="font-medium text-red-700">
-                          {filterCounts.ranges["45to55"]}
-                        </span>
-                      </CardContent>
-                    </Card>
-                    <Card
-                      className="border-red-100"
-                      onClick={() => handleFilterChange("35to45")}
-                    >
-                      <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
-                        <span className="text-sm text-red-700">
-                          LPCD 35-45L
-                        </span>
-                        <span className="font-medium text-red-700">
-                          {filterCounts.ranges["35to45"]}
-                        </span>
-                      </CardContent>
-                    </Card>
-                    <Card
-                      className="border-red-100"
-                      onClick={() => handleFilterChange("25to35")}
-                    >
-                      <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
-                        <span className="text-sm text-red-700">
-                          LPCD 25-35L
-                        </span>
-                        <span className="font-medium text-red-700">
-                          {filterCounts.ranges["25to35"]}
-                        </span>
-                      </CardContent>
-                    </Card>
-                    <Card
-                      className="border-red-100"
-                      onClick={() => handleFilterChange("15to25")}
-                    >
-                      <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
-                        <span className="text-sm text-red-700">
-                          LPCD 15-25L
-                        </span>
-                        <span className="font-medium text-red-700">
-                          {filterCounts.ranges["15to25"]}
-                        </span>
-                      </CardContent>
-                    </Card>
-                    <Card
-                      className="border-red-100"
-                      onClick={() => handleFilterChange("0to15")}
-                    >
-                      <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
-                        <span className="text-sm text-red-700">LPCD 0-15L</span>
-                        <span className="font-medium text-red-700">
-                          {filterCounts.ranges["0to15"]}
-                        </span>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CardFooter>
+                {showCharts && (
+                  <CardFooter className="pt-0 pb-4">
+                    <div className="w-full grid grid-cols-1 gap-2">
+                      <Card
+                        className="border-red-100"
+                        onClick={() => handleFilterChange("45to55")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
+                          <span className="text-sm text-red-700">
+                            LPCD 45-55L
+                          </span>
+                          <span className="font-medium text-red-700">
+                            {filterCounts.ranges["45to55"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        className="border-red-100"
+                        onClick={() => handleFilterChange("35to45")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
+                          <span className="text-sm text-red-700">
+                            LPCD 35-45L
+                          </span>
+                          <span className="font-medium text-red-700">
+                            {filterCounts.ranges["35to45"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        className="border-red-100"
+                        onClick={() => handleFilterChange("25to35")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
+                          <span className="text-sm text-red-700">
+                            LPCD 25-35L
+                          </span>
+                          <span className="font-medium text-red-700">
+                            {filterCounts.ranges["25to35"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        className="border-red-100"
+                        onClick={() => handleFilterChange("15to25")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
+                          <span className="text-sm text-red-700">
+                            LPCD 15-25L
+                          </span>
+                          <span className="font-medium text-red-700">
+                            {filterCounts.ranges["15to25"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        className="border-red-100"
+                        onClick={() => handleFilterChange("0to15")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
+                          <span className="text-sm text-red-700">LPCD 0-15L</span>
+                          <span className="font-medium text-red-700">
+                            {filterCounts.ranges["0to15"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CardFooter>
+                )}
               </Card>
             </div>
 
             {/* Bottom Cards Row - Consistent Trends */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {/* Consistently Above 55L LPCD */}
-              <Card
-                className="border-blue-200"
-                onClick={() => handleFilterChange("consistentlyAbove55")}
-              >
-                <CardContent className="p-4 flex justify-between items-center cursor-pointer hover:bg-blue-50">
-                  <span className="text-blue-700">
-                    Villages consistently above 55L LPCD for the week
-                  </span>
-                  <span className="text-xl font-bold text-blue-700">
-                    {filterCounts.consistentlyAbove55}
-                  </span>
-                </CardContent>
-              </Card>
+            {showCharts && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Consistently Above 55L LPCD */}
+                <Card
+                  className="border-blue-200"
+                  onClick={() => handleFilterChange("consistentlyAbove55")}
+                >
+                  <CardContent className="p-4 flex justify-between items-center cursor-pointer hover:bg-blue-50">
+                    <span className="text-blue-700">
+                      Villages consistently above 55L LPCD for the week
+                    </span>
+                    <span className="text-xl font-bold text-blue-700">
+                      {filterCounts.consistentlyAbove55}
+                    </span>
+                  </CardContent>
+                </Card>
 
-              {/* Consistently Below 55L LPCD */}
-              <Card
-                className="border-orange-200"
-                onClick={() => handleFilterChange("consistentlyBelow55")}
-              >
-                <CardContent className="p-4 flex justify-between items-center cursor-pointer hover:bg-orange-50">
-                  <span className="text-orange-700">
-                    Villages consistently below 55L LPCD for the week
-                  </span>
-                  <span className="text-xl font-bold text-orange-700">
-                    {filterCounts.consistentlyBelow55}
-                  </span>
-                </CardContent>
-              </Card>
-            </div>
+                {/* Consistently Below 55L LPCD */}
+                <Card
+                  className="border-orange-200"
+                  onClick={() => handleFilterChange("consistentlyBelow55")}
+                >
+                  <CardContent className="p-4 flex justify-between items-center cursor-pointer hover:bg-orange-50">
+                    <span className="text-orange-700">
+                      Villages consistently below 55L LPCD for the week
+                    </span>
+                    <span className="text-xl font-bold text-orange-700">
+                      {filterCounts.consistentlyBelow55}
+                    </span>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
 
             {/* Results Table */}
             <Card>
