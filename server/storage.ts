@@ -1076,13 +1076,20 @@ export class PostgresStorage implements IStorage {
       return data;
     }
     
-    // Calculate consistent zero LPCD
+    // Calculate consistent zero LPCD - only set to 1 if all 7 days have zero values
     const allZeros = lpcdValues.every(val => val === 0);
-    data.consistent_zero_lpcd_for_a_week = allZeros && lpcdValues.length >= 7 ? 1 : 0;
+    data.consistent_zero_lpcd_for_a_week = (allZeros && lpcdValues.length === 7) ? 1 : 0;
     
-    // Calculate below and above 55 LPCD counts
-    data.below_55_lpcd_count = lpcdValues.filter(val => val && val < 55).length;
-    data.above_55_lpcd_count = lpcdValues.filter(val => val && val >= 55).length;
+    // Special handling for all-zero values
+    if (allZeros && lpcdValues.length > 0) {
+      // If all values are zero, all days are below 55
+      data.below_55_lpcd_count = lpcdValues.length;
+      data.above_55_lpcd_count = 0;
+    } else {
+      // Normal calculation for non-zero values
+      data.below_55_lpcd_count = lpcdValues.filter(val => val < 55).length;
+      data.above_55_lpcd_count = lpcdValues.filter(val => val >= 55).length;
+    }
     
     return data;
   }
@@ -1307,6 +1314,15 @@ export class PostgresStorage implements IStorage {
         skip_empty_lines: true
       });
       
+      // Show headers for debugging
+      if (records.length > 0) {
+        console.log('CSV import analysis:');
+        console.log('- Headers:', records[0]);
+        console.log('- Water value columns:', records[0].filter((h: string) => h?.includes('water')));
+        console.log('- LPCD value columns:', records[0].filter((h: string) => h?.includes('lpcd')));
+        console.log('- Has LPCD headers:', records[0].some((h: string) => h?.includes('lpcd')));
+      }
+      
       // Process each row
       for (const record of records) {
         try {
@@ -1321,32 +1337,81 @@ export class PostgresStorage implements IStorage {
           }
           
           // Map fields from CSV to database schema based on column index
-          for (const [indexStr, dbField] of Object.entries(this.csvColumnMapping)) {
+          for (const [indexStr, dbField] of Object.entries(this.positionalColumnMapping)) {
             const index = parseInt(indexStr);
-            if (record[index] !== undefined) {
-              // Convert string values to numbers for numeric fields
+            if (record[index] !== undefined && record[index] !== "") {
+              // Convert string values to numbers for numeric fields, with safety check
               if (dbField.includes('value') || 
                   dbField === 'population' || 
                   dbField === 'number_of_esr' ||
                   dbField.includes('count')) {
-                schemeData[dbField] = Number(record[index]);
+                try {
+                  // Handle overflow issues by capping values to safe range
+                  let numberValue = parseFloat(String(record[index]).replace(/,/g, ""));
+                  
+                  // Check if number is within safe range for decimal(20,6)
+                  if (!isNaN(numberValue)) {
+                    // Max value for decimal(20,6) is approximately 10^14
+                    const MAX_SAFE_DECIMAL = 1e14;
+                    
+                    if (Math.abs(numberValue) > MAX_SAFE_DECIMAL) {
+                      console.warn(`Value too large for ${dbField}: ${numberValue}, capping to ${MAX_SAFE_DECIMAL}`);
+                      numberValue = numberValue > 0 ? MAX_SAFE_DECIMAL : -MAX_SAFE_DECIMAL;
+                    }
+                    
+                    schemeData[dbField] = numberValue;
+                  } else {
+                    // Skip invalid number values
+                    console.warn(`Invalid number for ${dbField}: ${record[index]}, using null instead`);
+                  }
+                } catch (e) {
+                  console.warn(`Error converting value for ${dbField}: ${e.message}`);
+                }
               } else {
                 schemeData[dbField] = record[index];
               }
             }
           }
           
-          // Check if scheme already exists
-          const existingScheme = await this.getWaterSchemeDataById(schemeData.scheme_id);
+          // Ensure village_name is present (required for composite primary key)
+          if (!schemeData.village_name) {
+            errors.push(`Row missing required field: village_name for scheme_id ${schemeData.scheme_id}`);
+            continue;
+          }
           
-          if (existingScheme) {
-            // Update existing scheme
-            await this.updateWaterSchemeData(schemeData.scheme_id, schemeData);
-            updated++;
-          } else {
-            // Insert new scheme
-            await this.createWaterSchemeData(schemeData as InsertWaterSchemeData);
-            inserted++;
+          // Calculate derived values (consistent zero, below/above 55 LPCD)
+          this.calculateDerivedValues(schemeData);
+          
+          // Generate a composite key for lookup
+          const lookupKey = `${schemeData.scheme_id}-${schemeData.village_name}`;
+          
+          // Check if scheme already exists
+          let existingScheme = null;
+          try {
+            const schemes = await db.select().from(waterSchemeData)
+              .where(sql`${waterSchemeData.scheme_id} = ${schemeData.scheme_id} AND 
+                     ${waterSchemeData.village_name} = ${schemeData.village_name}`);
+            
+            if (schemes.length > 0) {
+              existingScheme = schemes[0];
+            }
+          } catch (error) {
+            console.error(`Error checking for existing scheme: ${error}`);
+          }
+          
+          try {
+            if (existingScheme) {
+              // Update existing scheme
+              await this.updateWaterSchemeData(schemeData.scheme_id, schemeData);
+              updated++;
+            } else {
+              // Insert new scheme
+              await this.createWaterSchemeData(schemeData as InsertWaterSchemeData);
+              inserted++;
+            }
+          } catch (saveError) {
+            console.error(`Error saving data: ${saveError.message}`);
+            errors.push(`Error saving data for ${lookupKey}: ${saveError.message}`);
           }
         } catch (rowError) {
           errors.push(`Error processing row: ${rowError.message}`);
