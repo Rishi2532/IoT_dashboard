@@ -668,7 +668,7 @@ const EnhancedLpcdDashboard = () => {
       },
     ];
 
-    // Count days above and below 55 LPCD
+    // Count days above and below 55 LPCD and check for consistent zero LPCD
     const calculateDaysAboveBelow = () => {
       const validValues = lpcdValues.filter(
         (item) => item.value !== undefined && item.value !== null,
@@ -679,6 +679,7 @@ const EnhancedLpcdDashboard = () => {
       
       let daysAbove = 0;
       let daysBelow = 0;
+      let isConsistentZero = allZeros && validValues.length >= 7 ? 1 : 0;
       
       if (allZeros && validValues.length > 0) {
         // If all values are zero, count all days as "below 55"
@@ -697,13 +698,15 @@ const EnhancedLpcdDashboard = () => {
       return {
         daysAbove,
         daysBelow,
-        // For UI display, use these values
+        isConsistentZero,
+        // For UI display, use these values, falling back to calculated values if DB values aren't available
         daysAboveCount: selectedVillage.above_55_lpcd_count || daysAbove,
         daysBelowCount: selectedVillage.below_55_lpcd_count || daysBelow,
+        consistentZeroLpcd: selectedVillage.consistent_zero_lpcd_for_a_week || isConsistentZero,
       };
     };
 
-    const { daysAbove, daysBelow, daysAboveCount, daysBelowCount } =
+    const { daysAbove, daysBelow, daysAboveCount, daysBelowCount, consistentZeroLpcd } =
       calculateDaysAboveBelow();
 
     return (
@@ -840,20 +843,18 @@ const EnhancedLpcdDashboard = () => {
                 </Card>
 
                 <Card
-                  className={`${selectedVillage.consistent_zero_lpcd_for_a_week === 1 ? "bg-gray-800" : "bg-gray-50"}`}
+                  className={`${consistentZeroLpcd === 1 ? "bg-gray-800" : "bg-gray-50"}`}
                 >
                   <CardContent className="p-4 text-center">
                     <p
-                      className={`text-sm ${selectedVillage.consistent_zero_lpcd_for_a_week === 1 ? "text-gray-300" : "text-gray-600"}`}
+                      className={`text-sm ${consistentZeroLpcd === 1 ? "text-gray-300" : "text-gray-600"}`}
                     >
                       Zero Water for Week
                     </p>
                     <p
-                      className={`text-2xl font-bold ${selectedVillage.consistent_zero_lpcd_for_a_week === 1 ? "text-white" : "text-gray-600"}`}
+                      className={`text-2xl font-bold ${consistentZeroLpcd === 1 ? "text-white" : "text-gray-600"}`}
                     >
-                      {selectedVillage.consistent_zero_lpcd_for_a_week === 1
-                        ? "Yes"
-                        : "No"}
+                      {consistentZeroLpcd === 1 ? "Yes" : "No"}
                     </p>
                   </CardContent>
                 </Card>
