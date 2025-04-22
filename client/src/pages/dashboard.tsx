@@ -4,9 +4,7 @@ import DashboardLayout from "@/components/dashboard/dashboard-layout";
 import RegionFilter from "@/components/dashboard/region-filter";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RegionComparisonChart from "@/components/dashboard/region-comparison-chart";
-import MaharashtraMap from "@/components/dashboard/maharashtra-map";
-import GISMaharashtraMap from "@/components/dashboard/gis-maharashtra-map";
-import DetailedMaharashtraMap from "@/components/dashboard/detailed-maharashtra-map";
+import MaharashtraTopoMap from "@/components/dashboard/maharashtra-topo-map";
 import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
 import SchemeTable from "@/components/dashboard/scheme-table";
@@ -26,8 +24,8 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
   
-  // State for map type selection
-  const [mapType, setMapType] = useState<'gis' | 'detailed'>('gis');
+  // State for map options
+  const [colorMode, setColorMode] = useState<'region' | 'metrics'>('region');
 
   // Fetch regions data
   const {
@@ -280,22 +278,22 @@ export default function Dashboard() {
             </h2>
             <div className="flex items-center space-x-2 text-xs">
               <Button
-                variant={mapType === 'gis' ? 'default' : 'outline'}
+                variant={colorMode === 'region' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setMapType('gis')}
+                onClick={() => setColorMode('region')}
                 className="h-7 px-2 text-xs"
               >
                 <Map className="mr-1 h-3 w-3" />
-                Basic Map
+                Region Colors
               </Button>
               <Button
-                variant={mapType === 'detailed' ? 'default' : 'outline'}
+                variant={colorMode === 'metrics' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setMapType('detailed')}
+                onClick={() => setColorMode('metrics')}
                 className="h-7 px-2 text-xs"
               >
                 <Map className="mr-1 h-3 w-3" />
-                Detailed Map
+                Metrics Colors
               </Button>
             </div>
           </div>
