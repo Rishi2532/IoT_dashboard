@@ -193,9 +193,16 @@ function calculateDerivedValues(data) {
   const allZeros = lpcdValues.every(val => val === 0);
   data.consistent_zero_lpcd_for_a_week = allZeros && lpcdValues.length >= 7 ? 1 : 0;
   
-  // Calculate below and above 55 LPCD counts
-  data.below_55_lpcd_count = lpcdValues.filter(val => val < 55).length;
-  data.above_55_lpcd_count = lpcdValues.filter(val => val >= 55).length;
+  // Special handling for all-zero values
+  if (allZeros) {
+    // If all values are zero, count days with zero values as "below 55"
+    data.below_55_lpcd_count = lpcdValues.length;
+    data.above_55_lpcd_count = 0;
+  } else {
+    // Normal calculation for non-zero values
+    data.below_55_lpcd_count = lpcdValues.filter(val => val < 55).length;
+    data.above_55_lpcd_count = lpcdValues.filter(val => val >= 55).length;
+  }
   
   return data;
 }

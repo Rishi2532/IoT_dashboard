@@ -141,21 +141,21 @@ export const waterSchemeData = pgTable("water_scheme_data", {
   number_of_esr: integer("number_of_esr"),
   
   // Water values for different days
-  water_value_day1: decimal("water_value_day1", { precision: 10, scale: 2 }),
-  water_value_day2: decimal("water_value_day2", { precision: 10, scale: 2 }),
-  water_value_day3: decimal("water_value_day3", { precision: 10, scale: 2 }),
-  water_value_day4: decimal("water_value_day4", { precision: 10, scale: 2 }),
-  water_value_day5: decimal("water_value_day5", { precision: 10, scale: 2 }),
-  water_value_day6: decimal("water_value_day6", { precision: 10, scale: 2 }),
+  water_value_day1: decimal("water_value_day1", { precision: 20, scale: 6 }),
+  water_value_day2: decimal("water_value_day2", { precision: 20, scale: 6 }),
+  water_value_day3: decimal("water_value_day3", { precision: 20, scale: 6 }),
+  water_value_day4: decimal("water_value_day4", { precision: 20, scale: 6 }),
+  water_value_day5: decimal("water_value_day5", { precision: 20, scale: 6 }),
+  water_value_day6: decimal("water_value_day6", { precision: 20, scale: 6 }),
   
   // LPCD values for different days
-  lpcd_value_day1: decimal("lpcd_value_day1", { precision: 10, scale: 2 }),
-  lpcd_value_day2: decimal("lpcd_value_day2", { precision: 10, scale: 2 }),
-  lpcd_value_day3: decimal("lpcd_value_day3", { precision: 10, scale: 2 }),
-  lpcd_value_day4: decimal("lpcd_value_day4", { precision: 10, scale: 2 }),
-  lpcd_value_day5: decimal("lpcd_value_day5", { precision: 10, scale: 2 }),
-  lpcd_value_day6: decimal("lpcd_value_day6", { precision: 10, scale: 2 }),
-  lpcd_value_day7: decimal("lpcd_value_day7", { precision: 10, scale: 2 }),
+  lpcd_value_day1: decimal("lpcd_value_day1", { precision: 20, scale: 6 }),
+  lpcd_value_day2: decimal("lpcd_value_day2", { precision: 20, scale: 6 }),
+  lpcd_value_day3: decimal("lpcd_value_day3", { precision: 20, scale: 6 }),
+  lpcd_value_day4: decimal("lpcd_value_day4", { precision: 20, scale: 6 }),
+  lpcd_value_day5: decimal("lpcd_value_day5", { precision: 20, scale: 6 }),
+  lpcd_value_day6: decimal("lpcd_value_day6", { precision: 20, scale: 6 }),
+  lpcd_value_day7: decimal("lpcd_value_day7", { precision: 20, scale: 6 }),
   
   // Dates for water measurements
   water_date_day1: varchar("water_date_day1", { length: 20 }),
