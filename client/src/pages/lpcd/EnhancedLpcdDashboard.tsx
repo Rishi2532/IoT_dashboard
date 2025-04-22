@@ -116,7 +116,7 @@ type LpcdRange =
   | "consistentlyAbove55"
   | "consistentlyBelow55";
 
-const EnhancedLpcdDashboard: React.FC = () => {
+const EnhancedLpcdDashboard = () => {
   const { toast } = useToast();
 
   // Filter state
@@ -205,6 +205,15 @@ const EnhancedLpcdDashboard: React.FC = () => {
     // Filter by region
     if (selectedRegion !== "all") {
       filtered = filtered.filter((scheme) => scheme.region === selectedRegion);
+    }
+    
+    // Apply search query filter (for scheme name or village name)
+    if (searchQuery.trim() !== '') {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter((scheme) => 
+        scheme.scheme_name?.toLowerCase().includes(query) || 
+        scheme.village_name?.toLowerCase().includes(query)
+      );
     }
 
     // Apply LPCD range filter
@@ -448,15 +457,24 @@ const EnhancedLpcdDashboard: React.FC = () => {
             "Scheme Name": scheme.scheme_name,
             "Village Name": scheme.village_name,
             Population: scheme.population,
-            "Current LPCD": lpcdValue?.toFixed(2) || "N/A",
+            "Current LPCD": lpcdValue !== null ? lpcdValue.toFixed(2) : "N/A",
             Status: getLpcdStatusText(lpcdValue),
-            "LPCD Day 1": scheme.lpcd_value_day1?.toFixed(2) || "N/A",
-            "LPCD Day 2": scheme.lpcd_value_day2?.toFixed(2) || "N/A",
-            "LPCD Day 3": scheme.lpcd_value_day3?.toFixed(2) || "N/A",
-            "LPCD Day 4": scheme.lpcd_value_day4?.toFixed(2) || "N/A",
-            "LPCD Day 5": scheme.lpcd_value_day5?.toFixed(2) || "N/A",
-            "LPCD Day 6": scheme.lpcd_value_day6?.toFixed(2) || "N/A",
-            "LPCD Day 7": scheme.lpcd_value_day7?.toFixed(2) || "N/A",
+            "Days Above 55L": scheme.above_55_lpcd_count || 0,
+            "Days Below 55L": scheme.below_55_lpcd_count || 0,
+            "LPCD Day 1": scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined ? Number(scheme.lpcd_value_day1).toFixed(2) : "N/A",
+            "LPCD Day 2": scheme.lpcd_value_day2 !== null && scheme.lpcd_value_day2 !== undefined ? Number(scheme.lpcd_value_day2).toFixed(2) : "N/A",
+            "LPCD Day 3": scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined ? Number(scheme.lpcd_value_day3).toFixed(2) : "N/A",
+            "LPCD Day 4": scheme.lpcd_value_day4 !== null && scheme.lpcd_value_day4 !== undefined ? Number(scheme.lpcd_value_day4).toFixed(2) : "N/A",
+            "LPCD Day 5": scheme.lpcd_value_day5 !== null && scheme.lpcd_value_day5 !== undefined ? Number(scheme.lpcd_value_day5).toFixed(2) : "N/A",
+            "LPCD Day 6": scheme.lpcd_value_day6 !== null && scheme.lpcd_value_day6 !== undefined ? Number(scheme.lpcd_value_day6).toFixed(2) : "N/A",
+            "LPCD Day 7": scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined ? Number(scheme.lpcd_value_day7).toFixed(2) : "N/A",
+            "Date Day 1": scheme.lpcd_date_day1 || "N/A",
+            "Date Day 2": scheme.lpcd_date_day2 || "N/A",
+            "Date Day 3": scheme.lpcd_date_day3 || "N/A",
+            "Date Day 4": scheme.lpcd_date_day4 || "N/A",
+            "Date Day 5": scheme.lpcd_date_day5 || "N/A",
+            "Date Day 6": scheme.lpcd_date_day6 || "N/A",
+            "Date Day 7": scheme.lpcd_date_day7 || "N/A",
           };
         });
 
@@ -526,7 +544,8 @@ const EnhancedLpcdDashboard: React.FC = () => {
         No villages match the selected criteria
       </h3>
       <p className="text-gray-500 mt-2">
-        Try selecting a different filter or region
+        {searchQuery ? "Try clearing your search query or " : "Try "}
+        selecting a different filter or region
       </p>
       <Button
         variant="outline"
@@ -534,9 +553,10 @@ const EnhancedLpcdDashboard: React.FC = () => {
         onClick={() => {
           setCurrentFilter("all");
           setSelectedRegion("all");
+          setSearchQuery("");
         }}
       >
-        Reset Filters
+        Reset All Filters
       </Button>
     </div>
   );
@@ -788,6 +808,26 @@ const EnhancedLpcdDashboard: React.FC = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <div className="relative w-64">
+            <Input
+              type="search"
+              placeholder="Search scheme or village name..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1); // Reset page on search
+              }}
+              className="pr-8"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           <Select value={selectedRegion} onValueChange={setSelectedRegion}>
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="All Regions" />
