@@ -674,12 +674,13 @@ const EnhancedLpcdDashboard = () => {
         (item) => item.value !== undefined && item.value !== null,
       );
 
-      // Special handling for all-zero values
+      // Special handling for all-zero values - check if ALL values are 0
       const allZeros = validValues.every((item) => Number(item.value) === 0);
       
       let daysAbove = 0;
       let daysBelow = 0;
-      let isConsistentZero = allZeros && validValues.length >= 7 ? 1 : 0;
+      // Only mark as consistent zero if we have exactly 7 days of data and all are zero
+      let isConsistentZero = (allZeros && validValues.length === 7) ? 1 : 0;
       
       if (allZeros && validValues.length > 0) {
         // If all values are zero, count all days as "below 55"
@@ -699,10 +700,10 @@ const EnhancedLpcdDashboard = () => {
         daysAbove,
         daysBelow,
         isConsistentZero,
-        // For UI display, use these values, falling back to calculated values if DB values aren't available
-        daysAboveCount: selectedVillage.above_55_lpcd_count || daysAbove,
-        daysBelowCount: selectedVillage.below_55_lpcd_count || daysBelow,
-        consistentZeroLpcd: selectedVillage.consistent_zero_lpcd_for_a_week || isConsistentZero,
+        // For UI display, ALWAYS use calculated values to ensure accuracy
+        daysAboveCount: daysAbove,
+        daysBelowCount: daysBelow,
+        consistentZeroLpcd: isConsistentZero,
       };
     };
 
