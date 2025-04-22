@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import * as d3 from 'd3';
 import { geoPath, geoMercator } from 'd3-geo';
 import { feature } from 'topojson-client';
+import type { GeometryCollection } from 'topojson-specification';
 import { Region, RegionSummary } from '@/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { regionColors } from '@/data/maharashtra-geojson';

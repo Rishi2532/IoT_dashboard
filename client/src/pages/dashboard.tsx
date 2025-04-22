@@ -24,8 +24,8 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
   
-  // State for map options
-  const [colorMode, setColorMode] = useState<'region' | 'metrics'>('region');
+  // Map configuration
+  const mapRef = useRef(null);
 
   // Fetch regions data
   const {
@@ -278,22 +278,12 @@ export default function Dashboard() {
             </h2>
             <div className="flex items-center space-x-2 text-xs">
               <Button
-                variant={colorMode === 'region' ? 'default' : 'outline'}
+                variant="default"
                 size="sm"
-                onClick={() => setColorMode('region')}
                 className="h-7 px-2 text-xs"
               >
                 <Map className="mr-1 h-3 w-3" />
-                Region Colors
-              </Button>
-              <Button
-                variant={colorMode === 'metrics' ? 'default' : 'outline'}
-                size="sm"
-                onClick={() => setColorMode('metrics')}
-                className="h-7 px-2 text-xs"
-              >
-                <Map className="mr-1 h-3 w-3" />
-                Metrics Colors
+                Interactive Map
               </Button>
             </div>
           </div>
@@ -305,25 +295,14 @@ export default function Dashboard() {
           </div>
           <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
-              {mapType === 'gis' ? (
-                <GISMaharashtraMap
-                  regionSummary={regionSummary}
-                  regions={regions}
-                  selectedRegion={selectedRegion}
-                  onRegionClick={handleRegionChange}
-                  metric={mapMetric}
-                  isLoading={isRegionsLoading || isSummaryLoading}
-                />
-              ) : (
-                <DetailedMaharashtraMap
-                  regionSummary={regionSummary}
-                  regions={regions}
-                  selectedRegion={selectedRegion}
-                  onRegionClick={handleRegionChange}
-                  metric={mapMetric}
-                  isLoading={isRegionsLoading || isSummaryLoading}
-                />
-              )}
+              <MaharashtraTopoMap
+                regionSummary={regionSummary}
+                regions={regions}
+                selectedRegion={selectedRegion}
+                onRegionClick={handleRegionChange}
+                metric={mapMetric}
+                isLoading={isRegionsLoading || isSummaryLoading}
+              />
             </div>
           </div>
         </div>
