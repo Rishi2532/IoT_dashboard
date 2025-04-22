@@ -206,13 +206,14 @@ const EnhancedLpcdDashboard = () => {
     if (selectedRegion !== "all") {
       filtered = filtered.filter((scheme) => scheme.region === selectedRegion);
     }
-    
+
     // Apply search query filter (for scheme name or village name)
-    if (searchQuery.trim() !== '') {
+    if (searchQuery.trim() !== "") {
       const query = searchQuery.toLowerCase().trim();
-      filtered = filtered.filter((scheme) => 
-        scheme.scheme_name?.toLowerCase().includes(query) || 
-        scheme.village_name?.toLowerCase().includes(query)
+      filtered = filtered.filter(
+        (scheme) =>
+          scheme.scheme_name?.toLowerCase().includes(query) ||
+          scheme.village_name?.toLowerCase().includes(query),
       );
     }
 
@@ -335,7 +336,7 @@ const EnhancedLpcdDashboard = () => {
         (scheme) => scheme.region === selectedRegion,
       );
     }
-    
+
     // Update total after region filtering
     counts.total = regionFiltered.length;
 
@@ -343,10 +344,10 @@ const EnhancedLpcdDashboard = () => {
     regionFiltered.forEach((scheme) => {
       const lpcdValue = getLatestLpcdValue(scheme);
       const population = scheme.population ? Number(scheme.population) : 0;
-      
+
       // Add to total population
       counts.totalPopulation += population;
-      
+
       // Count all entries into above/below categories
       // If lpcdValue > 55, it's above55, otherwise (null, 0, or < 55) it's below55
       if (lpcdValue !== null && lpcdValue > 55) {
@@ -356,7 +357,7 @@ const EnhancedLpcdDashboard = () => {
         counts.below55++;
         counts.below55Population += population;
       }
-      
+
       // Skip further categorization if null
       if (lpcdValue === null) return;
 
@@ -470,13 +471,41 @@ const EnhancedLpcdDashboard = () => {
             Status: getLpcdStatusText(lpcdValue),
             "Days Above 55L": scheme.above_55_lpcd_count || 0,
             "Days Below 55L": scheme.below_55_lpcd_count || 0,
-            "LPCD Day 1": scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined ? Number(scheme.lpcd_value_day1).toFixed(2) : "N/A",
-            "LPCD Day 2": scheme.lpcd_value_day2 !== null && scheme.lpcd_value_day2 !== undefined ? Number(scheme.lpcd_value_day2).toFixed(2) : "N/A",
-            "LPCD Day 3": scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined ? Number(scheme.lpcd_value_day3).toFixed(2) : "N/A",
-            "LPCD Day 4": scheme.lpcd_value_day4 !== null && scheme.lpcd_value_day4 !== undefined ? Number(scheme.lpcd_value_day4).toFixed(2) : "N/A",
-            "LPCD Day 5": scheme.lpcd_value_day5 !== null && scheme.lpcd_value_day5 !== undefined ? Number(scheme.lpcd_value_day5).toFixed(2) : "N/A",
-            "LPCD Day 6": scheme.lpcd_value_day6 !== null && scheme.lpcd_value_day6 !== undefined ? Number(scheme.lpcd_value_day6).toFixed(2) : "N/A",
-            "LPCD Day 7": scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined ? Number(scheme.lpcd_value_day7).toFixed(2) : "N/A",
+            "LPCD Day 1":
+              scheme.lpcd_value_day1 !== null &&
+              scheme.lpcd_value_day1 !== undefined
+                ? Number(scheme.lpcd_value_day1).toFixed(2)
+                : "N/A",
+            "LPCD Day 2":
+              scheme.lpcd_value_day2 !== null &&
+              scheme.lpcd_value_day2 !== undefined
+                ? Number(scheme.lpcd_value_day2).toFixed(2)
+                : "N/A",
+            "LPCD Day 3":
+              scheme.lpcd_value_day3 !== null &&
+              scheme.lpcd_value_day3 !== undefined
+                ? Number(scheme.lpcd_value_day3).toFixed(2)
+                : "N/A",
+            "LPCD Day 4":
+              scheme.lpcd_value_day4 !== null &&
+              scheme.lpcd_value_day4 !== undefined
+                ? Number(scheme.lpcd_value_day4).toFixed(2)
+                : "N/A",
+            "LPCD Day 5":
+              scheme.lpcd_value_day5 !== null &&
+              scheme.lpcd_value_day5 !== undefined
+                ? Number(scheme.lpcd_value_day5).toFixed(2)
+                : "N/A",
+            "LPCD Day 6":
+              scheme.lpcd_value_day6 !== null &&
+              scheme.lpcd_value_day6 !== undefined
+                ? Number(scheme.lpcd_value_day6).toFixed(2)
+                : "N/A",
+            "LPCD Day 7":
+              scheme.lpcd_value_day7 !== null &&
+              scheme.lpcd_value_day7 !== undefined
+                ? Number(scheme.lpcd_value_day7).toFixed(2)
+                : "N/A",
             "Date Day 1": scheme.lpcd_date_day1 || "N/A",
             "Date Day 2": scheme.lpcd_date_day2 || "N/A",
             "Date Day 3": scheme.lpcd_date_day3 || "N/A",
@@ -586,7 +615,7 @@ const EnhancedLpcdDashboard = () => {
   const [selectedVillage, setSelectedVillage] =
     useState<WaterSchemeData | null>(null);
   const [villageDetailsOpen, setVillageDetailsOpen] = useState(false);
-  
+
   // Chart visibility toggle
   const [showCharts, setShowCharts] = useState(true);
 
@@ -641,22 +670,29 @@ const EnhancedLpcdDashboard = () => {
 
     // Count days above and below 55 LPCD
     const calculateDaysAboveBelow = () => {
-      const validValues = lpcdValues.filter(item => item.value !== undefined && item.value !== null);
-      
+      const validValues = lpcdValues.filter(
+        (item) => item.value !== undefined && item.value !== null,
+      );
+
       // Include the actual 0 values in the "below 55" count
-      const daysAbove = validValues.filter(item => Number(item.value) >= 55).length;
-      const daysBelow = validValues.filter(item => Number(item.value) < 55).length;
-      
-      return { 
-        daysAbove, 
+      const daysAbove = validValues.filter(
+        (item) => Number(item.value) >= 55,
+      ).length;
+      const daysBelow = validValues.filter(
+        (item) => Number(item.value) < 55,
+      ).length;
+
+      return {
+        daysAbove,
         daysBelow,
         // For UI display, use these values
         daysAboveCount: selectedVillage.above_55_lpcd_count || daysAbove,
-        daysBelowCount: selectedVillage.below_55_lpcd_count || daysBelow
+        daysBelowCount: selectedVillage.below_55_lpcd_count || daysBelow,
       };
     };
-    
-    const { daysAbove, daysBelow, daysAboveCount, daysBelowCount } = calculateDaysAboveBelow();
+
+    const { daysAbove, daysBelow, daysAboveCount, daysBelowCount } =
+      calculateDaysAboveBelow();
 
     return (
       <Dialog open={villageDetailsOpen} onOpenChange={setVillageDetailsOpen}>
@@ -840,7 +876,7 @@ const EnhancedLpcdDashboard = () => {
             />
             {searchQuery && (
               <button
-                onClick={() => setSearchQuery('')}
+                onClick={() => setSearchQuery("")}
                 className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
               >
                 <X className="h-4 w-4" />
@@ -876,10 +912,7 @@ const EnhancedLpcdDashboard = () => {
           >
             <FileSpreadsheet className="h-4 w-4" />
           </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowCharts(!showCharts)}
-          >
+          <Button variant="outline" onClick={() => setShowCharts(!showCharts)}>
             {showCharts ? "Hide Charts" : "Show Charts"}
           </Button>
         </div>
@@ -897,7 +930,7 @@ const EnhancedLpcdDashboard = () => {
           {/* Main Dashboard Grid */}
           <div className="space-y-6">
             {/* Top Card - Total Villages */}
-            <Card 
+            <Card
               className="w-full max-w-md mx-auto cursor-pointer hover:shadow-md transition-shadow duration-300"
               onClick={() => {
                 setCurrentFilter("all");
@@ -913,9 +946,12 @@ const EnhancedLpcdDashboard = () => {
                 <p className="text-5xl font-bold text-center text-primary">
                   {filterCounts.total}
                 </p>
-                <p className="text-sm text-center text-gray-600 mt-2">
-                  Total Population: {filterCounts.totalPopulation.toLocaleString()}
-                </p>
+                <div className="flex justify-center mt-2">
+                  <p className="text-lg font-semibold text-blue-700 bg-blue-100 px-3 py-1 rounded-md">
+                    Total Population:{" "}
+                    {filterCounts.totalPopulation.toLocaleString()}
+                  </p>
+                </div>
               </CardContent>
             </Card>
 
@@ -933,7 +969,8 @@ const EnhancedLpcdDashboard = () => {
                     {filterCounts.above55}
                   </p>
                   <p className="text-sm text-center text-gray-600 mt-2">
-                    Population: {filterCounts.above55Population.toLocaleString()}
+                    Population:{" "}
+                    {filterCounts.above55Population.toLocaleString()}
                   </p>
                   <Button
                     variant="ghost"
@@ -1017,7 +1054,8 @@ const EnhancedLpcdDashboard = () => {
                     {filterCounts.below55}
                   </p>
                   <p className="text-sm text-center text-gray-600 mt-2">
-                    Population: {filterCounts.below55Population.toLocaleString()}
+                    Population:{" "}
+                    {filterCounts.below55Population.toLocaleString()}
                   </p>
                   <Button
                     variant="ghost"
@@ -1089,7 +1127,9 @@ const EnhancedLpcdDashboard = () => {
                         onClick={() => handleFilterChange("0to15")}
                       >
                         <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-red-50">
-                          <span className="text-sm text-red-700">LPCD 0-15L</span>
+                          <span className="text-sm text-red-700">
+                            LPCD 0-15L
+                          </span>
                           <span className="font-medium text-red-700">
                             {filterCounts.ranges["0to15"]}
                           </span>
