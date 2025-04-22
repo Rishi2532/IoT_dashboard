@@ -251,22 +251,13 @@ export default function EnhancedSvgMap({
                 {/* Location pins */}
                 {regionPins.map((pin, idx) => (
                   <g key={`pin-${idx}`}>
+                    {/* Small dot marker without circles around it */}
                     <circle 
                       cx={pin.x} 
                       cy={pin.y} 
-                      r="8" 
+                      r="4" 
                       fill="#FF4136" 
-                      stroke="#fff" 
-                      strokeWidth="1.5"
-                      filter="drop-shadow(0px 2px 3px rgba(0,0,0,0.5))"
-                    />
-                    <circle 
-                      cx={pin.x} 
-                      cy={pin.y} 
-                      r="3" 
-                      fill="#ff6b63" 
-                      stroke="#fff" 
-                      strokeWidth="0.5"
+                      filter="drop-shadow(0px 1px 2px rgba(0,0,0,0.4))"
                     />
                     <text 
                       x={pin.x} 
@@ -331,14 +322,12 @@ export default function EnhancedSvgMap({
                   </g>
                 ))}
                 
-                {/* Compass rose */}
+                {/* Compass rose (no circular boundaries) */}
                 <g transform="translate(50, 500)">
-                  <circle cx="25" cy="25" r="24" fill="#0a1033" stroke="rgba(255,255,255,0.5)" strokeWidth="1" filter="drop-shadow(0px 2px 4px rgba(0,0,0,0.3))" />
-                  <circle cx="25" cy="25" r="22" fill="none" stroke="#fff" strokeWidth="1" />
-                  <circle cx="25" cy="25" r="18" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                  {/* Compass directional lines only */}
                   <path d="M25,3 L25,47 M3,25 L47,25" stroke="#fff" strokeWidth="1" />
                   <path d="M10,10 L40,40 M10,40 L40,10" stroke="rgba(255,255,255,0.5)" strokeWidth="1" strokeDasharray="2,1" />
-                  <circle cx="25" cy="25" r="4" fill="#0a1033" stroke="#fff" strokeWidth="1" />
+                  {/* Center point */}
                   <circle cx="25" cy="25" r="2" fill="#fff" />
                   <text x="25" y="8" textAnchor="middle" fill="#fff" fontSize="10px" fontWeight="bold" filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.5))">N</text>
                   <text x="25" y="45" textAnchor="middle" fill="#fff" fontSize="10px" fontWeight="bold" filter="drop-shadow(0px 1px 1px rgba(0,0,0,0.5))">S</text>

@@ -225,11 +225,11 @@ export default function GISMaharashtraMap({
         const feature = features[0];
         const center = getFeatureCenter(feature);
         
-        // Create region marker - with colors matching the reference image but without outer circles
+        // Create region marker - simple colored dot without circular boundaries
         const markerIcon = L.divIcon({
           className: 'custom-marker-icon',
           html: `
-            <div class="marker-pin" style="background-color: ${getColor(regionName)}; width: 8px; height: 8px; border-radius: 50%; box-shadow: 0 1px 1px rgba(0,0,0,0.15);">
+            <div class="marker-pin" style="background-color: ${getColor(regionName)}; width: 8px; height: 8px; box-shadow: 0 1px 1px rgba(0,0,0,0.15);">
             </div>
           `,
           iconSize: [8, 8],
@@ -470,16 +470,13 @@ export default function GISMaharashtraMap({
       div.style.boxShadow = '0 1px 3px rgba(0,0,0,0.2)';
       
       div.innerHTML = `
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.4);"></div>
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 36px; height: 36px; border-radius: 50%; border: 1px solid rgba(0,0,0,0.2);"></div>
         <div style="position: absolute; top: 6%; left: 50%; transform: translateX(-50%); color: #333; font-weight: bold; font-size: 10px;">N</div>
         <div style="position: absolute; top: 50%; right: 6%; transform: translateY(-50%); color: #333; font-weight: bold; font-size: 10px;">E</div>
         <div style="position: absolute; bottom: 6%; left: 50%; transform: translateX(-50%); color: #333; font-weight: bold; font-size: 10px;">S</div>
         <div style="position: absolute; top: 50%; left: 6%; transform: translateY(-50%); color: #333; font-weight: bold; font-size: 10px;">W</div>
         <div style="position: absolute; top: 50%; left: 50%; width: 44px; height: 1px; background-color: rgba(0,0,0,0.5); transform: translate(-50%, -50%);"></div>
         <div style="position: absolute; top: 50%; left: 50%; width: 1px; height: 44px; background-color: rgba(0,0,0,0.5); transform: translate(-50%, -50%);"></div>
-        <div style="position: absolute; top: 50%; left: 50%; width: 8px; height: 8px; border-radius: 50%; background-color: rgba(255, 255, 255, 0.9); border: 1px solid rgba(0,0,0,0.3); transform: translate(-50%, -50%);"></div>
-        <div style="position: absolute; top: 50%; left: 50%; width: 4px; height: 4px; border-radius: 50%; background-color: #2563eb; transform: translate(-50%, -50%);"></div>
+        <div style="position: absolute; top: 50%; left: 50%; width: 3px; height: 3px; background-color: #2563eb; transform: translate(-50%, -50%);"></div>
       `;
       
       return div;
