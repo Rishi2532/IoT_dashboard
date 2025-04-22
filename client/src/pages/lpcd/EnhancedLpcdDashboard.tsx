@@ -308,6 +308,9 @@ const EnhancedLpcdDashboard = () => {
       total: allWaterSchemeData.length,
       above55: 0,
       below55: 0,
+      totalPopulation: 0,
+      above55Population: 0,
+      below55Population: 0,
       ranges: {
         "45to55": 0,
         "35to45": 0,
@@ -339,13 +342,19 @@ const EnhancedLpcdDashboard = () => {
     // Count schemes in each category
     regionFiltered.forEach((scheme) => {
       const lpcdValue = getLatestLpcdValue(scheme);
+      const population = scheme.population ? Number(scheme.population) : 0;
+      
+      // Add to total population
+      counts.totalPopulation += population;
       
       // Count all entries into above/below categories
       // If lpcdValue > 55, it's above55, otherwise (null, 0, or < 55) it's below55
       if (lpcdValue !== null && lpcdValue > 55) {
         counts.above55++;
+        counts.above55Population += population;
       } else {
         counts.below55++;
+        counts.below55Population += population;
       }
       
       // Skip further categorization if null
@@ -577,6 +586,9 @@ const EnhancedLpcdDashboard = () => {
   const [selectedVillage, setSelectedVillage] =
     useState<WaterSchemeData | null>(null);
   const [villageDetailsOpen, setVillageDetailsOpen] = useState(false);
+  
+  // Chart visibility toggle
+  const [showCharts, setShowCharts] = useState(true);
 
   // View village details
   const handleViewVillage = (scheme: WaterSchemeData) => {
@@ -857,6 +869,12 @@ const EnhancedLpcdDashboard = () => {
           >
             <FileSpreadsheet className="h-4 w-4" />
           </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowCharts(!showCharts)}
+          >
+            {showCharts ? "Hide Charts" : "Show Charts"}
+          </Button>
         </div>
       </div>
 
@@ -872,7 +890,13 @@ const EnhancedLpcdDashboard = () => {
           {/* Main Dashboard Grid */}
           <div className="space-y-6">
             {/* Top Card - Total Villages */}
-            <Card className="w-full max-w-md mx-auto">
+            <Card 
+              className="w-full max-w-md mx-auto cursor-pointer hover:shadow-md transition-shadow duration-300"
+              onClick={() => {
+                setCurrentFilter("all");
+                setSearchQuery("");
+              }}
+            >
               <CardHeader className="bg-primary/10 pb-2">
                 <CardTitle className="text-center text-xl">
                   Total Villages Covered Under LPCD till date
@@ -881,6 +905,9 @@ const EnhancedLpcdDashboard = () => {
               <CardContent className="pt-6 pb-4">
                 <p className="text-5xl font-bold text-center text-primary">
                   {filterCounts.total}
+                </p>
+                <p className="text-sm text-center text-gray-600 mt-2">
+                  Total Population: {filterCounts.totalPopulation.toLocaleString()}
                 </p>
               </CardContent>
             </Card>
@@ -898,6 +925,9 @@ const EnhancedLpcdDashboard = () => {
                   <p className="text-5xl font-bold text-center text-green-600">
                     {filterCounts.above55}
                   </p>
+                  <p className="text-sm text-center text-gray-600 mt-2">
+                    Population: {filterCounts.above55Population.toLocaleString()}
+                  </p>
                   <Button
                     variant="ghost"
                     className="w-full mt-4 text-green-700 hover:text-green-800 hover:bg-green-100"
@@ -908,62 +938,64 @@ const EnhancedLpcdDashboard = () => {
                 </CardContent>
 
                 {/* Subcategory cards for LPCD > 55L */}
-                <CardFooter className="pt-0 pb-4">
-                  <div className="w-full grid grid-cols-1 gap-2">
-                    <Card
-                      className="border-green-100"
-                      onClick={() => handleFilterChange("55to60")}
-                    >
-                      <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
-                        <span className="text-sm text-green-700">
-                          LPCD 55-60L
-                        </span>
-                        <span className="font-medium text-green-700">
-                          {filterCounts.ranges["55to60"]}
-                        </span>
-                      </CardContent>
-                    </Card>
-                    <Card
-                      className="border-green-100"
-                      onClick={() => handleFilterChange("60to65")}
-                    >
-                      <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
-                        <span className="text-sm text-green-700">
-                          LPCD 60-65L
-                        </span>
-                        <span className="font-medium text-green-700">
-                          {filterCounts.ranges["60to65"]}
-                        </span>
-                      </CardContent>
-                    </Card>
-                    <Card
-                      className="border-green-100"
-                      onClick={() => handleFilterChange("65to70")}
-                    >
-                      <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
-                        <span className="text-sm text-green-700">
-                          LPCD 65-70L
-                        </span>
-                        <span className="font-medium text-green-700">
-                          {filterCounts.ranges["65to70"]}
-                        </span>
-                      </CardContent>
-                    </Card>
-                    <Card
-                      className="border-green-100"
-                      onClick={() => handleFilterChange("above70")}
-                    >
-                      <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
-                        <span className="text-sm text-green-700">
-                          LPCD &gt; 70L
-                        </span>
-                        <span className="font-medium text-green-700">
-                          {filterCounts.ranges["above70"]}
-                        </span>
-                      </CardContent>
-                    </Card>
-                  </div>
-                </CardFooter>
+                {showCharts && (
+                  <CardFooter className="pt-0 pb-4">
+                    <div className="w-full grid grid-cols-1 gap-2">
+                      <Card
+                        className="border-green-100"
+                        onClick={() => handleFilterChange("55to60")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
+                          <span className="text-sm text-green-700">
+                            LPCD 55-60L
+                          </span>
+                          <span className="font-medium text-green-700">
+                            {filterCounts.ranges["55to60"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        className="border-green-100"
+                        onClick={() => handleFilterChange("60to65")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
+                          <span className="text-sm text-green-700">
+                            LPCD 60-65L
+                          </span>
+                          <span className="font-medium text-green-700">
+                            {filterCounts.ranges["60to65"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        className="border-green-100"
+                        onClick={() => handleFilterChange("65to70")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
+                          <span className="text-sm text-green-700">
+                            LPCD 65-70L
+                          </span>
+                          <span className="font-medium text-green-700">
+                            {filterCounts.ranges["65to70"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        className="border-green-100"
+                        onClick={() => handleFilterChange("above70")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
+                          <span className="text-sm text-green-700">
+                            LPCD &gt; 70L
+                          </span>
+                          <span className="font-medium text-green-700">
+                            {filterCounts.ranges["above70"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CardFooter>
+                )}
               </Card>
 
               {/* Villages with LPCD < 55L */}
@@ -976,6 +1008,9 @@ const EnhancedLpcdDashboard = () => {
                 <CardContent className="pt-6 pb-4">
                   <p className="text-5xl font-bold text-center text-red-600">
                     {filterCounts.below55}
+                  </p>
+                  <p className="text-sm text-center text-gray-600 mt-2">
+                    Population: {filterCounts.below55Population.toLocaleString()}
                   </p>
                   <Button
                     variant="ghost"
