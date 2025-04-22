@@ -660,7 +660,7 @@ const EnhancedLpcdDashboard = () => {
 
     return (
       <Dialog open={villageDetailsOpen} onOpenChange={setVillageDetailsOpen}>
-        <DialogContent className="max-w-3xl max-h-[90vh] bg-blue-50/30">
+        <DialogContent className="max-w-3xl max-h-[90vh] bg-gradient-to-b from-blue-50 to-white">
           <DialogHeader className="bg-white p-4 rounded-lg">
             <DialogTitle className="text-xl flex items-center justify-between">
               <span>{selectedVillage.village_name}</span>
@@ -700,7 +700,7 @@ const EnhancedLpcdDashboard = () => {
             <div className="space-y-6">
               {/* LPCD Values */}
               <div>
-                <h3 className="text-lg font-semibold mb-3 bg-white p-2 rounded">
+                <h3 className="text-lg font-semibold mb-3 bg-white p-2 rounded shadow-sm border border-blue-100">
                   LPCD Values (Last 7 Days)
                 </h3>
                 <div className="grid grid-cols-7 gap-2">
@@ -727,7 +727,7 @@ const EnhancedLpcdDashboard = () => {
 
               {/* Water Consumption Values */}
               <div>
-                <h3 className="text-lg font-semibold mb-3 bg-white p-2 rounded">
+                <h3 className="text-lg font-semibold mb-3 bg-white p-2 rounded shadow-sm border border-blue-100">
                   Water Consumption (MLD)
                 </h3>
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
@@ -766,27 +766,27 @@ const EnhancedLpcdDashboard = () => {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4">
                 <Card
-                  className={`${daysBelow > 0 ? "bg-red-50" : "bg-gray-50"} border border-red-100`}
+                  className={`${daysBelowCount > 0 ? "bg-red-50" : "bg-gray-50"} border border-red-100`}
                 >
                   <CardContent className="p-4 text-center">
                     <p className="text-sm text-gray-600">Days Below 55L LPCD</p>
                     <p
-                      className={`text-2xl font-bold ${daysBelow > 0 ? "text-red-600" : "text-gray-600"}`}
+                      className={`text-2xl font-bold ${daysBelowCount > 0 ? "text-red-600" : "text-gray-600"}`}
                     >
-                      {daysBelow}
+                      {daysBelowCount}
                     </p>
                   </CardContent>
                 </Card>
 
                 <Card
-                  className={`${daysAbove > 0 ? "bg-green-50" : "bg-gray-50"} border border-green-100`}
+                  className={`${daysAboveCount > 0 ? "bg-green-50" : "bg-gray-50"} border border-green-100`}
                 >
                   <CardContent className="p-4 text-center">
                     <p className="text-sm text-gray-600">Days Above 55L LPCD</p>
                     <p
-                      className={`text-2xl font-bold ${daysAbove > 0 ? "text-green-600" : "text-gray-600"}`}
+                      className={`text-2xl font-bold ${daysAboveCount > 0 ? "text-green-600" : "text-gray-600"}`}
                     >
-                      {daysAbove}
+                      {daysAboveCount}
                     </p>
                   </CardContent>
                 </Card>
