@@ -283,15 +283,15 @@ export default function GISMaharashtraMap({
         
         // Add pulse effect for selected region
         if (regionName === selectedRegion) {
-          // Create a pulse effect with CSS
+          // Create a pulse effect with CSS but without the circular boundary
           const pulseIcon = L.divIcon({
             className: 'custom-pulse-icon',
             html: `
-              <div class="pulse-circle" style="position: absolute; top: -12px; left: -12px; width: 24px; height: 24px; border-radius: 50%; border: 2px solid #2563eb; opacity: 0.7; background: transparent; animation: pulse 1.5s infinite;">
+              <div class="pulse-dot" style="position: absolute; top: -4px; left: -4px; width: 8px; height: 8px; background-color: #2563eb; opacity: 0.9;">
               </div>
             `,
-            iconSize: [24, 24],
-            iconAnchor: [12, 12]
+            iconSize: [8, 8],
+            iconAnchor: [4, 4]
           });
           
           L.marker([center[1], center[0]], { icon: pulseIcon, interactive: false }).addTo(markersLayer);
