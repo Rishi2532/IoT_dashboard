@@ -146,14 +146,14 @@ export default function MaharashtraTopoMap({
     svg.selectAll("*").remove(); // Clear previous elements
     
     // Extract features from topoJSON
-    const maharashtraFeatures = feature(topoData, topoData.objects.maharashtra);
+    const maharashtraFeatures = feature(topoData, topoData.objects.maharashtra as any);
     
     // Set up projection and path generator
     const width = containerRef.current?.clientWidth || 800;
     const height = containerRef.current?.clientHeight || 600;
     
     const projection = geoMercator()
-      .fitSize([width, height], maharashtraFeatures)
+      .fitSize([width, height], maharashtraFeatures as any)
       .center([76.8, 19.0])  // Center coordinates for Maharashtra
       .scale(2500 * zoom)
       .translate([position[0], position[1]]);
@@ -186,7 +186,7 @@ export default function MaharashtraTopoMap({
       .data(maharashtraFeatures.features)
       .enter()
       .append("path")
-      .attr("d", pathGenerator)
+      .attr("d", (d: any) => pathGenerator(d))
       .attr("stroke", "#fff")
       .attr("stroke-width", (d: any) => {
         // Get the region name from properties
