@@ -4,7 +4,7 @@ import DashboardLayout from "@/components/dashboard/dashboard-layout";
 import RegionFilter from "@/components/dashboard/region-filter";
 import StatsCards from "@/components/dashboard/stats-cards";
 import RegionComparisonChart from "@/components/dashboard/region-comparison-chart";
-import MaharashtraTopoMap from "@/components/dashboard/maharashtra-topo-map";
+import SimpleMaharashtraMap from "@/components/dashboard/simple-maharashtra-map";
 import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
 import SchemeTable from "@/components/dashboard/scheme-table";
@@ -295,7 +295,7 @@ export default function Dashboard() {
           </div>
           <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
-              <MaharashtraTopoMap
+              <SimpleMaharashtraMap
                 regionSummary={regionSummary}
                 regions={regions}
                 selectedRegion={selectedRegion}
