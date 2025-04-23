@@ -77,12 +77,24 @@ class ActionProvider {
 
   // Handle showing schemes by region
   handleSchemesByRegion = async (region: string) => {
-    // Capitalize the first letter of each word in the region name
-    const formattedRegion = region
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
-
+    // Use a mapping for exact region names as expected by the API
+    const regionMap: { [key: string]: string } = {
+      'nagpur': 'Nagpur',
+      'pune': 'Pune',
+      'nashik': 'Nashik',
+      'konkan': 'Konkan',
+      'amravati': 'Amravati',
+      'chhatrapati sambhajinagar': 'Chhatrapati Sambhajinagar',
+      'mumbai': 'Mumbai'
+    };
+    
+    // Get properly capitalized region name
+    const formattedRegion = regionMap[region.toLowerCase()] || 
+      region.split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    
+    console.log(`Fetching schemes for region: "${formattedRegion}"`);
     this.addMessage(`Fetching schemes in ${formattedRegion} region...`);
 
     try {
@@ -136,12 +148,23 @@ class ActionProvider {
 
   // Handle filtering schemes by status
   handleFilterByStatus = async (status: string) => {
-    // Capitalize the first letter of each word in the status
-    const formattedStatus = status
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
-
+    // Use a mapping for exact status values as expected by the API
+    const statusMap: { [key: string]: string } = {
+      'fully completed': 'Fully Completed',
+      'partial integration': 'Partial Integration',
+      'partially completed': 'Partial Integration',
+      'completed': 'Fully Completed',
+      'partial': 'Partial Integration',
+      'in progress': 'Partial Integration'
+    };
+    
+    // Get properly formatted status name
+    const formattedStatus = statusMap[status.toLowerCase()] || 
+      status.split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+        .join(' ');
+    
+    console.log(`Fetching schemes with status: "${formattedStatus}"`);
     this.addMessage(`Fetching schemes with status "${formattedStatus}"...`);
 
     try {

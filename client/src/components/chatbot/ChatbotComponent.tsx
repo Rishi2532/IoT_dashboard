@@ -814,6 +814,21 @@ const CustomChatbot = () => {
 
         // Apply filters if available
         if (filterContext && (filters.region || filters.status)) {
+          console.log('Applying filters from chatbot processing:', JSON.stringify(filters));
+          
+          // First try direct calls to ensure immediate application
+          if (filters.region) {
+            console.log(`Directly setting region filter to: "${filters.region}"`);
+            filterContext.setSelectedRegion(filters.region);
+          }
+          
+          if (filters.status) {
+            console.log(`Directly setting status filter to: "${filters.status}"`);
+            filterContext.setStatusFilter(filters.status);
+          }
+          
+          // Then use the combined method for good measure
+          console.log('Applying filters using the combined method');
           filterContext.applyFilters(filters);
           
           // Check if previous message was from voice input to enable auto-speak
