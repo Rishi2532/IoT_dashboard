@@ -129,7 +129,7 @@ export default function DailyUpdates({ isLoading }: DailyUpdatesProps) {
 
   if (isLoading) {
     return (
-      <div className="bg-white border shadow-sm mb-4 sm:mb-6 h-12 rounded-md overflow-hidden flex items-center">
+      <div className="bg-white border shadow-sm mb-4 sm:mb-6 h-16 rounded-md overflow-hidden flex items-center">
         <div className="bg-blue-50 border-r border-blue-100 h-full flex items-center justify-center px-3">
           <Skeleton className="h-4 w-24" />
         </div>
@@ -140,7 +140,7 @@ export default function DailyUpdates({ isLoading }: DailyUpdatesProps) {
 
   if (error) {
     return (
-      <div className="bg-white border border-red-200 shadow-sm mb-4 sm:mb-6 h-12 rounded-md overflow-hidden flex items-center">
+      <div className="bg-white border border-red-200 shadow-sm mb-4 sm:mb-6 h-16 rounded-md overflow-hidden flex items-center">
         <div className="bg-red-50 border-r border-red-100 h-full flex items-center justify-center px-3">
           <AlertCircle className="w-4 h-4 text-red-500 mr-2" />
           <span className="text-sm font-medium text-red-700">Error</span>
@@ -155,12 +155,12 @@ export default function DailyUpdates({ isLoading }: DailyUpdatesProps) {
   // If no updates, show a simple message
   if (!isLoadingUpdates && (!todayUpdates || todayUpdates.length === 0)) {
     return (
-      <div className="bg-white border shadow-sm mb-4 sm:mb-6 h-12 rounded-md overflow-hidden flex items-center">
+      <div className="bg-white border shadow-sm mb-4 sm:mb-6 h-16 rounded-md overflow-hidden flex items-center">
         <div className="bg-blue-50 border-r border-blue-100 h-full flex items-center justify-center px-3">
-          <Bell className="w-4 h-4 text-blue-500 mr-2" />
-          <span className="text-sm font-medium text-blue-800">Updates</span>
+          <Bell className="w-5 h-5 text-blue-500 mr-2" />
+          <span className="text-base font-medium text-blue-800">Updates</span>
         </div>
-        <div className="text-neutral-500 text-sm mx-3">
+        <div className="text-neutral-500 text-base mx-3">
           No new updates for today
         </div>
       </div>
@@ -168,7 +168,7 @@ export default function DailyUpdates({ isLoading }: DailyUpdatesProps) {
   }
 
   return (
-    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 shadow-sm mb-4 sm:mb-6 h-12 rounded-md overflow-hidden">
+    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 shadow-sm mb-4 sm:mb-6 h-16 rounded-md overflow-hidden">
       {isLoadingUpdates ? (
         <div className="flex items-center h-full">
           <div className="bg-blue-100 border-r border-blue-200 h-full flex items-center justify-center px-3">
@@ -179,9 +179,9 @@ export default function DailyUpdates({ isLoading }: DailyUpdatesProps) {
       ) : (
         <div className="flex items-center h-full">
           <div className="bg-gradient-to-r from-blue-500 to-indigo-600 border-r border-blue-300 h-full flex items-center justify-center px-3">
-            <Badge className="bg-white/20 backdrop-blur-sm" variant="default">
-              <Calendar className="h-3.5 w-3.5 mr-1 text-white" />
-              <span className="text-xs font-medium text-white">TODAY</span>
+            <Badge className="bg-white/20 backdrop-blur-sm px-2.5 py-1" variant="default">
+              <Calendar className="h-4 w-4 mr-1 text-white" />
+              <span className="text-sm font-medium text-white">TODAY</span>
             </Badge>
           </div>
           
@@ -202,7 +202,7 @@ export default function DailyUpdates({ isLoading }: DailyUpdatesProps) {
                     {getItemIcon(item.type)}
                   </span>
                   <span 
-                    className={`text-sm whitespace-nowrap font-medium ${
+                    className={`text-base whitespace-nowrap font-medium ${
                       item.status === 'completed' 
                         ? 'text-green-600' 
                         : item.type === 'village' 
