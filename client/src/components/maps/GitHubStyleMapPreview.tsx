@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import MaharashtraMap from './MaharashtraMap';
+import SimpleLeafletMap from './SimpleLeafletMap';
 
 interface GitHubStyleMapPreviewProps {
   title?: string;
@@ -70,7 +70,7 @@ export default function GitHubStyleMapPreview({
       {/* Content */}
       <div className="p-0">
         {activeTab === 'preview' && (
-          <MaharashtraMap 
+          <SimpleLeafletMap 
             containerClassName="h-[350px] w-full" 
             onRegionClick={onRegionClick}
           />
