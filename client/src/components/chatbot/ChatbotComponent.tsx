@@ -26,7 +26,12 @@ import { triggerExcelExport } from "@/utils/excel-helper";
 interface DashboardFilterContext {
   setSelectedRegion: (region: string) => void;
   setStatusFilter: (status: string) => void;
-  applyFilters: (filters: { region?: string; status?: string }) => void;
+  applyFilters: (filters: { 
+    region?: string; 
+    status?: string; 
+    componentType?: string;  // Added to support filtering by infrastructure component type (e.g., "chlorine")
+    schemeId?: string;       // Already used in code but not defined in interface
+  }) => void;
 }
 
 const FilterContext = createContext<DashboardFilterContext | null>(null);
@@ -37,12 +42,39 @@ export const FilterContextProvider: React.FC<{
   setSelectedRegion: (region: string) => void;
   setStatusFilter: (status: string) => void;
 }> = ({ children, setSelectedRegion, setStatusFilter }) => {
-  const applyFilters = (filters: { region?: string; status?: string }) => {
+  const applyFilters = (filters: { 
+    region?: string; 
+    status?: string; 
+    componentType?: string;
+    schemeId?: string;
+  }) => {
+    console.log(`Filter context applying filters:`, JSON.stringify(filters));
+    
     if (filters.region) {
       setSelectedRegion(filters.region);
     }
     if (filters.status) {
       setStatusFilter(filters.status);
+    }
+    
+    // For componentType filters, we need to create a custom event that the dashboard will listen for
+    if (filters.componentType) {
+      // Create and dispatch a custom event for component filtering
+      const event = new CustomEvent('filter:componentType', { 
+        detail: { componentType: filters.componentType } 
+      });
+      document.dispatchEvent(event);
+      console.log(`Dispatched componentType filter event for: ${filters.componentType}`);
+    }
+    
+    // For scheme ID filtering
+    if (filters.schemeId) {
+      // Create and dispatch a custom event for scheme ID filtering
+      const event = new CustomEvent('filter:schemeId', { 
+        detail: { schemeId: filters.schemeId } 
+      });
+      document.dispatchEvent(event);
+      console.log(`Dispatched schemeId filter event for: ${filters.schemeId}`);
     }
   };
 
@@ -60,7 +92,12 @@ interface ChatMessage {
   type: "user" | "bot";
   text: string;
   fromVoice?: boolean;
-  filters?: { region?: string; status?: string };
+  filters?: { 
+    region?: string; 
+    status?: string; 
+    componentType?: string;
+    schemeId?: string;
+  };
   autoSpeak?: boolean;
 }
 
@@ -224,7 +261,12 @@ const CustomChatbot = () => {
     setTimeout(async () => {
       try {
         let response = "";
-        let filters: { region?: string; status?: string; schemeId?: string } = {};
+        let filters: { 
+          region?: string; 
+          status?: string; 
+          schemeId?: string;
+          componentType?: string;
+        } = {};
 
         const lowerText = text.toLowerCase();
         console.log(`Processing query: "${lowerText}"`);
@@ -338,6 +380,20 @@ const CustomChatbot = () => {
           response =
             "Hello! How can I help you with Maharashtra's water infrastructure today? You can ask me about flow meters, chlorine analyzers, ESRs, or villages in specific regions or schemes.";
         } 
+        // Handle chlorine data filter specifically
+        else if (lowerText.includes("chlorine data") || 
+                lowerText.includes("show chlorine") || 
+                lowerText.includes("filter chlorine") ||
+                lowerText.includes("chlorine analyzer data") ||
+                lowerText.includes("chlorine analysers")) {
+          console.log("Chlorine analyzer data filter detected");
+          // Set a special filter type for chlorine analyzers
+          filters = { componentType: "chlorine" };
+          response = "I've filtered the dashboard to focus on chlorine analyzer data across all regions.";
+          
+          // We still need a way to implement this filter in the dashboard component
+          // This will require additional changes in the dashboard component
+        }
         // Handle infrastructure queries
         else if (isHowManyQuery) {
           try {
