@@ -1,95 +1,82 @@
 /**
  * Test script for pgAdmin database connection
  * 
- * This script tests the connection to your pgAdmin PostgreSQL database
- * and checks if the necessary tables exist.
+ * This script verifies that your pgAdmin database connection
+ * is properly configured. It checks the water_scheme_dashboard database
+ * and confirms if all required tables are present.
  */
 
-// Fix for CommonJS module import
-import pkg from 'pg';
-const { Pool } = pkg;
+// Load environment variables from .env.pgadmin
+require('dotenv').config({ path: '.env.pgadmin' });
 
-import dotenv from 'dotenv';
-import fs from 'fs';
-import path from 'path';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Attempt to load environment variables from .env.vscode
-const envPath = path.join(__dirname, '.env.vscode');
-if (fs.existsSync(envPath)) {
-  console.log(`Loading environment variables from ${envPath}`);
-  dotenv.config({ path: envPath });
-} else {
-  console.log('No .env.vscode file found, using default environment variables');
-  dotenv.config();
-}
+const { Pool } = require('pg');
 
 async function testPgAdminConnection() {
-  console.log('\n--- Testing pgAdmin Database Connection ---\n');
-  console.log('Connection details:');
-  console.log('- Database: water_scheme_dashboard');
-  console.log('- Host: localhost');
-  console.log('- Port: 5432');
-  console.log('- User: postgres');
-  console.log('- Password: [HIDDEN]');
-  
-  const connectionString = 'postgres://postgres:Salunke@123@localhost:5432/water_scheme_dashboard';
-  console.log('\nAttempting to connect...');
-  
-  const pool = new Pool({ connectionString });
-  
+  console.log('Testing pgAdmin database connection...');
+  console.log('----------------------------------');
+  console.log(`Database: ${process.env.PGDATABASE}`);
+  console.log(`Host: ${process.env.PGHOST}`);
+  console.log(`Port: ${process.env.PGPORT}`);
+  console.log(`User: ${process.env.PGUSER}`);
+  console.log('Password: [hidden]');
+  console.log('----------------------------------');
+
+  const pool = new Pool({
+    connectionString: process.env.DATABASE_URL
+  });
+
   try {
-    // Try to connect
+    // Test basic connection
     const client = await pool.connect();
-    console.log('✅ Successfully connected to pgAdmin database!');
+    console.log('✅ Successfully connected to PostgreSQL database!');
+
+    // Test if tables exist
+    const tables = await client.query(`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public'
+      ORDER BY table_name;
+    `);
     
-    // Check if required tables exist
-    console.log('\nChecking for required tables:');
-    const requiredTables = ['region', 'scheme_status', 'users', 'app_state', 'water_scheme_data'];
+    console.log(`\n📋 Found ${tables.rows.length} tables in your database:`);
+    tables.rows.forEach(row => {
+      console.log(`  - ${row.table_name}`);
+    });
+
+    // Check for required tables
+    const requiredTables = ['region', 'scheme_status', 'water_scheme_data'];
+    console.log('\n🔍 Checking for required tables:');
     
-    for (const table of requiredTables) {
-      const result = await client.query(`
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_schema = 'public' 
-          AND table_name = $1
-        )
-      `, [table]);
-      
-      const exists = result.rows[0].exists;
-      console.log(`- Table "${table}": ${exists ? '✅ Found' : '❌ Not found'}`);
+    let allRequired = true;
+    requiredTables.forEach(table => {
+      const exists = tables.rows.some(row => row.table_name === table);
+      console.log(`  - ${table}: ${exists ? '✅ Found' : '❌ Missing'}`);
+      if (!exists) allRequired = false;
+    });
+
+    if (allRequired) {
+      console.log('\n🎉 All required tables are present! Your pgAdmin database is configured correctly.');
+      console.log('\nYou can now run the Maharashtra Water Dashboard with:');
+      console.log('  - Windows: Double-click run-with-pgadmin.bat');
+      console.log('  - Mac/Linux: ./run-with-pgadmin.sh');
+    } else {
+      console.log('\n⚠️ Some required tables are missing.');
+      console.log('The application may not function correctly until all required tables are present.');
+      console.log('Please refer to the documentation for importing the necessary data.');
     }
-    
-    // Check record counts in each table
-    console.log('\nChecking record counts:');
-    for (const table of requiredTables) {
-      try {
-        const countResult = await client.query(`SELECT COUNT(*) FROM "${table}"`);
-        const count = parseInt(countResult.rows[0].count, 10);
-        console.log(`- "${table}": ${count} records`);
-      } catch (err) {
-        console.log(`- "${table}": Error counting records - ${err.message}`);
-      }
-    }
-    
+
     client.release();
-    console.log('\n✅ Database connection test completed successfully!');
-    
-  } catch (error) {
-    console.error('❌ Error connecting to pgAdmin database:', error.message);
-    console.log('\nPlease ensure:');
-    console.log('1. PostgreSQL is running in pgAdmin');
-    console.log('2. The database "water_scheme_dashboard" exists');
-    console.log('3. The username "postgres" and password "Salunke@123" are correct');
-    console.log('4. PostgreSQL is accepting connections on localhost:5432');
+  } catch (err) {
+    console.error('❌ Error connecting to PostgreSQL database:', err.message);
+    console.error('\nPossible solutions:');
+    console.error('1. Make sure pgAdmin is running');
+    console.error('2. Verify the database "water_scheme_dashboard" exists');
+    console.error('3. Check your password is correct (Salunke@123)');
+    console.error('4. Ensure PostgreSQL service is running');
+    console.error('\nFor help, refer to PGADMIN-SETUP.md');
   } finally {
     await pool.end();
   }
 }
 
-// Run the test
 testPgAdminConnection();

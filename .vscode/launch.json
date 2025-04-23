@@ -4,12 +4,15 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "Launch Water Dashboard",
-      "skipFiles": ["<node_internals>/**"],
-      "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "name": "Start Water Dashboard",
+      "program": "${workspaceFolder}/server/index.ts",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["tsx"],
+      "console": "integratedTerminal",
+      "internalConsoleOptions": "neverOpen",
       "envFile": "${workspaceFolder}/.env.vscode",
-      "console": "integratedTerminal"
+      "skipFiles": ["<node_internals>/**"],
+      "preLaunchTask": "Setup for VS Code"
     }
   ]
 }

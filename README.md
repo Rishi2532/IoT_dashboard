@@ -2,20 +2,31 @@
 
 ## Getting Started with VS Code and pgAdmin
 
-This project is configured to run easily in Visual Studio Code with your pgAdmin database. Follow these steps:
+This project is configured to run easily with your pgAdmin database. Choose the simplest option that works for you:
 
-### Option 1: Quick Setup with pgAdmin (Recommended)
+### Option 1: One-Click Setup (Easiest)
+
+1. **Extract the project** to a folder on your computer
+2. **Double-click** the appropriate script:
+   - Windows: `run-with-pgadmin.bat`
+   - Mac/Linux: `run-with-pgadmin.sh`
+
+The script automatically sets up the database connection to your pgAdmin database named `water_scheme_dashboard` with password `Salunke@123`.
+
+For detailed setup instructions, see `PGADMIN-SETUP.md`
+
+### Option 2: VS Code Setup (Alternative)
 
 1. **Extract the project** to a folder on your computer
 2. **Open the project** in VS Code
-3. **Run the pgAdmin setup script** by right-clicking on `setup-vscode-pgadmin.bat` and selecting "Run" (Windows) or by running `node vscode-setup.js` in the terminal
+3. **Run the pgAdmin setup script** by right-clicking on `setup-vscode-pgadmin.bat` and selecting "Run" (Windows) or by running `node setup-pgadmin.js` in the terminal
 4. Install dependencies by running:
    ```
    npm install
    ```
 5. Press **F5** to launch the application with your pgAdmin database
 
-### Option 2: Manual Setup
+### Option 3: Manual Setup
 
 1. **Open the project** in VS Code
 2. Make sure the `.env.vscode` file contains the correct pgAdmin database credentials:
