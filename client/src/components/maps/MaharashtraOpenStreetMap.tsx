@@ -36,76 +36,107 @@ export default function MaharashtraOpenStreetMap({
 
   // Initialize the map
   useEffect(() => {
-    if (!mapContainerRef.current) return;
+    // Exit early if container not available or not in browser environment
+    if (!mapContainerRef.current || typeof window === 'undefined') {
+      return;
+    }
 
-    // Clean up any existing map instance
+    // Fix for Leaflet marker icons in bundled environments
+    try {
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+      L.Icon.Default.mergeOptions({
+        iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+      });
+    } catch (e) {
+      console.warn('Failed to set up Leaflet icon defaults:', e);
+    }
+
+    // Clean up any existing map instance to avoid duplicates
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
       mapInstanceRef.current = null;
     }
 
-    // Create the map instance
-    const map = L.map(mapContainerRef.current, {
-      center: [19.0, 76.5], // Maharashtra's center
-      zoom: 7,
-      zoomControl: true,
-      attributionControl: true,
-      scrollWheelZoom: false, // Disable scroll zoom to match reference image
-      dragging: true,
-    });
-
-    // Set bounds to focus on Maharashtra exactly like the reference image
-    const bounds = L.latLngBounds(
-      L.latLng(14.5, 72.0), // Southwest - Adjusted to match reference image
-      L.latLng(23.0, 82.0)  // Northeast - Adjusted to match reference image
-    );
-    map.fitBounds(bounds);
-
-    // Add OpenStreetMap tile layer to match the example image exactly
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '©2023 TomTom ©2023 OSM ©2023 GrabTaxi ©',
-      maxZoom: 19,
-    }).addTo(map);
-
-    // Add markers for each Maharashtra region
-    Object.entries(regionCoordinates).forEach(([regionName, coordinates]) => {
-      const color = regionColors[regionName] || '#cccccc';
-      
-      // Create a square marker for each region
-      const squareIcon = L.divIcon({
-        className: 'custom-div-icon',
-        html: `<div style="background-color: ${color}; width: 16px; height: 16px; border: 1px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
+    // Wrap map creation in try/catch for error handling
+    try {
+      // Create a new Leaflet map
+      const map = L.map(mapContainerRef.current, {
+        center: [19.0, 76.5], // Maharashtra's center
+        zoom: 7,
+        zoomControl: true,
+        attributionControl: true,
+        scrollWheelZoom: false, // Disable scroll zoom to match reference image
+        dragging: true,
       });
 
-      // Create marker with the square icon
-      const marker = L.marker(coordinates, { icon: squareIcon })
-        .addTo(map)
-        .on('click', () => {
-          console.log(`Region clicked: ${regionName}`);
-          onRegionClick(regionName);
+      // Set bounds to focus on Maharashtra exactly like the reference image
+      const bounds = L.latLngBounds(
+        L.latLng(14.5, 72.0), // Southwest - Adjusted to match reference image
+        L.latLng(23.0, 82.0)  // Northeast - Adjusted to match reference image
+      );
+      map.fitBounds(bounds);
+
+      // Add OpenStreetMap tile layer to match the example image exactly
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '©2023 TomTom ©2023 OSM ©2023 GrabTaxi ©',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Add markers for each Maharashtra region
+      Object.entries(regionCoordinates).forEach(([regionName, coordinates]) => {
+        const color = regionColors[regionName] || '#cccccc';
+        
+        // Create a square marker for each region
+        const squareIcon = L.divIcon({
+          className: 'custom-div-icon',
+          html: `<div style="background-color: ${color}; width: 16px; height: 16px; border: 1px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8],
         });
 
-      // Add a tooltip to show region name
-      marker.bindTooltip(regionName, {
-        permanent: false,
-        direction: 'top',
-        className: 'region-tooltip',
+        // Create marker with the square icon
+        const marker = L.marker(coordinates, { icon: squareIcon })
+          .addTo(map)
+          .on('click', () => {
+            console.log(`Region clicked: ${regionName}`);
+            onRegionClick(regionName);
+          });
+
+        // Add a tooltip to show region name
+        marker.bindTooltip(regionName, {
+          permanent: false,
+          direction: 'top',
+          className: 'region-tooltip',
+        });
       });
-    });
 
-    // Store the map instance for cleanup
-    mapInstanceRef.current = map;
+      // Store the map instance for cleanup
+      mapInstanceRef.current = map;
 
-    // Cleanup function
+      // Force a map refresh after rendering
+      setTimeout(() => {
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.invalidateSize();
+        }
+      }, 100);
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
+
+    // Cleanup function to prevent memory leaks
     return () => {
       if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
+        try {
+          mapInstanceRef.current.remove();
+        } catch (e) {
+          console.warn('Error removing map:', e);
+        }
         mapInstanceRef.current = null;
       }
     };
-  }, [onRegionClick]);
+  }, [containerClassName, onRegionClick]);
 
   return (
     <div className="relative">

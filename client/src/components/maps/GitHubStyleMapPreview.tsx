@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { MaharashtraOpenStreetMap } from '.';
+import React, { useState } from 'react';
+import MaharashtraMap from './MaharashtraMap';
 
 interface GitHubStyleMapPreviewProps {
   title?: string;
@@ -70,7 +70,7 @@ export default function GitHubStyleMapPreview({
       {/* Content */}
       <div className="p-0">
         {activeTab === 'preview' && (
-          <MaharashtraOpenStreetMap 
+          <MaharashtraMap 
             containerClassName="h-[350px] w-full" 
             onRegionClick={onRegionClick}
           />
