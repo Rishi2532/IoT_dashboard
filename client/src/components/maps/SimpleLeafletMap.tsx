@@ -33,90 +33,121 @@ export default function SimpleLeafletMap({
 }: SimpleLeafletMapProps) {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
 
+  // Fix Leaflet's icon path issues for bundled environments
+  useEffect(() => {
+    // Only fix this once globally
+    if (typeof window !== 'undefined' && typeof L !== 'undefined') {
+      // Set Leaflet's images path to a CDN to avoid webpack issues
+      if (L.Icon && L.Icon.Default) {
+        // Fix for Leaflet marker icons in bundled environments
+        delete (L.Icon.Default.prototype as any)._getIconUrl;
+        
+        L.Icon.Default.mergeOptions({
+          iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
+          iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
+          shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
+        });
+      }
+    }
+  }, []);
+
+  // Initialize map
   useEffect(() => {
     if (!mapContainerRef.current) return;
-
-    // Fix for Leaflet marker icons in bundled environments
-    try {
-      delete (L.Icon.Default.prototype as any)._getIconUrl;
-      L.Icon.Default.mergeOptions({
-        iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
-        iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
-        shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
-      });
-    } catch (e) {
-      console.warn('Failed to setup Leaflet defaults:', e);
-    }
-
-    // Clean up any existing map instance to avoid duplicates
+    
+    // Avoid duplicating map instance
     if (mapInstanceRef.current) {
       mapInstanceRef.current.remove();
-      mapInstanceRef.current = null;
     }
 
-    // Create a new map
-    const map = L.map(mapContainerRef.current, {
-      center: [19.7515, 75.7139], // Center of Maharashtra
-      zoom: 7,
-      zoomControl: true,
-      attributionControl: true,
-      scrollWheelZoom: false
-    });
-
-    // Add OpenStreetMap tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 19,
-    }).addTo(map);
-
-    // Set bounds to focus on Maharashtra
-    const bounds = L.latLngBounds(
-      L.latLng(14.5, 72.0), // Southwest
-      L.latLng(23.0, 82.0)  // Northeast
-    );
-    map.fitBounds(bounds);
-
-    // Add markers for each region
-    Object.entries(regionCoordinates).forEach(([regionName, coordinates]) => {
-      const color = regionColors[regionName] || '#cccccc';
-      
-      // Create a square marker for each region
-      const squareIcon = L.divIcon({
-        className: 'custom-div-icon',
-        html: `<div style="background-color: ${color}; width: 16px; height: 16px; border: 1px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>`,
-        iconSize: [16, 16],
-        iconAnchor: [8, 8]
+    try {
+      // Create map with proper initialization options
+      const map = L.map(mapContainerRef.current, {
+        center: [19.7515, 75.7139], // Center of Maharashtra
+        zoom: 7,
+        zoomControl: true,
+        attributionControl: true,
+        scrollWheelZoom: false,
+        // Add these to help with mobile
+        tap: true,
+        dragging: !L.Browser.mobile, 
+        tapTolerance: 15
       });
-      
-      // Create marker with the square icon
-      const marker = L.marker(coordinates, { icon: squareIcon })
-        .addTo(map)
-        .on('click', () => {
-          console.log(`Region clicked: ${regionName}`);
-          onRegionClick(regionName);
+
+      // Store the instance for later use
+      mapInstanceRef.current = map;
+
+      // Add OpenStreetMap tile layer with error handling
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Set bounds to focus on Maharashtra
+      const bounds = L.latLngBounds(
+        L.latLng(14.5, 72.0), // Southwest
+        L.latLng(23.0, 82.0)  // Northeast
+      );
+      map.fitBounds(bounds);
+
+      // Clear any existing markers
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
+
+      // Add markers for each region
+      Object.entries(regionCoordinates).forEach(([regionName, coordinates]) => {
+        const color = regionColors[regionName] || '#cccccc';
+        
+        // Create a square marker for each region
+        const squareIcon = L.divIcon({
+          className: 'custom-div-icon',
+          html: `<div style="background-color: ${color}; width: 16px; height: 16px; border: 1px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>`,
+          iconSize: [16, 16],
+          iconAnchor: [8, 8]
         });
-      
-      // Add a tooltip to show region name
-      marker.bindTooltip(regionName, {
-        permanent: false,
-        direction: 'top'
+        
+        // Create marker with the square icon
+        const marker = L.marker(coordinates, { icon: squareIcon })
+          .addTo(map)
+          .on('click', () => {
+            console.log(`Region clicked: ${regionName}`);
+            onRegionClick(regionName);
+          });
+        
+        // Add a tooltip to show region name
+        marker.bindTooltip(regionName, {
+          permanent: false,
+          direction: 'top'
+        });
+        
+        // Save marker for cleanup
+        markersRef.current.push(marker);
       });
-    });
 
-    // Store the map instance for cleanup
-    mapInstanceRef.current = map;
+      // Force a map refresh after rendering
+      // This helps fix the "__refresh-page" error
+      setTimeout(() => {
+        if (map && map._container) {
+          map.invalidateSize(false);
+        }
+      }, 250);
+    } catch (error) {
+      console.error('Error initializing map:', error);
+      // Provide a fallback or error state if the map fails to initialize
+    }
 
-    // Force a map refresh after rendering
-    setTimeout(() => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.invalidateSize();
-      }
-    }, 100);
-
-    // Cleanup function
+    // Clean up on unmount
     return () => {
       if (mapInstanceRef.current) {
+        // Clean up markers
+        markersRef.current.forEach(marker => {
+          if (marker) marker.remove();
+        });
+        markersRef.current = [];
+      
+        // Remove the map
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
       }
@@ -128,9 +159,10 @@ export default function SimpleLeafletMap({
       <div 
         ref={mapContainerRef} 
         className={containerClassName}
+        id="maharashtra-leaflet-map" // Add a unique ID to help with debugging
       />
       <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-75 text-xs p-1 text-gray-700 border-t border-gray-300">
-        <span>©2023 TomTom ©2023 OSM ©2023 GrabTaxi ©</span>
+        <span>©2025 OpenStreetMap contributors</span>
       </div>
       
       {/* Add styling for tooltips */}
