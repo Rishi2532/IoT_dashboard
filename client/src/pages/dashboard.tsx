@@ -16,7 +16,7 @@ import { Region, RegionSummary, SchemeStatus } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
 // Import our map components
-import SimpleLeafletMap from "@/components/maps/SimpleLeafletMap";
+import { GitHubStyleMapPreview } from "@/components/maps";
 
 export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState("all");
@@ -298,15 +298,12 @@ export default function Dashboard() {
           </div>
           <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
-              {/* Direct Simple Maharashtra Map implementation */}
-              <div className="map-container rounded-lg overflow-hidden shadow-md bg-white p-3" id="maharashtra-map-preview">
-                <SimpleMaharashtraMap 
-                  regions={regions}
-                  regionSummary={regionSummary}
-                  selectedRegion={selectedRegion}
+              {/* GitHub-style Map Preview with region filtering */}
+              <div className="map-container" id="maharashtra-map-preview">
+                <GitHubStyleMapPreview 
+                  title="maharashtra.topo.json"
+                  description="Add division maps for states"
                   onRegionClick={handleRegionChange}
-                  metric={mapMetric}
-                  isLoading={isRegionsLoading}
                 />
               </div>
               

@@ -9,7 +9,7 @@ const FallbackMaharashtraMap = ({ onRegionClick }: { onRegionClick?: (region: st
     { name: 'Chhatrapati Sambhajinagar', color: '#68A9A9', x: 220, y: 240, width: 100, height: 80 },
     { name: 'Nashik', color: '#8CB3E2', x: 150, y: 200, width: 80, height: 80 },
     { name: 'Pune', color: '#FFC408', x: 170, y: 290, width: 80, height: 80 },
-    { name: 'Konkan', color: '#4A77BB', x: 135, y: 240, width: 60, height: 100 }, // Updated Konkan position
+    { name: 'Konkan', color: '#4A77BB', x: 110, y: 280, width: 60, height: 100 }, // Updated Konkan position
   ];
   
   return (
