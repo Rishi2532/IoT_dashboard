@@ -9,6 +9,7 @@ import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
+import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";
 import ChatbotComponent, { FilterContextProvider } from "@/components/chatbot/ChatbotComponent";
 import { Button } from "@/components/ui/button";
 import { Download, RefreshCw, Map } from "lucide-react";
@@ -220,6 +221,14 @@ export default function Dashboard() {
   
   return (
     <DashboardLayout>
+      {/* Add ComponentTypeFilter for highlighting components when asked about through chatbot */}
+      <ComponentTypeFilter 
+        onFilterChange={(componentType) => {
+          console.log(`Dashboard received component filter change: ${componentType}`);
+          // You can add additional logic here if needed
+        }}
+      />
+      
       {/* Enhanced Dashboard Header with water-themed gradient */}
       <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-600/20 via-blue-400/15 to-blue-700/10 rounded-lg mb-4 sm:mb-6 shadow-md border border-blue-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
