@@ -81,6 +81,16 @@ All tables from your pgAdmin database will be automatically accessible in the da
 
 If you need to change any database credentials, edit the `.env.vscode` file.
 
+### Perplexity API Key
+
+The AI chatbot functionality requires a Perplexity API key. You'll need to add this to the `.env.pgadmin` file:
+
+```
+PERPLEXITY_API_KEY=your_actual_key_here
+```
+
+Without this key, the dashboard will still work but the chatbot feature won't be available.
+
 ## Troubleshooting
 
 If you encounter issues connecting to pgAdmin:

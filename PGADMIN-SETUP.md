@@ -27,6 +27,19 @@ The application is pre-configured to connect to your pgAdmin database with these
 
 If your pgAdmin setup is different, you can edit the `.env.pgadmin` file to match your configuration.
 
+### Perplexity API Key Setup
+
+For the AI chatbot functionality, you'll need to add your Perplexity API key to the `.env.pgadmin` file:
+
+1. Open the `.env.pgadmin` file in a text editor
+2. Add or update the following line with your API key:
+   ```
+   PERPLEXITY_API_KEY=your_actual_api_key_here
+   ```
+3. Save the file
+
+If you don't have a Perplexity API key, you can still use the dashboard, but the chatbot feature won't work.
+
 ## Step 3: Run the Dashboard
 
 ### For Windows:

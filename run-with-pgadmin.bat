@@ -29,6 +29,20 @@ echo.
 echo Setting up pgAdmin configuration...
 copy .env.pgadmin .env.vscode
 
+:: Check for Perplexity API key
+findstr /C:"PERPLEXITY_API_KEY=pplx" .env.pgadmin >nul
+if %errorlevel% equ 0 (
+  echo.
+  echo IMPORTANT: Perplexity API Key not set
+  echo.
+  echo To use the AI chatbot feature, you need to set your Perplexity API key
+  echo in the .env.pgadmin file. The dashboard will still work without it,
+  echo but the chatbot feature won't be available.
+  echo.
+  set /p confirm=Press Enter to continue...
+  echo.
+)
+
 :: Install dependencies
 echo Installing dependencies...
 call npm install
