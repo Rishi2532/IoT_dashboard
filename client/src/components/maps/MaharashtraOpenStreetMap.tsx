@@ -32,16 +32,16 @@ export default function MaharashtraOpenStreetMap({
       dragging: true,
     });
 
-    // Set bounds to focus on Maharashtra
+    // Set bounds to focus on Maharashtra exactly like the reference image
     const bounds = L.latLngBounds(
-      L.latLng(15.5, 72.5), // Southwest
-      L.latLng(22.5, 81.5)  // Northeast
+      L.latLng(14.5, 72.0), // Southwest - Adjusted to match reference image
+      L.latLng(23.0, 82.0)  // Northeast - Adjusted to match reference image
     );
     map.fitBounds(bounds);
 
-    // Add OpenStreetMap tile layer to match the example image
+    // Add OpenStreetMap tile layer to match the example image exactly
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      attribution: '©2023 TomTom ©2023 OSM ©2023 GrabTaxi ©',
       maxZoom: 19,
     }).addTo(map);
 

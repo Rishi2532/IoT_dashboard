@@ -283,6 +283,7 @@ export default function Dashboard() {
                 variant="default"
                 size="sm"
                 className="h-7 px-2 text-xs"
+                onClick={() => window.location.href = '/map-preview'}
               >
                 <Map className="mr-1 h-3 w-3" />
                 Interactive Map

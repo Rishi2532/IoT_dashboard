@@ -13,6 +13,7 @@ import UserLoginPage from "./pages/user-login";
 import RegisterPage from "./pages/register";
 import ForgotPasswordPage from "./pages/forgot-password";
 import LpcdPage from "./pages/LpcdPage";
+import MapPreviewPage from "./pages/map-preview";
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
@@ -79,6 +80,12 @@ function App() {
           <Route path="/lpcd">
             <ProtectedRoute>
               <LpcdPage />
+            </ProtectedRoute>
+          </Route>
+          
+          <Route path="/map-preview">
+            <ProtectedRoute>
+              <MapPreviewPage />
             </ProtectedRoute>
           </Route>
           

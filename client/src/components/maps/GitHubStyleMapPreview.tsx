@@ -68,7 +68,7 @@ export default function GitHubStyleMapPreview({
       {/* Content */}
       <div className="p-0">
         {activeTab === 'preview' && (
-          <MaharashtraOpenStreetMap containerClassName="h-[320px] w-full" />
+          <MaharashtraOpenStreetMap containerClassName="h-[350px] w-full" />
         )}
         
         {activeTab === 'code' && (
