@@ -13,7 +13,7 @@ const regionCoordinates: Record<string, [number, number]> = {
   'Chhatrapati Sambhajinagar': [19.8762, 75.3433],
   'Nashik': [19.9975, 73.7898],
   'Pune': [18.5204, 73.8567],
-  'Konkan': [19.3530, 73.2765], // Updated to correct Konkan coordinates
+  'Konkan': [16.9900, 73.3100], // Updated Konkan coordinates to be above Goa
 };
 
 // Custom colors for each region
@@ -63,13 +63,18 @@ export default function SimpleLeafletMap({
           mapContainerRef.current.innerHTML = '';
         }
         
-        // Create map
+        // Create map centered on Maharashtra
         const map = L.map(mapContainerRef.current, {
           center: [19.7515, 75.7139], // Center of Maharashtra
           zoom: 7,
           zoomControl: true,
           attributionControl: true,
           scrollWheelZoom: false,
+          minZoom: 6, // Prevent zooming out too far
+          maxBounds: L.latLngBounds( // Restrict panning to Maharashtra region
+            L.latLng(15.6, 72.6), // Southwest - above Goa
+            L.latLng(22.1, 80.9)  // Northeast
+          ),
           // Add these to help with mobile
           dragging: !L.Browser.mobile
           // The tap property is causing TypeScript errors because it's not in MapOptions
@@ -79,13 +84,13 @@ export default function SimpleLeafletMap({
         // Add OpenStreetMap tile layer with error handling
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenStreetMap contributors',
-          maxZoom: 19,
+          maxZoom: 10, // Limit maximum zoom to prevent too detailed view
         }).addTo(map);
         
-        // Set bounds to focus on Maharashtra
+        // Set bounds to focus on Maharashtra (tighter bounds)
         const bounds = L.latLngBounds(
-          L.latLng(14.5, 72.0), // Southwest
-          L.latLng(23.0, 82.0)  // Northeast
+          L.latLng(15.8, 72.8), // Southwest - more focused on Maharashtra
+          L.latLng(21.8, 80.1)  // Northeast - more focused on Maharashtra
         );
         map.fitBounds(bounds);
         
