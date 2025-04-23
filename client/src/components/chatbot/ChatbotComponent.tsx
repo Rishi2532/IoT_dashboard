@@ -89,6 +89,41 @@ const CustomChatbot = () => {
     // Normalize text - convert to lowercase and remove punctuation
     const normalizedText = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, " ");
 
+    // Check for specific phrases like "Nagpur data" or "filter Nagpur data"
+    const filterPatterns = [
+      /(\w+)\s+data/i,               // "Nagpur data"
+      /filter\s+(\w+)/i,             // "filter Nagpur"
+      /filter\s+(\w+)\s+data/i,      // "filter Nagpur data"
+      /show\s+(\w+)/i,               // "show Nagpur"
+      /show\s+(\w+)\s+data/i,        // "show Nagpur data"
+      /display\s+(\w+)/i,            // "display Nagpur" 
+      /display\s+(\w+)\s+data/i,     // "display Nagpur data"
+      /focus\s+on\s+(\w+)/i,         // "focus on Nagpur"
+      /(\w+)\s+region/i,             // "Nagpur region"
+      /(\w+)\s+only/i,               // "Nagpur only"
+    ];
+    
+    for (const pattern of filterPatterns) {
+      const match = text.match(pattern);
+      if (match && match[1]) {
+        const potentialRegion = match[1].toLowerCase();
+        // Check if this matches a known region
+        if (['nagpur', 'pune', 'nashik', 'amravati', 'konkan', 'mumbai', 'sambhajinagar', 'aurangabad'].includes(potentialRegion)) {
+          console.log(`Matched region '${potentialRegion}' using filter pattern: ${pattern}`);
+          
+          // Map to standardized region name
+          if (potentialRegion === 'nagpur') return "Nagpur";
+          if (potentialRegion === 'pune') return "Pune";
+          if (potentialRegion === 'nashik' || potentialRegion === 'nasik') return "Nashik";
+          if (potentialRegion === 'amravati') return "Amravati";
+          if (potentialRegion === 'konkan') return "Konkan";
+          if (potentialRegion === 'mumbai' || potentialRegion === 'bombay') return "Mumbai";
+          if (potentialRegion === 'sambhajinagar' || potentialRegion === 'aurangabad') 
+            return "Chhatrapati Sambhajinagar";
+        }
+      }
+    }
+
     // Expanded region mapping with alternate spellings, typos, and local language variations
     const regionMap: Record<string, string> = {
       // Standard region names
@@ -286,11 +321,17 @@ const CustomChatbot = () => {
                            lowerText.includes("gram") ||
                            lowerText.includes("community");
 
-        // Status filter check
+        // Status filter check - enhanced to catch more variations
         const hasStatusFilter =
           lowerText.includes("fully completed") ||
           lowerText.includes("completed scheme") ||
-          lowerText.includes("completed schemes");
+          lowerText.includes("completed schemes") ||
+          lowerText.includes("fully completion") ||
+          lowerText === "completed" ||
+          lowerText.includes("show completed") ||
+          lowerText.includes("filter completed") ||
+          // Specifically match the exact phrase mentioned by user
+          lowerText.includes("fully completed schemes");
 
         // Handle greeting queries
         if (lowerText.includes("hello") || lowerText.includes("hi")) {
@@ -473,6 +514,7 @@ const CustomChatbot = () => {
 
           // Apply filters first if any were specified
           if (filterContext && filters) {
+            console.log(`Applying Excel export filters to dashboard:`, JSON.stringify(filters));
             filterContext.applyFilters(filters);
           }
 
