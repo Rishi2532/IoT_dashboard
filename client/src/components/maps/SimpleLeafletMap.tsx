@@ -13,7 +13,7 @@ const regionCoordinates: Record<string, [number, number]> = {
   'Chhatrapati Sambhajinagar': [19.8762, 75.3433],
   'Nashik': [19.9975, 73.7898],
   'Pune': [18.5204, 73.8567],
-  'Konkan': [16.9900, 73.3100], // Updated Konkan coordinates to be above Goa
+  'Konkan': [19.3530, 73.2765], // Updated Konkan coordinates as requested
 };
 
 // Custom colors for each region
