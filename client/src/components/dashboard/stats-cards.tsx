@@ -344,7 +344,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
                   {flowMeterIntegrated}
                 </span>
               </div>
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center" data-component-type="chlorine">
                 <div className="flex items-center">
                   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" className="h-4 w-4 sm:h-5 sm:w-5 text-emerald-600 mr-2" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
                     <rect x="5" y="3" width="14" height="3" rx="1" fill="rgba(107, 114, 128, 0.3)" stroke="currentColor" />
@@ -364,7 +364,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
                     Residual Chlorine Analyzer
                   </span>
                 </div>
-                <span className="text-xs sm:text-sm font-bold text-emerald-900">
+                <span className="text-xs sm:text-sm font-bold text-emerald-900 bg-emerald-50 px-2 py-1 rounded-md">
                   {rcaIntegrated}
                 </span>
               </div>
