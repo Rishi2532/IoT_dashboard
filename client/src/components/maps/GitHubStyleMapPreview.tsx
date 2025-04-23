@@ -14,19 +14,17 @@ export default function GitHubStyleMapPreview({
 
   return (
     <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
-      {/* Header with file info */}
+      {/* Header with file info - formatted like GitHub */}
       <div className="border-b border-gray-200 p-3 flex items-center text-sm">
-        <span className="font-medium text-gray-700">{title}</span>
+        <span className="font-medium text-gray-700">datameet</span>
         <span className="mx-2 text-gray-500">/</span>
-        <span className="text-gray-500">divisions</span>
-        <span className="mx-2 text-gray-500">/</span>
-        <span className="text-gray-500">{title}</span>
+        <span className="text-gray-500">maps</span>
       </div>
       
       {/* File metadata */}
       <div className="border-b border-gray-200 p-3 flex justify-between items-center text-sm">
         <div className="flex items-center">
-          <div className="w-6 h-6 bg-gray-200 rounded-full mr-2 flex items-center justify-center overflow-hidden">
+          <div className="w-6 h-6 bg-gray-100 rounded-full mr-2 flex items-center justify-center overflow-hidden text-gray-700">
             <span className="text-xs">A</span>
           </div>
           <span className="text-gray-700">{description}</span>
@@ -36,23 +34,32 @@ export default function GitHubStyleMapPreview({
         </div>
       </div>
       
-      {/* Tabs */}
+      {/* File location - path like in GitHub */}
+      <div className="border-b border-gray-200 p-2 flex items-center text-xs bg-gray-50">
+        <span className="text-gray-600 font-medium mr-2">maps</span>
+        <span className="text-gray-500">/</span>
+        <span className="text-gray-600 font-medium mx-2">divisions</span>
+        <span className="text-gray-500">/</span>
+        <span className="text-gray-600 font-medium ml-2">{title}</span>
+      </div>
+      
+      {/* Tabs - closer to GitHub styling */}
       <div className="border-b border-gray-200 flex text-sm">
         <button 
           onClick={() => setActiveTab('preview')}
-          className={`px-4 py-2 border-b-2 ${activeTab === 'preview' ? 'border-red-500 font-medium' : 'border-transparent text-gray-600'}`}
+          className={`px-4 py-2 border-b-2 ${activeTab === 'preview' ? 'border-indigo-500 font-medium' : 'border-transparent text-gray-600'}`}
         >
           Preview
         </button>
         <button 
           onClick={() => setActiveTab('code')}
-          className={`px-4 py-2 border-b-2 ${activeTab === 'code' ? 'border-red-500 font-medium' : 'border-transparent text-gray-600'}`}
+          className={`px-4 py-2 border-b-2 ${activeTab === 'code' ? 'border-indigo-500 font-medium' : 'border-transparent text-gray-600'}`}
         >
           Code
         </button>
         <button 
           onClick={() => setActiveTab('blame')}
-          className={`px-4 py-2 border-b-2 ${activeTab === 'blame' ? 'border-red-500 font-medium' : 'border-transparent text-gray-600'}`}
+          className={`px-4 py-2 border-b-2 ${activeTab === 'blame' ? 'border-indigo-500 font-medium' : 'border-transparent text-gray-600'}`}
         >
           Blame
         </button>

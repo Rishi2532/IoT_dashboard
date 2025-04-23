@@ -229,7 +229,8 @@ export default function OpenStreetMapView({
         />
         
         {/* Add styling for tooltips */}
-        <style jsx global>{`
+        <style dangerouslySetInnerHTML={{
+          __html: `
           .region-tooltip {
             background-color: rgba(255, 255, 255, 0.9);
             border: 1px solid #ccc;
@@ -241,7 +242,8 @@ export default function OpenStreetMapView({
           .leaflet-container {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
           }
-        `}</style>
+          `
+        }} />
       </CardContent>
     </Card>
   );

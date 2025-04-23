@@ -297,13 +297,10 @@ export default function Dashboard() {
           </div>
           <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
-              <SimpleMaharashtraMap
-                regionSummary={regionSummary}
-                regions={regions}
-                selectedRegion={selectedRegion}
-                onRegionClick={handleRegionChange}
-                metric={mapMetric}
-                isLoading={isRegionsLoading || isSummaryLoading}
+              {/* GitHub-style Map Preview */}
+              <GitHubStyleMapPreview 
+                title="maharashtra.topo.json"
+                description="Add division maps for states"
               />
             </div>
           </div>
