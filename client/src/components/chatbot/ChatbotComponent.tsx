@@ -131,9 +131,21 @@ const CustomChatbot = () => {
     const singleWordQuery = text.trim();
     const knownRegions = ["Nagpur", "Pune", "Nashik", "Amravati", "Konkan", "Mumbai", "Chhatrapati Sambhajinagar", "Sambhajinagar", "Aurangabad"];
     
+    // Enhanced check for simple queries like "Nagpur" or "Nagpur data"
     for (const region of knownRegions) {
+      // Check exact match (e.g., "Nagpur")
       if (singleWordQuery.toLowerCase() === region.toLowerCase()) {
         console.log(`Matched exact region name: ${region}`);
+        if (region.toLowerCase() === "sambhajinagar" || region.toLowerCase() === "aurangabad") {
+          return "Chhatrapati Sambhajinagar";
+        }
+        return region;
+      }
+      
+      // Check simple patterns like "Nagpur data"
+      const simpleRegionPattern = new RegExp(`^${region.toLowerCase()}\\s+data$`, 'i');
+      if (simpleRegionPattern.test(singleWordQuery.toLowerCase())) {
+        console.log(`Matched simple region data pattern: ${region} data`);
         if (region.toLowerCase() === "sambhajinagar" || region.toLowerCase() === "aurangabad") {
           return "Chhatrapati Sambhajinagar";
         }
@@ -396,6 +408,19 @@ const CustomChatbot = () => {
           response =
             "Hello! How can I help you with Maharashtra's water infrastructure today? You can ask me about flow meters, chlorine analyzers, ESRs, or villages in specific regions or schemes.";
         } 
+        // Handle direct region filtering requests (e.g., "show Nagpur data" or just "Nagpur")
+        else if (region && (
+            lowerText === region.toLowerCase() || 
+            lowerText.includes("show") || 
+            lowerText.includes("filter") || 
+            lowerText.includes("display") || 
+            lowerText.includes("data")
+          )) {
+          console.log(`Region filter request detected for: ${region}`);
+          // Set the region filter
+          filters.region = region;
+          response = `I've filtered the dashboard to show data for ${region} region. You can now see water infrastructure details specific to this region.`;
+        }
         // Handle chlorine data filter specifically
         else if (lowerText.includes("chlorine data") || 
                 lowerText.includes("show chlorine") || 
@@ -529,12 +554,8 @@ const CustomChatbot = () => {
               "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
           }
         } 
-        // Handle region filter requests
-        else if (region) {
-          // Just filter by region
-          filters = { region };
-          response = `I've updated the dashboard to focus on ${region} region and its schemes.`;
-        } 
+        // This section is now handled earlier in the code with the dedicated region filter handler
+        // to better support the user's request of filtering just by region name
         // Handle Excel download requests
         else if (
           (lowerText.includes("excel") || 
