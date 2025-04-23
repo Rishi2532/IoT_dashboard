@@ -397,9 +397,17 @@ export default function Dashboard() {
             <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center">
               <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
               Water Scheme Details
+              {selectedRegion !== "all" && (
+                <span className="ml-2 text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full region-selected">
+                  {selectedRegion} Region
+                </span>
+              )}
             </h2>
             <p className="text-xs sm:text-sm text-neutral-500 mt-1 sm:mt-2">
-              Click on any scheme to view detailed integration status and progress information
+              {selectedRegion === "all" 
+                ? "Click on any scheme to view detailed integration status and progress information"
+                : `Showing water schemes in ${selectedRegion} region. Use the chatbot to filter other regions.`
+              }
             </p>
           </div>
           <span className="hidden sm:flex items-center text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
