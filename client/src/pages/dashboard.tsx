@@ -300,9 +300,13 @@ export default function Dashboard() {
             <div className="min-w-[280px] sm:min-w-full h-full">
               {/* Direct Simple Maharashtra Map implementation */}
               <div className="map-container rounded-lg overflow-hidden shadow-md bg-white p-3" id="maharashtra-map-preview">
-                <div className="font-medium text-sm text-gray-700 mb-2">Maharashtra Regions</div>
                 <SimpleMaharashtraMap 
+                  regions={regions}
+                  regionSummary={regionSummary}
+                  selectedRegion={selectedRegion}
                   onRegionClick={handleRegionChange}
+                  metric={mapMetric}
+                  isLoading={isRegionsLoading}
                 />
               </div>
               

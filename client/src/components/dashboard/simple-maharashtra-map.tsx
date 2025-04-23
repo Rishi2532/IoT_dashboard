@@ -158,9 +158,9 @@ export default function SimpleMaharashtraMap({
               className="cursor-pointer hover:opacity-90"
             />
             
-            {/* Region: Konkan */}
+            {/* Region: Konkan (Updated coordinates) */}
             <path 
-              d="M90,280 L150,260 L140,340 L70,320 Z" 
+              d="M110,240 L150,260 L140,340 L90,320 Z" 
               fill={getColor("Konkan")} 
               stroke={selectedRegion === "Konkan" ? "#2563eb" : "#fff"}
               strokeWidth={selectedRegion === "Konkan" ? 3 : 1}
@@ -174,7 +174,7 @@ export default function SimpleMaharashtraMap({
             <text x="240" y="230" textAnchor="middle" className="text-xs font-semibold">C.S.Nagar</text>
             <text x="170" y="220" textAnchor="middle" className="text-xs font-semibold">Nashik</text>
             <text x="190" y="310" textAnchor="middle" className="text-xs font-semibold">Pune</text>
-            <text x="110" y="300" textAnchor="middle" className="text-xs font-semibold">Konkan</text>
+            <text x="115" y="280" textAnchor="middle" className="text-xs font-semibold">Konkan</text>
           </svg>
         </div>
         
