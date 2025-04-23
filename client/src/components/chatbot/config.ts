@@ -1,12 +1,15 @@
-import { createChatBotMessage } from 'react-chatbot-kit';
+import { createChatBotMessage } from "react-chatbot-kit";
 
 // Define the configuration object
 const config = {
   initialMessages: [
-    createChatBotMessage("Hello! I'm your Maharashtra Water Infrastructure Assistant. How can I help you today?", {
-      delay: 500,
-      widget: "welcomeOptions",
-    }),
+    createChatBotMessage(
+      "Hello! I'm your Maharashtra Water Infrastructure Assistant. How can I help you today?",
+      {
+        delay: 500,
+        widget: "welcomeOptions",
+      },
+    ),
   ],
   botName: "Water Infrastructure Assistant",
   customStyles: {
@@ -64,7 +67,7 @@ const config = {
     regions: [],
     regionSummary: null,
     selectedRegion: "all",
-  }
+  },
 };
 
 export default config;

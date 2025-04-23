@@ -32,7 +32,7 @@ const MapWidget: React.FC<MapWidgetProps> = ({ regions, selectedRegion }) => {
                   stroke="#2563eb" 
                   strokeWidth="2"
                 />
-                
+
                 {/* Simplified region locations */}
                 <g>
                   {/* Nagpur */}
@@ -44,7 +44,7 @@ const MapWidget: React.FC<MapWidgetProps> = ({ regions, selectedRegion }) => {
                     fill={selectedRegion === "Nagpur" ? "#4f83cc" : "#8bb3e3"} 
                   />
                   <text x="260" y="135" textAnchor="middle" fontSize="10" fontWeight="bold">Nagpur</text>
-                  
+
                   {/* Amravati */}
                   <rect 
                     x="200" 
@@ -54,7 +54,7 @@ const MapWidget: React.FC<MapWidgetProps> = ({ regions, selectedRegion }) => {
                     fill={selectedRegion === "Amravati" ? "#4f83cc" : "#8bb3e3"} 
                   />
                   <text x="210" y="145" textAnchor="middle" fontSize="10" fontWeight="bold">Amravati</text>
-                  
+
                   {/* Chhatrapati Sambhajinagar */}
                   <rect 
                     x="180" 
@@ -64,7 +64,7 @@ const MapWidget: React.FC<MapWidgetProps> = ({ regions, selectedRegion }) => {
                     fill={selectedRegion === "Chhatrapati Sambhajinagar" ? "#4f83cc" : "#8bb3e3"} 
                   />
                   <text x="190" y="195" textAnchor="middle" fontSize="10" fontWeight="bold">C.S. Nagar</text>
-                  
+
                   {/* Nashik */}
                   <rect 
                     x="130" 
@@ -74,7 +74,7 @@ const MapWidget: React.FC<MapWidgetProps> = ({ regions, selectedRegion }) => {
                     fill={selectedRegion === "Nashik" ? "#4f83cc" : "#8bb3e3"} 
                   />
                   <text x="140" y="165" textAnchor="middle" fontSize="10" fontWeight="bold">Nashik</text>
-                  
+
                   {/* Pune */}
                   <rect 
                     x="140" 
@@ -84,7 +84,7 @@ const MapWidget: React.FC<MapWidgetProps> = ({ regions, selectedRegion }) => {
                     fill={selectedRegion === "Pune" ? "#4f83cc" : "#8bb3e3"} 
                   />
                   <text x="150" y="225" textAnchor="middle" fontSize="10" fontWeight="bold">Pune</text>
-                  
+
                   {/* Konkan */}
                   <rect 
                     x="80" 

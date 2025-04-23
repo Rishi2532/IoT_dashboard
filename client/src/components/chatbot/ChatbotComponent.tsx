@@ -26,13 +26,7 @@ import { triggerExcelExport } from "@/utils/excel-helper";
 interface DashboardFilterContext {
   setSelectedRegion: (region: string) => void;
   setStatusFilter: (status: string) => void;
-  applyFilters: (filters: { 
-    region?: string; 
-    status?: string;
-    minLpcd?: number;
-    maxLpcd?: number;
-    zeroSupplyForWeek?: boolean;
-  }) => void;
+  applyFilters: (filters: { region?: string; status?: string }) => void;
 }
 
 const FilterContext = createContext<DashboardFilterContext | null>(null);
@@ -42,33 +36,13 @@ export const FilterContextProvider: React.FC<{
   children: React.ReactNode;
   setSelectedRegion: (region: string) => void;
   setStatusFilter: (status: string) => void;
-  setLpcdFilters?: (filters: { minLpcd?: number; maxLpcd?: number; zeroSupplyForWeek?: boolean }) => void;
-}> = ({ children, setSelectedRegion, setStatusFilter, setLpcdFilters }) => {
-  const applyFilters = (filters: { 
-    region?: string; 
-    status?: string;
-    minLpcd?: number;
-    maxLpcd?: number;
-    zeroSupplyForWeek?: boolean;
-  }) => {
+}> = ({ children, setSelectedRegion, setStatusFilter }) => {
+  const applyFilters = (filters: { region?: string; status?: string }) => {
     if (filters.region) {
       setSelectedRegion(filters.region);
     }
     if (filters.status) {
       setStatusFilter(filters.status);
-    }
-    
-    // If we have LPCD filters and the setter function is available
-    if (setLpcdFilters && (
-      filters.minLpcd !== undefined || 
-      filters.maxLpcd !== undefined || 
-      filters.zeroSupplyForWeek !== undefined
-    )) {
-      setLpcdFilters({
-        minLpcd: filters.minLpcd,
-        maxLpcd: filters.maxLpcd,
-        zeroSupplyForWeek: filters.zeroSupplyForWeek
-      });
     }
   };
 
@@ -86,13 +60,7 @@ interface ChatMessage {
   type: "user" | "bot";
   text: string;
   fromVoice?: boolean;
-  filters?: { 
-    region?: string; 
-    status?: string;
-    minLpcd?: number;
-    maxLpcd?: number;
-    zeroSupplyForWeek?: boolean;
-  };
+  filters?: { region?: string; status?: string };
   autoSpeak?: boolean;
 }
 
@@ -120,7 +88,7 @@ const CustomChatbot = () => {
   const extractRegion = (text: string): string | null => {
     // Normalize text - convert to lowercase and remove punctuation
     const normalizedText = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, " ");
-    
+
     // Expanded region mapping with alternate spellings, typos, and local language variations
     const regionMap: Record<string, string> = {
       // Standard region names
@@ -136,7 +104,7 @@ const CustomChatbot = () => {
       "chhatrapati sambhajinagar": "Chhatrapati Sambhajinagar",
       sambhajinagar: "Chhatrapati Sambhajinagar",
       aurangabad: "Chhatrapati Sambhajinagar", // Historical name
-      
+
       // Common word boundaries/patterns to improve accuracy
       " amravati ": "Amravati",
       " nagpur ": "Nagpur",
@@ -145,7 +113,7 @@ const CustomChatbot = () => {
       " pune ": "Pune",
       " konkan ": "Konkan",
       " mumbai ": "Mumbai",
-      
+
       // Prefix patterns like "in Nagpur" or "for Pune"
       "in nagpur": "Nagpur",
       "in pune": "Pune",
@@ -155,7 +123,7 @@ const CustomChatbot = () => {
       "in mumbai": "Mumbai",
       "in aurangabad": "Chhatrapati Sambhajinagar",
       "in sambhajinagar": "Chhatrapati Sambhajinagar",
-      
+
       // Hindi/Marathi transliteration variations
       "नागपूर": "Nagpur",
       "पुणे": "Pune",
@@ -173,7 +141,7 @@ const CustomChatbot = () => {
       /(\w+)\s+region/i,
       /region\s+of\s+(\w+)/i
     ];
-    
+
     for (const pattern of regionPatterns) {
       const match = normalizedText.match(pattern);
       if (match && match[1]) {
@@ -202,7 +170,7 @@ const CustomChatbot = () => {
         return value;
       }
     }
-    
+
     return null;
   };
 
@@ -221,33 +189,26 @@ const CustomChatbot = () => {
     setTimeout(async () => {
       try {
         let response = "";
-        let filters: { 
-          region?: string; 
-          status?: string; 
-          schemeId?: string;
-          minLpcd?: number;
-          maxLpcd?: number;
-          zeroSupplyForWeek?: boolean;
-        } = {};
+        let filters: { region?: string; status?: string; schemeId?: string } = {};
 
         const lowerText = text.toLowerCase();
         console.log(`Processing query: "${lowerText}"`);
-        
+
         // Extract region from query with enhanced detection
         const region = extractRegion(text);
         if (region) {
           console.log(`Detected region: ${region}`);
         }
-        
+
         // Extract scheme ID or name if present - try different pattern matches
         let schemeId = null;
-        
+
         // Try pattern "in scheme X" or "scheme X"
         const schemeMatch1 = text.match(/(?:in\s+)?scheme\s+([A-Za-z0-9\s-]+)/i);
         if (schemeMatch1) {
           schemeId = schemeMatch1[1].trim();
         }
-        
+
         // Try pattern "in X scheme" or "X scheme"
         if (!schemeId) {
           const schemeMatch2 = text.match(/(?:in\s+)?([A-Za-z0-9\s-]+)\s+scheme/i);
@@ -255,7 +216,7 @@ const CustomChatbot = () => {
             schemeId = schemeMatch2[1].trim();
           }
         }
-        
+
         // Try direct numeric scheme ID
         if (!schemeId) {
           const schemeMatch3 = text.match(/\b(\d{5,})\b/);
@@ -263,7 +224,7 @@ const CustomChatbot = () => {
             schemeId = schemeMatch3[1].trim();
           }
         }
-        
+
         // Try villages like "Bidgaon" or "Tarodi" mentioned in query
         if (!schemeId && !region) {
           const villageSchemeMatch = text.match(/\b(bidgaon|tarodi|in\s+\w+\s+village)\b/i);
@@ -278,11 +239,11 @@ const CustomChatbot = () => {
             }
           }
         }
-        
+
         if (schemeId) {
           console.log(`Detected scheme ID/name: ${schemeId}`);
         }
-        
+
         // Flag for specific query types - enhanced to detect implicit questions
         const isHowManyQuery = lowerText.includes("how many") || 
                               lowerText.includes("number of") || 
@@ -292,74 +253,39 @@ const CustomChatbot = () => {
                                 lowerText.includes("flow meter") || 
                                 lowerText.includes("chlorine") ||
                                 lowerText.includes("esr") ||
-                                lowerText.includes("village") ||
-                                lowerText.includes("lpcd")
+                                lowerText.includes("village")
                               ));
-        
+
         // Check for infrastructure components with expanded keywords
         const hasFlowMeters = lowerText.includes("flow meter") || 
                              lowerText.includes("flowmeter") || 
                              lowerText.includes("flow-meter") ||
                              lowerText.includes("flow") ||
                              lowerText.match(/\bfm\b/i) !== null;
-                             
+
         const hasChlorineAnalyzers = lowerText.includes("chlorine") || 
                                     lowerText.includes("analyzer") || 
                                     lowerText.includes("analyser") ||
                                     lowerText.includes("rca") ||
                                     lowerText.includes("residual") ||
                                     lowerText.includes("chlorin");
-                                    
+
         const hasPressureTransmitters = lowerText.includes("pressure") || 
                                        lowerText.includes("transmitter") || 
                                        lowerText.includes("pt") ||
                                        lowerText.includes("transmit");
-                                       
+
         const hasESR = lowerText.includes("esr") || 
                       lowerText.includes("reservoir") || 
                       lowerText.includes("elevated") ||
                       lowerText.includes("storage") ||
                       lowerText.includes("tank");
-                      
+
         const hasVillages = lowerText.includes("village") || 
                            lowerText.includes("settlement") ||
                            lowerText.includes("gram") ||
                            lowerText.includes("community");
-        
-        // LPCD related checks for statistics and filtering
-        const isLpcdQuery = lowerText.includes("lpcd") || 
-                           lowerText.includes("liters per capita") || 
-                           lowerText.includes("litres per capita") ||
-                           lowerText.includes("water consumption") || 
-                           lowerText.includes("water supply") ||
-                           lowerText.includes("water availability");
-        
-        const hasLpcdAbove55 = isLpcdQuery && (
-                               lowerText.includes("above 55") || 
-                               lowerText.includes(">55") || 
-                               lowerText.includes("greater than 55") ||
-                               lowerText.includes("more than 55") ||
-                               lowerText.includes("over 55") ||
-                               lowerText.match(/\b55\+\b/) !== null);
-                               
-        const hasLpcdBelow40 = isLpcdQuery && (
-                              lowerText.includes("below 40") || 
-                              lowerText.includes("<40") || 
-                              lowerText.includes("less than 40") ||
-                              lowerText.includes("under 40"));
-                              
-        const hasLpcdBetween40And55 = isLpcdQuery && (
-                                     lowerText.includes("between 40 and 55") || 
-                                     lowerText.includes("40-55") || 
-                                     lowerText.includes("40 to 55") ||
-                                     lowerText.includes("40 - 55"));
-                                     
-        const hasZeroLpcd = isLpcdQuery && (
-                           lowerText.includes("zero lpcd") || 
-                           lowerText.includes("no water") || 
-                           lowerText.includes("without water") ||
-                           lowerText.includes("0 lpcd"));
-        
+
         // Status filter check
         const hasStatusFilter =
           lowerText.includes("fully completed") ||
@@ -378,18 +304,18 @@ const CustomChatbot = () => {
             const components = [];
             let isRegionSpecific = false;
             let isSchemeSpecific = false;
-            
+
             // Set filter based on region or scheme
             if (region) {
               filters.region = region;
               isRegionSpecific = true;
             }
-            
+
             if (schemeId) {
               filters.schemeId = schemeId;
               isSchemeSpecific = true;
             }
-            
+
             // Determine which API to call based on filters
             try {
               if (isRegionSpecific && region) {
@@ -408,7 +334,7 @@ const CustomChatbot = () => {
                   throw new Error(`Failed to fetch data for scheme: ${schemeId}`);
                 }
                 const schemeData = await response.json();
-                
+
                 // Convert scheme data to a summary format
                 queryResult = {
                   flow_meter_integrated: schemeData.flow_meters_connected || 0,
@@ -432,7 +358,7 @@ const CustomChatbot = () => {
               console.error("Error fetching data:", error);
               throw error;
             }
-            
+
             // Build response based on requested components
             let locationDescription = "across Maharashtra";
             if (isRegionSpecific && region) {
@@ -440,28 +366,28 @@ const CustomChatbot = () => {
             } else if (isSchemeSpecific && schemeId) {
               locationDescription = `in scheme ${schemeId}`;
             }
-            
+
             // Add components to response
             if (hasFlowMeters) {
               components.push(`**${queryResult.flow_meter_integrated || 0}** flow meters`);
             }
-            
+
             if (hasChlorineAnalyzers) {
               components.push(`**${queryResult.rca_integrated || 0}** chlorine analyzers`);
             }
-            
+
             if (hasPressureTransmitters) {
               components.push(`**${queryResult.pressure_transmitter_integrated || 0}** pressure transmitters`);
             }
-            
+
             if (hasESR) {
               components.push(`**${queryResult.total_esr_integrated || 0}** ESRs (with **${queryResult.fully_completed_esr || 0}** fully completed)`);
             }
-            
+
             if (hasVillages) {
               components.push(`**${queryResult.total_villages_integrated || 0}** villages (with **${queryResult.fully_completed_villages || 0}** fully completed)`);
             }
-            
+
             // If no specific components were asked for, give a comprehensive answer
             if (components.length === 0) {
               response = `${locationDescription.charAt(0).toUpperCase() + locationDescription.slice(1)}, there are:\n• **${queryResult.flow_meter_integrated || 0}** flow meters\n• **${queryResult.rca_integrated || 0}** chlorine analyzers\n• **${queryResult.pressure_transmitter_integrated || 0}** pressure transmitters\n• **${queryResult.total_esr_integrated || 0}** ESRs\n• **${queryResult.total_villages_integrated || 0}** villages`;
@@ -471,153 +397,30 @@ const CustomChatbot = () => {
               const lastComponent = components.pop();
               response = `There are ${components.join(', ')} and ${lastComponent} ${locationDescription}.`;
             }
-            
+
           } catch (error) {
             console.error("Error fetching infrastructure data:", error);
             response = "Sorry, I couldn't fetch the requested infrastructure information at the moment.";
           }
-        }
-        // Handle LPCD statistics queries
-        else if (isLpcdQuery) {
-          try {
-            console.log("LPCD query detected");
-            
-            // Determine the region to filter by (if any)
-            let regionParam = '';
-            if (region) {
-              regionParam = `?region=${encodeURIComponent(region)}`;
-            }
-            
-            // Fetch LPCD statistics from the new API endpoint
-            const statsResponse = await fetch(`/api/water-scheme-data/lpcd-stats${regionParam}`);
-            if (!statsResponse.ok) {
-              throw new Error("Failed to fetch LPCD statistics");
-            }
-            const lpcdStats = await statsResponse.json();
-            
-            // Prepare location description for the response
-            let locationDesc = region ? `in the ${region} region` : "across Maharashtra";
-            
-            // Handle specific LPCD range queries
-            if (hasLpcdAbove55) {
-              // Query for villages with LPCD > 55
-              response = `There are **${lpcdStats.above_55_count}** villages with LPCD values above 55 liters per capita per day ${locationDesc}. This represents ${Math.round((lpcdStats.above_55_count / lpcdStats.total_villages) * 100)}% of all villages.`;
-              
-              // Set filter for the dashboard to show only villages with LPCD > 55
-              if (filterContext) {
-                filters = { minLpcd: 55 };
-                if (region) filters.region = region;
-              }
-            }
-            else if (hasLpcdBelow40) {
-              // Query for villages with LPCD < 40
-              response = `There are **${lpcdStats.below_40_count}** villages with LPCD values below 40 liters per capita per day ${locationDesc}. This represents ${Math.round((lpcdStats.below_40_count / lpcdStats.total_villages) * 100)}% of all villages.`;
-              
-              // Set filter for the dashboard to show only villages with LPCD < 40
-              if (filterContext) {
-                filters = { maxLpcd: 40 };
-                if (region) filters.region = region;
-              }
-            }
-            else if (hasLpcdBetween40And55) {
-              // Query for villages with LPCD between 40 and 55
-              response = `There are **${lpcdStats.between_40_55_count}** villages with LPCD values between 40 and 55 liters per capita per day ${locationDesc}. This represents ${Math.round((lpcdStats.between_40_55_count / lpcdStats.total_villages) * 100)}% of all villages.`;
-              
-              // Set filter for the dashboard to show only villages with LPCD between 40 and 55
-              if (filterContext) {
-                filters = { minLpcd: 40, maxLpcd: 55 };
-                if (region) filters.region = region;
-              }
-            }
-            else if (hasZeroLpcd) {
-              // Query for villages with zero LPCD
-              response = `There are **${lpcdStats.zero_lpcd_count}** villages with zero water supply (0 LPCD) ${locationDesc}. Among these, **${lpcdStats.consistent_zero_count}** villages have had no water supply for an entire week.`;
-              
-              // Set filter for the dashboard to show only villages with zero LPCD
-              if (filterContext) {
-                filters = { zeroSupplyForWeek: true };
-                if (region) filters.region = region;
-              }
-            }
-            else {
-              // General LPCD statistics summary
-              response = `LPCD Statistics ${locationDesc}:\n` +
-                         `• **${lpcdStats.above_55_count}** villages have good water supply (LPCD > 55L)\n` +
-                         `• **${lpcdStats.between_40_55_count}** villages have moderate water supply (LPCD between 40-55L)\n` +
-                         `• **${lpcdStats.below_40_count}** villages have low water supply (LPCD < 40L)\n` +
-                         `• **${lpcdStats.zero_lpcd_count}** villages have no water supply (LPCD = 0L)\n` +
-                         `• **${lpcdStats.consistent_zero_count}** villages have had no water for over a week`;
-            }
-          } catch (error) {
-            console.error("Error fetching LPCD statistics:", error);
-            response = "I'm sorry, I couldn't fetch the LPCD statistics at the moment. Please try again later.";
-          }
-        }
+        } 
         // Handle status filter requests
         else if (hasStatusFilter) {
           // If region is specified, apply both filters
           if (region) {
-            // Convert region to match the exact case that the API expects
-            console.log(`Applying region filter for "${region}" with status "Fully Completed"`);
             filters = { region, status: "Fully Completed" };
             response = `I've filtered the dashboard to show fully completed schemes in ${region} region.`;
           } else {
             // Apply just the status filter
-            console.log(`Applying status filter for "Fully Completed"`);
             filters = { status: "Fully Completed" };
             response =
               "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
           }
-          
-          // Explicitly apply filters immediately
-          if (filterContext) {
-            console.log(`Applying status filters immediately:`, filters);
-            setTimeout(() => {
-              try {
-                // First try direct call for status
-                if (filters.status) {
-                  filterContext.setStatusFilter(filters.status);
-                  console.log(`Direct status filter applied: "${filters.status}"`);
-                }
-                
-                // Also try direct call for region if present
-                if (filters.region) {
-                  filterContext.setSelectedRegion(filters.region);
-                  console.log(`Direct region filter applied: "${filters.region}"`);
-                }
-                
-                // Then also apply using the combined method for good measure
-                filterContext.applyFilters(filters);
-                console.log(`Filters applied via applyFilters: ${JSON.stringify(filters)}`);
-              } catch (err) {
-                console.error("Error applying status filters:", err);
-              }
-            }, 100); // Small delay to ensure UI is updated
-          }
         } 
         // Handle region filter requests
         else if (region) {
-          // Just filter by region - ensure the region name matches what's expected by the API
+          // Just filter by region
           filters = { region };
           response = `I've updated the dashboard to focus on ${region} region and its schemes.`;
-          
-          // Explicitly apply filters immediately
-          if (filterContext) {
-            console.log(`Applying region filter immediately:`, filters);
-            setTimeout(() => {
-              try {
-                // First try direct call
-                filterContext.setSelectedRegion(region);
-                console.log(`Direct region filter applied: "${region}"`);
-                
-                // Then also apply using the combined method for good measure
-                filterContext.applyFilters(filters);
-                console.log(`Filters applied via applyFilters: ${JSON.stringify(filters)}`);
-              } catch (err) {
-                console.error("Error applying region filter:", err);
-              }
-            }, 100); // Small delay to ensure UI is updated
-          }
         } 
         // Handle Excel download requests
         else if (
@@ -629,11 +432,11 @@ const CustomChatbot = () => {
            lowerText.includes("generate excel"))
         ) {
           console.log("Excel download request detected");
-          
+
           // If region is specified, first apply the region filter
           if (region) {
             filters = { region };
-            
+
             // Check if a specific status is also mentioned
             if (lowerText.includes("fully completed") || 
                 lowerText.includes("complete") || 
@@ -667,17 +470,17 @@ const CustomChatbot = () => {
           else {
             response = `I'll help you download an Excel file with all water schemes across Maharashtra. The download will start shortly.`;
           }
-          
+
           // Apply filters first if any were specified
           if (filterContext && filters) {
             filterContext.applyFilters(filters);
           }
-          
+
           // Directly trigger the Excel download (no need to wait for filters)
           try {
             // Direct call to manually trigger document click on export button
             const exportButton = document.querySelector('button[aria-label="Export to Excel"], button:has(.lucide-download), button.border-blue-300');
-            
+
             if (exportButton) {
               console.log("Found export button, clicking it directly");
               (exportButton as HTMLButtonElement).click();
@@ -686,7 +489,7 @@ const CustomChatbot = () => {
               console.log("No export button found, using global export method");
               await triggerExcelExport();
             }
-            
+
             console.log("Excel export triggered successfully");
           } catch (error) {
             console.error("Failed to trigger Excel export:", error);
@@ -715,14 +518,6 @@ const CustomChatbot = () => {
           filters = { region: "all" };
           response =
             "I've reset the region filter to show schemes from all regions.";
-            
-          // Explicitly apply filters immediately
-          if (filterContext) {
-            console.log(`Resetting region filter to all`);
-            setTimeout(() => {
-              filterContext.applyFilters(filters);
-            }, 100); // Small delay to ensure UI is updated
-          }
         } 
         // Reset all filters
         else if (
@@ -732,14 +527,6 @@ const CustomChatbot = () => {
           filters = { region: "all", status: "all" };
           response =
             "I've reset all filters. Now showing schemes from all regions with any status.";
-            
-          // Explicitly apply filters immediately
-          if (filterContext) {
-            console.log(`Resetting all filters`);
-            setTimeout(() => {
-              filterContext.applyFilters(filters);
-            }, 100); // Small delay to ensure UI is updated
-          }
         } 
         // Default response for unrecognized queries - use OpenAI
         else {
@@ -747,7 +534,7 @@ const CustomChatbot = () => {
             // Detect language from user input
             const detectedLanguage = detectLanguage(text);
             console.log(`Detected language: ${detectedLanguage}`);
-            
+
             // Create enhanced context for OpenAI about Maharashtra Water Dashboard
             // Including specific instruction to respond in the same language
             const languageMap: Record<string, string> = {
@@ -762,10 +549,10 @@ const CustomChatbot = () => {
               'bn': 'Bengali'
             };
             const languageName = languageMap[detectedLanguage] || 'English';
-            
+
             const contextPrompt = `
               User query: "${text}"
-              
+
               The user is asking about the Maharashtra Water Dashboard, which tracks water infrastructure 
               across Maharashtra, India. The dashboard monitors:
               - Elevated Storage Reservoirs (ESRs)
@@ -773,22 +560,22 @@ const CustomChatbot = () => {
               - Flow meters
               - Chlorine analyzers (RCA)
               - Pressure transmitters (PT)
-              
+
               Regions in the dashboard: Nagpur, Pune, Nashik, Konkan, Amravati, and Chhatrapati Sambhajinagar.
-              
+
               IMPORTANT: Respond ONLY in ${languageName} language, even if the user's input is partly in English.
               If the user is speaking in Hindi, your response must be entirely in Hindi.
               If the user is speaking in Tamil, your response must be entirely in Tamil.
               If the user is speaking in Telugu, your response must be entirely in Telugu.
               If the user is speaking in Marathi, your response must be entirely in Marathi.
-              
+
               Answer the query briefly (2-3 sentences) based on context. If you don't know, suggest asking about 
               specific regions or schemes. Don't make up information not in the context.
             `;
-            
+
             // Log the language that will be used for the response
             console.log(`Responding in ${languageName} (code: ${detectedLanguage})`);
-            
+
             // Get response from OpenAI with enhanced language settings
             console.log("Calling OpenAI for assistance with unrecognized query");
             const openAIResponse = await getOpenAICompletion({
@@ -797,7 +584,7 @@ const CustomChatbot = () => {
               temperature: 0.5,  // Lower temperature for more consistent responses
               language: detectedLanguage
             });
-            
+
             if (!openAIResponse.isError) {
               response = openAIResponse.text;
               console.log("Received OpenAI response:", response);
@@ -814,27 +601,12 @@ const CustomChatbot = () => {
 
         // Apply filters if available
         if (filterContext && (filters.region || filters.status)) {
-          console.log('Applying filters from chatbot processing:', JSON.stringify(filters));
-          
-          // First try direct calls to ensure immediate application
-          if (filters.region) {
-            console.log(`Directly setting region filter to: "${filters.region}"`);
-            filterContext.setSelectedRegion(filters.region);
-          }
-          
-          if (filters.status) {
-            console.log(`Directly setting status filter to: "${filters.status}"`);
-            filterContext.setStatusFilter(filters.status);
-          }
-          
-          // Then use the combined method for good measure
-          console.log('Applying filters using the combined method');
           filterContext.applyFilters(filters);
-          
+
           // Check if previous message was from voice input to enable auto-speak
           const prevMessage = messages[messages.length - 1];
           const autoSpeak = prevMessage?.fromVoice === true;
-          
+
           // Add visual indication of filter application
           setMessages((prev) => [
             ...prev,
@@ -849,7 +621,7 @@ const CustomChatbot = () => {
           // Check if previous message was from voice input to enable auto-speak
           const prevMessage = messages[messages.length - 1];
           const autoSpeak = prevMessage?.fromVoice === true;
-          
+
           setMessages((prev) => [...prev, { 
             type: "bot", 
             text: response,
@@ -861,7 +633,7 @@ const CustomChatbot = () => {
         // Check if previous message was from voice input to enable auto-speak
         const prevMessage = messages[messages.length - 1];
         const autoSpeak = prevMessage?.fromVoice === true;
-        
+
         setMessages((prev) => [...prev, { 
           type: "bot", 
           text: "I encountered an error processing your request. Please try again.",
@@ -978,7 +750,7 @@ const CustomChatbot = () => {
             <>
               {/* Display the voice assistant guide */}
               <ChatbotGuide />
-              
+
               {/* Example queries */}
               <div className="mb-2 flex justify-start">
                 <div className="bg-gray-100 p-3 rounded-lg max-w-[90%]">
@@ -1066,7 +838,7 @@ const CustomChatbot = () => {
             </svg>
           </button>
         </div>
-        
+
         {/* Voice recognition component */}
         <div className="mt-2 flex justify-between items-center">
           <div className="text-xs text-gray-500">

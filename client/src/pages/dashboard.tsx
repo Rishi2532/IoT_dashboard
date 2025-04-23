@@ -259,7 +259,7 @@ export default function Dashboard() {
       <DailyUpdates isLoading={false} />
 
       {/* Region Filter in card */}
-      <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-lg border shadow-sm">
+      <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-lg border shadow-sm relative z-10">
         <h2 className="text-base sm:text-lg font-medium mb-2 sm:mb-3 text-blue-800">
           Filter Dashboard
         </h2>
@@ -268,6 +268,12 @@ export default function Dashboard() {
           selectedRegion={selectedRegion}
           onChange={handleRegionChange}
         />
+        {/* The following style helps ensure dropdowns appear above map elements */}
+        <style jsx global>{`
+          .select-content {
+            z-index: 100 !important;
+          }
+        `}</style>
       </div>
 
       {/* Map and Stats Cards Layout (stacked on mobile, side-by-side on desktop) */}

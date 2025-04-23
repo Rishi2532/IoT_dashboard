@@ -26,7 +26,7 @@ const SchemeStatusWidget: React.FC<SchemeStatusWidgetProps> = ({ schemes, select
             {selectedRegion !== "all" ? `${selectedRegion} Region Schemes` : "Scheme Data"}
           </h3>
         </div>
-        
+
         <div className="max-h-[300px] overflow-y-auto">
           {schemesToDisplay.map((scheme, index) => (
             <div 
@@ -51,7 +51,7 @@ const SchemeStatusWidget: React.FC<SchemeStatusWidgetProps> = ({ schemes, select
                   </span>
                 </div>
               </div>
-              
+
               <div className="mt-2 grid grid-cols-2 gap-2">
                 <div className="text-xs">
                   <span className="text-gray-500">Region:</span> {scheme.region}
@@ -69,7 +69,7 @@ const SchemeStatusWidget: React.FC<SchemeStatusWidgetProps> = ({ schemes, select
             </div>
           ))}
         </div>
-        
+
         {hasMoreSchemes && (
           <div className="px-4 py-3 bg-gray-50 border-t border-gray-200">
             <p className="text-xs text-gray-500 text-center">

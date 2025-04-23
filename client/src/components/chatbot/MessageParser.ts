@@ -49,7 +49,7 @@ class MessageParser {
       'konkan',
       'mumbai'
     ];
-    
+
     for (const region of regionNames) {
       if (lowerCaseMessage.includes(region)) {
         return this.actionProvider.handleSchemesByRegion(region);
@@ -116,7 +116,7 @@ class MessageParser {
       'konkan',
       'mumbai'
     ];
-    
+
     let matchedRegion = null;
     for (const region of regionNames) {
       if (lowerCaseMessage.includes(region)) {
@@ -159,7 +159,7 @@ class MessageParser {
           regions.push(region);
         }
       }
-      
+
       if (regions.length >= 2) {
         return this.actionProvider.handleCompareRegions(regions[0], regions[1]);
       }
@@ -174,7 +174,7 @@ class MessageParser {
     try {
       // Simple keyword matching as fallback
       this.actionProvider.handleUnknownQuery(message);
-      
+
       // In a full implementation, this would use the TensorFlow Universal Sentence Encoder
       // to calculate semantic similarity between the user query and predefined intents
     } catch (error) {
