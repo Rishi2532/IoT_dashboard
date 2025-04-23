@@ -42,6 +42,31 @@ function App() {
   return (
     <AuthProvider>
       <>
+        {/* Global styles to fix z-index issues */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            /* Force dropdown menus to have higher z-index than maps */
+            [data-radix-popper-content-wrapper] {
+              z-index: 9999 !important;
+            }
+            
+            /* Lower z-index for maps and containers */
+            .leaflet-container,
+            .leaflet-pane,
+            .leaflet-top,
+            .leaflet-bottom,
+            .leaflet-control,
+            #maharashtra-map-preview {
+              z-index: 1 !important;
+            }
+            
+            /* Ensure the dropdown doesn't get cut off */
+            [data-state="open"].Select-content {
+              overflow: visible !important;
+            }
+          `
+        }} />
+        
         <Switch>
           {/* Public routes */}
           <Route path="/" component={LoginPage} />

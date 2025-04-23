@@ -268,12 +268,21 @@ export default function Dashboard() {
           selectedRegion={selectedRegion}
           onChange={handleRegionChange}
         />
-        {/* The following style helps ensure dropdowns appear above map elements */}
-        <style jsx global>{`
-          .select-content {
-            z-index: 100 !important;
-          }
-        `}</style>
+        {/* Add global styling to ensure dropdown is always visible */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .region-select-dropdown {
+              z-index: 9999 !important;
+              position: absolute !important;
+              top: auto !important;
+              bottom: auto !important;
+            }
+            /* Force the portal to render even above maps */
+            [data-radix-popper-content-wrapper] {
+              z-index: 9999 !important;
+            }
+          `
+        }} />
       </div>
 
       {/* Map and Stats Cards Layout (stacked on mobile, side-by-side on desktop) */}

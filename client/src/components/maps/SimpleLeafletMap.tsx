@@ -188,6 +188,7 @@ export default function SimpleLeafletMap({
         ref={mapContainerRef} 
         className={containerClassName}
         id="maharashtra-leaflet-map" // Add a unique ID to help with debugging
+        style={{ zIndex: 1 }} // Lower z-index for the map
       />
       
       {/* Loading state while Leaflet initializes */}
