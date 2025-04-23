@@ -299,11 +299,23 @@ export default function Dashboard() {
           <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
               {/* GitHub-style Map Preview with region filtering */}
-              <GitHubStyleMapPreview 
-                title="maharashtra.topo.json"
-                description="Add division maps for states"
-                onRegionClick={handleRegionChange}
-              />
+              <div className="map-container" id="maharashtra-map-preview">
+                <GitHubStyleMapPreview 
+                  title="maharashtra.topo.json"
+                  description="Add division maps for states"
+                  onRegionClick={handleRegionChange}
+                />
+              </div>
+              
+              {/* Remove error modal if it appears */}
+              <style dangerouslySetInnerHTML={{
+                __html: `
+                  /* Hide runtime error popup for map */
+                  #maharashtra-map-preview + div[data-plugin-id="runtime-errors"] {
+                    display: none !important;
+                  }
+                `
+              }} />
             </div>
           </div>
         </div>
