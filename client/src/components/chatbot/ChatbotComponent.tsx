@@ -643,6 +643,7 @@ const CustomChatbot = () => {
 
         // Apply filters if available
         if (filterContext && (filters.region || filters.status)) {
+          console.log(`Applying filters to dashboard:`, JSON.stringify(filters));
           filterContext.applyFilters(filters);
 
           // Check if previous message was from voice input to enable auto-speak
