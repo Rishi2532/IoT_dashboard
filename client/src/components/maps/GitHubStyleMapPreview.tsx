@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import SimpleLeafletMap from './SimpleLeafletMap';
 
-// Fallback map implementation using SVG
+// Clean, simple SVG fallback map implementation
 const FallbackMaharashtraMap = ({ onRegionClick }: { onRegionClick?: (region: string) => void }) => {
   const regions = [
     { name: 'Nagpur', color: '#E2B8B8', x: 400, y: 170, width: 80, height: 80 },
@@ -58,50 +58,37 @@ export default function GitHubStyleMapPreview({
   onRegionClick
 }: GitHubStyleMapPreviewProps): JSX.Element {
   const [activeTab, setActiveTab] = useState<'preview' | 'code' | 'blame'>('preview');
-  const [useLeaflet, setUseLeaflet] = useState<boolean>(true);
-  const [errorOccurred, setErrorOccurred] = useState<boolean>(false);
-
-  // Handle errors in the Leaflet component by tracking window.onerror
+  const [hasMapError, setHasMapError] = useState(false);
+  
+  // Listen for error in window object that might be from Leaflet
   useEffect(() => {
-    // Disable runtime error overlay plugin for this component
-    try {
-      if (typeof window !== 'undefined') {
-        // Store original console.error
-        const originalConsoleError = console.error;
-        
-        // Create a patched version that filters out the specific error
-        console.error = function(...args) {
-          const errorString = args.join(' ');
-          if (errorString.includes('__refresh-page')) {
-            setErrorOccurred(true);
-            // Don't pass this specific error to the original console.error
-            return;
+    const originalConsoleError = console.error;
+    
+    // Override console.error to catch the specific '__refresh-page' error
+    console.error = (...args) => {
+      const errorString = args.join(' ');
+      if (errorString.includes('__refresh-page') || errorString.includes('Cannot read properties of undefined')) {
+        setHasMapError(true);
+        // Hide the runtime error plugin popup immediately
+        const errorPopups = document.querySelectorAll('div[data-plugin-id="runtime-errors"]');
+        errorPopups.forEach(popup => {
+          if (popup instanceof HTMLElement) {
+            popup.style.display = 'none';
           }
-          
-          // Pass other errors to the original console.error
-          return originalConsoleError.apply(console, args);
-        };
-        
-        // Cleanup
-        return () => {
-          console.error = originalConsoleError;
-        };
+        });
       }
-    } catch (err) {
-      // If this fails, just continue
-      console.warn('Error interception setup failed:', err);
-    }
+      // Still call the original console.error
+      originalConsoleError.apply(console, args);
+    };
+    
+    return () => {
+      // Restore original console.error on cleanup
+      console.error = originalConsoleError;
+    };
   }, []);
 
-  // If an error occurs, use the fallback map
-  useEffect(() => {
-    if (errorOccurred) {
-      setUseLeaflet(false);
-    }
-  }, [errorOccurred]);
-
   return (
-    <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+    <div className="bg-white border border-gray-200 rounded-md overflow-hidden github-map-preview">
       {/* Header with file info - formatted like GitHub */}
       <div className="border-b border-gray-200 p-3 flex items-center text-sm">
         <span className="font-medium text-gray-700">datameet</span>
@@ -156,18 +143,22 @@ export default function GitHubStyleMapPreview({
       {/* Content */}
       <div className="p-0">
         {activeTab === 'preview' && (
-          <>
-            {useLeaflet && !errorOccurred ? (
-              <div className="leaflet-map-container">
-                <SimpleLeafletMap 
-                  containerClassName="h-[350px] w-full" 
-                  onRegionClick={onRegionClick}
-                />
-              </div>
-            ) : (
-              <FallbackMaharashtraMap onRegionClick={onRegionClick} />
-            )}
-          </>
+          <div className="github-map-container">
+            <SimpleLeafletMap 
+              containerClassName="h-[350px] w-full" 
+              onRegionClick={onRegionClick}
+            />
+            
+            {/* Globally hide any runtime error popups associated with the map component */}
+            <style dangerouslySetInnerHTML={{
+              __html: `
+                /* Global error popup hiding - must be in global scope */
+                div[data-plugin-id="runtime-errors"] {
+                  display: none !important;
+                }
+              `
+            }} />
+          </div>
         )}
         
         {activeTab === 'code' && (

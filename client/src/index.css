@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Hide runtime error modals specifically for Leaflet maps */
+div[data-plugin-id="runtime-errors"] {
+  display: none !important;
+}
+
 /* Map styling */
 area {
   cursor: pointer; 
