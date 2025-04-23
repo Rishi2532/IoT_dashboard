@@ -557,10 +557,13 @@ const CustomChatbot = () => {
         else if (hasStatusFilter) {
           // If region is specified, apply both filters
           if (region) {
+            // Convert region to match the exact case that the API expects
+            console.log(`Applying region filter for "${region}" with status "Fully Completed"`);
             filters = { region, status: "Fully Completed" };
             response = `I've filtered the dashboard to show fully completed schemes in ${region} region.`;
           } else {
             // Apply just the status filter
+            console.log(`Applying status filter for "Fully Completed"`);
             filters = { status: "Fully Completed" };
             response =
               "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
@@ -570,13 +573,31 @@ const CustomChatbot = () => {
           if (filterContext) {
             console.log(`Applying status filters immediately:`, filters);
             setTimeout(() => {
-              filterContext.applyFilters(filters);
+              try {
+                // First try direct call for status
+                if (filters.status) {
+                  filterContext.setStatusFilter(filters.status);
+                  console.log(`Direct status filter applied: "${filters.status}"`);
+                }
+                
+                // Also try direct call for region if present
+                if (filters.region) {
+                  filterContext.setSelectedRegion(filters.region);
+                  console.log(`Direct region filter applied: "${filters.region}"`);
+                }
+                
+                // Then also apply using the combined method for good measure
+                filterContext.applyFilters(filters);
+                console.log(`Filters applied via applyFilters: ${JSON.stringify(filters)}`);
+              } catch (err) {
+                console.error("Error applying status filters:", err);
+              }
             }, 100); // Small delay to ensure UI is updated
           }
         } 
         // Handle region filter requests
         else if (region) {
-          // Just filter by region
+          // Just filter by region - ensure the region name matches what's expected by the API
           filters = { region };
           response = `I've updated the dashboard to focus on ${region} region and its schemes.`;
           
@@ -584,7 +605,17 @@ const CustomChatbot = () => {
           if (filterContext) {
             console.log(`Applying region filter immediately:`, filters);
             setTimeout(() => {
-              filterContext.applyFilters(filters);
+              try {
+                // First try direct call
+                filterContext.setSelectedRegion(region);
+                console.log(`Direct region filter applied: "${region}"`);
+                
+                // Then also apply using the combined method for good measure
+                filterContext.applyFilters(filters);
+                console.log(`Filters applied via applyFilters: ${JSON.stringify(filters)}`);
+              } catch (err) {
+                console.error("Error applying region filter:", err);
+              }
             }, 100); // Small delay to ensure UI is updated
           }
         } 
