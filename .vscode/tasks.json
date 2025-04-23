@@ -2,22 +2,34 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Start App",
-      "type": "npm",
-      "script": "dev",
-      "problemMatcher": [],
+      "label": "Install Dependencies",
+      "type": "shell",
+      "command": "npm install",
       "presentation": {
-        "reveal": "always"
+        "reveal": "always",
+        "panel": "shared"
       },
-      "group": {
-        "kind": "build",
-        "isDefault": true
+      "problemMatcher": []
+    },
+    {
+      "label": "Start Water Dashboard",
+      "type": "shell",
+      "command": "npm run dev",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
       },
-      "options": {
-        "env": {
-          "NODE_ENV": "development"
-        }
-      }
+      "problemMatcher": []
+    },
+    {
+      "label": "Setup for VS Code",
+      "type": "shell",
+      "command": "node setup-for-vscode.js",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      },
+      "problemMatcher": []
     }
   ]
 }
