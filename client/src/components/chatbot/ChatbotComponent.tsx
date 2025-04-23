@@ -565,12 +565,28 @@ const CustomChatbot = () => {
             response =
               "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
           }
+          
+          // Explicitly apply filters immediately
+          if (filterContext) {
+            console.log(`Applying status filters immediately:`, filters);
+            setTimeout(() => {
+              filterContext.applyFilters(filters);
+            }, 100); // Small delay to ensure UI is updated
+          }
         } 
         // Handle region filter requests
         else if (region) {
           // Just filter by region
           filters = { region };
           response = `I've updated the dashboard to focus on ${region} region and its schemes.`;
+          
+          // Explicitly apply filters immediately
+          if (filterContext) {
+            console.log(`Applying region filter immediately:`, filters);
+            setTimeout(() => {
+              filterContext.applyFilters(filters);
+            }, 100); // Small delay to ensure UI is updated
+          }
         } 
         // Handle Excel download requests
         else if (
@@ -668,6 +684,14 @@ const CustomChatbot = () => {
           filters = { region: "all" };
           response =
             "I've reset the region filter to show schemes from all regions.";
+            
+          // Explicitly apply filters immediately
+          if (filterContext) {
+            console.log(`Resetting region filter to all`);
+            setTimeout(() => {
+              filterContext.applyFilters(filters);
+            }, 100); // Small delay to ensure UI is updated
+          }
         } 
         // Reset all filters
         else if (
@@ -677,6 +701,14 @@ const CustomChatbot = () => {
           filters = { region: "all", status: "all" };
           response =
             "I've reset all filters. Now showing schemes from all regions with any status.";
+            
+          // Explicitly apply filters immediately
+          if (filterContext) {
+            console.log(`Resetting all filters`);
+            setTimeout(() => {
+              filterContext.applyFilters(filters);
+            }, 100); // Small delay to ensure UI is updated
+          }
         } 
         // Default response for unrecognized queries - use OpenAI
         else {
