@@ -15,6 +15,8 @@ import { Download, RefreshCw, Map } from "lucide-react";
 import { Region, RegionSummary, SchemeStatus } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
+// Import our new map components
+import { OpenStreetMapView, GitHubStyleMapPreview } from "@/components/maps";
 
 export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState("all");

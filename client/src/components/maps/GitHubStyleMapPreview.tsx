@@ -1,0 +1,91 @@
+import React, { useEffect, useRef, useState } from 'react';
+import { MaharashtraOpenStreetMap } from '.';
+
+interface GitHubStyleMapPreviewProps {
+  title?: string;
+  description?: string;
+}
+
+export default function GitHubStyleMapPreview({
+  title = "maharashtra.topo.json",
+  description = "Add division maps for states"
+}: GitHubStyleMapPreviewProps): JSX.Element {
+  const [activeTab, setActiveTab] = useState<'preview' | 'code' | 'blame'>('preview');
+
+  return (
+    <div className="bg-white border border-gray-200 rounded-md overflow-hidden">
+      {/* Header with file info */}
+      <div className="border-b border-gray-200 p-3 flex items-center text-sm">
+        <span className="font-medium text-gray-700">{title}</span>
+        <span className="mx-2 text-gray-500">/</span>
+        <span className="text-gray-500">divisions</span>
+        <span className="mx-2 text-gray-500">/</span>
+        <span className="text-gray-500">{title}</span>
+      </div>
+      
+      {/* File metadata */}
+      <div className="border-b border-gray-200 p-3 flex justify-between items-center text-sm">
+        <div className="flex items-center">
+          <div className="w-6 h-6 bg-gray-200 rounded-full mr-2 flex items-center justify-center overflow-hidden">
+            <span className="text-xs">A</span>
+          </div>
+          <span className="text-gray-700">{description}</span>
+        </div>
+        <div className="text-gray-500 text-xs">
+          111 KB
+        </div>
+      </div>
+      
+      {/* Tabs */}
+      <div className="border-b border-gray-200 flex text-sm">
+        <button 
+          onClick={() => setActiveTab('preview')}
+          className={`px-4 py-2 border-b-2 ${activeTab === 'preview' ? 'border-red-500 font-medium' : 'border-transparent text-gray-600'}`}
+        >
+          Preview
+        </button>
+        <button 
+          onClick={() => setActiveTab('code')}
+          className={`px-4 py-2 border-b-2 ${activeTab === 'code' ? 'border-red-500 font-medium' : 'border-transparent text-gray-600'}`}
+        >
+          Code
+        </button>
+        <button 
+          onClick={() => setActiveTab('blame')}
+          className={`px-4 py-2 border-b-2 ${activeTab === 'blame' ? 'border-red-500 font-medium' : 'border-transparent text-gray-600'}`}
+        >
+          Blame
+        </button>
+      </div>
+      
+      {/* Content */}
+      <div className="p-0">
+        {activeTab === 'preview' && (
+          <MaharashtraOpenStreetMap containerClassName="h-[320px] w-full" />
+        )}
+        
+        {activeTab === 'code' && (
+          <div className="p-4 text-sm font-mono text-gray-700">
+            <pre>{`{
+  "type": "Topology",
+  "objects": {
+    "maharashtra": {
+      "type": "GeometryCollection",
+      "geometries": [
+        // ... Map data would be here
+      ]
+    }
+  }
+}`}</pre>
+          </div>
+        )}
+        
+        {activeTab === 'blame' && (
+          <div className="p-4 text-sm text-gray-700">
+            <p>Blame information would be displayed here.</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
