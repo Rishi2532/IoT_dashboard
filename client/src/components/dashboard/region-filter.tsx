@@ -24,7 +24,9 @@ export default function RegionFilter({
         value={selectedRegion} 
         onValueChange={onChange}
       >
-        <SelectTrigger className="mt-1 w-full h-8 sm:h-10 text-xs sm:text-sm">
+        <SelectTrigger 
+          className={`mt-1 w-full h-8 sm:h-10 text-xs sm:text-sm ${selectedRegion !== 'all' ? 'region-selected' : ''}`}
+        >
           <SelectValue placeholder="All Regions" />
         </SelectTrigger>
         <SelectContent className="text-xs sm:text-sm">
