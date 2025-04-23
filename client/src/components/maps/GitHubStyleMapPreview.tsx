@@ -4,11 +4,13 @@ import { MaharashtraOpenStreetMap } from '.';
 interface GitHubStyleMapPreviewProps {
   title?: string;
   description?: string;
+  onRegionClick?: (region: string) => void;
 }
 
 export default function GitHubStyleMapPreview({
   title = "maharashtra.topo.json",
-  description = "Add division maps for states"
+  description = "Add division maps for states",
+  onRegionClick
 }: GitHubStyleMapPreviewProps): JSX.Element {
   const [activeTab, setActiveTab] = useState<'preview' | 'code' | 'blame'>('preview');
 
@@ -68,7 +70,10 @@ export default function GitHubStyleMapPreview({
       {/* Content */}
       <div className="p-0">
         {activeTab === 'preview' && (
-          <MaharashtraOpenStreetMap containerClassName="h-[350px] w-full" />
+          <MaharashtraOpenStreetMap 
+            containerClassName="h-[350px] w-full" 
+            onRegionClick={onRegionClick}
+          />
         )}
         
         {activeTab === 'code' && (

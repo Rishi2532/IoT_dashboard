@@ -4,10 +4,32 @@ import 'leaflet/dist/leaflet.css';
 
 interface MaharashtraOpenStreetMapProps {
   containerClassName?: string;
+  onRegionClick?: (region: string) => void;
 }
 
+// Define Maharashtra regions and their approximate coordinates
+const regionCoordinates: Record<string, [number, number]> = {
+  'Nagpur': [21.1458, 79.0882],
+  'Amravati': [20.9320, 77.7523],
+  'Chhatrapati Sambhajinagar': [19.8762, 75.3433],
+  'Nashik': [19.9975, 73.7898],
+  'Pune': [18.5204, 73.8567],
+  'Konkan': [19.0760, 72.8777],
+};
+
+// Custom colors for each region
+const regionColors: Record<string, string> = {
+  'Nashik': '#8CB3E2',         // Light blue
+  'Amravati': '#FF7300',       // Orange 
+  'Nagpur': '#E2B8B8',         // Light red/pink
+  'Chhatrapati Sambhajinagar': '#68A9A9', // Teal green
+  'Pune': '#FFC408',           // Yellow
+  'Konkan': '#4A77BB',         // Blue
+};
+
 export default function MaharashtraOpenStreetMap({ 
-  containerClassName = "h-[400px] w-full rounded-md overflow-hidden"
+  containerClassName = "h-[400px] w-full rounded-md overflow-hidden",
+  onRegionClick = () => {}
 }: MaharashtraOpenStreetMapProps): JSX.Element {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
@@ -45,6 +67,34 @@ export default function MaharashtraOpenStreetMap({
       maxZoom: 19,
     }).addTo(map);
 
+    // Add markers for each Maharashtra region
+    Object.entries(regionCoordinates).forEach(([regionName, coordinates]) => {
+      const color = regionColors[regionName] || '#cccccc';
+      
+      // Create a square marker for each region
+      const squareIcon = L.divIcon({
+        className: 'custom-div-icon',
+        html: `<div style="background-color: ${color}; width: 16px; height: 16px; border: 1px solid #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.3);"></div>`,
+        iconSize: [16, 16],
+        iconAnchor: [8, 8],
+      });
+
+      // Create marker with the square icon
+      const marker = L.marker(coordinates, { icon: squareIcon })
+        .addTo(map)
+        .on('click', () => {
+          console.log(`Region clicked: ${regionName}`);
+          onRegionClick(regionName);
+        });
+
+      // Add a tooltip to show region name
+      marker.bindTooltip(regionName, {
+        permanent: false,
+        direction: 'top',
+        className: 'region-tooltip',
+      });
+    });
+
     // Store the map instance for cleanup
     mapInstanceRef.current = map;
 
@@ -55,7 +105,7 @@ export default function MaharashtraOpenStreetMap({
         mapInstanceRef.current = null;
       }
     };
-  }, []);
+  }, [onRegionClick]);
 
   return (
     <div className="relative">

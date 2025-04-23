@@ -298,10 +298,11 @@ export default function Dashboard() {
           </div>
           <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
-              {/* GitHub-style Map Preview */}
+              {/* GitHub-style Map Preview with region filtering */}
               <GitHubStyleMapPreview 
                 title="maharashtra.topo.json"
                 description="Add division maps for states"
+                onRegionClick={handleRegionChange}
               />
             </div>
           </div>
