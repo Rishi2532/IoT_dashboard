@@ -126,6 +126,21 @@ const CustomChatbot = () => {
     // Normalize text - convert to lowercase and remove punctuation
     const normalizedText = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, " ");
 
+    // First, check if the entire query is just a region name (e.g., "Nagpur", "Pune")
+    // This handles cases where the user simply types the region name without any context
+    const singleWordQuery = text.trim();
+    const knownRegions = ["Nagpur", "Pune", "Nashik", "Amravati", "Konkan", "Mumbai", "Chhatrapati Sambhajinagar", "Sambhajinagar", "Aurangabad"];
+    
+    for (const region of knownRegions) {
+      if (singleWordQuery.toLowerCase() === region.toLowerCase()) {
+        console.log(`Matched exact region name: ${region}`);
+        if (region.toLowerCase() === "sambhajinagar" || region.toLowerCase() === "aurangabad") {
+          return "Chhatrapati Sambhajinagar";
+        }
+        return region;
+      }
+    }
+
     // Check for specific phrases like "Nagpur data" or "filter Nagpur data"
     const filterPatterns = [
       /(\w+)\s+data/i,               // "Nagpur data"
@@ -138,6 +153,7 @@ const CustomChatbot = () => {
       /focus\s+on\s+(\w+)/i,         // "focus on Nagpur"
       /(\w+)\s+region/i,             // "Nagpur region"
       /(\w+)\s+only/i,               // "Nagpur only"
+      /^(\w+)$/i,                    // Single word like "Nagpur" alone
     ];
     
     for (const pattern of filterPatterns) {
