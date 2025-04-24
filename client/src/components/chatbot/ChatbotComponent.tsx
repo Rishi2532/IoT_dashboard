@@ -26,12 +26,7 @@ import { triggerExcelExport } from "@/utils/excel-helper";
 interface DashboardFilterContext {
   setSelectedRegion: (region: string) => void;
   setStatusFilter: (status: string) => void;
-  applyFilters: (filters: { 
-    region?: string; 
-    status?: string; 
-    componentType?: string;  // Added to support filtering by infrastructure component type (e.g., "chlorine")
-    schemeId?: string;       // Already used in code but not defined in interface
-  }) => void;
+  applyFilters: (filters: { region?: string; status?: string }) => void;
 }
 
 const FilterContext = createContext<DashboardFilterContext | null>(null);
@@ -42,39 +37,12 @@ export const FilterContextProvider: React.FC<{
   setSelectedRegion: (region: string) => void;
   setStatusFilter: (status: string) => void;
 }> = ({ children, setSelectedRegion, setStatusFilter }) => {
-  const applyFilters = (filters: { 
-    region?: string; 
-    status?: string; 
-    componentType?: string;
-    schemeId?: string;
-  }) => {
-    console.log(`Filter context applying filters:`, JSON.stringify(filters));
-    
+  const applyFilters = (filters: { region?: string; status?: string }) => {
     if (filters.region) {
       setSelectedRegion(filters.region);
     }
     if (filters.status) {
       setStatusFilter(filters.status);
-    }
-    
-    // For componentType filters, we need to create a custom event that the dashboard will listen for
-    if (filters.componentType) {
-      // Create and dispatch a custom event for component filtering
-      const event = new CustomEvent('filter:componentType', { 
-        detail: { componentType: filters.componentType } 
-      });
-      document.dispatchEvent(event);
-      console.log(`Dispatched componentType filter event for: ${filters.componentType}`);
-    }
-    
-    // For scheme ID filtering
-    if (filters.schemeId) {
-      // Create and dispatch a custom event for scheme ID filtering
-      const event = new CustomEvent('filter:schemeId', { 
-        detail: { schemeId: filters.schemeId } 
-      });
-      document.dispatchEvent(event);
-      console.log(`Dispatched schemeId filter event for: ${filters.schemeId}`);
     }
   };
 
@@ -92,12 +60,7 @@ interface ChatMessage {
   type: "user" | "bot";
   text: string;
   fromVoice?: boolean;
-  filters?: { 
-    region?: string; 
-    status?: string; 
-    componentType?: string;
-    schemeId?: string;
-  };
+  filters?: { region?: string; status?: string };
   autoSpeak?: boolean;
 }
 
@@ -125,69 +88,6 @@ const CustomChatbot = () => {
   const extractRegion = (text: string): string | null => {
     // Normalize text - convert to lowercase and remove punctuation
     const normalizedText = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, " ");
-
-    // First, check if the entire query is just a region name (e.g., "Nagpur", "Pune")
-    // This handles cases where the user simply types the region name without any context
-    const singleWordQuery = text.trim();
-    const knownRegions = ["Nagpur", "Pune", "Nashik", "Amravati", "Konkan", "Mumbai", "Chhatrapati Sambhajinagar", "Sambhajinagar", "Aurangabad"];
-    
-    // Enhanced check for simple queries like "Nagpur" or "Nagpur data"
-    for (const region of knownRegions) {
-      // Check exact match (e.g., "Nagpur")
-      if (singleWordQuery.toLowerCase() === region.toLowerCase()) {
-        console.log(`Matched exact region name: ${region}`);
-        if (region.toLowerCase() === "sambhajinagar" || region.toLowerCase() === "aurangabad") {
-          return "Chhatrapati Sambhajinagar";
-        }
-        return region;
-      }
-      
-      // Check simple patterns like "Nagpur data"
-      const simpleRegionPattern = new RegExp(`^${region.toLowerCase()}\\s+data$`, 'i');
-      if (simpleRegionPattern.test(singleWordQuery.toLowerCase())) {
-        console.log(`Matched simple region data pattern: ${region} data`);
-        if (region.toLowerCase() === "sambhajinagar" || region.toLowerCase() === "aurangabad") {
-          return "Chhatrapati Sambhajinagar";
-        }
-        return region;
-      }
-    }
-
-    // Check for specific phrases like "Nagpur data" or "filter Nagpur data"
-    const filterPatterns = [
-      /(\w+)\s+data/i,               // "Nagpur data"
-      /filter\s+(\w+)/i,             // "filter Nagpur"
-      /filter\s+(\w+)\s+data/i,      // "filter Nagpur data"
-      /show\s+(\w+)/i,               // "show Nagpur"
-      /show\s+(\w+)\s+data/i,        // "show Nagpur data"
-      /display\s+(\w+)/i,            // "display Nagpur" 
-      /display\s+(\w+)\s+data/i,     // "display Nagpur data"
-      /focus\s+on\s+(\w+)/i,         // "focus on Nagpur"
-      /(\w+)\s+region/i,             // "Nagpur region"
-      /(\w+)\s+only/i,               // "Nagpur only"
-      /^(\w+)$/i,                    // Single word like "Nagpur" alone
-    ];
-    
-    for (const pattern of filterPatterns) {
-      const match = text.match(pattern);
-      if (match && match[1]) {
-        const potentialRegion = match[1].toLowerCase();
-        // Check if this matches a known region
-        if (['nagpur', 'pune', 'nashik', 'amravati', 'konkan', 'mumbai', 'sambhajinagar', 'aurangabad'].includes(potentialRegion)) {
-          console.log(`Matched region '${potentialRegion}' using filter pattern: ${pattern}`);
-          
-          // Map to standardized region name
-          if (potentialRegion === 'nagpur') return "Nagpur";
-          if (potentialRegion === 'pune') return "Pune";
-          if (potentialRegion === 'nashik' || potentialRegion === 'nasik') return "Nashik";
-          if (potentialRegion === 'amravati') return "Amravati";
-          if (potentialRegion === 'konkan') return "Konkan";
-          if (potentialRegion === 'mumbai' || potentialRegion === 'bombay') return "Mumbai";
-          if (potentialRegion === 'sambhajinagar' || potentialRegion === 'aurangabad') 
-            return "Chhatrapati Sambhajinagar";
-        }
-      }
-    }
 
     // Expanded region mapping with alternate spellings, typos, and local language variations
     const regionMap: Record<string, string> = {
@@ -289,12 +189,7 @@ const CustomChatbot = () => {
     setTimeout(async () => {
       try {
         let response = "";
-        let filters: { 
-          region?: string; 
-          status?: string; 
-          schemeId?: string;
-          componentType?: string;
-        } = {};
+        let filters: { region?: string; status?: string; schemeId?: string } = {};
 
         const lowerText = text.toLowerCase();
         console.log(`Processing query: "${lowerText}"`);
@@ -391,50 +286,17 @@ const CustomChatbot = () => {
                            lowerText.includes("gram") ||
                            lowerText.includes("community");
 
-        // Status filter check - enhanced to catch more variations
+        // Status filter check
         const hasStatusFilter =
           lowerText.includes("fully completed") ||
           lowerText.includes("completed scheme") ||
-          lowerText.includes("completed schemes") ||
-          lowerText.includes("fully completion") ||
-          lowerText === "completed" ||
-          lowerText.includes("show completed") ||
-          lowerText.includes("filter completed") ||
-          // Specifically match the exact phrase mentioned by user
-          lowerText.includes("fully completed schemes");
+          lowerText.includes("completed schemes");
 
         // Handle greeting queries
         if (lowerText.includes("hello") || lowerText.includes("hi")) {
           response =
             "Hello! How can I help you with Maharashtra's water infrastructure today? You can ask me about flow meters, chlorine analyzers, ESRs, or villages in specific regions or schemes.";
         } 
-        // Handle direct region filtering requests (e.g., "show Nagpur data" or just "Nagpur")
-        else if (region && (
-            lowerText === region.toLowerCase() || 
-            lowerText.includes("show") || 
-            lowerText.includes("filter") || 
-            lowerText.includes("display") || 
-            lowerText.includes("data")
-          )) {
-          console.log(`Region filter request detected for: ${region}`);
-          // Set the region filter
-          filters.region = region;
-          response = `I've filtered the dashboard to show data for ${region} region. You can now see water infrastructure details specific to this region.`;
-        }
-        // Handle chlorine data filter specifically
-        else if (lowerText.includes("chlorine data") || 
-                lowerText.includes("show chlorine") || 
-                lowerText.includes("filter chlorine") ||
-                lowerText.includes("chlorine analyzer data") ||
-                lowerText.includes("chlorine analysers")) {
-          console.log("Chlorine analyzer data filter detected");
-          // Set a special filter type for chlorine analyzers
-          filters = { componentType: "chlorine" };
-          response = "I've filtered the dashboard to focus on chlorine analyzer data across all regions.";
-          
-          // We still need a way to implement this filter in the dashboard component
-          // This will require additional changes in the dashboard component
-        }
         // Handle infrastructure queries
         else if (isHowManyQuery) {
           try {
@@ -554,8 +416,12 @@ const CustomChatbot = () => {
               "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
           }
         } 
-        // This section is now handled earlier in the code with the dedicated region filter handler
-        // to better support the user's request of filtering just by region name
+        // Handle region filter requests
+        else if (region) {
+          // Just filter by region
+          filters = { region };
+          response = `I've updated the dashboard to focus on ${region} region and its schemes.`;
+        } 
         // Handle Excel download requests
         else if (
           (lowerText.includes("excel") || 
@@ -607,7 +473,6 @@ const CustomChatbot = () => {
 
           // Apply filters first if any were specified
           if (filterContext && filters) {
-            console.log(`Applying Excel export filters to dashboard:`, JSON.stringify(filters));
             filterContext.applyFilters(filters);
           }
 
@@ -663,79 +528,79 @@ const CustomChatbot = () => {
           response =
             "I've reset all filters. Now showing schemes from all regions with any status.";
         } 
-        // Default response for unrecognized queries - use server-side AI integration
+        // Default response for unrecognized queries - use OpenAI
         else {
           try {
-            // Detect language from user input for better client-side context
+            // Detect language from user input
             const detectedLanguage = detectLanguage(text);
             console.log(`Detected language: ${detectedLanguage}`);
-            
-            console.log("Using server-side AI route to process the query");
-            
-            // Make a request to our server's AI API endpoint
-            const apiResponse = await fetch('/api/ai/query', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({
-                query: text,
-                language: detectedLanguage
-              }),
+
+            // Create enhanced context for OpenAI about Maharashtra Water Dashboard
+            // Including specific instruction to respond in the same language
+            const languageMap: Record<string, string> = {
+              'en': 'English',
+              'hi': 'Hindi',
+              'mr': 'Marathi',
+              'ta': 'Tamil',
+              'te': 'Telugu',
+              'kn': 'Kannada',
+              'ml': 'Malayalam',
+              'gu': 'Gujarati',
+              'bn': 'Bengali'
+            };
+            const languageName = languageMap[detectedLanguage] || 'English';
+
+            const contextPrompt = `
+              User query: "${text}"
+
+              The user is asking about the Maharashtra Water Dashboard, which tracks water infrastructure 
+              across Maharashtra, India. The dashboard monitors:
+              - Elevated Storage Reservoirs (ESRs)
+              - Villages with water access
+              - Flow meters
+              - Chlorine analyzers (RCA)
+              - Pressure transmitters (PT)
+
+              Regions in the dashboard: Nagpur, Pune, Nashik, Konkan, Amravati, and Chhatrapati Sambhajinagar.
+
+              IMPORTANT: Respond ONLY in ${languageName} language, even if the user's input is partly in English.
+              If the user is speaking in Hindi, your response must be entirely in Hindi.
+              If the user is speaking in Tamil, your response must be entirely in Tamil.
+              If the user is speaking in Telugu, your response must be entirely in Telugu.
+              If the user is speaking in Marathi, your response must be entirely in Marathi.
+
+              Answer the query briefly (2-3 sentences) based on context. If you don't know, suggest asking about 
+              specific regions or schemes. Don't make up information not in the context.
+            `;
+
+            // Log the language that will be used for the response
+            console.log(`Responding in ${languageName} (code: ${detectedLanguage})`);
+
+            // Get response from OpenAI with enhanced language settings
+            console.log("Calling OpenAI for assistance with unrecognized query");
+            const openAIResponse = await getOpenAICompletion({
+              prompt: contextPrompt,
+              maxTokens: 200,  // Increased for non-English responses
+              temperature: 0.5,  // Lower temperature for more consistent responses
+              language: detectedLanguage
             });
-            
-            if (!apiResponse.ok) {
-              throw new Error(`API error: ${apiResponse.status}`);
-            }
-            
-            const data = await apiResponse.json();
-            console.log("Server AI response:", data);
-            
-            // Check if the response includes a filter action
-            if (data.response && data.response.action === 'filter_dashboard') {
-              // Apply any filters returned from the server
-              if (data.response.filterData) {
-                if (data.response.filterData.regionName) {
-                  filters.region = data.response.filterData.regionName;
-                  console.log(`Setting region filter to: ${filters.region}`);
-                }
-                
-                if (data.response.filterData.status) {
-                  filters.status = data.response.filterData.status;
-                  console.log(`Setting status filter to: ${filters.status}`);
-                }
-              }
-              
-              // Use the message provided by the server
-              response = data.response.message || "Filtering the dashboard based on your request.";
+
+            if (!openAIResponse.isError) {
+              response = openAIResponse.text;
+              console.log("Received OpenAI response:", response);
             } else {
-              // For non-filter intents, just use the standard OpenAI response
-              // This is a fallback - we'll use client-side OpenAI until we implement all intents on the server
-              const openAIResponse = await getOpenAICompletion({
-                prompt: text,
-                maxTokens: 200,
-                temperature: 0.5,
-                language: detectedLanguage
-              });
-              
-              if (!openAIResponse.isError) {
-                response = openAIResponse.text;
-                console.log("Received OpenAI response:", response);
-              } else {
-                // Fallback if OpenAI fails
-                response = "I'm not sure I understand that query. You can ask me about:\n• Flow meters, chlorine analyzers, pressure transmitters\n• ESRs (reservoirs) and villages\n• Filter by region (e.g., 'Schemes in Nagpur')\n• Filter by status (e.g., 'Show fully completed schemes')";
-                console.log("Using fallback response due to OpenAI error");
-              }
+              // Fallback if OpenAI fails
+              response = "I'm not sure I understand that query. You can ask me about:\n• Flow meters, chlorine analyzers, pressure transmitters\n• ESRs (reservoirs) and villages\n• Filter by region (e.g., 'Schemes in Nagpur')\n• Filter by status (e.g., 'Show fully completed schemes')";
+              console.log("Using fallback response due to OpenAI error");
             }
           } catch (error) {
-            console.error("Error processing query with AI service:", error);
+            console.error("Error using OpenAI:", error);
             response = "I'm not sure I understand that query. You can ask me about:\n• Flow meters, chlorine analyzers, pressure transmitters\n• ESRs (reservoirs) and villages\n• Filter by region (e.g., 'Schemes in Nagpur')\n• Filter by status (e.g., 'Show fully completed schemes')";
           }
         }
 
         // Apply filters if available
         if (filterContext && (filters.region || filters.status)) {
-          console.log(`Applying filters to dashboard:`, JSON.stringify(filters));
           filterContext.applyFilters(filters);
 
           // Check if previous message was from voice input to enable auto-speak
