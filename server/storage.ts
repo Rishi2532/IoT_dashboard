@@ -51,6 +51,13 @@ export interface ChlorineDataFilter {
   chlorineRange?: 'below_0.2' | 'between_0.2_0.5' | 'above_0.5' | 'consistent_zero' | 'consistent_below' | 'consistent_optimal' | 'consistent_above';
 }
 
+export interface PressureDataFilter {
+  region?: string;
+  minPressure?: number;
+  maxPressure?: number;
+  pressureRange?: 'below_0.2' | 'between_0.2_0.7' | 'above_0.7' | 'consistent_zero' | 'consistent_below' | 'consistent_optimal' | 'consistent_above';
+}
+
 // Interface for storage operations
 export interface IStorage {
   // User operations
@@ -131,6 +138,33 @@ export interface IStorage {
   
   // Chlorine Dashboard operations
   getChlorineDashboardStats(regionName?: string): Promise<{
+    totalSensors: number;
+    belowRangeSensors: number;
+    optimalRangeSensors: number;
+    aboveRangeSensors: number;
+    consistentZeroSensors: number;
+    consistentBelowRangeSensors: number;
+    consistentOptimalSensors: number;
+    consistentAboveRangeSensors: number;
+  }>;
+  
+  // Pressure Data operations
+  getAllPressureData(
+    filter?: PressureDataFilter
+  ): Promise<PressureData[]>;
+  getPressureDataByCompositeKey(schemeId: string, villageName: string, esrName: string): Promise<PressureData | undefined>;
+  createPressureData(data: InsertPressureData): Promise<PressureData>;
+  updatePressureData(schemeId: string, villageName: string, esrName: string, data: UpdatePressureData): Promise<PressureData>;
+  deletePressureData(schemeId: string, villageName: string, esrName: string): Promise<boolean>;
+  importPressureDataFromCSV(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    removed: number;
+    errors: string[];
+  }>;
+  
+  // Pressure Dashboard operations
+  getPressureDashboardStats(regionName?: string): Promise<{
     totalSensors: number;
     belowRangeSensors: number;
     optimalRangeSensors: number;
