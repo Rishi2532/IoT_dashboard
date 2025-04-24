@@ -115,6 +115,12 @@ function App() {
             </ProtectedRoute>
           </Route>
           
+          <Route path="/chlorine/import">
+            <ProtectedRoute>
+              <ChlorineImport />
+            </ProtectedRoute>
+          </Route>
+          
           <Route path="/map-preview">
             <ProtectedRoute>
               <MapPreviewPage />

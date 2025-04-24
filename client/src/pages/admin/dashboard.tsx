@@ -27,6 +27,7 @@ import ProtectedRoute from '@/components/auth/protected-route';
 import RegionImporter from '@/components/admin/region-importer';
 import SchemeImporter from '@/components/admin/scheme-importer';
 import LpcdImport from '@/pages/lpcd/LpcdImport';
+import { ChlorineImport } from '@/pages/chlorine';
 import {
   Table,
   TableHeader,
@@ -465,7 +466,7 @@ export default function AdminDashboard() {
 
         <div className="px-6">
           <Tabs defaultValue="region-import" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-4 mb-6">
+            <TabsList className="grid w-full grid-cols-5 mb-6">
               <TabsTrigger value="region-import" className="flex items-center">
                 <Database className="h-4 w-4 mr-2" />
                 Import Region Data
@@ -477,6 +478,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="lpcd-import" className="flex items-center">
                 <FileText className="h-4 w-4 mr-2" />
                 Import LPCD Data
+              </TabsTrigger>
+              <TabsTrigger value="chlorine-import" className="flex items-center">
+                <FileUp className="h-4 w-4 mr-2" />
+                Import Chlorine Data
               </TabsTrigger>
               <TabsTrigger value="manage-schemes" className="flex items-center">
                 <Cog className="h-4 w-4 mr-2" />
