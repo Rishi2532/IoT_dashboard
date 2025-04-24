@@ -735,25 +735,25 @@ export class PostgresStorage implements IStorage {
           switch (filter.chlorineRange) {
             case 'below_0.2':
               // ESRs with chlorine value below 0.2 mg/l
-              query = query.where(sql`${chlorineData.chlorine_value_7} < 0.2 AND ${chlorineData.chlorine_value_7} >= 0`);
+              query = query.where(sql`${chlorineData.Chlorine_value_7} < 0.2 AND ${chlorineData.Chlorine_value_7} >= 0`);
               break;
             case 'between_0.2_0.5':
               // ESRs with chlorine value between 0.2 and 0.5 mg/l
-              query = query.where(sql`${chlorineData.chlorine_value_7} >= 0.2 AND ${chlorineData.chlorine_value_7} <= 0.5`);
+              query = query.where(sql`${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5`);
               break;
             case 'above_0.5':
               // ESRs with chlorine value above 0.5 mg/l
-              query = query.where(sql`${chlorineData.chlorine_value_7} > 0.5`);
+              query = query.where(sql`${chlorineData.Chlorine_value_7} > 0.5`);
               break;
           }
         } else {
           // Apply min/max filters if range is not specified
           if (filter.minChlorine !== undefined) {
-            query = query.where(sql`${chlorineData.chlorine_value_7} >= ${filter.minChlorine}`);
+            query = query.where(sql`${chlorineData.Chlorine_value_7} >= ${filter.minChlorine}`);
           }
           
           if (filter.maxChlorine !== undefined) {
-            query = query.where(sql`${chlorineData.chlorine_value_7} <= ${filter.maxChlorine}`);
+            query = query.where(sql`${chlorineData.Chlorine_value_7} <= ${filter.maxChlorine}`);
           }
         }
       }
