@@ -1129,6 +1129,7 @@ export class PostgresStorage implements IStorage {
       const elapsedSeconds = (endTime - startTime) / 1000;
       
       // Log the import summary
+      const removed = 0; // No records are being removed in this import operation
       const summary = `Excel Import Summary: ${inserted} records inserted, ${updated} records updated, ${errors.length} errors in ${elapsedSeconds.toFixed(2)} seconds`;
       if (errors.length > 0) {
         console.warn(summary);
@@ -1137,18 +1138,20 @@ export class PostgresStorage implements IStorage {
         console.log(summary);
       }
       
-      return { inserted, updated, errors };
+      return { inserted, updated, removed, errors };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error("Error importing chlorine data from Excel:", errorMessage);
       errors.push(`General import error: ${errorMessage}`);
-      return { inserted, updated, errors };
+      const removed = 0; // No records are being removed in this import operation
+      return { inserted, updated, removed, errors };
     }
   }
 
   async importChlorineDataFromCSV(fileBuffer: Buffer): Promise<{
     inserted: number;
     updated: number;
+    removed: number;
     errors: string[];
   }> {
     await this.initialized;
@@ -1222,7 +1225,8 @@ export class PostgresStorage implements IStorage {
 
       if (records.length === 0) {
         errors.push("No data found in CSV file");
-        return { inserted, updated, errors };
+        const removed = 0; // No records are being removed in this import operation
+        return { inserted, updated, removed, errors };
       }
       
       // Prepare a structure to collect all records before batch processing
@@ -1315,7 +1319,8 @@ export class PostgresStorage implements IStorage {
       
       if (recordsToProcess.length === 0) {
         console.log("No valid records found to process after validation.");
-        return { inserted, updated, errors };
+        const removed = 0; // No records are being removed in this import operation
+        return { inserted, updated, removed, errors };
       }
       
       // First fetch all existing records in one query to avoid multiple database lookups
@@ -1395,6 +1400,7 @@ export class PostgresStorage implements IStorage {
       const elapsedSeconds = (endTime - startTime) / 1000;
       
       // Log the import summary
+      const removed = 0; // No records are being removed in this import operation
       const summary = `CSV Import Summary: ${inserted} records inserted, ${updated} records updated, ${errors.length} errors in ${elapsedSeconds.toFixed(2)} seconds`;
       if (errors.length > 0) {
         console.warn(summary);
@@ -1403,12 +1409,13 @@ export class PostgresStorage implements IStorage {
         console.log(summary);
       }
 
-      return { inserted, updated, errors };
+      return { inserted, updated, removed, errors };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
       console.error("Error importing chlorine data from CSV:", errorMessage);
       errors.push(`General import error: ${errorMessage}`);
-      return { inserted, updated, errors };
+      const removed = 0; // No records are being removed in this import operation
+      return { inserted, updated, removed, errors };
     }
   }
 
