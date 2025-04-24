@@ -622,6 +622,7 @@ const ChlorineDashboard: React.FC = () => {
                           className={`${rowVariantClass} transition-colors`}
                         >
                           <TableCell className="font-medium">{item.region}</TableCell>
+                          <TableCell className="font-mono text-sm">{item.scheme_id}</TableCell>
                           <TableCell>{item.scheme_name}</TableCell>
                           <TableCell>{item.village_name}</TableCell>
                           <TableCell>{item.esr_name}</TableCell>
@@ -675,6 +676,11 @@ const ChlorineDashboard: React.FC = () => {
                                             <div className="flex justify-between items-center border-b border-blue-100 pb-2">
                                               <span className="text-sm text-blue-700">Region</span>
                                               <span className="font-medium">{selectedESR.region}</span>
+                                            </div>
+                                            
+                                            <div className="flex justify-between items-center border-b border-blue-100 pb-2">
+                                              <span className="text-sm text-blue-700">Scheme ID</span>
+                                              <span className="font-medium font-mono">{selectedESR.scheme_id}</span>
                                             </div>
                                             
                                             <div className="flex justify-between items-center border-b border-blue-100 pb-2">

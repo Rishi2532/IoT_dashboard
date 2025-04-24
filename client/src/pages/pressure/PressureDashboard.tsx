@@ -536,6 +536,7 @@ const PressureDashboard: React.FC = () => {
             <TableHeader className="bg-blue-50">
               <TableRow>
                 <TableHead className="font-bold text-blue-900">Region</TableHead>
+                <TableHead className="font-bold text-blue-900">Scheme ID</TableHead>
                 <TableHead className="font-bold text-blue-900">Scheme Name</TableHead>
                 <TableHead className="font-bold text-blue-900">Village</TableHead>
                 <TableHead className="font-bold text-blue-900">ESR</TableHead>
@@ -556,6 +557,7 @@ const PressureDashboard: React.FC = () => {
                       className={`${statusInfo.className} hover:bg-gray-50 border-b border-gray-100`}
                     >
                       <TableCell className="font-medium">{item.region}</TableCell>
+                      <TableCell className="font-mono text-sm">{item.scheme_id}</TableCell>
                       <TableCell>{item.scheme_name}</TableCell>
                       <TableCell>{item.village_name}</TableCell>
                       <TableCell>{item.esr_name}</TableCell>
