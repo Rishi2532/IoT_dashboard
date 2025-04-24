@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import fs from 'fs';
 import path from 'path';
-import { regions, schemeStatuses, users, waterSchemeData, chlorineData } from "@shared/schema";
+import { regions, schemeStatuses, users, waterSchemeData, chlorineData, pressureData } from "@shared/schema";
 
 const { Pool } = pg;
 
@@ -234,6 +234,40 @@ export async function initializeTables(db: any) {
         "Chlorine_less_than_02_mgl" INTEGER,
         "Chlorine_between_02__05_mgl" INTEGER,
         "Chlorine_greater_than_05_mgl" INTEGER,
+        PRIMARY KEY ("scheme_id", "village_name", "esr_name")
+      );
+    `);
+    
+    // Create pressure_data table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "pressure_data" (
+        "region" TEXT,
+        "circle" TEXT,
+        "division" TEXT,
+        "sub_division" TEXT,
+        "block" TEXT,
+        "scheme_id" TEXT,
+        "scheme_name" TEXT,
+        "village_name" TEXT,
+        "esr_name" TEXT,
+        "pressure_value_1" DECIMAL(12,2),
+        "pressure_value_2" DECIMAL(12,2),
+        "pressure_value_3" DECIMAL(12,2),
+        "pressure_value_4" DECIMAL(12,2),
+        "pressure_value_5" DECIMAL(12,2),
+        "pressure_value_6" DECIMAL(12,2),
+        "pressure_value_7" DECIMAL(12,2),
+        "pressure_date_day_1" VARCHAR(15),
+        "pressure_date_day_2" VARCHAR(15),
+        "pressure_date_day_3" VARCHAR(15),
+        "pressure_date_day_4" VARCHAR(15),
+        "pressure_date_day_5" VARCHAR(15),
+        "pressure_date_day_6" VARCHAR(15),
+        "pressure_date_day_7" VARCHAR(15),
+        "number_of_consistent_zero_value_in_pressure" INTEGER,
+        "pressure_less_than_02_bar" DECIMAL(12,2),
+        "pressure_between_02_07_bar" DECIMAL(12,2),
+        "pressure_greater_than_07_bar" DECIMAL(12,2),
         PRIMARY KEY ("scheme_id", "village_name", "esr_name")
       );
     `);

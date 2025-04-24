@@ -248,3 +248,59 @@ export const updateChlorineDataSchema = createInsertSchema(chlorineData).omit({
 export type InsertChlorineData = z.infer<typeof insertChlorineDataSchema>;
 export type UpdateChlorineData = z.infer<typeof updateChlorineDataSchema>;
 export type ChlorineData = typeof chlorineData.$inferSelect;
+
+// Pressure Data table for ESR-level pressure monitoring
+export const pressureData = pgTable("pressure_data", {
+  // Location information
+  region: text("region"),
+  circle: text("circle"),
+  division: text("division"),
+  sub_division: text("sub_division"),
+  block: text("block"),
+  
+  // Identification
+  scheme_id: text("scheme_id"),
+  scheme_name: text("scheme_name"),
+  village_name: text("village_name"),
+  esr_name: text("esr_name"),
+  
+  // Pressure measurements for different days
+  pressure_value_1: decimal("pressure_value_1", { precision: 12, scale: 2 }),
+  pressure_value_2: decimal("pressure_value_2", { precision: 12, scale: 2 }),
+  pressure_value_3: decimal("pressure_value_3", { precision: 12, scale: 2 }),
+  pressure_value_4: decimal("pressure_value_4", { precision: 12, scale: 2 }),
+  pressure_value_5: decimal("pressure_value_5", { precision: 12, scale: 2 }),
+  pressure_value_6: decimal("pressure_value_6", { precision: 12, scale: 2 }),
+  pressure_value_7: decimal("pressure_value_7", { precision: 12, scale: 2 }),
+  
+  // Dates for pressure measurements
+  pressure_date_day_1: varchar("pressure_date_day_1", { length: 15 }),
+  pressure_date_day_2: varchar("pressure_date_day_2", { length: 15 }),
+  pressure_date_day_3: varchar("pressure_date_day_3", { length: 15 }),
+  pressure_date_day_4: varchar("pressure_date_day_4", { length: 15 }),
+  pressure_date_day_5: varchar("pressure_date_day_5", { length: 15 }),
+  pressure_date_day_6: varchar("pressure_date_day_6", { length: 15 }),
+  pressure_date_day_7: varchar("pressure_date_day_7", { length: 15 }),
+  
+  // Analysis fields
+  number_of_consistent_zero_value_in_pressure: integer("number_of_consistent_zero_value_in_pressure"),
+  pressure_less_than_02_bar: decimal("pressure_less_than_02_bar", { precision: 12, scale: 2 }),
+  pressure_between_02_07_bar: decimal("pressure_between_02_07_bar", { precision: 12, scale: 2 }),
+  pressure_greater_than_07_bar: decimal("pressure_greater_than_07_bar", { precision: 12, scale: 2 }),
+}, (table) => {
+  return {
+    // Composite primary key to uniquely identify each ESR
+    pk: primaryKey({ columns: [table.scheme_id, table.village_name, table.esr_name] }),
+  };
+});
+
+export const insertPressureDataSchema = createInsertSchema(pressureData);
+export const updatePressureDataSchema = createInsertSchema(pressureData).omit({
+  scheme_id: true,
+  village_name: true,
+  esr_name: true
+});
+
+export type InsertPressureData = z.infer<typeof insertPressureDataSchema>;
+export type UpdatePressureData = z.infer<typeof updatePressureDataSchema>;
+export type PressureData = typeof pressureData.$inferSelect;
