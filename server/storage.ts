@@ -4,6 +4,7 @@ import {
   schemeStatuses,
   appState,
   waterSchemeData,
+  chlorineData,
   type User,
   type InsertUser,
   type Region,
@@ -13,6 +14,9 @@ import {
   type WaterSchemeData,
   type InsertWaterSchemeData,
   type UpdateWaterSchemeData,
+  type ChlorineData,
+  type InsertChlorineData,
+  type UpdateChlorineData,
 } from "@shared/schema";
 import { getDB, initializeDatabase } from "./db";
 import { eq, sql } from "drizzle-orm";
@@ -37,6 +41,14 @@ export interface WaterSchemeDataFilter {
   minLpcd?: number;
   maxLpcd?: number;
   zeroSupplyForWeek?: boolean;
+}
+
+// Filter type for chlorine data queries
+export interface ChlorineDataFilter {
+  region?: string;
+  minChlorine?: number;
+  maxChlorine?: number;
+  chlorineRange?: 'below_0.2' | 'between_0.2_0.5' | 'above_0.5';
 }
 
 // Interface for storage operations
@@ -93,6 +105,33 @@ export interface IStorage {
     updated: number;
     errors: string[];
   }>;
+  
+  // Chlorine Data operations
+  getAllChlorineData(
+    filter?: ChlorineDataFilter
+  ): Promise<ChlorineData[]>;
+  getChlorineDataByCompositeKey(schemeId: string, villageName: string, esrName: string): Promise<ChlorineData | undefined>;
+  createChlorineData(data: InsertChlorineData): Promise<ChlorineData>;
+  updateChlorineData(schemeId: string, villageName: string, esrName: string, data: UpdateChlorineData): Promise<ChlorineData>;
+  deleteChlorineData(schemeId: string, villageName: string, esrName: string): Promise<boolean>;
+  importChlorineDataFromExcel(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    errors: string[];
+  }>;
+  importChlorineDataFromCSV(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    errors: string[];
+  }>;
+  
+  // Chlorine Dashboard operations
+  getChlorineDashboardStats(regionName?: string): Promise<{
+    totalSensors: number;
+    belowRangeSensors: number;
+    optimalRangeSensors: number;
+    aboveRangeSensors: number;
+  }>;
 }
 
 // PostgreSQL implementation
@@ -100,8 +139,94 @@ export class PostgresStorage implements IStorage {
   private db: any;
   private initialized: Promise<void>;
   
-  // Excel column mapping for water scheme data
+  // Excel column mapping for water scheme and chlorine data
   private excelColumnMapping: Record<string, string> = {
+    // ESR and Chlorine specific fields
+    "ESR Name": "esr_name",
+    "ESR_Name": "esr_name", 
+    "esr name": "esr_name",
+    "esr_name": "esr_name",
+    "ESR ID": "esr_name",
+    "ESR_ID": "esr_name",
+    
+    // Chlorine value fields
+    "Chlorine Value Day 1": "Chlorine_value_1",
+    "Chlorine_Value_1": "Chlorine_value_1",
+    "chlorine_value_1": "Chlorine_value_1",
+    "Chlorine Value 1": "Chlorine_value_1",
+    
+    "Chlorine Value Day 2": "Chlorine_value_2",
+    "Chlorine_Value_2": "Chlorine_value_2",
+    "chlorine_value_2": "Chlorine_value_2",
+    "Chlorine Value 2": "Chlorine_value_2",
+    
+    "Chlorine Value Day 3": "Chlorine_value_3",
+    "Chlorine_Value_3": "Chlorine_value_3",
+    "chlorine_value_3": "Chlorine_value_3",
+    "Chlorine Value 3": "Chlorine_value_3",
+    
+    "Chlorine Value Day 4": "Chlorine_value_4",
+    "Chlorine_Value_4": "Chlorine_value_4",
+    "chlorine_value_4": "Chlorine_value_4",
+    "Chlorine Value 4": "Chlorine_value_4",
+    
+    "Chlorine Value Day 5": "Chlorine_value_5",
+    "Chlorine_Value_5": "Chlorine_value_5",
+    "chlorine_value_5": "Chlorine_value_5",
+    "Chlorine Value 5": "Chlorine_value_5",
+    
+    "Chlorine Value Day 6": "Chlorine_value_6",
+    "Chlorine_Value_6": "Chlorine_value_6",
+    "chlorine_value_6": "Chlorine_value_6",
+    "Chlorine Value 6": "Chlorine_value_6",
+    
+    "Chlorine Value Day 7": "Chlorine_value_7",
+    "Chlorine_Value_7": "Chlorine_value_7",
+    "chlorine_value_7": "Chlorine_value_7",
+    "Chlorine Value 7": "Chlorine_value_7",
+    
+    // Chlorine date fields
+    "Chlorine Date Day 1": "Chlorine_date_day_1",
+    "Chlorine_Date_Day_1": "Chlorine_date_day_1",
+    "chlorine_date_day_1": "Chlorine_date_day_1",
+    
+    "Chlorine Date Day 2": "Chlorine_date_day_2",
+    "Chlorine_Date_Day_2": "Chlorine_date_day_2",
+    "chlorine_date_day_2": "Chlorine_date_day_2",
+    
+    "Chlorine Date Day 3": "Chlorine_date_day_3",
+    "Chlorine_Date_Day_3": "Chlorine_date_day_3",
+    "chlorine_date_day_3": "Chlorine_date_day_3",
+    
+    "Chlorine Date Day 4": "Chlorine_date_day_4",
+    "Chlorine_Date_Day_4": "Chlorine_date_day_4",
+    "chlorine_date_day_4": "Chlorine_date_day_4",
+    
+    "Chlorine Date Day 5": "Chlorine_date_day_5",
+    "Chlorine_Date_Day_5": "Chlorine_date_day_5",
+    "chlorine_date_day_5": "Chlorine_date_day_5",
+    
+    "Chlorine Date Day 6": "Chlorine_date_day_6",
+    "Chlorine_Date_Day_6": "Chlorine_date_day_6",
+    "chlorine_date_day_6": "Chlorine_date_day_6",
+    
+    "Chlorine Date Day 7": "Chlorine_date_day_7",
+    "Chlorine_Date_Day_7": "Chlorine_date_day_7",
+    "chlorine_date_day_7": "Chlorine_date_day_7",
+    
+    // Analysis fields
+    "Consistent Zero Chlorine": "number_of_consistent_zero_value_in_Chlorine",
+    "consistent_zero_chlorine": "number_of_consistent_zero_value_in_Chlorine",
+    "Zero Chlorine Count": "number_of_consistent_zero_value_in_Chlorine",
+    
+    "Below 0.2 mg/l Count": "Chlorine_less_than_02_mgl",
+    "chlorine_less_than_02_mgl": "Chlorine_less_than_02_mgl",
+    
+    "Between 0.2-0.5 mg/l Count": "Chlorine_between_02__05_mgl",
+    "chlorine_between_02__05_mgl": "Chlorine_between_02__05_mgl",
+    
+    "Above 0.5 mg/l Count": "Chlorine_greater_than_05_mgl",
+    "chlorine_greater_than_05_mgl": "Chlorine_greater_than_05_mgl",
     // Excel header -> Database field
     // Upper case variations
     "Region": "region",
@@ -590,6 +715,493 @@ export class PostgresStorage implements IStorage {
       console.error("Failed to initialize database in constructor:", error);
       throw error;
     });
+  }
+  
+  // Chlorine Data CRUD operations
+  async getAllChlorineData(filter?: ChlorineDataFilter): Promise<ChlorineData[]> {
+    await this.initialized;
+    const { db } = getDB();
+    
+    try {
+      let query = db.select().from(chlorineData);
+      
+      // Apply filters if provided
+      if (filter) {
+        if (filter.region) {
+          query = query.where(eq(chlorineData.region, filter.region));
+        }
+        
+        if (filter.chlorineRange) {
+          switch (filter.chlorineRange) {
+            case 'below_0.2':
+              // ESRs with chlorine value below 0.2 mg/l
+              query = query.where(sql`${chlorineData.chlorine_value_7} < 0.2 AND ${chlorineData.chlorine_value_7} >= 0`);
+              break;
+            case 'between_0.2_0.5':
+              // ESRs with chlorine value between 0.2 and 0.5 mg/l
+              query = query.where(sql`${chlorineData.chlorine_value_7} >= 0.2 AND ${chlorineData.chlorine_value_7} <= 0.5`);
+              break;
+            case 'above_0.5':
+              // ESRs with chlorine value above 0.5 mg/l
+              query = query.where(sql`${chlorineData.chlorine_value_7} > 0.5`);
+              break;
+          }
+        } else {
+          // Apply min/max filters if range is not specified
+          if (filter.minChlorine !== undefined) {
+            query = query.where(sql`${chlorineData.chlorine_value_7} >= ${filter.minChlorine}`);
+          }
+          
+          if (filter.maxChlorine !== undefined) {
+            query = query.where(sql`${chlorineData.chlorine_value_7} <= ${filter.maxChlorine}`);
+          }
+        }
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error("Error fetching chlorine data:", error);
+      return [];
+    }
+  }
+  
+  async getChlorineDataByCompositeKey(
+    schemeId: string,
+    villageName: string,
+    esrName: string
+  ): Promise<ChlorineData | undefined> {
+    await this.initialized;
+    const { db } = getDB();
+    
+    try {
+      const result = await db
+        .select()
+        .from(chlorineData)
+        .where(
+          sql`${chlorineData.scheme_id} = ${schemeId} 
+              AND ${chlorineData.village_name} = ${villageName}
+              AND ${chlorineData.esr_name} = ${esrName}`
+        );
+      
+      return result.length > 0 ? result[0] : undefined;
+    } catch (error) {
+      console.error("Error fetching chlorine data by composite key:", error);
+      return undefined;
+    }
+  }
+  
+  async createChlorineData(data: InsertChlorineData): Promise<ChlorineData> {
+    await this.initialized;
+    const { db } = getDB();
+    
+    try {
+      // Calculate derived fields for analysis
+      const enhancedData = this.calculateChlorineAnalysisFields(data);
+      
+      // Insert the data
+      const result = await db
+        .insert(chlorineData)
+        .values(enhancedData)
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error("Error creating chlorine data:", error);
+      throw new Error(`Failed to create chlorine data: ${error}`);
+    }
+  }
+  
+  async updateChlorineData(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+    data: UpdateChlorineData
+  ): Promise<ChlorineData> {
+    await this.initialized;
+    const { db } = getDB();
+    
+    try {
+      // Calculate derived fields for analysis
+      const enhancedData = this.calculateChlorineAnalysisFields(data);
+      
+      // Update the data
+      const result = await db
+        .update(chlorineData)
+        .set(enhancedData)
+        .where(
+          sql`${chlorineData.scheme_id} = ${schemeId} 
+              AND ${chlorineData.village_name} = ${villageName}
+              AND ${chlorineData.esr_name} = ${esrName}`
+        )
+        .returning();
+      
+      if (!result.length) {
+        throw new Error("Chlorine data not found");
+      }
+      
+      return result[0];
+    } catch (error) {
+      console.error("Error updating chlorine data:", error);
+      throw new Error(`Failed to update chlorine data: ${error}`);
+    }
+  }
+  
+  async deleteChlorineData(
+    schemeId: string,
+    villageName: string,
+    esrName: string
+  ): Promise<boolean> {
+    await this.initialized;
+    const { db } = getDB();
+    
+    try {
+      await db
+        .delete(chlorineData)
+        .where(
+          sql`${chlorineData.scheme_id} = ${schemeId} 
+              AND ${chlorineData.village_name} = ${villageName}
+              AND ${chlorineData.esr_name} = ${esrName}`
+        );
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting chlorine data:", error);
+      return false;
+    }
+  }
+  
+  // Helper function to calculate analysis fields for chlorine data
+  private calculateChlorineAnalysisFields(data: Partial<InsertChlorineData>): any {
+    const enhancedData = { ...data };
+    
+    // Count how many consecutive days have zero chlorine values
+    let zeroCount = 0;
+    let below02Count = 0;
+    let between02And05Count = 0;
+    let above05Count = 0;
+    
+    // Check all 7 days
+    for (let i = 1; i <= 7; i++) {
+      const value = enhancedData[`chlorine_value_${i}` as keyof InsertChlorineData] as number | undefined;
+      
+      if (value !== undefined) {
+        if (value === 0) {
+          zeroCount++;
+        }
+        
+        if (value < 0.2 && value >= 0) {
+          below02Count++;
+        } else if (value >= 0.2 && value <= 0.5) {
+          between02And05Count++;
+        } else if (value > 0.5) {
+          above05Count++;
+        }
+      }
+    }
+    
+    // Update analysis fields
+    enhancedData.number_of_consistent_zero_value_in_chlorine = zeroCount;
+    enhancedData.chlorine_less_than_02_mgl = below02Count;
+    enhancedData.chlorine_between_02__05_mgl = between02And05Count;
+    enhancedData.chlorine_greater_than_05_mgl = above05Count;
+    
+    return enhancedData;
+  }
+  
+  // Import methods for chlorine data
+  async importChlorineDataFromExcel(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    errors: string[];
+  }> {
+    await this.initialized;
+    const { db } = getDB();
+    const errors: string[] = [];
+    let inserted = 0;
+    let updated = 0;
+
+    try {
+      const xlsx = require('xlsx');
+      const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+
+      // Process each sheet in the workbook
+      for (const sheetName of workbook.SheetNames) {
+        const sheet = workbook.Sheets[sheetName];
+        const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+
+        // Find the header row
+        const headerRow = this.findHeaderRow(data);
+        if (headerRow === -1) {
+          errors.push(`No header row found in sheet ${sheetName}`);
+          continue;
+        }
+
+        // Extract headers and create column mapping
+        const headers = data[headerRow];
+        const columnMap: Record<number, string> = {};
+        
+        // Map Excel columns to database fields
+        headers.forEach((header: string, index: number) => {
+          if (header && typeof header === 'string') {
+            const dbField = this.excelColumnMapping[header.trim()];
+            if (dbField) {
+              columnMap[index] = dbField;
+            }
+          }
+        });
+
+        // Process data rows
+        for (let i = headerRow + 1; i < data.length; i++) {
+          const row = data[i];
+          if (!row || row.length === 0) continue;
+
+          try {
+            const recordData: Partial<InsertChlorineData> = {};
+            
+            // Extract data from each column
+            for (let j = 0; j < row.length; j++) {
+              if (columnMap[j]) {
+                const value = row[j];
+                const fieldName = columnMap[j];
+                
+                // Handle numeric chlorine values and ensure they are decimal numbers
+                if (fieldName.startsWith('Chlorine_value_')) {
+                  recordData[fieldName as keyof InsertChlorineData] = this.parseNumericValue(value);
+                } else {
+                  recordData[fieldName as keyof InsertChlorineData] = value;
+                }
+              }
+            }
+
+            // Skip rows without required fields
+            if (!recordData.scheme_id || !recordData.village_name || !recordData.esr_name) {
+              errors.push(`Row ${i + 1}: Missing required fields (scheme_id, village_name, or esr_name)`);
+              continue;
+            }
+
+            // Calculate analysis fields
+            const enhancedData = this.calculateChlorineAnalysisFields(recordData);
+
+            // Check if record exists
+            const existingRecord = await this.getChlorineDataByCompositeKey(
+              recordData.scheme_id, 
+              recordData.village_name, 
+              recordData.esr_name
+            );
+
+            if (existingRecord) {
+              // Update existing record
+              await db
+                .update(chlorineData)
+                .set(enhancedData)
+                .where(
+                  sql`${chlorineData.scheme_id} = ${recordData.scheme_id} 
+                      AND ${chlorineData.village_name} = ${recordData.village_name}
+                      AND ${chlorineData.esr_name} = ${recordData.esr_name}`
+                );
+              updated++;
+            } else {
+              // Insert new record
+              await db.insert(chlorineData).values(enhancedData);
+              inserted++;
+            }
+          } catch (rowError) {
+            errors.push(`Row ${i + 1}: ${rowError}`);
+          }
+        }
+      }
+
+      return { inserted, updated, errors };
+    } catch (error) {
+      console.error("Error importing chlorine data from Excel:", error);
+      errors.push(`General import error: ${error}`);
+      return { inserted, updated, errors };
+    }
+  }
+
+  async importChlorineDataFromCSV(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    errors: string[];
+  }> {
+    await this.initialized;
+    const { db } = getDB();
+    const errors: string[] = [];
+    let inserted = 0;
+    let updated = 0;
+
+    try {
+      const csvString = fileBuffer.toString('utf8');
+      const { parse } = require('csv-parse/sync');
+      const records = parse(csvString, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true
+      });
+
+      if (records.length === 0) {
+        errors.push("No data found in CSV file");
+        return { inserted, updated, errors };
+      }
+
+      // Process each row in the CSV
+      for (let i = 0; i < records.length; i++) {
+        const row = records[i];
+        try {
+          const recordData: Partial<InsertChlorineData> = {};
+          
+          // Map CSV headers to database fields
+          for (const [header, value] of Object.entries(row)) {
+            const fieldName = this.excelColumnMapping[header.trim()];
+            if (fieldName) {
+              // Handle numeric chlorine values and ensure they are decimal numbers
+              if (fieldName.startsWith('Chlorine_value_')) {
+                recordData[fieldName as keyof InsertChlorineData] = this.parseNumericValue(value as string);
+              } else {
+                recordData[fieldName as keyof InsertChlorineData] = value;
+              }
+            }
+          }
+
+          // Skip rows without required fields
+          if (!recordData.scheme_id || !recordData.village_name || !recordData.esr_name) {
+            errors.push(`Row ${i + 1}: Missing required fields (scheme_id, village_name, or esr_name)`);
+            continue;
+          }
+
+          // Calculate analysis fields
+          const enhancedData = this.calculateChlorineAnalysisFields(recordData);
+
+          // Check if record exists
+          const existingRecord = await this.getChlorineDataByCompositeKey(
+            recordData.scheme_id, 
+            recordData.village_name, 
+            recordData.esr_name
+          );
+
+          if (existingRecord) {
+            // Update existing record
+            await db
+              .update(chlorineData)
+              .set(enhancedData)
+              .where(
+                sql`${chlorineData.scheme_id} = ${recordData.scheme_id} 
+                    AND ${chlorineData.village_name} = ${recordData.village_name}
+                    AND ${chlorineData.esr_name} = ${recordData.esr_name}`
+              );
+            updated++;
+          } else {
+            // Insert new record
+            await db.insert(chlorineData).values(enhancedData);
+            inserted++;
+          }
+        } catch (rowError) {
+          errors.push(`Row ${i + 1}: ${rowError}`);
+        }
+      }
+
+      return { inserted, updated, errors };
+    } catch (error) {
+      console.error("Error importing chlorine data from CSV:", error);
+      errors.push(`General import error: ${error}`);
+      return { inserted, updated, errors };
+    }
+  }
+
+  // Helper for parsing numeric values from Excel/CSV
+  private parseNumericValue(value: any): number | null {
+    if (value === null || value === undefined || value === '') {
+      return null;
+    }
+    
+    // Convert string to number
+    const num = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : Number(value);
+    
+    // Check if it's a valid number
+    if (isNaN(num)) {
+      return null;
+    }
+    
+    return num;
+  }
+  
+  // Find header row in Excel sheet
+  private findHeaderRow(data: any[]): number {
+    if (!data || data.length === 0) return -1;
+    
+    // Look for rows with key column headers
+    const keyColumns = ['scheme_id', 'Scheme ID', 'scheme id', 'ESR Name', 'esr name', 'ESR_Name'];
+    
+    for (let i = 0; i < Math.min(20, data.length); i++) {
+      const row = data[i];
+      if (!row) continue;
+      
+      // Check if any cell in this row matches our key columns
+      for (const cell of row) {
+        if (cell && typeof cell === 'string' && keyColumns.some(key => 
+          cell.toLowerCase() === key.toLowerCase())) {
+          return i;
+        }
+      }
+    }
+    
+    return 0; // Default to first row if no good match found
+  }
+  
+  // Dashboard statistics for chlorine data
+  async getChlorineDashboardStats(regionName?: string): Promise<{
+    totalSensors: number;
+    belowRangeSensors: number;
+    optimalRangeSensors: number;
+    aboveRangeSensors: number;
+  }> {
+    await this.initialized;
+    const { db } = getDB();
+    
+    try {
+      // Base query - filter by region if specified
+      let baseQuery = db.select().from(chlorineData);
+      if (regionName) {
+        baseQuery = baseQuery.where(eq(chlorineData.region, regionName));
+      }
+      
+      // Get total count
+      const totalResult = await baseQuery.count();
+      const totalSensors = parseInt(totalResult[0].count, 10) || 0;
+      
+      // Get below 0.2 mg/l count
+      const belowRangeResult = await baseQuery
+        .where(sql`${chlorineData.chlorine_value_7} < 0.2 AND ${chlorineData.chlorine_value_7} >= 0`)
+        .count();
+      const belowRangeSensors = parseInt(belowRangeResult[0].count, 10) || 0;
+      
+      // Get optimal range (0.2-0.5 mg/l) count
+      const optimalRangeResult = await baseQuery
+        .where(sql`${chlorineData.chlorine_value_7} >= 0.2 AND ${chlorineData.chlorine_value_7} <= 0.5`)
+        .count();
+      const optimalRangeSensors = parseInt(optimalRangeResult[0].count, 10) || 0;
+      
+      // Get above 0.5 mg/l count
+      const aboveRangeResult = await baseQuery
+        .where(sql`${chlorineData.chlorine_value_7} > 0.5`)
+        .count();
+      const aboveRangeSensors = parseInt(aboveRangeResult[0].count, 10) || 0;
+      
+      return {
+        totalSensors,
+        belowRangeSensors,
+        optimalRangeSensors,
+        aboveRangeSensors
+      };
+    } catch (error) {
+      console.error("Error fetching chlorine dashboard stats:", error);
+      return {
+        totalSensors: 0,
+        belowRangeSensors: 0,
+        optimalRangeSensors: 0,
+        aboveRangeSensors: 0
+      };
+    }
   }
 
   private async initializeDb() {

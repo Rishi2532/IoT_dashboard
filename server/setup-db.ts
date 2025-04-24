@@ -204,6 +204,40 @@ export async function initializeTables(db: any) {
       );
     `);
     
+    // Create chlorine_data table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "chlorine_data" (
+        "region" TEXT,
+        "circle" TEXT,
+        "division" TEXT,
+        "sub_division" TEXT,
+        "block" TEXT,
+        "scheme_id" TEXT,
+        "scheme_name" TEXT,
+        "village_name" TEXT,
+        "esr_name" TEXT,
+        "Chlorine_value_1" DECIMAL(5,2),
+        "Chlorine_value_2" DECIMAL(5,2),
+        "Chlorine_value_3" DECIMAL(5,2),
+        "Chlorine_value_4" DECIMAL(5,2),
+        "Chlorine_value_5" DECIMAL(5,2),
+        "Chlorine_value_6" DECIMAL(5,2),
+        "Chlorine_value_7" DECIMAL(5,2),
+        "Chlorine_date_day_1" VARCHAR(10),
+        "Chlorine_date_day_2" VARCHAR(10),
+        "Chlorine_date_day_3" VARCHAR(10),
+        "Chlorine_date_day_4" VARCHAR(10),
+        "Chlorine_date_day_5" VARCHAR(10),
+        "Chlorine_date_day_6" VARCHAR(10),
+        "Chlorine_date_day_7" VARCHAR(10),
+        "number_of_consistent_zero_value_in_Chlorine" INTEGER,
+        "Chlorine_less_than_02_mgl" INTEGER,
+        "Chlorine_between_02__05_mgl" INTEGER,
+        "Chlorine_greater_than_05_mgl" INTEGER,
+        PRIMARY KEY ("scheme_id", "village_name", "esr_name")
+      );
+    `);
+    
     // Check if the users table has any records using raw SQL to avoid Drizzle ORM issues
     try {
       const usersResult = await db.execute(`SELECT COUNT(*) FROM "users"`);
