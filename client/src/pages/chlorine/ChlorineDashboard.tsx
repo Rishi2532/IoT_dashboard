@@ -24,7 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Search, AlertTriangle, CheckCircle, AlertCircle, X, RefreshCw, Droplet } from 'lucide-react';
+import { Search, AlertTriangle, CheckCircle, AlertCircle, X, RefreshCw, Droplet, Activity } from 'lucide-react';
 
 // Define types for Chlorine Data
 interface ChlorineData {
@@ -439,6 +439,86 @@ const ChlorineDashboard: React.FC = () => {
               <span className="ml-auto px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium">
                 Review Required
               </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Consistent Reading Cards */}
+      <h2 className="text-lg font-semibold text-gray-800 mb-4 mt-2">ESRs with Consistent Readings (7 days)</h2>
+      <div className="grid gap-4 md:grid-cols-4 mb-8">
+        {/* Consistent Zero Card */}
+        <Card className="border border-gray-200 hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold text-gray-700 flex items-center">
+              <Activity className="h-4 w-4 text-gray-500 mr-2" />
+              Consistent Zero Chlorine
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-gray-700">{dashboardStats?.consistentZeroSensors || 0}</p>
+            <p className="text-xs text-gray-500 mt-1">ESRs with zero chlorine for 7 days</p>
+            <div className="mt-2">
+              <Badge variant="outline" className="bg-gray-50 text-gray-600 border-gray-200">
+                Critical Review
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Consistent Below Range Card */}
+        <Card className="border border-gray-200 hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold text-red-700 flex items-center">
+              <AlertTriangle className="h-4 w-4 text-red-500 mr-2" />
+              Consistent Below Range
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-red-600">{dashboardStats?.consistentBelowRangeSensors || 0}</p>
+            <p className="text-xs text-red-500/80 mt-1">ESRs with &lt;0.2mg/l for 7 days</p>
+            <div className="mt-2">
+              <Badge variant="outline" className="bg-red-50 text-red-600 border-red-200">
+                Adjust Dosing
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Consistent Optimal Card */}
+        <Card className="border border-gray-200 hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold text-green-700 flex items-center">
+              <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+              Consistent Optimal
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-green-600">{dashboardStats?.consistentOptimalSensors || 0}</p>
+            <p className="text-xs text-green-500/80 mt-1">ESRs with 0.2-0.5mg/l for 7 days</p>
+            <div className="mt-2">
+              <Badge variant="outline" className="bg-green-50 text-green-600 border-green-200">
+                Excellent
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
+        
+        {/* Consistent Above Range Card */}
+        <Card className="border border-gray-200 hover:shadow-md transition-all duration-200">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-bold text-orange-700 flex items-center">
+              <AlertCircle className="h-4 w-4 text-orange-500 mr-2" />
+              Consistent Above Range
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-3xl font-bold text-orange-600">{dashboardStats?.consistentAboveRangeSensors || 0}</p>
+            <p className="text-xs text-orange-500/80 mt-1">ESRs with &gt;0.5mg/l for 7 days</p>
+            <div className="mt-2">
+              <Badge variant="outline" className="bg-orange-50 text-orange-600 border-orange-200">
+                Reduce Dosing
+              </Badge>
             </div>
           </CardContent>
         </Card>
