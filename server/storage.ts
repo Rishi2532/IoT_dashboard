@@ -5,6 +5,7 @@ import {
   appState,
   waterSchemeData,
   chlorineData,
+  pressureData,
   type User,
   type InsertUser,
   type Region,
@@ -17,9 +18,13 @@ import {
   type ChlorineData,
   type InsertChlorineData,
   type UpdateChlorineData,
+  type PressureData,
+  type InsertPressureData,
+  type UpdatePressureData,
 } from "@shared/schema";
 import { getDB, initializeDatabase } from "./db";
-import { eq, sql } from "drizzle-orm";
+import { eq, sql, and } from "drizzle-orm";
+import { parse } from "csv-parse";
 
 // Declare global variables for storing updates data
 declare global {
@@ -657,6 +662,52 @@ export class PostgresStorage implements IStorage {
     38: "above_55_lpcd_count"
   };
 
+  /**
+   * Convert date string to standard format
+   * @param value - The date value to parse
+   * @returns The parsed date string or null if invalid
+   */
+  private getDateValue(value: any): string | null {
+    if (!value) return null;
+    
+    try {
+      // If it's already a string in an acceptable format, return it
+      if (typeof value === 'string') {
+        // Ensure consistent format by parsing and reformatting if necessary
+        const dateStr = value.trim();
+        if (dateStr.length > 0) {
+          return dateStr;
+        }
+      }
+      
+      // If it's a Date object, format it
+      if (value instanceof Date) {
+        const day = value.getDate().toString().padStart(2, '0');
+        const month = (value.getMonth() + 1).toString().padStart(2, '0');
+        const year = value.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+      
+      // Try to convert number to date (Excel serial date)
+      if (typeof value === 'number') {
+        // Excel dates are number of days since 1/1/1900
+        // To convert: create date at 1/1/1900, add the number of days
+        const excelEpoch = new Date(1900, 0, 1);
+        const date = new Date(excelEpoch.getTime() + (value - 1) * 24 * 60 * 60 * 1000);
+        
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const year = date.getFullYear();
+        return `${day}/${month}/${year}`;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error("Error parsing date value:", value, error);
+      return null;
+    }
+  }
+  
   /**
    * Improved numeric value parsing that handles various formats and validation
    * @param value - The value to parse into a number
@@ -1785,6 +1836,552 @@ export class PostgresStorage implements IStorage {
         consistentAboveRangeSensors: 0
       };
     }
+  }
+  
+  // Pressure Data CRUD operations
+  async getAllPressureData(filter?: PressureDataFilter): Promise<PressureData[]> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      let query = db.select().from(pressureData);
+      
+      // Apply filters if provided
+      if (filter) {
+        if (filter.region && filter.region !== 'all') {
+          query = query.where(eq(pressureData.region, filter.region));
+        }
+        
+        if (filter.pressureRange) {
+          switch (filter.pressureRange) {
+            case 'below_0.2':
+              // ESRs with pressure value below 0.2 bar
+              query = query.where(sql`${pressureData.pressure_value_7} < 0.2 AND ${pressureData.pressure_value_7} >= 0`);
+              break;
+            case 'between_0.2_0.7':
+              // ESRs with pressure value between 0.2 and 0.7 bar
+              query = query.where(sql`${pressureData.pressure_value_7} >= 0.2 AND ${pressureData.pressure_value_7} <= 0.7`);
+              break;
+            case 'above_0.7':
+              // ESRs with pressure value above 0.7 bar
+              query = query.where(sql`${pressureData.pressure_value_7} > 0.7`);
+              break;
+            case 'consistent_zero':
+              // ESRs with consistent zero pressure readings over 7 days
+              query = query.where(sql`
+                COALESCE(${pressureData.number_of_consistent_zero_value_in_pressure}, 0) = 7 OR
+                (
+                  (${pressureData.pressure_value_1} = 0 OR ${pressureData.pressure_value_1} IS NULL) AND
+                  (${pressureData.pressure_value_2} = 0 OR ${pressureData.pressure_value_2} IS NULL) AND
+                  (${pressureData.pressure_value_3} = 0 OR ${pressureData.pressure_value_3} IS NULL) AND
+                  (${pressureData.pressure_value_4} = 0 OR ${pressureData.pressure_value_4} IS NULL) AND
+                  (${pressureData.pressure_value_5} = 0 OR ${pressureData.pressure_value_5} IS NULL) AND
+                  (${pressureData.pressure_value_6} = 0 OR ${pressureData.pressure_value_6} IS NULL) AND
+                  (${pressureData.pressure_value_7} = 0 OR ${pressureData.pressure_value_7} IS NULL)
+                )
+              `);
+              break;
+            case 'consistent_below':
+              // ESRs with consistent below range pressure (< 0.2 bar) for 7 days
+              query = query.where(sql`
+                (
+                  (${pressureData.pressure_value_1} < 0.2 AND ${pressureData.pressure_value_1} > 0) AND
+                  (${pressureData.pressure_value_2} < 0.2 AND ${pressureData.pressure_value_2} > 0) AND
+                  (${pressureData.pressure_value_3} < 0.2 AND ${pressureData.pressure_value_3} > 0) AND
+                  (${pressureData.pressure_value_4} < 0.2 AND ${pressureData.pressure_value_4} > 0) AND
+                  (${pressureData.pressure_value_5} < 0.2 AND ${pressureData.pressure_value_5} > 0) AND
+                  (${pressureData.pressure_value_6} < 0.2 AND ${pressureData.pressure_value_6} > 0) AND
+                  (${pressureData.pressure_value_7} < 0.2 AND ${pressureData.pressure_value_7} > 0)
+                )
+              `);
+              break;
+            case 'consistent_optimal':
+              // ESRs with consistent optimal range pressure (0.2-0.7 bar) for 7 days
+              query = query.where(sql`
+                (
+                  (${pressureData.pressure_value_1} >= 0.2 AND ${pressureData.pressure_value_1} <= 0.7) AND
+                  (${pressureData.pressure_value_2} >= 0.2 AND ${pressureData.pressure_value_2} <= 0.7) AND
+                  (${pressureData.pressure_value_3} >= 0.2 AND ${pressureData.pressure_value_3} <= 0.7) AND
+                  (${pressureData.pressure_value_4} >= 0.2 AND ${pressureData.pressure_value_4} <= 0.7) AND
+                  (${pressureData.pressure_value_5} >= 0.2 AND ${pressureData.pressure_value_5} <= 0.7) AND
+                  (${pressureData.pressure_value_6} >= 0.2 AND ${pressureData.pressure_value_6} <= 0.7) AND
+                  (${pressureData.pressure_value_7} >= 0.2 AND ${pressureData.pressure_value_7} <= 0.7)
+                )
+              `);
+              break;
+            case 'consistent_above':
+              // ESRs with consistent above range pressure (> 0.7 bar) for 7 days
+              query = query.where(sql`
+                (
+                  (${pressureData.pressure_value_1} > 0.7) AND
+                  (${pressureData.pressure_value_2} > 0.7) AND
+                  (${pressureData.pressure_value_3} > 0.7) AND
+                  (${pressureData.pressure_value_4} > 0.7) AND
+                  (${pressureData.pressure_value_5} > 0.7) AND
+                  (${pressureData.pressure_value_6} > 0.7) AND
+                  (${pressureData.pressure_value_7} > 0.7)
+                )
+              `);
+              break;
+          }
+        } else {
+          // Apply min/max filters if range is not specified
+          if (filter.minPressure !== undefined) {
+            query = query.where(sql`${pressureData.pressure_value_7} >= ${filter.minPressure}`);
+          }
+          
+          if (filter.maxPressure !== undefined) {
+            query = query.where(sql`${pressureData.pressure_value_7} <= ${filter.maxPressure}`);
+          }
+        }
+      }
+      
+      return await query;
+    } catch (error) {
+      console.error("Error in getAllPressureData:", error);
+      throw error;
+    }
+  }
+  
+  async getPressureDataByCompositeKey(schemeId: string, villageName: string, esrName: string): Promise<PressureData | undefined> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      const result = await db
+        .select()
+        .from(pressureData)
+        .where(
+          and(
+            eq(pressureData.scheme_id, schemeId),
+            eq(pressureData.village_name, villageName),
+            eq(pressureData.esr_name, esrName)
+          )
+        );
+      
+      return result[0];
+    } catch (error) {
+      console.error(`Error getting pressure data for ${schemeId}/${villageName}/${esrName}:`, error);
+      throw error;
+    }
+  }
+  
+  async createPressureData(data: InsertPressureData): Promise<PressureData> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      const result = await db.insert(pressureData).values(data).returning();
+      return result[0];
+    } catch (error) {
+      console.error("Error creating pressure data:", error);
+      throw error;
+    }
+  }
+  
+  async updatePressureData(
+    schemeId: string, 
+    villageName: string, 
+    esrName: string, 
+    data: UpdatePressureData
+  ): Promise<PressureData> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      const result = await db
+        .update(pressureData)
+        .set(data)
+        .where(
+          and(
+            eq(pressureData.scheme_id, schemeId),
+            eq(pressureData.village_name, villageName),
+            eq(pressureData.esr_name, esrName)
+          )
+        )
+        .returning();
+      
+      return result[0];
+    } catch (error) {
+      console.error(`Error updating pressure data for ${schemeId}/${villageName}/${esrName}:`, error);
+      throw error;
+    }
+  }
+  
+  async deletePressureData(schemeId: string, villageName: string, esrName: string): Promise<boolean> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      const result = await db
+        .delete(pressureData)
+        .where(
+          and(
+            eq(pressureData.scheme_id, schemeId),
+            eq(pressureData.village_name, villageName),
+            eq(pressureData.esr_name, esrName)
+          )
+        );
+      
+      return result.count > 0;
+    } catch (error) {
+      console.error(`Error deleting pressure data for ${schemeId}/${villageName}/${esrName}:`, error);
+      throw error;
+    }
+  }
+  
+  // Dashboard statistics for pressure data
+  async getPressureDashboardStats(regionName?: string): Promise<{
+    totalSensors: number;
+    belowRangeSensors: number;
+    optimalRangeSensors: number;
+    aboveRangeSensors: number;
+    consistentZeroSensors: number;
+    consistentBelowRangeSensors: number;
+    consistentOptimalSensors: number;
+    consistentAboveRangeSensors: number;
+  }> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      console.log("Fetching pressure dashboard stats...");
+      
+      // Base conditions - filter by region if specified and not 'all'
+      const whereConditions = (regionName && regionName !== 'all')
+        ? eq(pressureData.region, regionName)
+        : undefined;
+      
+      // Get total count
+      const totalResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(pressureData)
+        .where(whereConditions);
+      
+      const totalSensors = Number(totalResult[0]?.count || 0);
+      console.log("Total sensors:", totalSensors);
+      
+      // Get below 0.2 bar count
+      const belowRangeResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(pressureData)
+        .where(
+          whereConditions ? 
+            sql`${whereConditions} AND ${pressureData.pressure_value_7} < 0.2 AND ${pressureData.pressure_value_7} >= 0` :
+            sql`${pressureData.pressure_value_7} < 0.2 AND ${pressureData.pressure_value_7} >= 0`
+        );
+      
+      const belowRangeSensors = Number(belowRangeResult[0]?.count || 0);
+      console.log("Below range sensors:", belowRangeSensors);
+      
+      // Get optimal range (0.2-0.7 bar) count
+      const optimalRangeResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(pressureData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND ${pressureData.pressure_value_7} >= 0.2 AND ${pressureData.pressure_value_7} <= 0.7` :
+            sql`${pressureData.pressure_value_7} >= 0.2 AND ${pressureData.pressure_value_7} <= 0.7`
+        );
+      
+      const optimalRangeSensors = Number(optimalRangeResult[0]?.count || 0);
+      console.log("Optimal range sensors:", optimalRangeSensors);
+      
+      // Get above 0.7 bar count
+      const aboveRangeResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(pressureData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND ${pressureData.pressure_value_7} > 0.7` :
+            sql`${pressureData.pressure_value_7} > 0.7`
+        );
+        
+      const aboveRangeSensors = Number(aboveRangeResult[0]?.count || 0);
+      console.log("Above range sensors:", aboveRangeSensors);
+      
+      // Get sensors with consistent zero readings for 7 days
+      const consistentZeroResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(pressureData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND 
+               ${pressureData.pressure_value_1} = 0 AND 
+               ${pressureData.pressure_value_2} = 0 AND 
+               ${pressureData.pressure_value_3} = 0 AND 
+               ${pressureData.pressure_value_4} = 0 AND 
+               ${pressureData.pressure_value_5} = 0 AND 
+               ${pressureData.pressure_value_6} = 0 AND 
+               ${pressureData.pressure_value_7} = 0` :
+            sql`${pressureData.pressure_value_1} = 0 AND 
+                ${pressureData.pressure_value_2} = 0 AND 
+                ${pressureData.pressure_value_3} = 0 AND 
+                ${pressureData.pressure_value_4} = 0 AND 
+                ${pressureData.pressure_value_5} = 0 AND 
+                ${pressureData.pressure_value_6} = 0 AND 
+                ${pressureData.pressure_value_7} = 0`
+        );
+      
+      const consistentZeroSensors = Number(consistentZeroResult[0]?.count || 0);
+      console.log("Consistent zero sensors:", consistentZeroSensors);
+      
+      // Get sensors with consistently below range readings (>0 and <0.2) for 7 days
+      const consistentBelowRangeResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(pressureData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND 
+               ${pressureData.pressure_value_1} > 0 AND ${pressureData.pressure_value_1} < 0.2 AND 
+               ${pressureData.pressure_value_2} > 0 AND ${pressureData.pressure_value_2} < 0.2 AND 
+               ${pressureData.pressure_value_3} > 0 AND ${pressureData.pressure_value_3} < 0.2 AND 
+               ${pressureData.pressure_value_4} > 0 AND ${pressureData.pressure_value_4} < 0.2 AND 
+               ${pressureData.pressure_value_5} > 0 AND ${pressureData.pressure_value_5} < 0.2 AND 
+               ${pressureData.pressure_value_6} > 0 AND ${pressureData.pressure_value_6} < 0.2 AND 
+               ${pressureData.pressure_value_7} > 0 AND ${pressureData.pressure_value_7} < 0.2` :
+            sql`${pressureData.pressure_value_1} > 0 AND ${pressureData.pressure_value_1} < 0.2 AND 
+                ${pressureData.pressure_value_2} > 0 AND ${pressureData.pressure_value_2} < 0.2 AND 
+                ${pressureData.pressure_value_3} > 0 AND ${pressureData.pressure_value_3} < 0.2 AND 
+                ${pressureData.pressure_value_4} > 0 AND ${pressureData.pressure_value_4} < 0.2 AND 
+                ${pressureData.pressure_value_5} > 0 AND ${pressureData.pressure_value_5} < 0.2 AND 
+                ${pressureData.pressure_value_6} > 0 AND ${pressureData.pressure_value_6} < 0.2 AND 
+                ${pressureData.pressure_value_7} > 0 AND ${pressureData.pressure_value_7} < 0.2`
+        );
+      
+      const consistentBelowRangeSensors = Number(consistentBelowRangeResult[0]?.count || 0);
+      console.log("Consistent below range sensors:", consistentBelowRangeSensors);
+      
+      // Get sensors with consistently optimal range readings (0.2-0.7) for 7 days
+      const consistentOptimalResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(pressureData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND 
+               ${pressureData.pressure_value_1} >= 0.2 AND ${pressureData.pressure_value_1} <= 0.7 AND 
+               ${pressureData.pressure_value_2} >= 0.2 AND ${pressureData.pressure_value_2} <= 0.7 AND 
+               ${pressureData.pressure_value_3} >= 0.2 AND ${pressureData.pressure_value_3} <= 0.7 AND 
+               ${pressureData.pressure_value_4} >= 0.2 AND ${pressureData.pressure_value_4} <= 0.7 AND 
+               ${pressureData.pressure_value_5} >= 0.2 AND ${pressureData.pressure_value_5} <= 0.7 AND 
+               ${pressureData.pressure_value_6} >= 0.2 AND ${pressureData.pressure_value_6} <= 0.7 AND 
+               ${pressureData.pressure_value_7} >= 0.2 AND ${pressureData.pressure_value_7} <= 0.7` :
+            sql`${pressureData.pressure_value_1} >= 0.2 AND ${pressureData.pressure_value_1} <= 0.7 AND 
+                ${pressureData.pressure_value_2} >= 0.2 AND ${pressureData.pressure_value_2} <= 0.7 AND 
+                ${pressureData.pressure_value_3} >= 0.2 AND ${pressureData.pressure_value_3} <= 0.7 AND 
+                ${pressureData.pressure_value_4} >= 0.2 AND ${pressureData.pressure_value_4} <= 0.7 AND 
+                ${pressureData.pressure_value_5} >= 0.2 AND ${pressureData.pressure_value_5} <= 0.7 AND 
+                ${pressureData.pressure_value_6} >= 0.2 AND ${pressureData.pressure_value_6} <= 0.7 AND 
+                ${pressureData.pressure_value_7} >= 0.2 AND ${pressureData.pressure_value_7} <= 0.7`
+        );
+      
+      const consistentOptimalSensors = Number(consistentOptimalResult[0]?.count || 0);
+      console.log("Consistent optimal range sensors:", consistentOptimalSensors);
+      
+      // Get sensors with consistently above range readings (>0.7) for 7 days
+      const consistentAboveResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(pressureData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND 
+               ${pressureData.pressure_value_1} > 0.7 AND 
+               ${pressureData.pressure_value_2} > 0.7 AND 
+               ${pressureData.pressure_value_3} > 0.7 AND 
+               ${pressureData.pressure_value_4} > 0.7 AND 
+               ${pressureData.pressure_value_5} > 0.7 AND 
+               ${pressureData.pressure_value_6} > 0.7 AND 
+               ${pressureData.pressure_value_7} > 0.7` :
+            sql`${pressureData.pressure_value_1} > 0.7 AND 
+                ${pressureData.pressure_value_2} > 0.7 AND 
+                ${pressureData.pressure_value_3} > 0.7 AND 
+                ${pressureData.pressure_value_4} > 0.7 AND 
+                ${pressureData.pressure_value_5} > 0.7 AND 
+                ${pressureData.pressure_value_6} > 0.7 AND 
+                ${pressureData.pressure_value_7} > 0.7`
+        );
+      
+      const consistentAboveRangeSensors = Number(consistentAboveResult[0]?.count || 0);
+      console.log("Consistent above range sensors:", consistentAboveRangeSensors);
+      
+      return {
+        totalSensors,
+        belowRangeSensors,
+        optimalRangeSensors,
+        aboveRangeSensors,
+        consistentZeroSensors,
+        consistentBelowRangeSensors,
+        consistentOptimalSensors,
+        consistentAboveRangeSensors
+      };
+    } catch (error) {
+      console.error("Error fetching pressure dashboard stats:", error);
+      throw error;
+    }
+  }
+  
+  // CSV Import for pressure data
+  async importPressureDataFromCSV(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    removed: number;
+    errors: string[];
+  }> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      console.log("Starting pressure data CSV import...");
+      
+      // Parse CSV file
+      const csvString = fileBuffer.toString('utf8');
+      const parsed = await new Promise<any[]>((resolve, reject) => {
+        parse(csvString, {
+          columns: true,
+          skip_empty_lines: true,
+          trim: true,
+          cast: true
+        }, (err, records) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(records);
+          }
+        });
+      });
+      
+      if (!parsed || parsed.length === 0) {
+        throw new Error("Empty or invalid CSV file");
+      }
+      
+      console.log(`CSV parsed successfully. Found ${parsed.length} records.`);
+      
+      // Process records
+      let inserted = 0;
+      let updated = 0;
+      let errors: string[] = [];
+      
+      for (const record of parsed) {
+        try {
+          // Map CSV columns to database fields using the mappings
+          const pressureRecord: Partial<InsertPressureData> = {};
+          
+          // Process all columns by using both direct mapping and column mapping table
+          for (const [key, value] of Object.entries(record)) {
+            const mappedField = this.excelColumnMapping[key] || key.toLowerCase().replace(/\s+/g, '_');
+            
+            // Skip empty values
+            if (value === null || value === undefined || value === '') continue;
+            
+            // Check if the field is a pressure data field
+            if (mappedField in pressureData.$inferInsert) {
+              // Handle numeric fields with proper conversion
+              if (
+                mappedField.startsWith('pressure_value_') || 
+                mappedField.includes('_less_than_') || 
+                mappedField.includes('_between_') || 
+                mappedField.includes('_greater_than_') ||
+                mappedField.startsWith('number_of_')
+              ) {
+                pressureRecord[mappedField as keyof InsertPressureData] = this.getNumericValue(value);
+              } 
+              // Handle date fields
+              else if (mappedField.startsWith('pressure_date_day_')) {
+                pressureRecord[mappedField as keyof InsertPressureData] = this.getDateValue(value);
+              }
+              // Other fields as is
+              else {
+                pressureRecord[mappedField as keyof InsertPressureData] = value;
+              }
+            }
+          }
+          
+          // Required fields check
+          if (!pressureRecord.scheme_id || !pressureRecord.village_name || !pressureRecord.esr_name) {
+            errors.push(`Missing required fields in record: ${JSON.stringify(record)}`);
+            continue;
+          }
+          
+          // Calculate pressure analysis fields
+          this.calculatePressureAnalysisFields(pressureRecord);
+          
+          // Check if record already exists
+          const existingRecords = await db
+            .select()
+            .from(pressureData)
+            .where(
+              and(
+                eq(pressureData.scheme_id, pressureRecord.scheme_id!),
+                eq(pressureData.village_name, pressureRecord.village_name!),
+                eq(pressureData.esr_name, pressureRecord.esr_name!)
+              )
+            );
+          
+          if (existingRecords.length > 0) {
+            // Update existing record
+            await db
+              .update(pressureData)
+              .set(pressureRecord)
+              .where(
+                and(
+                  eq(pressureData.scheme_id, pressureRecord.scheme_id!),
+                  eq(pressureData.village_name, pressureRecord.village_name!),
+                  eq(pressureData.esr_name, pressureRecord.esr_name!)
+                )
+              );
+            updated++;
+          } else {
+            // Insert new record
+            await db
+              .insert(pressureData)
+              .values(pressureRecord as InsertPressureData);
+            inserted++;
+          }
+        } catch (recordError: any) {
+          errors.push(`Error processing record: ${JSON.stringify(record)} - ${recordError instanceof Error ? recordError.message : String(recordError)}`);
+        }
+      }
+      
+      return {
+        inserted,
+        updated,
+        removed: 0, // CSV import doesn't remove records
+        errors
+      };
+    } catch (error: any) {
+      console.error("Error importing pressure data from CSV:", error);
+      throw new Error(`Failed to import pressure data: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+  
+  // Helper method to calculate pressure analysis fields
+  private calculatePressureAnalysisFields(record: Partial<InsertPressureData>): void {
+    let zeroCount = 0;
+    let belowRangeCount = 0;
+    let optimalRangeCount = 0;
+    let aboveRangeCount = 0;
+    
+    // Count values in each range
+    for (let i = 1; i <= 7; i++) {
+      const valueField = `pressure_value_${i}` as keyof InsertPressureData;
+      const value = record[valueField] as number | null;
+      
+      if (value === null || value === 0) {
+        zeroCount++;
+      } else if (value < 0.2) {
+        belowRangeCount++;
+      } else if (value >= 0.2 && value <= 0.7) {
+        optimalRangeCount++;
+      } else if (value > 0.7) {
+        aboveRangeCount++;
+      }
+    }
+    
+    // Set analysis fields
+    record.number_of_consistent_zero_value_in_pressure = zeroCount === 7 ? 7 : null;
+    record.pressure_less_than_02_bar = belowRangeCount;
+    record.pressure_between_02_07_bar = optimalRangeCount;
+    record.pressure_greater_than_07_bar = aboveRangeCount;
   }
 
   private async initializeDb() {
