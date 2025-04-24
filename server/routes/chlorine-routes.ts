@@ -29,7 +29,7 @@ router.get("/", async (req, res) => {
     
     const filter: any = {};
     if (region) filter.region = region as string;
-    if (chlorineRange) filter.chlorineRange = chlorineRange as 'below_0.2' | 'between_0.2_0.5' | 'above_0.5';
+    if (chlorineRange) filter.chlorineRange = chlorineRange as 'below_0.2' | 'between_0.2_0.5' | 'above_0.5' | 'consistent_zero' | 'consistent_below' | 'consistent_optimal' | 'consistent_above';
     if (minChlorine) filter.minChlorine = parseFloat(minChlorine as string);
     if (maxChlorine) filter.maxChlorine = parseFloat(maxChlorine as string);
     
