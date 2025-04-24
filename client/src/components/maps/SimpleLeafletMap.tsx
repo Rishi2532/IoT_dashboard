@@ -68,7 +68,7 @@ export default function SimpleLeafletMap({
           center: [19.7515, 75.7139], // Center of Maharashtra
           zoom: 7,
           zoomControl: true,
-          attributionControl: true,
+          attributionControl: false, // Disable attribution control
           scrollWheelZoom: false,
           minZoom: 6, // Prevent zooming out too far
           maxBounds: L.latLngBounds( // Restrict panning to Maharashtra region
@@ -81,9 +81,9 @@ export default function SimpleLeafletMap({
           // tapTolerance: 15
         });
         
-        // Add OpenStreetMap tile layer with error handling
+        // Add OpenStreetMap tile layer with error handling - attribution removed
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
+          attribution: '', // Removed attribution
           maxZoom: 10, // Limit maximum zoom to prevent too detailed view
         }).addTo(map);
         
@@ -197,10 +197,6 @@ export default function SimpleLeafletMap({
           <div className="text-sm text-gray-600">Loading map...</div>
         </div>
       )}
-      
-      <div className="absolute bottom-0 left-0 right-0 bg-white bg-opacity-75 text-xs p-1 text-gray-700 border-t border-gray-300">
-        <span>©2025 OpenStreetMap contributors</span>
-      </div>
       
       {/* Add styling for tooltips */}
       <style dangerouslySetInnerHTML={{
