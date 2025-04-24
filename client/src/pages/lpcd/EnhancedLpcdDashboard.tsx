@@ -179,6 +179,42 @@ const EnhancedLpcdDashboard = () => {
     }
     return null;
   };
+  
+  // Check if a scheme has zero water supply on ALL days
+  const hasNoWaterSupplyAtAll = (scheme: WaterSchemeData): boolean => {
+    // Check all days
+    for (const day of [1, 2, 3, 4, 5, 6]) {
+      const value = scheme[`water_value_day${day}` as keyof WaterSchemeData];
+      // If any day has a positive water supply value, return false
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        !isNaN(Number(value)) &&
+        Number(value) > 0
+      ) {
+        return false;
+      }
+    }
+    
+    // Make sure at least one day has an explicitly zero value (not just null/undefined)
+    let hasExplicitZero = false;
+    for (const day of [1, 2, 3, 4, 5, 6]) {
+      const value = scheme[`water_value_day${day}` as keyof WaterSchemeData];
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        !isNaN(Number(value)) &&
+        Number(value) === 0
+      ) {
+        hasExplicitZero = true;
+        break;
+      }
+    }
+    
+    return hasExplicitZero;
+  };
 
   // Extract all LPCD values
   const extractLpcdValues = (scheme: WaterSchemeData): number[] => {
@@ -283,10 +319,7 @@ const EnhancedLpcdDashboard = () => {
         });
         break;
       case "noSupply":
-        filtered = filtered.filter((scheme) => {
-          const waterSupplyValue = getLatestWaterSupplyValue(scheme);
-          return waterSupplyValue !== null && waterSupplyValue === 0;
-        });
+        filtered = filtered.filter((scheme) => hasNoWaterSupplyAtAll(scheme));
         break;
       case "55to60":
         filtered = filtered.filter((scheme) => {
@@ -1124,10 +1157,7 @@ const EnhancedLpcdDashboard = () => {
 
                           <span className="font-medium text-red-900">
                             {
-                              filteredSchemes.filter((scheme) => {
-                                const waterSupplyValue = getLatestWaterSupplyValue(scheme);
-                                return waterSupplyValue !== null && waterSupplyValue === 0;
-                              }).length
+                              filteredSchemes.filter(scheme => hasNoWaterSupplyAtAll(scheme)).length
                             }
                           </span>
                         </CardContent>
