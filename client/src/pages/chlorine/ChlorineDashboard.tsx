@@ -105,12 +105,15 @@ const ChlorineDashboard: React.FC = () => {
       const queryString = params.toString();
       const url = `/api/chlorine${queryString ? `?${queryString}` : ''}`;
       
+      console.log('Fetching chlorine data with URL:', url);
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('Failed to fetch chlorine data');
       }
       
-      return response.json();
+      const data = await response.json();
+      console.log(`Received ${data.length} chlorine records`);
+      return data;
     }
   });
 
@@ -262,8 +265,6 @@ const ChlorineDashboard: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Chlorine Monitoring Dashboard</h1>
-      
       {/* Region Filter */}
       <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
         <div className="w-full md:w-64">
@@ -437,7 +438,7 @@ const ChlorineDashboard: React.FC = () => {
                                   View
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="max-w-4xl">
+                              <DialogContent className="max-w-4xl bg-white">
                                 {selectedESR && (
                                   <>
                                     <DialogHeader>

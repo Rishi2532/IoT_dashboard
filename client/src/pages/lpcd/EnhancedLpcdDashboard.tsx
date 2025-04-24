@@ -1130,7 +1130,7 @@ const EnhancedLpcdDashboard = () => {
 
                           <span className="font-medium text-red-900">
                             {
-                              filteredSchemes.filter(scheme => hasNoCurrentWaterSupply(scheme)).length
+                              allWaterSchemeData.filter(scheme => hasNoCurrentWaterSupply(scheme)).length
                             }
                           </span>
                         </CardContent>
