@@ -882,7 +882,7 @@ export class PostgresStorage implements IStorage {
     
     // Check all 7 days
     for (let i = 1; i <= 7; i++) {
-      const value = enhancedData[`chlorine_value_${i}` as keyof InsertChlorineData] as number | undefined;
+      const value = enhancedData[`Chlorine_value_${i}` as keyof InsertChlorineData] as number | undefined;
       
       if (value !== undefined) {
         if (value === 0) {
@@ -900,10 +900,10 @@ export class PostgresStorage implements IStorage {
     }
     
     // Update analysis fields
-    enhancedData.number_of_consistent_zero_value_in_chlorine = zeroCount;
-    enhancedData.chlorine_less_than_02_mgl = below02Count;
-    enhancedData.chlorine_between_02__05_mgl = between02And05Count;
-    enhancedData.chlorine_greater_than_05_mgl = above05Count;
+    enhancedData.number_of_consistent_zero_value_in_Chlorine = zeroCount;
+    enhancedData.Chlorine_less_than_02_mgl = below02Count;
+    enhancedData.Chlorine_between_02__05_mgl = between02And05Count;
+    enhancedData.Chlorine_greater_than_05_mgl = above05Count;
     
     return enhancedData;
   }
@@ -1171,19 +1171,19 @@ export class PostgresStorage implements IStorage {
       
       // Get below 0.2 mg/l count
       const belowRangeResult = await baseQuery
-        .where(sql`${chlorineData.chlorine_value_7} < 0.2 AND ${chlorineData.chlorine_value_7} >= 0`)
+        .where(sql`${chlorineData.Chlorine_value_7} < 0.2 AND ${chlorineData.Chlorine_value_7} >= 0`)
         .count();
       const belowRangeSensors = parseInt(belowRangeResult[0].count, 10) || 0;
       
       // Get optimal range (0.2-0.5 mg/l) count
       const optimalRangeResult = await baseQuery
-        .where(sql`${chlorineData.chlorine_value_7} >= 0.2 AND ${chlorineData.chlorine_value_7} <= 0.5`)
+        .where(sql`${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5`)
         .count();
       const optimalRangeSensors = parseInt(optimalRangeResult[0].count, 10) || 0;
       
       // Get above 0.5 mg/l count
       const aboveRangeResult = await baseQuery
-        .where(sql`${chlorineData.chlorine_value_7} > 0.5`)
+        .where(sql`${chlorineData.Chlorine_value_7} > 0.5`)
         .count();
       const aboveRangeSensors = parseInt(aboveRangeResult[0].count, 10) || 0;
       
