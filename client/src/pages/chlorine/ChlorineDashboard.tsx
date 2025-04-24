@@ -16,6 +16,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -23,7 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Search, AlertTriangle, CheckCircle, AlertCircle } from 'lucide-react';
+import { Search, AlertTriangle, CheckCircle, AlertCircle, X, RefreshCw, Droplet } from 'lucide-react';
 
 // Define types for Chlorine Data
 interface ChlorineData {
@@ -266,135 +267,217 @@ const ChlorineDashboard: React.FC = () => {
   return (
     <div className="container mx-auto p-4">
       {/* Region Filter */}
-      <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
-        <div className="w-full md:w-64">
-          <Select value={selectedRegion} onValueChange={(value) => { setSelectedRegion(value); setPage(1); }}>
-            <SelectTrigger className="bg-white border-2 border-gray-300 shadow-sm">
-              <SelectValue placeholder="All Regions" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Regions</SelectItem>
-              {regionsData.map((region) => (
-                <SelectItem key={region.region_id} value={region.region_name}>
-                  {region.region_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        
-        <div className="w-full md:w-96 relative">
-          <Search className="absolute left-2 top-3 h-4 w-4 text-gray-500" />
-          <Input
-            placeholder="Search by scheme, village or ESR name..."
-            className="pl-8"
-            value={searchQuery}
-            onChange={(e) => {
-              setSearchQuery(e.target.value);
-              setPage(1); // Reset to first page on search
-            }}
-          />
-        </div>
-        
-        <div className="ml-auto">
-          <Button onClick={() => refetch()} variant="outline">
-            Refresh Data
-          </Button>
+      <div className="bg-white rounded-xl shadow-md mb-6 p-4 border border-blue-100">
+        <div className="flex flex-col md:flex-row gap-4 items-center">
+          <div className="w-full md:w-64">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Select Region
+            </label>
+            <Select 
+              value={selectedRegion} 
+              onValueChange={(value) => { setSelectedRegion(value); setPage(1); }}
+            >
+              <SelectTrigger className="bg-white border border-blue-200 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all" className="font-medium">All Regions</SelectItem>
+                <div className="h-px bg-gray-200 my-1"></div>
+                {regionsData.map((region) => (
+                  <SelectItem key={region.region_id} value={region.region_name}>
+                    {region.region_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
+          <div className="w-full md:w-96 relative">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Search ESRs
+            </label>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 text-gray-400 -translate-y-1/2" />
+              <Input
+                placeholder="Search by scheme, village or ESR name..."
+                className="pl-9 pr-4 py-2 border-blue-200 focus:ring-blue-500 focus:border-blue-500"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1); // Reset to first page on search
+                }}
+              />
+              {searchQuery && (
+                <button 
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                  onClick={() => setSearchQuery("")}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+          
+          <div className="ml-auto self-end">
+            <Button 
+              onClick={() => refetch()} 
+              variant="outline"
+              className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 gap-2"
+            >
+              <RefreshCw className="h-4 w-4" />
+              Refresh Data
+            </Button>
+          </div>
         </div>
       </div>
       
       {/* Dashboard Cards */}
-      <div className="grid gap-4 md:grid-cols-4 mb-8">
+      <div className="grid gap-6 md:grid-cols-4 mb-8">
         {/* Total Sensors Card */}
         <Card 
-          className={`cursor-pointer hover:shadow-md transition-shadow border-2 ${currentFilter === 'all' ? 'border-blue-500' : ''}`}
+          className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
+            currentFilter === 'all' ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+          } transform hover:scale-[1.02]`}
           onClick={() => handleCardClick('all')}
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg">Total Connected ESRs</CardTitle>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white"></div>
+          <div className="absolute bottom-0 right-0 opacity-10">
+            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-blue-600">
+              <path d="M19 5L5 19M5 5L19 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+          <CardHeader className="pb-2 relative">
+            <CardTitle className="text-lg font-bold text-blue-800">Total Connected ESRs</CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold">{dashboardStats?.totalSensors || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">Total chlorine sensors connected</p>
+          <CardContent className="relative">
+            <p className="text-5xl font-bold text-blue-700">{dashboardStats?.totalSensors || 0}</p>
+            <p className="text-sm text-blue-600/80 mt-2 font-medium">Total chlorine sensors connected</p>
           </CardContent>
         </Card>
         
         {/* Below Range Card */}
         <Card 
-          className={`cursor-pointer hover:shadow-md transition-shadow border-2 ${currentFilter === 'below_0.2' ? 'border-red-500' : ''} bg-red-50`}
+          className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
+            currentFilter === 'below_0.2' ? 'ring-2 ring-red-500 ring-offset-2' : ''
+          } transform hover:scale-[1.02]`}
           onClick={() => handleCardClick('below_0.2')}
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center">
+          <div className="absolute inset-0 bg-gradient-to-br from-red-50 to-white"></div>
+          <div className="absolute bottom-0 right-0 opacity-10">
+            <AlertTriangle className="h-24 w-24 text-red-500" />
+          </div>
+          <CardHeader className="pb-2 relative">
+            <CardTitle className="text-lg font-bold text-red-800 flex items-center">
               <AlertTriangle className="h-5 w-5 text-red-600 mr-2" />
               Below Range
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold text-red-600">{dashboardStats?.belowRangeSensors || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">ESRs with chlorine &lt;0.2mg/l</p>
+          <CardContent className="relative">
+            <p className="text-5xl font-bold text-red-600">{dashboardStats?.belowRangeSensors || 0}</p>
+            <div className="flex items-center mt-2">
+              <p className="text-sm text-red-600/80 font-medium">ESRs with chlorine &lt;0.2mg/l</p>
+              <span className="ml-auto px-2 py-1 bg-red-100 text-red-800 text-xs rounded-full font-medium">
+                Action Required
+              </span>
+            </div>
           </CardContent>
         </Card>
         
         {/* Optimal Range Card */}
         <Card 
-          className={`cursor-pointer hover:shadow-md transition-shadow border-2 ${currentFilter === 'between_0.2_0.5' ? 'border-green-500' : ''} bg-green-50`}
+          className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
+            currentFilter === 'between_0.2_0.5' ? 'ring-2 ring-green-500 ring-offset-2' : ''
+          } transform hover:scale-[1.02]`}
           onClick={() => handleCardClick('between_0.2_0.5')}
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center">
+          <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-white"></div>
+          <div className="absolute bottom-0 right-0 opacity-10">
+            <CheckCircle className="h-24 w-24 text-green-500" />
+          </div>
+          <CardHeader className="pb-2 relative">
+            <CardTitle className="text-lg font-bold text-green-800 flex items-center">
               <CheckCircle className="h-5 w-5 text-green-600 mr-2" />
               Optimal Range
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold text-green-600">{dashboardStats?.optimalRangeSensors || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">ESRs with chlorine 0.2-0.5mg/l</p>
+          <CardContent className="relative">
+            <p className="text-5xl font-bold text-green-600">{dashboardStats?.optimalRangeSensors || 0}</p>
+            <div className="flex items-center mt-2">
+              <p className="text-sm text-green-600/80 font-medium">ESRs with chlorine 0.2-0.5mg/l</p>
+              <span className="ml-auto px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full font-medium">
+                Good Quality
+              </span>
+            </div>
           </CardContent>
         </Card>
         
         {/* Above Range Card */}
         <Card 
-          className={`cursor-pointer hover:shadow-md transition-shadow border-2 ${currentFilter === 'above_0.5' ? 'border-orange-500' : ''} bg-orange-50`}
+          className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
+            currentFilter === 'above_0.5' ? 'ring-2 ring-orange-500 ring-offset-2' : ''
+          } transform hover:scale-[1.02]`}
           onClick={() => handleCardClick('above_0.5')}
         >
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg flex items-center">
+          <div className="absolute inset-0 bg-gradient-to-br from-orange-50 to-white"></div>
+          <div className="absolute bottom-0 right-0 opacity-10">
+            <AlertCircle className="h-24 w-24 text-orange-500" />
+          </div>
+          <CardHeader className="pb-2 relative">
+            <CardTitle className="text-lg font-bold text-orange-800 flex items-center">
               <AlertCircle className="h-5 w-5 text-orange-600 mr-2" />
               Above Range
             </CardTitle>
           </CardHeader>
-          <CardContent>
-            <p className="text-4xl font-bold text-orange-600">{dashboardStats?.aboveRangeSensors || 0}</p>
-            <p className="text-sm text-gray-500 mt-2">ESRs with chlorine &gt;0.5mg/l</p>
+          <CardContent className="relative">
+            <p className="text-5xl font-bold text-orange-600">{dashboardStats?.aboveRangeSensors || 0}</p>
+            <div className="flex items-center mt-2">
+              <p className="text-sm text-orange-600/80 font-medium">ESRs with chlorine &gt;0.5mg/l</p>
+              <span className="ml-auto px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded-full font-medium">
+                Review Required
+              </span>
+            </div>
           </CardContent>
         </Card>
       </div>
       
       {/* Data Table */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>{getFilterTitle(currentFilter)} - {filteredData.length} ESRs</CardTitle>
+      <Card className="mb-6 shadow-md border-0">
+        <CardHeader className="pb-3 border-b">
+          <CardTitle className="flex items-center gap-2">
+            {currentFilter === 'below_0.2' && <AlertTriangle className="h-5 w-5 text-red-600" />}
+            {currentFilter === 'between_0.2_0.5' && <CheckCircle className="h-5 w-5 text-green-600" />}
+            {currentFilter === 'above_0.5' && <AlertCircle className="h-5 w-5 text-orange-600" />}
+            {getFilterTitle(currentFilter)} 
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              ({filteredData.length} ESRs found)
+            </span>
+          </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="p-0">
           {filteredData.length === 0 ? (
-            <div className="text-center py-6">
-              <p className="text-gray-500">No ESR data found matching the selected criteria.</p>
+            <div className="text-center py-12 px-4">
+              <div className="mx-auto w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mb-4">
+                <AlertCircle className="h-8 w-8 text-blue-300" />
+              </div>
+              <h3 className="text-lg font-medium text-gray-900">No Data Found</h3>
+              <p className="text-gray-500 mt-2 max-w-md mx-auto">
+                No ESR data matching the selected criteria. Try changing your filters or search terms.
+              </p>
             </div>
           ) : (
             <>
-              <div className="rounded-md border">
+              <div className="overflow-hidden rounded-md">
                 <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Region</TableHead>
-                      <TableHead>Scheme Name</TableHead>
-                      <TableHead>Village</TableHead>
-                      <TableHead>ESR Name</TableHead>
-                      <TableHead>Latest Chlorine (mg/l)</TableHead>
-                      <TableHead>Last Updated</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Action</TableHead>
+                  <TableHeader className="bg-blue-50/50">
+                    <TableRow className="hover:bg-blue-50/80">
+                      <TableHead className="font-semibold text-blue-800">Region</TableHead>
+                      <TableHead className="font-semibold text-blue-800">Scheme Name</TableHead>
+                      <TableHead className="font-semibold text-blue-800">Village</TableHead>
+                      <TableHead className="font-semibold text-blue-800">ESR Name</TableHead>
+                      <TableHead className="font-semibold text-blue-800">Latest Chlorine (mg/l)</TableHead>
+                      <TableHead className="font-semibold text-blue-800">Last Updated</TableHead>
+                      <TableHead className="font-semibold text-blue-800">Status</TableHead>
+                      <TableHead className="font-semibold text-blue-800">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -412,18 +495,34 @@ const ChlorineDashboard: React.FC = () => {
                         }
                       }
                       
+                      // Get row variant based on chlorine value
+                      let rowVariantClass = "";
+                      if (latestValue !== null) {
+                        if (latestValue < 0.2) rowVariantClass = "bg-red-50/40 hover:bg-red-50";
+                        else if (latestValue >= 0.2 && latestValue <= 0.5) rowVariantClass = "hover:bg-green-50";
+                        else rowVariantClass = "bg-orange-50/40 hover:bg-orange-50";
+                      }
+                      
                       return (
-                        <TableRow key={`${item.scheme_id}-${item.village_name}-${item.esr_name}-${index}`}>
-                          <TableCell>{item.region}</TableCell>
+                        <TableRow 
+                          key={`${item.scheme_id}-${item.village_name}-${item.esr_name}-${index}`}
+                          className={`${rowVariantClass} transition-colors`}
+                        >
+                          <TableCell className="font-medium">{item.region}</TableCell>
                           <TableCell>{item.scheme_name}</TableCell>
                           <TableCell>{item.village_name}</TableCell>
                           <TableCell>{item.esr_name}</TableCell>
-                          <TableCell>
-                            {latestValue !== null ? latestValue.toFixed(2) : "-"}
+                          <TableCell className="font-medium">
+                            {latestValue !== null ? (
+                              <span className={latestValue < 0.2 ? "text-red-600" : 
+                                (latestValue > 0.5 ? "text-orange-600" : "text-green-600")}>
+                                {latestValue.toFixed(2)}
+                              </span>
+                            ) : "-"}
                           </TableCell>
                           <TableCell>{latestDate || "-"}</TableCell>
                           <TableCell>
-                            <Badge className={`${className} ${textColor} flex items-center gap-1 w-fit`}>
+                            <Badge className={`${className} ${textColor} flex items-center gap-1 w-fit shadow-sm border`}>
                               {icon} {statusText}
                             </Badge>
                           </TableCell>
@@ -433,6 +532,7 @@ const ChlorineDashboard: React.FC = () => {
                                 <Button 
                                   variant="outline" 
                                   size="sm"
+                                  className="hover:bg-blue-50 hover:text-blue-700 transition-colors"
                                   onClick={() => setSelectedESR(item)}
                                 >
                                   View
@@ -442,56 +542,144 @@ const ChlorineDashboard: React.FC = () => {
                                 {selectedESR && (
                                   <>
                                     <DialogHeader>
-                                      <DialogTitle>
+                                      <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                          <Droplet className="h-5 w-5 text-blue-600" />
+                                        </div>
                                         {selectedESR.esr_name} - {selectedESR.village_name}
                                       </DialogTitle>
+                                      <DialogDescription>
+                                        Detailed chlorine monitoring data for this ESR
+                                      </DialogDescription>
                                     </DialogHeader>
+                                    
                                     <div className="py-4">
-                                      <div className="grid grid-cols-2 gap-4 mb-4">
-                                        <div>
-                                          <h3 className="font-medium">Region:</h3>
-                                          <p>{selectedESR.region}</p>
+                                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                        <div className="bg-blue-50/50 rounded-lg p-4 border border-blue-100">
+                                          <h3 className="text-sm font-medium text-blue-800 mb-3">ESR Information</h3>
+                                          
+                                          <div className="space-y-3">
+                                            <div className="flex justify-between items-center border-b border-blue-100 pb-2">
+                                              <span className="text-sm text-blue-700">Region</span>
+                                              <span className="font-medium">{selectedESR.region}</span>
+                                            </div>
+                                            
+                                            <div className="flex justify-between items-center border-b border-blue-100 pb-2">
+                                              <span className="text-sm text-blue-700">Scheme</span>
+                                              <span className="font-medium">{selectedESR.scheme_name}</span>
+                                            </div>
+                                            
+                                            <div className="flex justify-between items-center border-b border-blue-100 pb-2">
+                                              <span className="text-sm text-blue-700">Village</span>
+                                              <span className="font-medium">{selectedESR.village_name}</span>
+                                            </div>
+                                            
+                                            <div className="flex justify-between items-center border-b border-blue-100 pb-2">
+                                              <span className="text-sm text-blue-700">Sensor ID</span>
+                                              <span className="font-medium">{selectedESR.sensor_id || "N/A"}</span>
+                                            </div>
+                                          </div>
                                         </div>
-                                        <div>
-                                          <h3 className="font-medium">Scheme:</h3>
-                                          <p>{selectedESR.scheme_name}</p>
-                                        </div>
-                                        <div>
-                                          <h3 className="font-medium">Sensor ID:</h3>
-                                          <p>{selectedESR.sensor_id || "N/A"}</p>
-                                        </div>
-                                        <div>
-                                          <h3 className="font-medium">Status:</h3>
-                                          <Badge className={`${getChlorineStatusInfo(getLatestChlorineValue(selectedESR)).className} ${getChlorineStatusInfo(getLatestChlorineValue(selectedESR)).textColor} flex items-center gap-1 w-fit mt-1`}>
-                                            {getChlorineStatusInfo(getLatestChlorineValue(selectedESR)).icon} 
-                                            {getChlorineStatusInfo(getLatestChlorineValue(selectedESR)).statusText}
-                                          </Badge>
+                                        
+                                        <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg p-4 border border-blue-100 flex flex-col">
+                                          <h3 className="text-sm font-medium text-blue-800 mb-3">Current Status</h3>
+                                          
+                                          {(() => {
+                                            const latestValue = getLatestChlorineValue(selectedESR);
+                                            const { className, statusText, textColor, icon } = getChlorineStatusInfo(latestValue);
+                                            
+                                            let statusBgClass = "bg-gray-100";
+                                            let statusTextClass = "text-gray-800";
+                                            
+                                            if (latestValue !== null) {
+                                              if (latestValue < 0.2) {
+                                                statusBgClass = "bg-red-100";
+                                                statusTextClass = "text-red-800";
+                                              } else if (latestValue >= 0.2 && latestValue <= 0.5) {
+                                                statusBgClass = "bg-green-100";
+                                                statusTextClass = "text-green-800";
+                                              } else {
+                                                statusBgClass = "bg-orange-100";
+                                                statusTextClass = "text-orange-800";
+                                              }
+                                            }
+                                            
+                                            return (
+                                              <div className={`${statusBgClass} rounded-lg p-4 flex-1 flex flex-col justify-center items-center`}>
+                                                <div className="flex items-center gap-2 mb-2">
+                                                  {icon}
+                                                  <span className={`text-lg font-bold ${statusTextClass}`}>{statusText}</span>
+                                                </div>
+                                                
+                                                <div className="text-4xl font-bold mb-2">
+                                                  {latestValue !== null ? (
+                                                    <span className={statusTextClass}>{latestValue.toFixed(2)}</span>
+                                                  ) : "—"}
+                                                </div>
+                                                
+                                                <div className={`text-sm ${statusTextClass}`}>
+                                                  mg/l
+                                                </div>
+                                                
+                                                <div className="mt-4 text-xs text-gray-600">
+                                                  Target Range: 0.2-0.5 mg/l
+                                                </div>
+                                              </div>
+                                            );
+                                          })()}
                                         </div>
                                       </div>
                                       
-                                      <h3 className="font-medium text-lg mb-3">7-Day Chlorine History</h3>
-                                      <div className="grid grid-cols-7 gap-2">
-                                        {[7, 6, 5, 4, 3, 2, 1].map((day) => {
-                                          const value = selectedESR[`Chlorine_value_${day}` as keyof ChlorineData];
-                                          const numValue = value !== undefined && value !== null ? Number(value) : null;
-                                          const dateValue = selectedESR[`Chlorine_date_day_${day}` as keyof ChlorineData];
-                                          const { className: dayClassName } = getChlorineStatusInfo(numValue);
-                                          
-                                          return (
-                                            <div
-                                              key={`chlorine-day-${day}`}
-                                              className={`${dayClassName} p-3 rounded-md text-center shadow-sm border`}
-                                            >
-                                              <p className="text-xs text-gray-700">Day {day}</p>
-                                              <p className="text-lg font-semibold">
-                                                {numValue !== null ? numValue.toFixed(2) : "-"}
-                                              </p>
-                                              <p className="text-xs text-gray-700">
-                                                {dateValue || "-"}
-                                              </p>
-                                            </div>
-                                          );
-                                        })}
+                                      <div className="border-t border-gray-200 pt-6">
+                                        <h3 className="font-medium text-lg mb-4 text-blue-800 flex items-center gap-2">
+                                          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                                            <AlertCircle className="h-3 w-3 text-blue-600" />
+                                          </div>
+                                          7-Day Chlorine History
+                                        </h3>
+                                        <div className="grid grid-cols-7 gap-3">
+                                          {[7, 6, 5, 4, 3, 2, 1].map((day) => {
+                                            const value = selectedESR[`Chlorine_value_${day}` as keyof ChlorineData];
+                                            const numValue = value !== undefined && value !== null ? Number(value) : null;
+                                            const dateValue = selectedESR[`Chlorine_date_day_${day}` as keyof ChlorineData];
+                                            const { className: dayClassName, statusText, textColor } = getChlorineStatusInfo(numValue);
+                                            
+                                            let cardBgClass = "bg-white border-gray-200";
+                                            let valueTextClass = "text-gray-400";
+                                            
+                                            if (numValue !== null) {
+                                              if (numValue < 0.2) {
+                                                cardBgClass = "bg-gradient-to-br from-red-50 to-white border-red-200";
+                                                valueTextClass = "text-red-600";
+                                              } else if (numValue >= 0.2 && numValue <= 0.5) {
+                                                cardBgClass = "bg-gradient-to-br from-green-50 to-white border-green-200";
+                                                valueTextClass = "text-green-600";
+                                              } else {
+                                                cardBgClass = "bg-gradient-to-br from-orange-50 to-white border-orange-200";
+                                                valueTextClass = "text-orange-600";
+                                              }
+                                            }
+                                            
+                                            return (
+                                              <div
+                                                key={`chlorine-day-${day}`}
+                                                className={`${cardBgClass} p-3 rounded-md text-center shadow-sm border relative overflow-hidden`}
+                                              >
+                                                <div className="relative">
+                                                  <p className="text-xs text-gray-700 font-medium">
+                                                    {day === 1 ? "Today" : day === 2 ? "Yesterday" : `Day ${day}`}
+                                                  </p>
+                                                  <p className={`text-xl font-bold ${valueTextClass}`}>
+                                                    {numValue !== null ? numValue.toFixed(2) : "—"}
+                                                  </p>
+                                                  <p className="text-xs text-gray-500 truncate">
+                                                    {dateValue || "No data"}
+                                                  </p>
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
                                       </div>
                                     </div>
                                   </>

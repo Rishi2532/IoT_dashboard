@@ -1,5 +1,5 @@
 import { Button } from "../ui/button";
-import { UserCircle, Settings, Droplet, LogOut } from "lucide-react";
+import { UserCircle, Settings, Droplet, LogOut, DropletIcon } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import Sidebar from "./sidebar";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -41,8 +41,16 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-gradient-to-r from-indigo-600 via-blue-600 to-indigo-700 shadow-xl sticky top-0 z-[9999]">
-      <div className="absolute inset-0 bg-[url('/images/water-bg.svg')] opacity-10 bg-repeat"></div>
+    <header className="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 shadow-2xl sticky top-0 z-[9999]">
+      <div className="absolute inset-0 bg-[url('/images/water-pattern.svg')] opacity-10 bg-repeat"></div>
+      <div 
+        className="absolute inset-0 bg-gradient-to-b from-transparent to-blue-900/20"
+        style={{ 
+          backdropFilter: 'blur(1px)',
+          WebkitBackdropFilter: 'blur(1px)'
+        }}
+      ></div>
+      
       <div className="mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
@@ -52,32 +60,36 @@ export default function Header() {
                 <Sidebar />
               </div>
 
-              <div className="mr-3">
+              <div className="mr-3 relative">
+                <div className="absolute -inset-0.5 bg-white rounded-full blur-sm opacity-70"></div>
                 <img
                   src="/images/jal-jeevan-mission-logo.png"
                   alt="Jal Jeevan Mission"
-                  className="h-10 bg-white/90 rounded-full p-0.5"
+                  className="h-10 bg-white/90 rounded-full p-0.5 relative"
                 />
               </div>
+              
               <div>
-                <h1 className="font-bold text-lg sm:text-xl text-white drop-shadow-sm">
-                  STATE WATER AND SANITATION MISSION (SWSM)
-                  {/* <span className="relative ml-1">
+                <h1 className="font-bold text-lg sm:text-xl text-white drop-shadow-md tracking-tight">
+                  STATE WATER AND SANITATION MISSION
+                  <span className="relative ml-1">
                     <span className="absolute inset-0 bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white blur-sm">
-                      IoT
+                      MAHARASHTRA
                     </span>
                     <span className="relative bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-white">
-                      IoT
+                      MAHARASHTRA
                     </span>
-                  </span> */}
+                  </span>
                 </h1>
                 <p className="text-xs text-blue-100 -mt-1 hidden sm:block font-medium">
-                  <span className="text-white">JJM</span> Integration Monitoring
-                  System
+                  <span className="text-white flex items-center gap-1">
+                    <DropletIcon className="h-3 w-3" /> JJM Integration Monitoring System
+                  </span>
                 </p>
               </div>
             </div>
           </div>
+          
           <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Only show Admin button if user is admin */}
             {authData?.isAdmin && (
@@ -92,11 +104,12 @@ export default function Header() {
                 </Button>
               </Link>
             )}
-            <div className="ml-2 sm:ml-4 pl-2 sm:pl-4 border-l border-indigo-400/30">
+            
+            <div className="ml-2 sm:ml-4 pl-2 sm:pl-4 border-l border-blue-400/30">
               <Button
                 variant="ghost"
                 size="icon"
-                className="rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white shadow-md border border-white/10"
+                className="rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white shadow-lg border border-white/20 transition-all hover:scale-105"
                 onClick={handleLogout}
                 title="Logout"
               >
