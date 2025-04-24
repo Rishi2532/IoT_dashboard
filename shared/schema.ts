@@ -192,3 +192,59 @@ export const updateWaterSchemeDataSchema = createInsertSchema(waterSchemeData).o
 export type InsertWaterSchemeData = z.infer<typeof insertWaterSchemeDataSchema>;
 export type UpdateWaterSchemeData = z.infer<typeof updateWaterSchemeDataSchema>;
 export type WaterSchemeData = typeof waterSchemeData.$inferSelect;
+
+// Chlorine Data table for ESR-level chlorine monitoring
+export const chlorineData = pgTable("chlorine_data", {
+  // Location information
+  region: text("region"),
+  circle: text("circle"),
+  division: text("division"),
+  sub_division: text("sub_division"),
+  block: text("block"),
+  
+  // Identification
+  scheme_id: text("scheme_id"),
+  scheme_name: text("scheme_name"),
+  village_name: text("village_name"),
+  esr_name: text("esr_name"),
+  
+  // Chlorine measurements for different days
+  chlorine_value_1: decimal("Chlorine_value_1", { precision: 5, scale: 2 }),
+  chlorine_value_2: decimal("Chlorine_value_2", { precision: 5, scale: 2 }),
+  chlorine_value_3: decimal("Chlorine_value_3", { precision: 5, scale: 2 }),
+  chlorine_value_4: decimal("Chlorine_value_4", { precision: 5, scale: 2 }),
+  chlorine_value_5: decimal("Chlorine_value_5", { precision: 5, scale: 2 }),
+  chlorine_value_6: decimal("Chlorine_value_6", { precision: 5, scale: 2 }),
+  chlorine_value_7: decimal("Chlorine_value_7", { precision: 5, scale: 2 }),
+  
+  // Dates for chlorine measurements
+  chlorine_date_day_1: varchar("Chlorine_date_day_1", { length: 10 }),
+  chlorine_date_day_2: varchar("Chlorine_date_day_2", { length: 10 }),
+  chlorine_date_day_3: varchar("Chlorine_date_day_3", { length: 10 }),
+  chlorine_date_day_4: varchar("Chlorine_date_day_4", { length: 10 }),
+  chlorine_date_day_5: varchar("Chlorine_date_day_5", { length: 10 }),
+  chlorine_date_day_6: varchar("Chlorine_date_day_6", { length: 10 }),
+  chlorine_date_day_7: varchar("Chlorine_date_day_7", { length: 10 }),
+  
+  // Analysis fields
+  number_of_consistent_zero_value_in_chlorine: integer("number_of_consistent_zero_value_in_Chlorine"),
+  chlorine_less_than_02_mgl: integer("Chlorine_less_than_02_mgl"),
+  chlorine_between_02__05_mgl: integer("Chlorine_between_02__05_mgl"),
+  chlorine_greater_than_05_mgl: integer("Chlorine_greater_than_05_mgl"),
+}, (table) => {
+  return {
+    // Composite primary key to uniquely identify each ESR
+    pk: primaryKey({ columns: [table.scheme_id, table.village_name, table.esr_name] }),
+  };
+});
+
+export const insertChlorineDataSchema = createInsertSchema(chlorineData);
+export const updateChlorineDataSchema = createInsertSchema(chlorineData).omit({
+  scheme_id: true,
+  village_name: true,
+  esr_name: true
+});
+
+export type InsertChlorineData = z.infer<typeof insertChlorineDataSchema>;
+export type UpdateChlorineData = z.infer<typeof updateChlorineDataSchema>;
+export type ChlorineData = typeof chlorineData.$inferSelect;
