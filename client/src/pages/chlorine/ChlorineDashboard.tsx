@@ -58,25 +58,25 @@ interface ChlorineData {
   village_name: string;
   esr_name: string;
   sensor_id?: string;
-  Chlorine_value_1?: number | null;
-  Chlorine_date_day_1?: string | null;
-  Chlorine_value_2?: number | null;
-  Chlorine_date_day_2?: string | null;
-  Chlorine_value_3?: number | null;
-  Chlorine_date_day_3?: string | null;
-  Chlorine_value_4?: number | null;
-  Chlorine_date_day_4?: string | null;
-  Chlorine_value_5?: number | null;
-  Chlorine_date_day_5?: string | null;
-  Chlorine_value_6?: number | null;
-  Chlorine_date_day_6?: string | null;
-  Chlorine_value_7?: number | null;
-  Chlorine_date_day_7?: string | null;
+  chlorine_value_1?: number | null;
+  chlorine_date_day_1?: string | null;
+  chlorine_value_2?: number | null;
+  chlorine_date_day_2?: string | null;
+  chlorine_value_3?: number | null;
+  chlorine_date_day_3?: string | null;
+  chlorine_value_4?: number | null;
+  chlorine_date_day_4?: string | null;
+  chlorine_value_5?: number | null;
+  chlorine_date_day_5?: string | null;
+  chlorine_value_6?: number | null;
+  chlorine_date_day_6?: string | null;
+  chlorine_value_7?: number | null;
+  chlorine_date_day_7?: string | null;
   // Additional analysis fields
-  number_of_consistent_zero_value_in_Chlorine?: number | null;
-  Chlorine_less_than_02_mgl?: number | null;
-  Chlorine_between_02__05_mgl?: number | null;
-  Chlorine_greater_than_05_mgl?: number | null;
+  number_of_consistent_zero_value_in_chlorine?: number | null;
+  chlorine_less_than_02_mgl?: number | null;
+  chlorine_between_02_05_mgl?: number | null;
+  chlorine_greater_than_05_mgl?: number | null;
 }
 
 interface RegionData {
@@ -1083,7 +1083,7 @@ const ChlorineDashboard: React.FC = () => {
                                           {[7, 6, 5, 4, 3, 2, 1].map((day) => {
                                             const value =
                                               selectedESR[
-                                                `Chlorine_value_${day}` as keyof ChlorineData
+                                                `chlorine_value_${day}` as keyof ChlorineData
                                               ];
                                             const numValue =
                                               value !== undefined &&
@@ -1092,7 +1092,7 @@ const ChlorineDashboard: React.FC = () => {
                                                 : null;
                                             const dateValue =
                                               selectedESR[
-                                                `Chlorine_date_day_${day}` as keyof ChlorineData
+                                                `chlorine_date_day_${day}` as keyof ChlorineData
                                               ];
                                             const {
                                               className: dayClassName,
