@@ -188,7 +188,7 @@ const ChlorineDashboard: React.FC = () => {
   const getLatestChlorineValue = (data: ChlorineData): number | null => {
     // Try to get the latest non-null value
     for (const day of [7, 6, 5, 4, 3, 2, 1]) {
-      const value = data[`Chlorine_value_${day}` as keyof ChlorineData];
+      const value = data[`chlorine_value_${day}` as keyof ChlorineData];
       if (
         value !== undefined &&
         value !== null &&
@@ -297,7 +297,7 @@ const ChlorineDashboard: React.FC = () => {
         let latestDate = null;
         for (const day of [7, 6, 5, 4, 3, 2, 1]) {
           const dateValue =
-            item[`Chlorine_date_day_${day}` as keyof ChlorineData];
+            item[`chlorine_date_day_${day}` as keyof ChlorineData];
           if (dateValue) {
             latestDate = dateValue;
             break;
@@ -315,13 +315,13 @@ const ChlorineDashboard: React.FC = () => {
             latestChlorine !== null ? latestChlorine.toFixed(2) : "No data",
           "Last Updated": latestDate || "No data",
           Status: statusText,
-          "Days Below Range (<0.2 mg/l)": item.Chlorine_less_than_02_mgl || 0,
+          "Days Below Range (<0.2 mg/l)": item.chlorine_less_than_02_mgl || 0,
           "Days Optimal Range (0.2-0.5 mg/l)":
-            item.Chlorine_between_02__05_mgl || 0,
+            item.chlorine_between_02_05_mgl || 0,
           "Days Above Range (>0.5 mg/l)":
-            item.Chlorine_greater_than_05_mgl || 0,
+            item.chlorine_greater_than_05_mgl || 0,
           "Consistent Zero for 7 Days":
-            item.number_of_consistent_zero_value_in_Chlorine === 7
+            item.number_of_consistent_zero_value_in_chlorine === 7
               ? "Yes"
               : "No",
         };
