@@ -880,30 +880,52 @@ export class PostgresStorage implements IStorage {
     let between02And05Count = 0;
     let above05Count = 0;
     
+    // Track any potentially problematic readings
+    const problematicReadings = [];
+    
     // Check all 7 days
     for (let i = 1; i <= 7; i++) {
-      const value = enhancedData[`Chlorine_value_${i}` as keyof InsertChlorineData] as number | undefined;
+      const value = enhancedData[`Chlorine_value_${i}` as keyof InsertChlorineData] as number | undefined | null;
       
-      if (value !== undefined) {
-        if (value === 0) {
+      // Handle only defined and non-null values
+      if (value !== undefined && value !== null) {
+        // Verify the value is within reasonable range (0-10)
+        if (value < 0) {
+          problematicReadings.push(`Day ${i}: Negative chlorine value ${value} corrected to 0`);
+          // Correct negative values to 0
+          enhancedData[`Chlorine_value_${i}` as keyof InsertChlorineData] = 0 as any;
+        } else if (value > 10) {
+          problematicReadings.push(`Day ${i}: Unusually high chlorine value ${value}`);
+        }
+        
+        // Use the potentially corrected value
+        const correctedValue = enhancedData[`Chlorine_value_${i}` as keyof InsertChlorineData] as number;
+        
+        if (correctedValue === 0) {
           zeroCount++;
         }
         
-        if (value < 0.2 && value >= 0) {
+        if (correctedValue < 0.2 && correctedValue >= 0) {
           below02Count++;
-        } else if (value >= 0.2 && value <= 0.5) {
+        } else if (correctedValue >= 0.2 && correctedValue <= 0.5) {
           between02And05Count++;
-        } else if (value > 0.5) {
+        } else if (correctedValue > 0.5) {
           above05Count++;
         }
       }
     }
     
     // Update analysis fields
-    enhancedData.number_of_consistent_zero_value_in_Chlorine = zeroCount;
-    enhancedData.Chlorine_less_than_02_mgl = below02Count;
-    enhancedData.Chlorine_between_02__05_mgl = between02And05Count;
-    enhancedData.Chlorine_greater_than_05_mgl = above05Count;
+    enhancedData.number_of_consistent_zero_value_in_Chlorine = zeroCount as any;
+    enhancedData.Chlorine_less_than_02_mgl = below02Count as any;
+    enhancedData.Chlorine_between_02__05_mgl = between02And05Count as any;
+    enhancedData.Chlorine_greater_than_05_mgl = above05Count as any;
+    
+    // Log any problematic readings for debugging
+    if (problematicReadings.length > 0) {
+      console.log(`Problematic chlorine readings for ${enhancedData.scheme_id}/${enhancedData.village_name}/${enhancedData.esr_name}:`, 
+        problematicReadings.join("; "));
+    }
     
     return enhancedData;
   }
@@ -1016,6 +1038,15 @@ export class PostgresStorage implements IStorage {
         }
       }
 
+      // Log the import summary
+      const summary = `Excel Import Summary: ${inserted} records inserted, ${updated} records updated, ${errors.length} errors`;
+      if (errors.length > 0) {
+        console.warn(summary);
+        console.warn("Import errors:", errors);
+      } else {
+        console.log(summary);
+      }
+      
       return { inserted, updated, errors };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -1037,6 +1068,7 @@ export class PostgresStorage implements IStorage {
     let updated = 0;
 
     try {
+      console.log("Starting chlorine data import from CSV...");
       // CSV column mapping without headers (as per requirements)
       const csvColumnMapping = [
         'region',                                     // Column 0
@@ -1048,20 +1080,20 @@ export class PostgresStorage implements IStorage {
         'scheme_name',                                // Column 6
         'village_name',                               // Column 7
         'esr_name',                                   // Column 8
-        'Chlorine_value_1',                           // Column 9
-        'Chlorine_value_2',                           // Column 10
-        'Chlorine_value_3',                           // Column 11
-        'Chlorine_value_4',                           // Column 12
-        'Chlorine_value_5',                           // Column 13
-        'Chlorine_value_6',                           // Column 14
-        'Chlorine_value_7',                           // Column 15
-        'Chlorine_date_day_1',                        // Column 16
-        'Chlorine_date_day_2',                        // Column 17
-        'Chlorine_date_day_3',                        // Column 18
-        'Chlorine_date_day_4',                        // Column 19
-        'Chlorine_date_day_5',                        // Column 20
-        'Chlorine_date_day_6',                        // Column 21
-        'Chlorine_date_day_7',                        // Column 22
+        'Chlorine_value_1',                           // Column 9 - Now NUMERIC(12,2)
+        'Chlorine_value_2',                           // Column 10 - Now NUMERIC(12,2)
+        'Chlorine_value_3',                           // Column 11 - Now NUMERIC(12,2)
+        'Chlorine_value_4',                           // Column 12 - Now NUMERIC(12,2)
+        'Chlorine_value_5',                           // Column 13 - Now NUMERIC(12,2)
+        'Chlorine_value_6',                           // Column 14 - Now NUMERIC(12,2)
+        'Chlorine_value_7',                           // Column 15 - Now NUMERIC(12,2)
+        'Chlorine_date_day_1',                        // Column 16 - Now VARCHAR(15)
+        'Chlorine_date_day_2',                        // Column 17 - Now VARCHAR(15)
+        'Chlorine_date_day_3',                        // Column 18 - Now VARCHAR(15)
+        'Chlorine_date_day_4',                        // Column 19 - Now VARCHAR(15)
+        'Chlorine_date_day_5',                        // Column 20 - Now VARCHAR(15)
+        'Chlorine_date_day_6',                        // Column 21 - Now VARCHAR(15)
+        'Chlorine_date_day_7',                        // Column 22 - Now VARCHAR(15)
         'number_of_consistent_zero_value_in_Chlorine', // Column 23
         'Chlorine_less_than_02_mgl',                  // Column 24
         'Chlorine_between_02__05_mgl',                // Column 25
@@ -1192,6 +1224,15 @@ export class PostgresStorage implements IStorage {
           const errorMessage = rowError instanceof Error ? rowError.message : String(rowError);
           errors.push(`Row ${i + 1}: ${errorMessage}`);
         }
+      }
+
+      // Log the import summary
+      const summary = `CSV Import Summary: ${inserted} records inserted, ${updated} records updated, ${errors.length} errors`;
+      if (errors.length > 0) {
+        console.warn(summary);
+        console.warn("Import errors:", errors);
+      } else {
+        console.log(summary);
       }
 
       return { inserted, updated, errors };
