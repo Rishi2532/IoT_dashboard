@@ -109,6 +109,7 @@ type LpcdRange =
   | "25to35"
   | "15to25"
   | "0to15"
+  | "noSupply"  // New filter for villages with 0 LPCD
   | "55to60"
   | "60to65"
   | "65to70"
@@ -262,6 +263,12 @@ const EnhancedLpcdDashboard = () => {
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 15;
+        });
+        break;
+      case "noSupply":
+        filtered = filtered.filter((scheme) => {
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue !== null && lpcdValue === 0;
         });
         break;
       case "55to60":
