@@ -1946,6 +1946,7 @@ export class PostgresStorage implements IStorage {
   async importWaterSchemeDataFromExcel(fileBuffer: Buffer): Promise<{
     inserted: number;
     updated: number;
+    removed: number;
     errors: string[];
   }> {
     const db = await this.ensureInitialized();
@@ -2188,11 +2189,11 @@ export class PostgresStorage implements IStorage {
       }
       
       console.log(`LPCD import complete: ${inserted} inserted, ${updated} updated, ${removed} removed, ${errors.length} errors`);
-      return { inserted, updated, errors };
+      return { inserted, updated, removed, errors };
     } catch (error: any) {
       console.error(`Excel import error: ${error.message}`);
       errors.push(`Excel import error: ${error.message}`);
-      return { inserted, updated, errors };
+      return { inserted, updated, removed, errors };
     }
   }
   
@@ -2379,11 +2380,11 @@ export class PostgresStorage implements IStorage {
       }
       
       console.log(`LPCD CSV import complete: ${inserted} inserted, ${updated} updated, ${removed} removed, ${errors.length} errors`);
-      return { inserted, updated, errors };
+      return { inserted, updated, removed, errors };
     } catch (error) {
       console.error(`CSV import error:`, error);
       errors.push(`CSV import error: ${error instanceof Error ? error.message : String(error)}`);
-      return { inserted, updated, errors };
+      return { inserted, updated, removed, errors };
     }
   }
 
