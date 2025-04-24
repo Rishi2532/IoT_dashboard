@@ -1488,6 +1488,10 @@ export class PostgresStorage implements IStorage {
     belowRangeSensors: number;
     optimalRangeSensors: number;
     aboveRangeSensors: number;
+    consistentZeroSensors: number;
+    consistentBelowRangeSensors: number;
+    consistentOptimalSensors: number;
+    consistentAboveRangeSensors: number;
   }> {
     await this.initialized;
     const db = await this.ensureInitialized();
