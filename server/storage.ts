@@ -1158,10 +1158,20 @@ export class PostgresStorage implements IStorage {
                 const fieldName = columnMap[j];
                 
                 // Handle numeric chlorine values and ensure they are decimal numbers
-                if (fieldName.startsWith('Chlorine_value_')) {
-                  recordData[fieldName as keyof InsertChlorineData] = this.parseNumericValue(value);
+                if (fieldName.startsWith('chlorine_value_') || fieldName.startsWith('Chlorine_value_')) {
+                  // Convert any old uppercase field name to new lowercase field name
+                  const newFieldName = fieldName.toLowerCase().replace('_value_', '_value_');
+                  recordData[newFieldName as keyof InsertChlorineData] = this.parseNumericValue(value);
                 } else {
-                  recordData[fieldName as keyof InsertChlorineData] = value;
+                  // Handle other potential uppercase field name conversions
+                  const newFieldName = fieldName.toLowerCase()
+                    .replace('chlorine_date_day_', 'chlorine_date_day_')
+                    .replace('number_of_consistent_zero_value_in_chlorine', 'number_of_consistent_zero_value_in_chlorine')
+                    .replace('chlorine_less_than_02_mgl', 'chlorine_less_than_02_mgl')
+                    .replace('chlorine_between_02__05_mgl', 'chlorine_between_02_05_mgl')
+                    .replace('chlorine_greater_than_05_mgl', 'chlorine_greater_than_05_mgl');
+                  
+                  recordData[newFieldName as keyof InsertChlorineData] = value;
                 }
               }
             }
@@ -1314,33 +1324,33 @@ export class PostgresStorage implements IStorage {
       console.log("Starting chlorine data import from CSV...");
       // CSV column mapping without headers (as per requirements)
       const csvColumnMapping = [
-        'region',                                     // Column 0
-        'circle',                                     // Column 1
-        'division',                                   // Column 2
-        'sub_division',                               // Column 3
-        'block',                                      // Column 4
-        'scheme_id',                                  // Column 5
-        'scheme_name',                                // Column 6
-        'village_name',                               // Column 7
-        'esr_name',                                   // Column 8
-        'Chlorine_value_1',                           // Column 9 - Now NUMERIC(12,2)
-        'Chlorine_value_2',                           // Column 10 - Now NUMERIC(12,2)
-        'Chlorine_value_3',                           // Column 11 - Now NUMERIC(12,2)
-        'Chlorine_value_4',                           // Column 12 - Now NUMERIC(12,2)
-        'Chlorine_value_5',                           // Column 13 - Now NUMERIC(12,2)
-        'Chlorine_value_6',                           // Column 14 - Now NUMERIC(12,2)
-        'Chlorine_value_7',                           // Column 15 - Now NUMERIC(12,2)
-        'Chlorine_date_day_1',                        // Column 16 - Now VARCHAR(15)
-        'Chlorine_date_day_2',                        // Column 17 - Now VARCHAR(15)
-        'Chlorine_date_day_3',                        // Column 18 - Now VARCHAR(15)
-        'Chlorine_date_day_4',                        // Column 19 - Now VARCHAR(15)
-        'Chlorine_date_day_5',                        // Column 20 - Now VARCHAR(15)
-        'Chlorine_date_day_6',                        // Column 21 - Now VARCHAR(15)
-        'Chlorine_date_day_7',                        // Column 22 - Now VARCHAR(15)
-        'number_of_consistent_zero_value_in_Chlorine', // Column 23
-        'Chlorine_less_than_02_mgl',                  // Column 24
-        'Chlorine_between_02__05_mgl',                // Column 25
-        'Chlorine_greater_than_05_mgl'                // Column 26
+        'region',                                      // Column 0
+        'circle',                                      // Column 1
+        'division',                                    // Column 2
+        'sub_division',                                // Column 3
+        'block',                                       // Column 4
+        'scheme_id',                                   // Column 5
+        'scheme_name',                                 // Column 6
+        'village_name',                                // Column 7
+        'esr_name',                                    // Column 8
+        'chlorine_value_1',                            // Column 9 - Now NUMERIC(12,2)
+        'chlorine_value_2',                            // Column 10 - Now NUMERIC(12,2)
+        'chlorine_value_3',                            // Column 11 - Now NUMERIC(12,2)
+        'chlorine_value_4',                            // Column 12 - Now NUMERIC(12,2)
+        'chlorine_value_5',                            // Column 13 - Now NUMERIC(12,2)
+        'chlorine_value_6',                            // Column 14 - Now NUMERIC(12,2)
+        'chlorine_value_7',                            // Column 15 - Now NUMERIC(12,2)
+        'chlorine_date_day_1',                         // Column 16 - Now VARCHAR(15)
+        'chlorine_date_day_2',                         // Column 17 - Now VARCHAR(15)
+        'chlorine_date_day_3',                         // Column 18 - Now VARCHAR(15)
+        'chlorine_date_day_4',                         // Column 19 - Now VARCHAR(15)
+        'chlorine_date_day_5',                         // Column 20 - Now VARCHAR(15)
+        'chlorine_date_day_6',                         // Column 21 - Now VARCHAR(15)
+        'chlorine_date_day_7',                         // Column 22 - Now VARCHAR(15)
+        'number_of_consistent_zero_value_in_chlorine', // Column 23
+        'chlorine_less_than_02_mgl',                   // Column 24
+        'chlorine_between_02_05_mgl',                  // Column 25
+        'chlorine_greater_than_05_mgl'                 // Column 26
       ];
 
       const csvString = fileBuffer.toString('utf8');
@@ -1393,22 +1403,22 @@ export class PostgresStorage implements IStorage {
             
             if (fieldName && value !== undefined && value !== '') {
               // Handle numeric chlorine values and ensure they are decimal numbers
-              if (fieldName.startsWith('Chlorine_value_')) {
+              if (fieldName.startsWith('chlorine_value_')) {
                 const numericValue = this.parseNumericValue(value);
                 // Type assertion to handle the TypeScript error
                 recordData[fieldName as keyof InsertChlorineData] = numericValue as any;
               } 
               // Handle analysis fields which should be numeric
-              else if (fieldName === 'number_of_consistent_zero_value_in_Chlorine' || 
-                      fieldName === 'Chlorine_less_than_02_mgl' || 
-                      fieldName === 'Chlorine_between_02__05_mgl' || 
-                      fieldName === 'Chlorine_greater_than_05_mgl') {
+              else if (fieldName === 'number_of_consistent_zero_value_in_chlorine' || 
+                      fieldName === 'chlorine_less_than_02_mgl' || 
+                      fieldName === 'chlorine_between_02_05_mgl' || 
+                      fieldName === 'chlorine_greater_than_05_mgl') {
                 const numericValue = this.parseNumericValue(value);
                 // Type assertion to handle the TypeScript error
                 recordData[fieldName as keyof InsertChlorineData] = numericValue as any;
               }
               // Handle date fields with the extended VARCHAR(15) format
-              else if (fieldName.startsWith('Chlorine_date_day_')) {
+              else if (fieldName.startsWith('chlorine_date_day_')) {
                 // Format date strings properly for the database
                 if (value) {
                   // Clean and standardize date format if needed
@@ -1665,8 +1675,8 @@ export class PostgresStorage implements IStorage {
         .from(chlorineData)
         .where(
           whereConditions ? 
-            sql`${whereConditions} AND ${chlorineData.Chlorine_value_7} < 0.2 AND ${chlorineData.Chlorine_value_7} >= 0` :
-            sql`${chlorineData.Chlorine_value_7} < 0.2 AND ${chlorineData.Chlorine_value_7} >= 0`
+            sql`${whereConditions} AND ${chlorineData.chlorine_value_7} < 0.2 AND ${chlorineData.chlorine_value_7} >= 0` :
+            sql`${chlorineData.chlorine_value_7} < 0.2 AND ${chlorineData.chlorine_value_7} >= 0`
         );
       
       const belowRangeSensors = Number(belowRangeResult[0]?.count || 0);
@@ -1678,8 +1688,8 @@ export class PostgresStorage implements IStorage {
         .from(chlorineData)
         .where(
           whereConditions ?
-            sql`${whereConditions} AND ${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5` :
-            sql`${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5`
+            sql`${whereConditions} AND ${chlorineData.chlorine_value_7} >= 0.2 AND ${chlorineData.chlorine_value_7} <= 0.5` :
+            sql`${chlorineData.chlorine_value_7} >= 0.2 AND ${chlorineData.chlorine_value_7} <= 0.5`
         );
       
       const optimalRangeSensors = Number(optimalRangeResult[0]?.count || 0);
@@ -1691,8 +1701,8 @@ export class PostgresStorage implements IStorage {
         .from(chlorineData)
         .where(
           whereConditions ?
-            sql`${whereConditions} AND ${chlorineData.Chlorine_value_7} > 0.5` :
-            sql`${chlorineData.Chlorine_value_7} > 0.5`
+            sql`${whereConditions} AND ${chlorineData.chlorine_value_7} > 0.5` :
+            sql`${chlorineData.chlorine_value_7} > 0.5`
         );
         
       const aboveRangeSensors = Number(aboveRangeResult[0]?.count || 0);
@@ -1705,20 +1715,20 @@ export class PostgresStorage implements IStorage {
         .where(
           whereConditions ?
             sql`${whereConditions} AND 
-               ${chlorineData.Chlorine_value_1} = 0 AND 
-               ${chlorineData.Chlorine_value_2} = 0 AND 
-               ${chlorineData.Chlorine_value_3} = 0 AND 
-               ${chlorineData.Chlorine_value_4} = 0 AND 
-               ${chlorineData.Chlorine_value_5} = 0 AND 
-               ${chlorineData.Chlorine_value_6} = 0 AND 
-               ${chlorineData.Chlorine_value_7} = 0` :
-            sql`${chlorineData.Chlorine_value_1} = 0 AND 
-                ${chlorineData.Chlorine_value_2} = 0 AND 
-                ${chlorineData.Chlorine_value_3} = 0 AND 
-                ${chlorineData.Chlorine_value_4} = 0 AND 
-                ${chlorineData.Chlorine_value_5} = 0 AND 
-                ${chlorineData.Chlorine_value_6} = 0 AND 
-                ${chlorineData.Chlorine_value_7} = 0`
+               ${chlorineData.chlorine_value_1} = 0 AND 
+               ${chlorineData.chlorine_value_2} = 0 AND 
+               ${chlorineData.chlorine_value_3} = 0 AND 
+               ${chlorineData.chlorine_value_4} = 0 AND 
+               ${chlorineData.chlorine_value_5} = 0 AND 
+               ${chlorineData.chlorine_value_6} = 0 AND 
+               ${chlorineData.chlorine_value_7} = 0` :
+            sql`${chlorineData.chlorine_value_1} = 0 AND 
+                ${chlorineData.chlorine_value_2} = 0 AND 
+                ${chlorineData.chlorine_value_3} = 0 AND 
+                ${chlorineData.chlorine_value_4} = 0 AND 
+                ${chlorineData.chlorine_value_5} = 0 AND 
+                ${chlorineData.chlorine_value_6} = 0 AND 
+                ${chlorineData.chlorine_value_7} = 0`
         );
       
       const consistentZeroSensors = Number(consistentZeroResult[0]?.count || 0);
@@ -1731,20 +1741,20 @@ export class PostgresStorage implements IStorage {
         .where(
           whereConditions ?
             sql`${whereConditions} AND 
-               ${chlorineData.Chlorine_value_1} > 0 AND ${chlorineData.Chlorine_value_1} < 0.2 AND 
-               ${chlorineData.Chlorine_value_2} > 0 AND ${chlorineData.Chlorine_value_2} < 0.2 AND 
-               ${chlorineData.Chlorine_value_3} > 0 AND ${chlorineData.Chlorine_value_3} < 0.2 AND 
-               ${chlorineData.Chlorine_value_4} > 0 AND ${chlorineData.Chlorine_value_4} < 0.2 AND 
-               ${chlorineData.Chlorine_value_5} > 0 AND ${chlorineData.Chlorine_value_5} < 0.2 AND 
-               ${chlorineData.Chlorine_value_6} > 0 AND ${chlorineData.Chlorine_value_6} < 0.2 AND 
-               ${chlorineData.Chlorine_value_7} > 0 AND ${chlorineData.Chlorine_value_7} < 0.2` :
-            sql`${chlorineData.Chlorine_value_1} > 0 AND ${chlorineData.Chlorine_value_1} < 0.2 AND 
-                ${chlorineData.Chlorine_value_2} > 0 AND ${chlorineData.Chlorine_value_2} < 0.2 AND 
-                ${chlorineData.Chlorine_value_3} > 0 AND ${chlorineData.Chlorine_value_3} < 0.2 AND 
-                ${chlorineData.Chlorine_value_4} > 0 AND ${chlorineData.Chlorine_value_4} < 0.2 AND 
-                ${chlorineData.Chlorine_value_5} > 0 AND ${chlorineData.Chlorine_value_5} < 0.2 AND 
-                ${chlorineData.Chlorine_value_6} > 0 AND ${chlorineData.Chlorine_value_6} < 0.2 AND 
-                ${chlorineData.Chlorine_value_7} > 0 AND ${chlorineData.Chlorine_value_7} < 0.2`
+               ${chlorineData.chlorine_value_1} > 0 AND ${chlorineData.chlorine_value_1} < 0.2 AND 
+               ${chlorineData.chlorine_value_2} > 0 AND ${chlorineData.chlorine_value_2} < 0.2 AND 
+               ${chlorineData.chlorine_value_3} > 0 AND ${chlorineData.chlorine_value_3} < 0.2 AND 
+               ${chlorineData.chlorine_value_4} > 0 AND ${chlorineData.chlorine_value_4} < 0.2 AND 
+               ${chlorineData.chlorine_value_5} > 0 AND ${chlorineData.chlorine_value_5} < 0.2 AND 
+               ${chlorineData.chlorine_value_6} > 0 AND ${chlorineData.chlorine_value_6} < 0.2 AND 
+               ${chlorineData.chlorine_value_7} > 0 AND ${chlorineData.chlorine_value_7} < 0.2` :
+            sql`${chlorineData.chlorine_value_1} > 0 AND ${chlorineData.chlorine_value_1} < 0.2 AND 
+                ${chlorineData.chlorine_value_2} > 0 AND ${chlorineData.chlorine_value_2} < 0.2 AND 
+                ${chlorineData.chlorine_value_3} > 0 AND ${chlorineData.chlorine_value_3} < 0.2 AND 
+                ${chlorineData.chlorine_value_4} > 0 AND ${chlorineData.chlorine_value_4} < 0.2 AND 
+                ${chlorineData.chlorine_value_5} > 0 AND ${chlorineData.chlorine_value_5} < 0.2 AND 
+                ${chlorineData.chlorine_value_6} > 0 AND ${chlorineData.chlorine_value_6} < 0.2 AND 
+                ${chlorineData.chlorine_value_7} > 0 AND ${chlorineData.chlorine_value_7} < 0.2`
         );
       
       const consistentBelowRangeSensors = Number(consistentBelowRangeResult[0]?.count || 0);
@@ -1757,20 +1767,20 @@ export class PostgresStorage implements IStorage {
         .where(
           whereConditions ?
             sql`${whereConditions} AND 
-               ${chlorineData.Chlorine_value_1} >= 0.2 AND ${chlorineData.Chlorine_value_1} <= 0.5 AND 
-               ${chlorineData.Chlorine_value_2} >= 0.2 AND ${chlorineData.Chlorine_value_2} <= 0.5 AND 
-               ${chlorineData.Chlorine_value_3} >= 0.2 AND ${chlorineData.Chlorine_value_3} <= 0.5 AND 
-               ${chlorineData.Chlorine_value_4} >= 0.2 AND ${chlorineData.Chlorine_value_4} <= 0.5 AND 
-               ${chlorineData.Chlorine_value_5} >= 0.2 AND ${chlorineData.Chlorine_value_5} <= 0.5 AND 
-               ${chlorineData.Chlorine_value_6} >= 0.2 AND ${chlorineData.Chlorine_value_6} <= 0.5 AND 
-               ${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5` :
-            sql`${chlorineData.Chlorine_value_1} >= 0.2 AND ${chlorineData.Chlorine_value_1} <= 0.5 AND 
-                ${chlorineData.Chlorine_value_2} >= 0.2 AND ${chlorineData.Chlorine_value_2} <= 0.5 AND 
-                ${chlorineData.Chlorine_value_3} >= 0.2 AND ${chlorineData.Chlorine_value_3} <= 0.5 AND 
-                ${chlorineData.Chlorine_value_4} >= 0.2 AND ${chlorineData.Chlorine_value_4} <= 0.5 AND 
-                ${chlorineData.Chlorine_value_5} >= 0.2 AND ${chlorineData.Chlorine_value_5} <= 0.5 AND 
-                ${chlorineData.Chlorine_value_6} >= 0.2 AND ${chlorineData.Chlorine_value_6} <= 0.5 AND 
-                ${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5`
+               ${chlorineData.chlorine_value_1} >= 0.2 AND ${chlorineData.chlorine_value_1} <= 0.5 AND 
+               ${chlorineData.chlorine_value_2} >= 0.2 AND ${chlorineData.chlorine_value_2} <= 0.5 AND 
+               ${chlorineData.chlorine_value_3} >= 0.2 AND ${chlorineData.chlorine_value_3} <= 0.5 AND 
+               ${chlorineData.chlorine_value_4} >= 0.2 AND ${chlorineData.chlorine_value_4} <= 0.5 AND 
+               ${chlorineData.chlorine_value_5} >= 0.2 AND ${chlorineData.chlorine_value_5} <= 0.5 AND 
+               ${chlorineData.chlorine_value_6} >= 0.2 AND ${chlorineData.chlorine_value_6} <= 0.5 AND 
+               ${chlorineData.chlorine_value_7} >= 0.2 AND ${chlorineData.chlorine_value_7} <= 0.5` :
+            sql`${chlorineData.chlorine_value_1} >= 0.2 AND ${chlorineData.chlorine_value_1} <= 0.5 AND 
+                ${chlorineData.chlorine_value_2} >= 0.2 AND ${chlorineData.chlorine_value_2} <= 0.5 AND 
+                ${chlorineData.chlorine_value_3} >= 0.2 AND ${chlorineData.chlorine_value_3} <= 0.5 AND 
+                ${chlorineData.chlorine_value_4} >= 0.2 AND ${chlorineData.chlorine_value_4} <= 0.5 AND 
+                ${chlorineData.chlorine_value_5} >= 0.2 AND ${chlorineData.chlorine_value_5} <= 0.5 AND 
+                ${chlorineData.chlorine_value_6} >= 0.2 AND ${chlorineData.chlorine_value_6} <= 0.5 AND 
+                ${chlorineData.chlorine_value_7} >= 0.2 AND ${chlorineData.chlorine_value_7} <= 0.5`
         );
       
       const consistentOptimalSensors = Number(consistentOptimalResult[0]?.count || 0);
