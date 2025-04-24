@@ -2286,26 +2286,24 @@ export class PostgresStorage implements IStorage {
             // Skip empty values
             if (value === null || value === undefined || value === '') continue;
             
-            // Check if the field is a pressure data field
-            if (mappedField in pressureData.$inferInsert) {
-              // Handle numeric fields with proper conversion
-              if (
-                mappedField.startsWith('pressure_value_') || 
-                mappedField.includes('_less_than_') || 
-                mappedField.includes('_between_') || 
-                mappedField.includes('_greater_than_') ||
-                mappedField.startsWith('number_of_')
-              ) {
-                pressureRecord[mappedField as keyof InsertPressureData] = this.getNumericValue(value);
-              } 
-              // Handle date fields
-              else if (mappedField.startsWith('pressure_date_day_')) {
-                pressureRecord[mappedField as keyof InsertPressureData] = this.getDateValue(value);
-              }
-              // Other fields as is
-              else {
-                pressureRecord[mappedField as keyof InsertPressureData] = value;
-              }
+            // We're not checking against schema anymore since we're using positional columns
+            // Handle numeric fields with proper conversion
+            if (
+              mappedField.startsWith('pressure_value_') || 
+              mappedField.includes('_less_than_') || 
+              mappedField.includes('_between_') || 
+              mappedField.includes('_greater_than_') ||
+              mappedField.startsWith('number_of_')
+            ) {
+              pressureRecord[mappedField as keyof InsertPressureData] = this.getNumericValue(value);
+            } 
+            // Handle date fields
+            else if (mappedField.startsWith('pressure_date_day_')) {
+              pressureRecord[mappedField as keyof InsertPressureData] = this.getDateValue(value);
+            }
+            // Other fields as is
+            else {
+              pressureRecord[mappedField as keyof InsertPressureData] = value;
             }
           }
           
