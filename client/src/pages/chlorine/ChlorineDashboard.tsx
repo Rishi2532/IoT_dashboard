@@ -269,8 +269,8 @@ const ChlorineDashboard: React.FC = () => {
       <div className="flex flex-col md:flex-row gap-4 mb-6 items-center">
         <div className="w-full md:w-64">
           <Select value={selectedRegion} onValueChange={(value) => { setSelectedRegion(value); setPage(1); }}>
-            <SelectTrigger>
-              <SelectValue placeholder="Select Region" />
+            <SelectTrigger className="bg-white">
+              <SelectValue placeholder="All Regions" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Regions</SelectItem>
