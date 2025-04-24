@@ -561,7 +561,7 @@ const PressureDashboard: React.FC = () => {
                       <TableCell>{item.esr_name}</TableCell>
                       <TableCell>
                         {latestPressure !== null ? (
-                          <span className="font-semibold">{latestPressure.toFixed(2)} bar</span>
+                          <span className="font-semibold">{typeof latestPressure === 'number' ? latestPressure.toFixed(2) : latestPressure} bar</span>
                         ) : (
                           <span className="text-gray-400">No data</span>
                         )}
@@ -609,7 +609,7 @@ const PressureDashboard: React.FC = () => {
                                         >
                                           <p className="text-sm text-gray-600">Day {day}</p>
                                           <p className="font-semibold text-xl">
-                                            {value !== null ? `${value.toFixed(2)} bar` : '-'}
+                                            {value !== null ? `${typeof value === 'number' ? value.toFixed(2) : value} bar` : '-'}
                                           </p>
                                           <p className="text-xs text-gray-500">{date || '-'}</p>
                                         </div>
