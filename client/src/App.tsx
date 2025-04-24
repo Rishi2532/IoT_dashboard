@@ -14,7 +14,7 @@ import RegisterPage from "./pages/register";
 import ForgotPasswordPage from "./pages/forgot-password";
 import LpcdPage from "./pages/LpcdPage";
 import MapPreviewPage from "./pages/map-preview";
-import { ChlorineDashboard } from "./pages/chlorine";
+import { ChlorineDashboard, ChlorineImport } from "./pages/chlorine";
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
