@@ -1112,14 +1112,42 @@ export class PostgresStorage implements IStorage {
             if (fieldName && value !== undefined && value !== '') {
               // Handle numeric chlorine values and ensure they are decimal numbers
               if (fieldName.startsWith('Chlorine_value_')) {
-                recordData[fieldName as keyof InsertChlorineData] = this.parseNumericValue(value);
+                const numericValue = this.parseNumericValue(value);
+                // Type assertion to handle the TypeScript error
+                recordData[fieldName as keyof InsertChlorineData] = numericValue as any;
               } 
               // Handle analysis fields which should be numeric
               else if (fieldName === 'number_of_consistent_zero_value_in_Chlorine' || 
                       fieldName === 'Chlorine_less_than_02_mgl' || 
                       fieldName === 'Chlorine_between_02__05_mgl' || 
                       fieldName === 'Chlorine_greater_than_05_mgl') {
-                recordData[fieldName as keyof InsertChlorineData] = this.parseNumericValue(value);
+                const numericValue = this.parseNumericValue(value);
+                // Type assertion to handle the TypeScript error
+                recordData[fieldName as keyof InsertChlorineData] = numericValue as any;
+              }
+              // Handle date fields with the extended VARCHAR(15) format
+              else if (fieldName.startsWith('Chlorine_date_day_')) {
+                // Format date strings properly for the database
+                if (value) {
+                  // Clean and standardize date format if needed
+                  let dateStr = String(value).trim();
+                  
+                  // If date is in DD/MM/YYYY format, convert to YYYY-MM-DD
+                  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(dateStr)) {
+                    const parts = dateStr.split('/');
+                    dateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                  }
+                  
+                  // If date is in DD-MM-YYYY format, convert to YYYY-MM-DD
+                  if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(dateStr)) {
+                    const parts = dateStr.split('-');
+                    dateStr = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+                  }
+                  
+                  recordData[fieldName as keyof InsertChlorineData] = dateStr as any;
+                } else {
+                  recordData[fieldName as keyof InsertChlorineData] = null;
+                }
               }
               else {
                 recordData[fieldName as keyof InsertChlorineData] = value;
@@ -1181,15 +1209,38 @@ export class PostgresStorage implements IStorage {
       return null;
     }
     
-    // Convert string to number
-    const num = typeof value === 'string' ? parseFloat(value.replace(/,/g, '')) : Number(value);
-    
-    // Check if it's a valid number
-    if (isNaN(num)) {
-      return null;
+    // Handle string values
+    if (typeof value === 'string') {
+      // Remove any commas and trim whitespace
+      const cleanValue = value.replace(/,/g, '').trim();
+      
+      // Handle special cases like "N/A", "NA", "-", etc.
+      if (['n/a', 'na', '-', 'nil', 'null'].includes(cleanValue.toLowerCase())) {
+        return null;
+      }
+      
+      // Parse as float with precision for NUMERIC(12,2)
+      const num = parseFloat(cleanValue);
+      
+      // Check if it's a valid number
+      if (isNaN(num)) {
+        return null;
+      }
+      
+      // Round to 2 decimal places to match NUMERIC(12,2)
+      return Math.round(num * 100) / 100;
     }
     
-    return num;
+    // Handle numeric values directly
+    if (typeof value === 'number') {
+      if (isNaN(value)) {
+        return null;
+      }
+      // Round to 2 decimal places to match NUMERIC(12,2)
+      return Math.round(value * 100) / 100;
+    }
+    
+    return null;
   }
   
   // Find header row in Excel sheet
