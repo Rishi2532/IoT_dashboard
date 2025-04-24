@@ -30,6 +30,7 @@ import aiRoutes from "./routes/ai";
 import waterSchemeRoutes from "./routes/water-scheme-routes";
 import lpcdImportRoutes from "./routes/admin/import-lpcd";
 import chlorineRoutes from "./routes/chlorine-routes";
+import pressureRoutes from "./routes/pressure-routes";
 
 const exec = promisify(cp.exec);
 
@@ -85,6 +86,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount chlorine data routes
   app.use("/api/chlorine", chlorineRoutes);
+  
+  // Mount pressure data routes
+  app.use("/api/pressure", pressureRoutes);
 
   // Register endpoint
   app.post("/api/auth/register", async (req, res) => {
