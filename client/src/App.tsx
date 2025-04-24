@@ -15,6 +15,7 @@ import ForgotPasswordPage from "./pages/forgot-password";
 import LpcdPage from "./pages/LpcdPage";
 import MapPreviewPage from "./pages/map-preview";
 import { ChlorineDashboard, ChlorineImport, ChlorinePage } from "./pages/chlorine";
+import { PressureDashboard, PressureImport, PressurePage } from "./pages/pressure";
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
@@ -118,6 +119,18 @@ function App() {
           <Route path="/chlorine/import">
             <ProtectedRoute>
               <ChlorineImport />
+            </ProtectedRoute>
+          </Route>
+          
+          <Route path="/pressure">
+            <ProtectedRoute>
+              <PressurePage />
+            </ProtectedRoute>
+          </Route>
+          
+          <Route path="/pressure/import">
+            <ProtectedRoute>
+              <PressureImport />
             </ProtectedRoute>
           </Route>
           
