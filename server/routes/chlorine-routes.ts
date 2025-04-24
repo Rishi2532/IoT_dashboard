@@ -1,0 +1,189 @@
+import express from "express";
+import multer from "multer";
+import { storage } from "../storage";
+import { ZodError } from "zod";
+import { insertChlorineDataSchema, updateChlorineDataSchema } from "@shared/schema";
+
+const router = express.Router();
+
+// Configure multer for file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+});
+
+// Middleware to require admin rights
+const requireAdmin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (!req.session || !req.session.userId || !req.session.isAdmin) {
+    return res.status(403).json({ error: "Admin access required" });
+  }
+  next();
+};
+
+// Get all chlorine data with optional filters
+router.get("/", async (req, res) => {
+  try {
+    const { region, chlorineRange, minChlorine, maxChlorine } = req.query;
+    
+    const filter: any = {};
+    if (region) filter.region = region as string;
+    if (chlorineRange) filter.chlorineRange = chlorineRange as 'below_0.2' | 'between_0.2_0.5' | 'above_0.5';
+    if (minChlorine) filter.minChlorine = parseFloat(minChlorine as string);
+    if (maxChlorine) filter.maxChlorine = parseFloat(maxChlorine as string);
+    
+    const chlorineData = await storage.getAllChlorineData(filter);
+    res.json(chlorineData);
+  } catch (error) {
+    console.error("Error getting chlorine data:", error);
+    res.status(500).json({ error: "Failed to get chlorine data" });
+  }
+});
+
+// Get dashboard statistics for chlorine data
+router.get("/dashboard-stats", async (req, res) => {
+  try {
+    const { region } = req.query;
+    const stats = await storage.getChlorineDashboardStats(region as string | undefined);
+    res.json(stats);
+  } catch (error) {
+    console.error("Error getting chlorine dashboard stats:", error);
+    res.status(500).json({ error: "Failed to get chlorine dashboard statistics" });
+  }
+});
+
+// Get single chlorine record by composite key
+router.get("/:schemeId/:villageName/:esrName", async (req, res) => {
+  try {
+    const { schemeId, villageName, esrName } = req.params;
+    
+    // URL decode parameters since they might contain spaces or special characters
+    const decodedVillageName = decodeURIComponent(villageName);
+    const decodedEsrName = decodeURIComponent(esrName);
+    
+    const chlorineData = await storage.getChlorineDataByCompositeKey(
+      schemeId,
+      decodedVillageName,
+      decodedEsrName
+    );
+    
+    if (!chlorineData) {
+      return res.status(404).json({ error: "Chlorine data not found" });
+    }
+    
+    res.json(chlorineData);
+  } catch (error) {
+    console.error("Error getting chlorine data record:", error);
+    res.status(500).json({ error: "Failed to get chlorine data record" });
+  }
+});
+
+// Create new chlorine data record (admin only)
+router.post("/", requireAdmin, async (req, res) => {
+  try {
+    const data = req.body;
+    
+    // Validate data with Zod
+    const validatedData = insertChlorineDataSchema.parse(data);
+    
+    const result = await storage.createChlorineData(validatedData);
+    res.status(201).json(result);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      res.status(400).json({ error: error.errors });
+    } else {
+      console.error("Error creating chlorine data:", error);
+      res.status(500).json({ error: "Failed to create chlorine data" });
+    }
+  }
+});
+
+// Update existing chlorine data (admin only)
+router.put("/:schemeId/:villageName/:esrName", requireAdmin, async (req, res) => {
+  try {
+    const { schemeId, villageName, esrName } = req.params;
+    const data = req.body;
+    
+    // URL decode parameters
+    const decodedVillageName = decodeURIComponent(villageName);
+    const decodedEsrName = decodeURIComponent(esrName);
+    
+    // Validate data with Zod
+    const validatedData = updateChlorineDataSchema.parse(data);
+    
+    const result = await storage.updateChlorineData(
+      schemeId,
+      decodedVillageName,
+      decodedEsrName,
+      validatedData
+    );
+    
+    res.json(result);
+  } catch (error) {
+    if (error instanceof ZodError) {
+      res.status(400).json({ error: error.errors });
+    } else {
+      console.error("Error updating chlorine data:", error);
+      res.status(500).json({ error: "Failed to update chlorine data" });
+    }
+  }
+});
+
+// Delete chlorine data (admin only)
+router.delete("/:schemeId/:villageName/:esrName", requireAdmin, async (req, res) => {
+  try {
+    const { schemeId, villageName, esrName } = req.params;
+    
+    // URL decode parameters
+    const decodedVillageName = decodeURIComponent(villageName);
+    const decodedEsrName = decodeURIComponent(esrName);
+    
+    const success = await storage.deleteChlorineData(
+      schemeId,
+      decodedVillageName,
+      decodedEsrName
+    );
+    
+    if (success) {
+      res.status(204).send();
+    } else {
+      res.status(404).json({ error: "Chlorine data not found" });
+    }
+  } catch (error) {
+    console.error("Error deleting chlorine data:", error);
+    res.status(500).json({ error: "Failed to delete chlorine data" });
+  }
+});
+
+// Import chlorine data from Excel file (admin only)
+router.post("/import/excel", requireAdmin, upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    
+    const result = await storage.importChlorineDataFromExcel(req.file.buffer);
+    res.json(result);
+  } catch (error) {
+    console.error("Error importing chlorine data from Excel:", error);
+    res.status(500).json({ error: "Failed to import chlorine data from Excel" });
+  }
+});
+
+// Import chlorine data from CSV file (admin only)
+router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+    
+    const result = await storage.importChlorineDataFromCSV(req.file.buffer);
+    res.json(result);
+  } catch (error) {
+    console.error("Error importing chlorine data from CSV:", error);
+    res.status(500).json({ error: "Failed to import chlorine data from CSV" });
+  }
+});
+
+export default router;
