@@ -48,7 +48,7 @@ export interface ChlorineDataFilter {
   region?: string;
   minChlorine?: number;
   maxChlorine?: number;
-  chlorineRange?: 'below_0.2' | 'between_0.2_0.5' | 'above_0.5';
+  chlorineRange?: 'below_0.2' | 'between_0.2_0.5' | 'above_0.5' | 'consistent_zero' | 'consistent_below' | 'consistent_optimal' | 'consistent_above';
 }
 
 // Interface for storage operations
@@ -135,6 +135,10 @@ export interface IStorage {
     belowRangeSensors: number;
     optimalRangeSensors: number;
     aboveRangeSensors: number;
+    consistentZeroSensors: number;
+    consistentBelowRangeSensors: number;
+    consistentOptimalSensors: number;
+    consistentAboveRangeSensors: number;
   }>;
 }
 
@@ -748,6 +752,63 @@ export class PostgresStorage implements IStorage {
             case 'above_0.5':
               // ESRs with chlorine value above 0.5 mg/l
               query = query.where(sql`${chlorineData.Chlorine_value_7} > 0.5`);
+              break;
+            case 'consistent_zero':
+              // ESRs with consistent zero chlorine readings over 7 days
+              query = query.where(sql`
+                COALESCE(${chlorineData.number_of_consistent_zero_value_in_Chlorine}, 0) = 7 OR
+                (
+                  (${chlorineData.Chlorine_value_1} = 0 OR ${chlorineData.Chlorine_value_1} IS NULL) AND
+                  (${chlorineData.Chlorine_value_2} = 0 OR ${chlorineData.Chlorine_value_2} IS NULL) AND
+                  (${chlorineData.Chlorine_value_3} = 0 OR ${chlorineData.Chlorine_value_3} IS NULL) AND
+                  (${chlorineData.Chlorine_value_4} = 0 OR ${chlorineData.Chlorine_value_4} IS NULL) AND
+                  (${chlorineData.Chlorine_value_5} = 0 OR ${chlorineData.Chlorine_value_5} IS NULL) AND
+                  (${chlorineData.Chlorine_value_6} = 0 OR ${chlorineData.Chlorine_value_6} IS NULL) AND
+                  (${chlorineData.Chlorine_value_7} = 0 OR ${chlorineData.Chlorine_value_7} IS NULL)
+                )
+              `);
+              break;
+            case 'consistent_below':
+              // ESRs with consistent below range chlorine (< 0.2 mg/l) for 7 days
+              query = query.where(sql`
+                (
+                  (${chlorineData.Chlorine_value_1} < 0.2 AND ${chlorineData.Chlorine_value_1} > 0) AND
+                  (${chlorineData.Chlorine_value_2} < 0.2 AND ${chlorineData.Chlorine_value_2} > 0) AND
+                  (${chlorineData.Chlorine_value_3} < 0.2 AND ${chlorineData.Chlorine_value_3} > 0) AND
+                  (${chlorineData.Chlorine_value_4} < 0.2 AND ${chlorineData.Chlorine_value_4} > 0) AND
+                  (${chlorineData.Chlorine_value_5} < 0.2 AND ${chlorineData.Chlorine_value_5} > 0) AND
+                  (${chlorineData.Chlorine_value_6} < 0.2 AND ${chlorineData.Chlorine_value_6} > 0) AND
+                  (${chlorineData.Chlorine_value_7} < 0.2 AND ${chlorineData.Chlorine_value_7} > 0)
+                )
+              `);
+              break;
+            case 'consistent_optimal':
+              // ESRs with consistent optimal range chlorine (0.2-0.5 mg/l) for 7 days
+              query = query.where(sql`
+                (
+                  (${chlorineData.Chlorine_value_1} >= 0.2 AND ${chlorineData.Chlorine_value_1} <= 0.5) AND
+                  (${chlorineData.Chlorine_value_2} >= 0.2 AND ${chlorineData.Chlorine_value_2} <= 0.5) AND
+                  (${chlorineData.Chlorine_value_3} >= 0.2 AND ${chlorineData.Chlorine_value_3} <= 0.5) AND
+                  (${chlorineData.Chlorine_value_4} >= 0.2 AND ${chlorineData.Chlorine_value_4} <= 0.5) AND
+                  (${chlorineData.Chlorine_value_5} >= 0.2 AND ${chlorineData.Chlorine_value_5} <= 0.5) AND
+                  (${chlorineData.Chlorine_value_6} >= 0.2 AND ${chlorineData.Chlorine_value_6} <= 0.5) AND
+                  (${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5)
+                )
+              `);
+              break;
+            case 'consistent_above':
+              // ESRs with consistent above range chlorine (> 0.5 mg/l) for 7 days
+              query = query.where(sql`
+                (
+                  (${chlorineData.Chlorine_value_1} > 0.5) AND
+                  (${chlorineData.Chlorine_value_2} > 0.5) AND
+                  (${chlorineData.Chlorine_value_3} > 0.5) AND
+                  (${chlorineData.Chlorine_value_4} > 0.5) AND
+                  (${chlorineData.Chlorine_value_5} > 0.5) AND
+                  (${chlorineData.Chlorine_value_6} > 0.5) AND
+                  (${chlorineData.Chlorine_value_7} > 0.5)
+                )
+              `);
               break;
           }
         } else {
