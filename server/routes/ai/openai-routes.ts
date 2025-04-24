@@ -6,8 +6,13 @@
 import { Router, Request, Response } from 'express';
 import { config, hasApiKey } from '../../config';
 import { z } from 'zod';
+import { OpenAIService } from '../../services/openai-service-class';
+import { getDB } from '../../db';
+import { regions, schemeStatuses } from '@shared/schema';
+import { eq, like } from 'drizzle-orm';
 
 const router = Router();
+const openaiService = new OpenAIService();
 
 // Schema for chat completion request
 const chatCompletionSchema = z.object({
@@ -15,6 +20,75 @@ const chatCompletionSchema = z.object({
   maxTokens: z.number().optional().default(150),
   temperature: z.number().optional().default(0.7),
   language: z.enum(["en", "hi", "mr"]).optional().default("en"),
+});
+
+// Schema for natural language query
+const querySchema = z.object({
+  query: z.string().min(1, "Query is required"),
+  language: z.string().optional().default("en"),
+});
+
+// POST /api/ai/query - Process natural language query with intent extraction
+router.post('/query', async (req: Request, res: Response) => {
+  try {
+    // Validate request body
+    const { query, language } = querySchema.parse(req.body);
+    
+    // Check if OpenAI API key is configured
+    if (!hasApiKey('OPENAI_API_KEY')) {
+      return res.status(500).json({ 
+        error: 'OpenAI API key not configured',
+        message: 'Please configure the OPENAI_API_KEY environment variable'
+      });
+    }
+    
+    // Process the query with OpenAI to extract intent and parameters
+    const result = await openaiService.processQuery(query, language);
+    
+    // If intent is to filter by region, get the region data
+    if (result.intent === 'filter_by_region' && result.parameters.region) {
+      const db = await getDB();
+      const regionName = result.parameters.region;
+      
+      // Get region information
+      const regionData = await db
+        .select()
+        .from(regions)
+        .where(like(regions.region_name, `%${regionName}%`));
+        
+      // Get schemes for this region
+      const schemeData = await db
+        .select()
+        .from(schemeStatuses)
+        .where(like(schemeStatuses.region, `%${regionName}%`))
+        .limit(10);
+        
+      return res.json({
+        intent: result.intent,
+        parameters: result.parameters,
+        response: {
+          message: `Here's data for ${regionName} region`,
+          regionData: regionData[0] || null,
+          schemeSummary: {
+            total: schemeData.length,
+            completed: schemeData.filter(s => s.fully_completion_scheme_status === 'Fully Completed').length,
+            partial: schemeData.filter(s => s.fully_completion_scheme_status === 'Partial').length
+          },
+          action: 'filter_dashboard',
+          filterData: {
+            regionName: regionName
+          }
+        }
+      });
+    }
+    
+    // Default response for other intents
+    return res.json(result);
+    
+  } catch (error) {
+    console.error('Error processing AI query:', error);
+    res.status(500).json({ error: 'Failed to process query' });
+  }
 });
 
 // POST /api/ai/chat - Generate chat completion
@@ -45,7 +119,8 @@ router.post('/chat', async (req: Request, res: Response) => {
         'Authorization': `Bearer ${config.apiKeys.openai}`
       },
       body: JSON.stringify({
-        model: 'gpt-3.5-turbo',
+        // the newest OpenAI model is "gpt-4o" which was released May 13, 2024. do not change this unless explicitly requested by the user
+        model: 'gpt-4o',
         messages: [
           {
             role: 'system',
@@ -100,6 +175,25 @@ router.post('/chat', async (req: Request, res: Response) => {
       message: "Server error processing the request",
       error: error instanceof Error ? error.message : String(error)
     });
+  }
+});
+
+// POST /api/ai/speech-to-text - Process audio to text
+router.post('/speech-to-text', async (req: Request, res: Response) => {
+  try {
+    const { audioData, language = 'en' } = req.body;
+    
+    if (!audioData) {
+      return res.status(400).json({ error: 'Audio data is required' });
+    }
+    
+    // Process speech using OpenAI's whisper model
+    const text = await openaiService.processAudio(audioData, language);
+    
+    return res.json({ text });
+  } catch (error) {
+    console.error('Error processing speech:', error);
+    res.status(500).json({ error: 'Failed to process speech' });
   }
 });
 
