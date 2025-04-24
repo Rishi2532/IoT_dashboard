@@ -828,28 +828,28 @@ export class PostgresStorage implements IStorage {
           switch (filter.chlorineRange) {
             case 'below_0.2':
               // ESRs with chlorine value below 0.2 mg/l
-              query = query.where(sql`${chlorineData.Chlorine_value_7} < 0.2 AND ${chlorineData.Chlorine_value_7} >= 0`);
+              query = query.where(sql`${chlorineData.chlorine_value_7} < 0.2 AND ${chlorineData.chlorine_value_7} >= 0`);
               break;
             case 'between_0.2_0.5':
               // ESRs with chlorine value between 0.2 and 0.5 mg/l
-              query = query.where(sql`${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5`);
+              query = query.where(sql`${chlorineData.chlorine_value_7} >= 0.2 AND ${chlorineData.chlorine_value_7} <= 0.5`);
               break;
             case 'above_0.5':
               // ESRs with chlorine value above 0.5 mg/l
-              query = query.where(sql`${chlorineData.Chlorine_value_7} > 0.5`);
+              query = query.where(sql`${chlorineData.chlorine_value_7} > 0.5`);
               break;
             case 'consistent_zero':
               // ESRs with consistent zero chlorine readings over 7 days
               query = query.where(sql`
-                COALESCE(${chlorineData.number_of_consistent_zero_value_in_Chlorine}, 0) = 7 OR
+                COALESCE(${chlorineData.number_of_consistent_zero_value_in_chlorine}, 0) = 7 OR
                 (
-                  (${chlorineData.Chlorine_value_1} = 0 OR ${chlorineData.Chlorine_value_1} IS NULL) AND
-                  (${chlorineData.Chlorine_value_2} = 0 OR ${chlorineData.Chlorine_value_2} IS NULL) AND
-                  (${chlorineData.Chlorine_value_3} = 0 OR ${chlorineData.Chlorine_value_3} IS NULL) AND
-                  (${chlorineData.Chlorine_value_4} = 0 OR ${chlorineData.Chlorine_value_4} IS NULL) AND
-                  (${chlorineData.Chlorine_value_5} = 0 OR ${chlorineData.Chlorine_value_5} IS NULL) AND
-                  (${chlorineData.Chlorine_value_6} = 0 OR ${chlorineData.Chlorine_value_6} IS NULL) AND
-                  (${chlorineData.Chlorine_value_7} = 0 OR ${chlorineData.Chlorine_value_7} IS NULL)
+                  (${chlorineData.chlorine_value_1} = 0 OR ${chlorineData.chlorine_value_1} IS NULL) AND
+                  (${chlorineData.chlorine_value_2} = 0 OR ${chlorineData.chlorine_value_2} IS NULL) AND
+                  (${chlorineData.chlorine_value_3} = 0 OR ${chlorineData.chlorine_value_3} IS NULL) AND
+                  (${chlorineData.chlorine_value_4} = 0 OR ${chlorineData.chlorine_value_4} IS NULL) AND
+                  (${chlorineData.chlorine_value_5} = 0 OR ${chlorineData.chlorine_value_5} IS NULL) AND
+                  (${chlorineData.chlorine_value_6} = 0 OR ${chlorineData.chlorine_value_6} IS NULL) AND
+                  (${chlorineData.chlorine_value_7} = 0 OR ${chlorineData.chlorine_value_7} IS NULL)
                 )
               `);
               break;
@@ -857,13 +857,13 @@ export class PostgresStorage implements IStorage {
               // ESRs with consistent below range chlorine (< 0.2 mg/l) for 7 days
               query = query.where(sql`
                 (
-                  (${chlorineData.Chlorine_value_1} < 0.2 AND ${chlorineData.Chlorine_value_1} > 0) AND
-                  (${chlorineData.Chlorine_value_2} < 0.2 AND ${chlorineData.Chlorine_value_2} > 0) AND
-                  (${chlorineData.Chlorine_value_3} < 0.2 AND ${chlorineData.Chlorine_value_3} > 0) AND
-                  (${chlorineData.Chlorine_value_4} < 0.2 AND ${chlorineData.Chlorine_value_4} > 0) AND
-                  (${chlorineData.Chlorine_value_5} < 0.2 AND ${chlorineData.Chlorine_value_5} > 0) AND
-                  (${chlorineData.Chlorine_value_6} < 0.2 AND ${chlorineData.Chlorine_value_6} > 0) AND
-                  (${chlorineData.Chlorine_value_7} < 0.2 AND ${chlorineData.Chlorine_value_7} > 0)
+                  (${chlorineData.chlorine_value_1} < 0.2 AND ${chlorineData.chlorine_value_1} > 0) AND
+                  (${chlorineData.chlorine_value_2} < 0.2 AND ${chlorineData.chlorine_value_2} > 0) AND
+                  (${chlorineData.chlorine_value_3} < 0.2 AND ${chlorineData.chlorine_value_3} > 0) AND
+                  (${chlorineData.chlorine_value_4} < 0.2 AND ${chlorineData.chlorine_value_4} > 0) AND
+                  (${chlorineData.chlorine_value_5} < 0.2 AND ${chlorineData.chlorine_value_5} > 0) AND
+                  (${chlorineData.chlorine_value_6} < 0.2 AND ${chlorineData.chlorine_value_6} > 0) AND
+                  (${chlorineData.chlorine_value_7} < 0.2 AND ${chlorineData.chlorine_value_7} > 0)
                 )
               `);
               break;
@@ -871,13 +871,13 @@ export class PostgresStorage implements IStorage {
               // ESRs with consistent optimal range chlorine (0.2-0.5 mg/l) for 7 days
               query = query.where(sql`
                 (
-                  (${chlorineData.Chlorine_value_1} >= 0.2 AND ${chlorineData.Chlorine_value_1} <= 0.5) AND
-                  (${chlorineData.Chlorine_value_2} >= 0.2 AND ${chlorineData.Chlorine_value_2} <= 0.5) AND
-                  (${chlorineData.Chlorine_value_3} >= 0.2 AND ${chlorineData.Chlorine_value_3} <= 0.5) AND
-                  (${chlorineData.Chlorine_value_4} >= 0.2 AND ${chlorineData.Chlorine_value_4} <= 0.5) AND
-                  (${chlorineData.Chlorine_value_5} >= 0.2 AND ${chlorineData.Chlorine_value_5} <= 0.5) AND
-                  (${chlorineData.Chlorine_value_6} >= 0.2 AND ${chlorineData.Chlorine_value_6} <= 0.5) AND
-                  (${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5)
+                  (${chlorineData.chlorine_value_1} >= 0.2 AND ${chlorineData.chlorine_value_1} <= 0.5) AND
+                  (${chlorineData.chlorine_value_2} >= 0.2 AND ${chlorineData.chlorine_value_2} <= 0.5) AND
+                  (${chlorineData.chlorine_value_3} >= 0.2 AND ${chlorineData.chlorine_value_3} <= 0.5) AND
+                  (${chlorineData.chlorine_value_4} >= 0.2 AND ${chlorineData.chlorine_value_4} <= 0.5) AND
+                  (${chlorineData.chlorine_value_5} >= 0.2 AND ${chlorineData.chlorine_value_5} <= 0.5) AND
+                  (${chlorineData.chlorine_value_6} >= 0.2 AND ${chlorineData.chlorine_value_6} <= 0.5) AND
+                  (${chlorineData.chlorine_value_7} >= 0.2 AND ${chlorineData.chlorine_value_7} <= 0.5)
                 )
               `);
               break;
@@ -885,13 +885,13 @@ export class PostgresStorage implements IStorage {
               // ESRs with consistent above range chlorine (> 0.5 mg/l) for 7 days
               query = query.where(sql`
                 (
-                  (${chlorineData.Chlorine_value_1} > 0.5) AND
-                  (${chlorineData.Chlorine_value_2} > 0.5) AND
-                  (${chlorineData.Chlorine_value_3} > 0.5) AND
-                  (${chlorineData.Chlorine_value_4} > 0.5) AND
-                  (${chlorineData.Chlorine_value_5} > 0.5) AND
-                  (${chlorineData.Chlorine_value_6} > 0.5) AND
-                  (${chlorineData.Chlorine_value_7} > 0.5)
+                  (${chlorineData.chlorine_value_1} > 0.5) AND
+                  (${chlorineData.chlorine_value_2} > 0.5) AND
+                  (${chlorineData.chlorine_value_3} > 0.5) AND
+                  (${chlorineData.chlorine_value_4} > 0.5) AND
+                  (${chlorineData.chlorine_value_5} > 0.5) AND
+                  (${chlorineData.chlorine_value_6} > 0.5) AND
+                  (${chlorineData.chlorine_value_7} > 0.5)
                 )
               `);
               break;
@@ -899,11 +899,11 @@ export class PostgresStorage implements IStorage {
         } else {
           // Apply min/max filters if range is not specified
           if (filter.minChlorine !== undefined) {
-            query = query.where(sql`${chlorineData.Chlorine_value_7} >= ${filter.minChlorine}`);
+            query = query.where(sql`${chlorineData.chlorine_value_7} >= ${filter.minChlorine}`);
           }
           
           if (filter.maxChlorine !== undefined) {
-            query = query.where(sql`${chlorineData.Chlorine_value_7} <= ${filter.maxChlorine}`);
+            query = query.where(sql`${chlorineData.chlorine_value_7} <= ${filter.maxChlorine}`);
           }
         }
       }
@@ -1793,20 +1793,20 @@ export class PostgresStorage implements IStorage {
         .where(
           whereConditions ?
             sql`${whereConditions} AND 
-               ${chlorineData.Chlorine_value_1} > 0.5 AND 
-               ${chlorineData.Chlorine_value_2} > 0.5 AND 
-               ${chlorineData.Chlorine_value_3} > 0.5 AND 
-               ${chlorineData.Chlorine_value_4} > 0.5 AND 
-               ${chlorineData.Chlorine_value_5} > 0.5 AND 
-               ${chlorineData.Chlorine_value_6} > 0.5 AND 
-               ${chlorineData.Chlorine_value_7} > 0.5` :
-            sql`${chlorineData.Chlorine_value_1} > 0.5 AND 
-                ${chlorineData.Chlorine_value_2} > 0.5 AND 
-                ${chlorineData.Chlorine_value_3} > 0.5 AND 
-                ${chlorineData.Chlorine_value_4} > 0.5 AND 
-                ${chlorineData.Chlorine_value_5} > 0.5 AND 
-                ${chlorineData.Chlorine_value_6} > 0.5 AND 
-                ${chlorineData.Chlorine_value_7} > 0.5`
+               ${chlorineData.chlorine_value_1} > 0.5 AND 
+               ${chlorineData.chlorine_value_2} > 0.5 AND 
+               ${chlorineData.chlorine_value_3} > 0.5 AND 
+               ${chlorineData.chlorine_value_4} > 0.5 AND 
+               ${chlorineData.chlorine_value_5} > 0.5 AND 
+               ${chlorineData.chlorine_value_6} > 0.5 AND 
+               ${chlorineData.chlorine_value_7} > 0.5` :
+            sql`${chlorineData.chlorine_value_1} > 0.5 AND 
+                ${chlorineData.chlorine_value_2} > 0.5 AND 
+                ${chlorineData.chlorine_value_3} > 0.5 AND 
+                ${chlorineData.chlorine_value_4} > 0.5 AND 
+                ${chlorineData.chlorine_value_5} > 0.5 AND 
+                ${chlorineData.chlorine_value_6} > 0.5 AND 
+                ${chlorineData.chlorine_value_7} > 0.5`
         );
       
       const consistentAboveRangeSensors = Number(consistentAboveRangeResult[0]?.count || 0);
