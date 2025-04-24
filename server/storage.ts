@@ -1035,7 +1035,7 @@ export class PostgresStorage implements IStorage {
     
     // Check all 7 days
     for (let i = 1; i <= 7; i++) {
-      const value = enhancedData[`Chlorine_value_${i}` as keyof InsertChlorineData] as number | undefined | null;
+      const value = enhancedData[`chlorine_value_${i}` as keyof InsertChlorineData] as number | undefined | null;
       
       // Handle only defined and non-null values
       if (value !== undefined && value !== null) {
@@ -1043,13 +1043,13 @@ export class PostgresStorage implements IStorage {
         if (value < 0) {
           problematicReadings.push(`Day ${i}: Negative chlorine value ${value} corrected to 0`);
           // Correct negative values to 0
-          enhancedData[`Chlorine_value_${i}` as keyof InsertChlorineData] = 0 as any;
+          enhancedData[`chlorine_value_${i}` as keyof InsertChlorineData] = 0 as any;
         } else if (value > 10) {
           problematicReadings.push(`Day ${i}: Unusually high chlorine value ${value}`);
         }
         
         // Use the potentially corrected value
-        const correctedValue = enhancedData[`Chlorine_value_${i}` as keyof InsertChlorineData] as number;
+        const correctedValue = enhancedData[`chlorine_value_${i}` as keyof InsertChlorineData] as number;
         
         if (correctedValue === 0) {
           zeroCount++;
@@ -1065,11 +1065,11 @@ export class PostgresStorage implements IStorage {
       }
     }
     
-    // Update analysis fields
-    enhancedData.number_of_consistent_zero_value_in_Chlorine = zeroCount as any;
-    enhancedData.Chlorine_less_than_02_mgl = below02Count as any;
-    enhancedData.Chlorine_between_02__05_mgl = between02And05Count as any;
-    enhancedData.Chlorine_greater_than_05_mgl = above05Count as any;
+    // Update analysis fields with new lowercase field names
+    enhancedData.number_of_consistent_zero_value_in_chlorine = zeroCount as any;
+    enhancedData.chlorine_less_than_02_mgl = below02Count as any;
+    enhancedData.chlorine_between_02_05_mgl = between02And05Count as any;
+    enhancedData.chlorine_greater_than_05_mgl = above05Count as any;
     
     // Log any problematic readings for debugging
     if (problematicReadings.length > 0) {

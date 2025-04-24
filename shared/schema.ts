@@ -196,41 +196,41 @@ export type WaterSchemeData = typeof waterSchemeData.$inferSelect;
 // Chlorine Data table for ESR-level chlorine monitoring
 export const chlorineData = pgTable("chlorine_data", {
   // Location information
-  region: text("region"),
-  circle: text("circle"),
-  division: text("division"),
-  sub_division: text("sub_division"),
-  block: text("block"),
+  region: varchar("region", { length: 100 }),
+  circle: varchar("circle", { length: 100 }),
+  division: varchar("division", { length: 100 }),
+  sub_division: varchar("sub_division", { length: 100 }),
+  block: varchar("block", { length: 100 }),
   
   // Identification
-  scheme_id: text("scheme_id"),
-  scheme_name: text("scheme_name"),
-  village_name: text("village_name"),
-  esr_name: text("esr_name"),
+  scheme_id: varchar("scheme_id", { length: 100 }),
+  scheme_name: varchar("scheme_name", { length: 255 }),
+  village_name: varchar("village_name", { length: 255 }),
+  esr_name: varchar("esr_name", { length: 255 }),
   
-  // Chlorine measurements for different days
-  Chlorine_value_1: decimal("Chlorine_value_1", { precision: 12, scale: 2 }),
-  Chlorine_value_2: decimal("Chlorine_value_2", { precision: 12, scale: 2 }),
-  Chlorine_value_3: decimal("Chlorine_value_3", { precision: 12, scale: 2 }),
-  Chlorine_value_4: decimal("Chlorine_value_4", { precision: 12, scale: 2 }),
-  Chlorine_value_5: decimal("Chlorine_value_5", { precision: 12, scale: 2 }),
-  Chlorine_value_6: decimal("Chlorine_value_6", { precision: 12, scale: 2 }),
-  Chlorine_value_7: decimal("Chlorine_value_7", { precision: 12, scale: 2 }),
+  // Chlorine measurements for different days (lowercase field names)
+  chlorine_value_1: decimal("chlorine_value_1", { precision: 12, scale: 2 }),
+  chlorine_value_2: decimal("chlorine_value_2", { precision: 12, scale: 2 }),
+  chlorine_value_3: decimal("chlorine_value_3", { precision: 12, scale: 2 }),
+  chlorine_value_4: decimal("chlorine_value_4", { precision: 12, scale: 2 }),
+  chlorine_value_5: decimal("chlorine_value_5", { precision: 12, scale: 2 }),
+  chlorine_value_6: decimal("chlorine_value_6", { precision: 12, scale: 2 }),
+  chlorine_value_7: decimal("chlorine_value_7", { precision: 12, scale: 2 }),
   
-  // Dates for chlorine measurements
-  Chlorine_date_day_1: varchar("Chlorine_date_day_1", { length: 20 }),
-  Chlorine_date_day_2: varchar("Chlorine_date_day_2", { length: 20 }),
-  Chlorine_date_day_3: varchar("Chlorine_date_day_3", { length: 20 }),
-  Chlorine_date_day_4: varchar("Chlorine_date_day_4", { length: 20 }),
-  Chlorine_date_day_5: varchar("Chlorine_date_day_5", { length: 20 }),
-  Chlorine_date_day_6: varchar("Chlorine_date_day_6", { length: 20 }),
-  Chlorine_date_day_7: varchar("Chlorine_date_day_7", { length: 20 }),
+  // Dates for chlorine measurements (lowercase field names)
+  chlorine_date_day_1: varchar("chlorine_date_day_1", { length: 15 }),
+  chlorine_date_day_2: varchar("chlorine_date_day_2", { length: 15 }),
+  chlorine_date_day_3: varchar("chlorine_date_day_3", { length: 15 }),
+  chlorine_date_day_4: varchar("chlorine_date_day_4", { length: 15 }),
+  chlorine_date_day_5: varchar("chlorine_date_day_5", { length: 15 }),
+  chlorine_date_day_6: varchar("chlorine_date_day_6", { length: 15 }),
+  chlorine_date_day_7: varchar("chlorine_date_day_7", { length: 15 }),
   
-  // Analysis fields
-  number_of_consistent_zero_value_in_Chlorine: integer("number_of_consistent_zero_value_in_Chlorine"),
-  Chlorine_less_than_02_mgl: integer("Chlorine_less_than_02_mgl"),
-  Chlorine_between_02__05_mgl: integer("Chlorine_between_02__05_mgl"),
-  Chlorine_greater_than_05_mgl: integer("Chlorine_greater_than_05_mgl"),
+  // Analysis fields (lowercase field names)
+  number_of_consistent_zero_value_in_chlorine: integer("number_of_consistent_zero_value_in_chlorine"),
+  chlorine_less_than_02_mgl: decimal("chlorine_less_than_02_mgl", { precision: 12, scale: 2 }),
+  chlorine_between_02_05_mgl: decimal("chlorine_between_02_05_mgl", { precision: 12, scale: 2 }),
+  chlorine_greater_than_05_mgl: decimal("chlorine_greater_than_05_mgl", { precision: 12, scale: 2 }),
 }, (table) => {
   return {
     // Composite primary key to uniquely identify each ESR
