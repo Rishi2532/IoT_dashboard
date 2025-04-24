@@ -208,14 +208,14 @@ export const chlorineData = pgTable("chlorine_data", {
   village_name: varchar("village_name", { length: 255 }),
   esr_name: varchar("esr_name", { length: 255 }),
   
-  // Chlorine measurements for different days (lowercase field names)
-  chlorine_value_1: decimal("chlorine_value_1", { precision: 12, scale: 2 }),
-  chlorine_value_2: decimal("chlorine_value_2", { precision: 12, scale: 2 }),
-  chlorine_value_3: decimal("chlorine_value_3", { precision: 12, scale: 2 }),
-  chlorine_value_4: decimal("chlorine_value_4", { precision: 12, scale: 2 }),
-  chlorine_value_5: decimal("chlorine_value_5", { precision: 12, scale: 2 }),
-  chlorine_value_6: decimal("chlorine_value_6", { precision: 12, scale: 2 }),
-  chlorine_value_7: decimal("chlorine_value_7", { precision: 12, scale: 2 }),
+  // Chlorine measurements for different days (lowercase field names with unlimited precision)
+  chlorine_value_1: decimal("chlorine_value_1"), // Removed precision/scale constraints to handle large values
+  chlorine_value_2: decimal("chlorine_value_2"), 
+  chlorine_value_3: decimal("chlorine_value_3"),
+  chlorine_value_4: decimal("chlorine_value_4"),
+  chlorine_value_5: decimal("chlorine_value_5"),
+  chlorine_value_6: decimal("chlorine_value_6"),
+  chlorine_value_7: decimal("chlorine_value_7"),
   
   // Dates for chlorine measurements (lowercase field names)
   chlorine_date_day_1: varchar("chlorine_date_day_1", { length: 15 }),
@@ -226,11 +226,11 @@ export const chlorineData = pgTable("chlorine_data", {
   chlorine_date_day_6: varchar("chlorine_date_day_6", { length: 15 }),
   chlorine_date_day_7: varchar("chlorine_date_day_7", { length: 15 }),
   
-  // Analysis fields (lowercase field names)
+  // Analysis fields (lowercase field names with unlimited precision)
   number_of_consistent_zero_value_in_chlorine: integer("number_of_consistent_zero_value_in_chlorine"),
-  chlorine_less_than_02_mgl: decimal("chlorine_less_than_02_mgl", { precision: 12, scale: 2 }),
-  chlorine_between_02_05_mgl: decimal("chlorine_between_02_05_mgl", { precision: 12, scale: 2 }),
-  chlorine_greater_than_05_mgl: decimal("chlorine_greater_than_05_mgl", { precision: 12, scale: 2 }),
+  chlorine_less_than_02_mgl: decimal("chlorine_less_than_02_mgl"), // Removed precision/scale constraints
+  chlorine_between_02_05_mgl: decimal("chlorine_between_02_05_mgl"), // Removed precision/scale constraints
+  chlorine_greater_than_05_mgl: decimal("chlorine_greater_than_05_mgl"), // Removed precision/scale constraints
 }, (table) => {
   return {
     // Composite primary key to uniquely identify each ESR

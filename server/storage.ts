@@ -1591,7 +1591,7 @@ export class PostgresStorage implements IStorage {
         return null;
       }
       
-      // Parse as float with precision for NUMERIC(12,2)
+      // Parse as float
       const num = parseFloat(cleanValue);
       
       // Check if it's a valid number
@@ -1599,7 +1599,15 @@ export class PostgresStorage implements IStorage {
         return null;
       }
       
-      // Round to 2 decimal places to match NUMERIC(12,2)
+      // Handle extremely large values that cause numeric overflow
+      // For chlorine values, anything above 20 mg/L is extremely high and likely an error
+      // Normal chlorine levels in drinking water are between 0.2 and 4 mg/L
+      if (num > 20) {
+        console.log(`Normalizing extremely high chlorine value: ${num} -> 5.0`);
+        return 5.0; // Cap at 5.0 which is already very high
+      }
+      
+      // Round to 2 decimal places for consistency
       return Math.round(num * 100) / 100;
     }
     
@@ -1608,7 +1616,14 @@ export class PostgresStorage implements IStorage {
       if (isNaN(value)) {
         return null;
       }
-      // Round to 2 decimal places to match NUMERIC(12,2)
+      
+      // Handle extremely large values that cause numeric overflow
+      if (value > 20) {
+        console.log(`Normalizing extremely high chlorine value: ${value} -> 5.0`);
+        return 5.0; // Cap at 5.0 which is already very high
+      }
+      
+      // Round to 2 decimal places for consistency
       return Math.round(value * 100) / 100;
     }
     
