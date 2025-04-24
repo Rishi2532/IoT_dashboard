@@ -209,22 +209,22 @@ export const chlorineData = pgTable("chlorine_data", {
   esr_name: text("esr_name"),
   
   // Chlorine measurements for different days
-  Chlorine_value_1: decimal("Chlorine_value_1", { precision: 5, scale: 2 }),
-  Chlorine_value_2: decimal("Chlorine_value_2", { precision: 5, scale: 2 }),
-  Chlorine_value_3: decimal("Chlorine_value_3", { precision: 5, scale: 2 }),
-  Chlorine_value_4: decimal("Chlorine_value_4", { precision: 5, scale: 2 }),
-  Chlorine_value_5: decimal("Chlorine_value_5", { precision: 5, scale: 2 }),
-  Chlorine_value_6: decimal("Chlorine_value_6", { precision: 5, scale: 2 }),
-  Chlorine_value_7: decimal("Chlorine_value_7", { precision: 5, scale: 2 }),
+  Chlorine_value_1: decimal("Chlorine_value_1", { precision: 12, scale: 2 }),
+  Chlorine_value_2: decimal("Chlorine_value_2", { precision: 12, scale: 2 }),
+  Chlorine_value_3: decimal("Chlorine_value_3", { precision: 12, scale: 2 }),
+  Chlorine_value_4: decimal("Chlorine_value_4", { precision: 12, scale: 2 }),
+  Chlorine_value_5: decimal("Chlorine_value_5", { precision: 12, scale: 2 }),
+  Chlorine_value_6: decimal("Chlorine_value_6", { precision: 12, scale: 2 }),
+  Chlorine_value_7: decimal("Chlorine_value_7", { precision: 12, scale: 2 }),
   
   // Dates for chlorine measurements
-  Chlorine_date_day_1: varchar("Chlorine_date_day_1", { length: 10 }),
-  Chlorine_date_day_2: varchar("Chlorine_date_day_2", { length: 10 }),
-  Chlorine_date_day_3: varchar("Chlorine_date_day_3", { length: 10 }),
-  Chlorine_date_day_4: varchar("Chlorine_date_day_4", { length: 10 }),
-  Chlorine_date_day_5: varchar("Chlorine_date_day_5", { length: 10 }),
-  Chlorine_date_day_6: varchar("Chlorine_date_day_6", { length: 10 }),
-  Chlorine_date_day_7: varchar("Chlorine_date_day_7", { length: 10 }),
+  Chlorine_date_day_1: varchar("Chlorine_date_day_1", { length: 20 }),
+  Chlorine_date_day_2: varchar("Chlorine_date_day_2", { length: 20 }),
+  Chlorine_date_day_3: varchar("Chlorine_date_day_3", { length: 20 }),
+  Chlorine_date_day_4: varchar("Chlorine_date_day_4", { length: 20 }),
+  Chlorine_date_day_5: varchar("Chlorine_date_day_5", { length: 20 }),
+  Chlorine_date_day_6: varchar("Chlorine_date_day_6", { length: 20 }),
+  Chlorine_date_day_7: varchar("Chlorine_date_day_7", { length: 20 }),
   
   // Analysis fields
   number_of_consistent_zero_value_in_Chlorine: integer("number_of_consistent_zero_value_in_Chlorine"),
