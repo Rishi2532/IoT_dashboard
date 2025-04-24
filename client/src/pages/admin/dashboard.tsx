@@ -20,7 +20,8 @@ import {
   FileText,
   Trash2,
   Cog,
-  List
+  List,
+  Droplets
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
 import ProtectedRoute from '@/components/auth/protected-route';
@@ -480,7 +481,7 @@ export default function AdminDashboard() {
                 Import LPCD Data
               </TabsTrigger>
               <TabsTrigger value="chlorine-import" className="flex items-center">
-                <FileUp className="h-4 w-4 mr-2" />
+                <Droplets className="h-4 w-4 mr-2" />
                 Import Chlorine Data
               </TabsTrigger>
               <TabsTrigger value="manage-schemes" className="flex items-center">
@@ -507,6 +508,20 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <LpcdImport />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="chlorine-import" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Import Chlorine Data</CardTitle>
+                  <CardDescription>
+                    Upload Excel or CSV files with chlorine measurements for ESRs (Elevated Storage Reservoirs).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ChlorineImport />
                 </CardContent>
               </Card>
             </TabsContent>
