@@ -938,6 +938,7 @@ export class PostgresStorage implements IStorage {
   async importChlorineDataFromExcel(fileBuffer: Buffer): Promise<{
     inserted: number;
     updated: number;
+    removed: number;
     errors: string[];
   }> {
     await this.initialized;
@@ -945,17 +946,31 @@ export class PostgresStorage implements IStorage {
     const errors: string[] = [];
     let inserted = 0;
     let updated = 0;
+    
+    // Add timing for performance analysis
+    const startTime = Date.now();
+    console.log("Starting Excel import at:", new Date().toISOString());
 
     try {
       // Import xlsx using dynamic import
+      console.log("Loading XLSX module...");
       const xlsxModule = await import('xlsx');
       const xlsx = xlsxModule.default || xlsxModule;
+      
+      console.log("Parsing Excel file...");
       const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
+      console.log(`Excel file contains ${workbook.SheetNames.length} sheets.`);
+
+      // Prepare a structure to collect all records before batch processing
+      const recordsToProcess: Partial<InsertChlorineData>[] = [];
+      const recordKeys: Set<string> = new Set();
 
       // Process each sheet in the workbook
       for (const sheetName of workbook.SheetNames) {
+        console.log(`Processing sheet: ${sheetName}`);
         const sheet = workbook.Sheets[sheetName];
         const data = xlsx.utils.sheet_to_json(sheet, { header: 1 });
+        console.log(`Sheet contains ${data.length} rows.`);
 
         // Find the header row
         const headerRow = this.findHeaderRow(data);
@@ -979,8 +994,10 @@ export class PostgresStorage implements IStorage {
             }
           });
         }
+        
+        console.log(`Found ${Object.keys(columnMap).length} mapped columns in headers.`);
 
-        // Process data rows
+        // Process data rows and collect records
         for (let i = headerRow + 1; i < data.length; i++) {
           const row = data[i];
           if (!row || !Array.isArray(row) || row.length === 0) continue;
@@ -1011,29 +1028,14 @@ export class PostgresStorage implements IStorage {
 
             // Calculate analysis fields
             const enhancedData = this.calculateChlorineAnalysisFields(recordData);
-
-            // Check if record exists
-            const existingRecord = await this.getChlorineDataByCompositeKey(
-              recordData.scheme_id, 
-              recordData.village_name, 
-              recordData.esr_name
-            );
-
-            if (existingRecord) {
-              // Update existing record
-              await db
-                .update(chlorineData)
-                .set(enhancedData)
-                .where(
-                  sql`${chlorineData.scheme_id} = ${recordData.scheme_id} 
-                      AND ${chlorineData.village_name} = ${recordData.village_name}
-                      AND ${chlorineData.esr_name} = ${recordData.esr_name}`
-                );
-              updated++;
-            } else {
-              // Insert new record
-              await db.insert(chlorineData).values(enhancedData);
-              inserted++;
+            
+            // Generate a unique key for this record to track duplicates
+            const recordKey = `${enhancedData.scheme_id}|${enhancedData.village_name}|${enhancedData.esr_name}`;
+            
+            // Only add if we haven't seen this record before (in case of duplicates across sheets)
+            if (!recordKeys.has(recordKey)) {
+              recordKeys.add(recordKey);
+              recordsToProcess.push(enhancedData);
             }
           } catch (rowError) {
             const errorMessage = rowError instanceof Error ? rowError.message : String(rowError);
@@ -1041,9 +1043,93 @@ export class PostgresStorage implements IStorage {
           }
         }
       }
+      
+      console.log(`Processing ${recordsToProcess.length} unique records...`);
+      
+      if (recordsToProcess.length === 0) {
+        console.log("No valid records found to process.");
+        const removed = 0; // No records were removed in this import
+        return { inserted, updated, removed, errors };
+      }
+      
+      // First fetch all existing records in one query to avoid multiple database lookups
+      console.log("Fetching existing records...");
+      const existingRecordsResult = await db
+        .select()
+        .from(chlorineData)
+        .where(
+          sql`(${chlorineData.scheme_id}, ${chlorineData.village_name}, ${chlorineData.esr_name}) IN 
+              (${sql.join(
+                recordsToProcess.map(r => 
+                  sql`(${r.scheme_id}, ${r.village_name}, ${r.esr_name})`
+                ),
+                sql`, `
+              )})`
+        );
+      
+      // Create a lookup map for existing records
+      const existingRecordsMap = new Map<string, ChlorineData>();
+      existingRecordsResult.forEach(record => {
+        const key = `${record.scheme_id}|${record.village_name}|${record.esr_name}`;
+        existingRecordsMap.set(key, record);
+      });
+      
+      console.log(`Found ${existingRecordsMap.size} existing records that match our import data.`);
+      
+      // Process the records - split into batches of updates and inserts
+      const recordsToUpdate: Partial<InsertChlorineData>[] = [];
+      const recordsToInsert: Partial<InsertChlorineData>[] = [];
+      
+      // Categorize records for batch processing
+      for (const record of recordsToProcess) {
+        const key = `${record.scheme_id}|${record.village_name}|${record.esr_name}`;
+        if (existingRecordsMap.has(key)) {
+          recordsToUpdate.push(record);
+        } else {
+          recordsToInsert.push(record);
+        }
+      }
+      
+      // Process inserts in batches
+      if (recordsToInsert.length > 0) {
+        console.log(`Inserting ${recordsToInsert.length} new records...`);
+        // Process in smaller batches to avoid overwhelming the database
+        const BATCH_SIZE = 100;
+        for (let i = 0; i < recordsToInsert.length; i += BATCH_SIZE) {
+          const batch = recordsToInsert.slice(i, i + BATCH_SIZE);
+          await db.insert(chlorineData).values(batch as InsertChlorineData[]);
+          inserted += batch.length;
+          console.log(`Inserted batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(recordsToInsert.length/BATCH_SIZE)}`);
+        }
+      }
+      
+      // Process updates individually since we need to match on composite keys
+      if (recordsToUpdate.length > 0) {
+        console.log(`Updating ${recordsToUpdate.length} existing records...`);
+        for (const record of recordsToUpdate) {
+          await db
+            .update(chlorineData)
+            .set(record)
+            .where(
+              sql`${chlorineData.scheme_id} = ${record.scheme_id} 
+                  AND ${chlorineData.village_name} = ${record.village_name}
+                  AND ${chlorineData.esr_name} = ${record.esr_name}`
+            );
+          updated++;
+          
+          // Log progress every 50 records
+          if (updated % 50 === 0) {
+            console.log(`Updated ${updated}/${recordsToUpdate.length} records...`);
+          }
+        }
+      }
 
+      // Calculate elapsed time
+      const endTime = Date.now();
+      const elapsedSeconds = (endTime - startTime) / 1000;
+      
       // Log the import summary
-      const summary = `Excel Import Summary: ${inserted} records inserted, ${updated} records updated, ${errors.length} errors`;
+      const summary = `Excel Import Summary: ${inserted} records inserted, ${updated} records updated, ${errors.length} errors in ${elapsedSeconds.toFixed(2)} seconds`;
       if (errors.length > 0) {
         console.warn(summary);
         console.warn("Import errors:", errors);
@@ -1070,6 +1156,10 @@ export class PostgresStorage implements IStorage {
     const errors: string[] = [];
     let inserted = 0;
     let updated = 0;
+    
+    // Add timing for performance analysis
+    const startTime = Date.now();
+    console.log("Starting CSV import at:", new Date().toISOString());
 
     try {
       console.log("Starting chlorine data import from CSV...");
@@ -1108,6 +1198,7 @@ export class PostgresStorage implements IStorage {
       console.log("CSV String preview (first 100 chars):", csvString.substring(0, 100));
       
       // Import csv-parse using dynamic import
+      console.log("Loading CSV parse module...");
       const parseModule = await import('csv-parse/sync');
       const parse = parseModule.parse;
       
@@ -1133,8 +1224,13 @@ export class PostgresStorage implements IStorage {
         errors.push("No data found in CSV file");
         return { inserted, updated, errors };
       }
+      
+      // Prepare a structure to collect all records before batch processing
+      const recordsToProcess: Partial<InsertChlorineData>[] = [];
+      const recordKeys: Set<string> = new Set();
 
-      // Process each row in the CSV
+      // Process each row in the CSV and collect records for batch processing
+      console.log(`Processing ${records.length} CSV records...`);
       for (let i = 0; i < records.length; i++) {
         const rowValues = records[i];
         try {
@@ -1200,38 +1296,106 @@ export class PostgresStorage implements IStorage {
           // Calculate analysis fields if they weren't provided in the CSV
           // This ensures we have proper values even if columns 23-26 are empty or invalid
           const enhancedData = this.calculateChlorineAnalysisFields(recordData);
-
-          // Check if record exists
-          const existingRecord = await this.getChlorineDataByCompositeKey(
-            recordData.scheme_id, 
-            recordData.village_name, 
-            recordData.esr_name
-          );
-
-          if (existingRecord) {
-            // Update existing record
-            await db
-              .update(chlorineData)
-              .set(enhancedData)
-              .where(
-                sql`${chlorineData.scheme_id} = ${recordData.scheme_id} 
-                    AND ${chlorineData.village_name} = ${recordData.village_name}
-                    AND ${chlorineData.esr_name} = ${recordData.esr_name}`
-              );
-            updated++;
-          } else {
-            // Insert new record
-            await db.insert(chlorineData).values(enhancedData);
-            inserted++;
+          
+          // Generate a unique key for this record to track duplicates
+          const recordKey = `${enhancedData.scheme_id}|${enhancedData.village_name}|${enhancedData.esr_name}`;
+          
+          // Only add if we haven't seen this record before (in case of duplicates)
+          if (!recordKeys.has(recordKey)) {
+            recordKeys.add(recordKey);
+            recordsToProcess.push(enhancedData);
           }
         } catch (rowError) {
           const errorMessage = rowError instanceof Error ? rowError.message : String(rowError);
           errors.push(`Row ${i + 1}: ${errorMessage}`);
         }
       }
+      
+      console.log(`Collected ${recordsToProcess.length} unique records to process`);
+      
+      if (recordsToProcess.length === 0) {
+        console.log("No valid records found to process after validation.");
+        return { inserted, updated, errors };
+      }
+      
+      // First fetch all existing records in one query to avoid multiple database lookups
+      console.log("Fetching existing records...");
+      const existingRecordsResult = await db
+        .select()
+        .from(chlorineData)
+        .where(
+          sql`(${chlorineData.scheme_id}, ${chlorineData.village_name}, ${chlorineData.esr_name}) IN 
+              (${sql.join(
+                recordsToProcess.map(r => 
+                  sql`(${r.scheme_id}, ${r.village_name}, ${r.esr_name})`
+                ),
+                sql`, `
+              )})`
+        );
+      
+      // Create a lookup map for existing records
+      const existingRecordsMap = new Map<string, ChlorineData>();
+      existingRecordsResult.forEach(record => {
+        const key = `${record.scheme_id}|${record.village_name}|${record.esr_name}`;
+        existingRecordsMap.set(key, record);
+      });
+      
+      console.log(`Found ${existingRecordsMap.size} existing records that match our import data.`);
+      
+      // Process the records - split into batches of updates and inserts
+      const recordsToUpdate: Partial<InsertChlorineData>[] = [];
+      const recordsToInsert: Partial<InsertChlorineData>[] = [];
+      
+      // Categorize records for batch processing
+      for (const record of recordsToProcess) {
+        const key = `${record.scheme_id}|${record.village_name}|${record.esr_name}`;
+        if (existingRecordsMap.has(key)) {
+          recordsToUpdate.push(record);
+        } else {
+          recordsToInsert.push(record);
+        }
+      }
+      
+      // Process inserts in batches
+      if (recordsToInsert.length > 0) {
+        console.log(`Inserting ${recordsToInsert.length} new records...`);
+        // Process in smaller batches to avoid overwhelming the database
+        const BATCH_SIZE = 100;
+        for (let i = 0; i < recordsToInsert.length; i += BATCH_SIZE) {
+          const batch = recordsToInsert.slice(i, i + BATCH_SIZE);
+          await db.insert(chlorineData).values(batch as InsertChlorineData[]);
+          inserted += batch.length;
+          console.log(`Inserted batch ${Math.floor(i/BATCH_SIZE) + 1}/${Math.ceil(recordsToInsert.length/BATCH_SIZE)}`);
+        }
+      }
+      
+      // Process updates individually since we need to match on composite keys
+      if (recordsToUpdate.length > 0) {
+        console.log(`Updating ${recordsToUpdate.length} existing records...`);
+        for (const record of recordsToUpdate) {
+          await db
+            .update(chlorineData)
+            .set(record)
+            .where(
+              sql`${chlorineData.scheme_id} = ${record.scheme_id} 
+                  AND ${chlorineData.village_name} = ${record.village_name}
+                  AND ${chlorineData.esr_name} = ${record.esr_name}`
+            );
+          updated++;
+          
+          // Log progress every 50 records
+          if (updated % 50 === 0) {
+            console.log(`Updated ${updated}/${recordsToUpdate.length} records...`);
+          }
+        }
+      }
 
+      // Calculate elapsed time
+      const endTime = Date.now();
+      const elapsedSeconds = (endTime - startTime) / 1000;
+      
       // Log the import summary
-      const summary = `CSV Import Summary: ${inserted} records inserted, ${updated} records updated, ${errors.length} errors`;
+      const summary = `CSV Import Summary: ${inserted} records inserted, ${updated} records updated, ${errors.length} errors in ${elapsedSeconds.toFixed(2)} seconds`;
       if (errors.length > 0) {
         console.warn(summary);
         console.warn("Import errors:", errors);
