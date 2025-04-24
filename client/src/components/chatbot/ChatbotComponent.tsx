@@ -663,73 +663,72 @@ const CustomChatbot = () => {
           response =
             "I've reset all filters. Now showing schemes from all regions with any status.";
         } 
-        // Default response for unrecognized queries - use OpenAI
+        // Default response for unrecognized queries - use server-side AI integration
         else {
           try {
-            // Detect language from user input
+            // Detect language from user input for better client-side context
             const detectedLanguage = detectLanguage(text);
             console.log(`Detected language: ${detectedLanguage}`);
-
-            // Create enhanced context for OpenAI about Maharashtra Water Dashboard
-            // Including specific instruction to respond in the same language
-            const languageMap: Record<string, string> = {
-              'en': 'English',
-              'hi': 'Hindi',
-              'mr': 'Marathi',
-              'ta': 'Tamil',
-              'te': 'Telugu',
-              'kn': 'Kannada',
-              'ml': 'Malayalam',
-              'gu': 'Gujarati',
-              'bn': 'Bengali'
-            };
-            const languageName = languageMap[detectedLanguage] || 'English';
-
-            const contextPrompt = `
-              User query: "${text}"
-
-              The user is asking about the Maharashtra Water Dashboard, which tracks water infrastructure 
-              across Maharashtra, India. The dashboard monitors:
-              - Elevated Storage Reservoirs (ESRs)
-              - Villages with water access
-              - Flow meters
-              - Chlorine analyzers (RCA)
-              - Pressure transmitters (PT)
-
-              Regions in the dashboard: Nagpur, Pune, Nashik, Konkan, Amravati, and Chhatrapati Sambhajinagar.
-
-              IMPORTANT: Respond ONLY in ${languageName} language, even if the user's input is partly in English.
-              If the user is speaking in Hindi, your response must be entirely in Hindi.
-              If the user is speaking in Tamil, your response must be entirely in Tamil.
-              If the user is speaking in Telugu, your response must be entirely in Telugu.
-              If the user is speaking in Marathi, your response must be entirely in Marathi.
-
-              Answer the query briefly (2-3 sentences) based on context. If you don't know, suggest asking about 
-              specific regions or schemes. Don't make up information not in the context.
-            `;
-
-            // Log the language that will be used for the response
-            console.log(`Responding in ${languageName} (code: ${detectedLanguage})`);
-
-            // Get response from OpenAI with enhanced language settings
-            console.log("Calling OpenAI for assistance with unrecognized query");
-            const openAIResponse = await getOpenAICompletion({
-              prompt: contextPrompt,
-              maxTokens: 200,  // Increased for non-English responses
-              temperature: 0.5,  // Lower temperature for more consistent responses
-              language: detectedLanguage
+            
+            console.log("Using server-side AI route to process the query");
+            
+            // Make a request to our server's AI API endpoint
+            const apiResponse = await fetch('/api/ai/query', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: text,
+                language: detectedLanguage
+              }),
             });
-
-            if (!openAIResponse.isError) {
-              response = openAIResponse.text;
-              console.log("Received OpenAI response:", response);
+            
+            if (!apiResponse.ok) {
+              throw new Error(`API error: ${apiResponse.status}`);
+            }
+            
+            const data = await apiResponse.json();
+            console.log("Server AI response:", data);
+            
+            // Check if the response includes a filter action
+            if (data.response && data.response.action === 'filter_dashboard') {
+              // Apply any filters returned from the server
+              if (data.response.filterData) {
+                if (data.response.filterData.regionName) {
+                  filters.region = data.response.filterData.regionName;
+                  console.log(`Setting region filter to: ${filters.region}`);
+                }
+                
+                if (data.response.filterData.status) {
+                  filters.status = data.response.filterData.status;
+                  console.log(`Setting status filter to: ${filters.status}`);
+                }
+              }
+              
+              // Use the message provided by the server
+              response = data.response.message || "Filtering the dashboard based on your request.";
             } else {
-              // Fallback if OpenAI fails
-              response = "I'm not sure I understand that query. You can ask me about:\n• Flow meters, chlorine analyzers, pressure transmitters\n• ESRs (reservoirs) and villages\n• Filter by region (e.g., 'Schemes in Nagpur')\n• Filter by status (e.g., 'Show fully completed schemes')";
-              console.log("Using fallback response due to OpenAI error");
+              // For non-filter intents, just use the standard OpenAI response
+              // This is a fallback - we'll use client-side OpenAI until we implement all intents on the server
+              const openAIResponse = await getOpenAICompletion({
+                prompt: text,
+                maxTokens: 200,
+                temperature: 0.5,
+                language: detectedLanguage
+              });
+              
+              if (!openAIResponse.isError) {
+                response = openAIResponse.text;
+                console.log("Received OpenAI response:", response);
+              } else {
+                // Fallback if OpenAI fails
+                response = "I'm not sure I understand that query. You can ask me about:\n• Flow meters, chlorine analyzers, pressure transmitters\n• ESRs (reservoirs) and villages\n• Filter by region (e.g., 'Schemes in Nagpur')\n• Filter by status (e.g., 'Show fully completed schemes')";
+                console.log("Using fallback response due to OpenAI error");
+              }
             }
           } catch (error) {
-            console.error("Error using OpenAI:", error);
+            console.error("Error processing query with AI service:", error);
             response = "I'm not sure I understand that query. You can ask me about:\n• Flow meters, chlorine analyzers, pressure transmitters\n• ESRs (reservoirs) and villages\n• Filter by region (e.g., 'Schemes in Nagpur')\n• Filter by status (e.g., 'Show fully completed schemes')";
           }
         }

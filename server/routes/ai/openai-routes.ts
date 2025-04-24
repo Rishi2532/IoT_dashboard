@@ -71,8 +71,16 @@ router.post('/query', async (req: Request, res: Response) => {
           regionData: regionData[0] || null,
           schemeSummary: {
             total: schemeData.length,
-            completed: schemeData.filter(s => s.fully_completion_scheme_status === 'Fully Completed').length,
-            partial: schemeData.filter(s => s.fully_completion_scheme_status === 'Partial').length
+            completed: schemeData.filter((s) => {
+              // Type-safe approach to check the completion status
+              const scheme = s as { fully_completion_scheme_status?: string };
+              return scheme.fully_completion_scheme_status === 'Fully Completed';
+            }).length,
+            partial: schemeData.filter((s) => {
+              // Type-safe approach to check the completion status
+              const scheme = s as { fully_completion_scheme_status?: string };
+              return scheme.fully_completion_scheme_status === 'Partial';
+            }).length
           },
           action: 'filter_dashboard',
           filterData: {
