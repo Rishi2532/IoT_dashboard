@@ -247,7 +247,7 @@ const EnhancedLpcdDashboard = () => {
   ): boolean => {
     const values = extractLpcdValues(scheme);
     if (values.length === 0) return false;
-    return values.every((val) => val < threshold && val > 0);
+    return values.every((val) => val < threshold);
   };
 
   // Apply filters
@@ -285,7 +285,7 @@ const EnhancedLpcdDashboard = () => {
       case "below55":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
-          return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 55;
+          return lpcdValue !== null && lpcdValue < 55;
         });
         break;
       case "45to55":
