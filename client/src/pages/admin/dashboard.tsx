@@ -30,6 +30,7 @@ import RegionImporter from '@/components/admin/region-importer';
 import SchemeImporter from '@/components/admin/scheme-importer';
 import LpcdImport from '@/pages/lpcd/LpcdImport';
 import { ChlorineImport } from '@/pages/chlorine';
+import { PressureImport } from '@/pages/pressure';
 import {
   Table,
   TableHeader,
@@ -527,6 +528,20 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <ChlorineImport />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="pressure-import" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Import Pressure Data</CardTitle>
+                  <CardDescription>
+                    Upload Excel or CSV files with pressure measurements (in bar) for ESRs (Elevated Storage Reservoirs).
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PressureImport />
                 </CardContent>
               </Card>
             </TabsContent>
