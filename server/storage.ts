@@ -731,7 +731,7 @@ export class PostgresStorage implements IStorage {
       
       // Apply filters if provided
       if (filter) {
-        if (filter.region) {
+        if (filter.region && filter.region !== 'all') {
           query = query.where(eq(chlorineData.region, filter.region));
         }
         
@@ -1495,8 +1495,8 @@ export class PostgresStorage implements IStorage {
     try {
       console.log("Fetching chlorine dashboard stats...");
       
-      // Base conditions - filter by region if specified
-      const whereConditions = regionName 
+      // Base conditions - filter by region if specified and not 'all'
+      const whereConditions = (regionName && regionName !== 'all')
         ? eq(chlorineData.region, regionName)
         : undefined;
       
@@ -1860,8 +1860,8 @@ export class PostgresStorage implements IStorage {
     console.log("Filter received:", filter); // Debug log
     
     if (filter) {
-      // Apply region filter if provided
-      if (filter.region) {
+      // Apply region filter if provided and not 'all'
+      if (filter.region && filter.region !== 'all') {
         query = query.where(eq(waterSchemeData.region, filter.region));
       }
       
