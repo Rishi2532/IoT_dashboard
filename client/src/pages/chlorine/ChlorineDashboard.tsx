@@ -71,7 +71,7 @@ interface ChlorineDashboardStats {
   consistentAboveRangeSensors: number;
 }
 
-type ChlorineRange = 'all' | 'below_0.2' | 'between_0.2_0.5' | 'above_0.5';
+type ChlorineRange = 'all' | 'below_0.2' | 'between_0.2_0.5' | 'above_0.5' | 'consistent_zero' | 'consistent_below' | 'consistent_optimal' | 'consistent_above';
 
 const ChlorineDashboard: React.FC = () => {
   const { toast } = useToast();
@@ -230,6 +230,10 @@ const ChlorineDashboard: React.FC = () => {
       case 'below_0.2': return 'Below Range (<0.2mg/l)';
       case 'between_0.2_0.5': return 'Optimal Range (0.2-0.5mg/l)';
       case 'above_0.5': return 'Above Range (>0.5mg/l)';
+      case 'consistent_zero': return 'Consistent Zero Chlorine (7 days)';
+      case 'consistent_below': return 'Consistent Below Range (7 days)';
+      case 'consistent_optimal': return 'Consistent Optimal Range (7 days)';
+      case 'consistent_above': return 'Consistent Above Range (7 days)';
       default: return 'All ESRs';
     }
   };
@@ -448,7 +452,12 @@ const ChlorineDashboard: React.FC = () => {
       <h2 className="text-lg font-semibold text-gray-800 mb-4 mt-2">ESRs with Consistent Readings (7 days)</h2>
       <div className="grid gap-4 md:grid-cols-4 mb-8">
         {/* Consistent Zero Card */}
-        <Card className="border border-gray-200 hover:shadow-md transition-all duration-200">
+        <Card 
+          className={`cursor-pointer border border-gray-200 hover:shadow-md transition-all duration-200 ${
+            currentFilter === 'consistent_zero' ? 'ring-2 ring-gray-500 ring-offset-2' : ''
+          }`} 
+          onClick={() => handleCardClick('consistent_zero')}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-gray-700 flex items-center">
               <Activity className="h-4 w-4 text-gray-500 mr-2" />
@@ -467,7 +476,12 @@ const ChlorineDashboard: React.FC = () => {
         </Card>
         
         {/* Consistent Below Range Card */}
-        <Card className="border border-gray-200 hover:shadow-md transition-all duration-200">
+        <Card 
+          className={`cursor-pointer border border-gray-200 hover:shadow-md transition-all duration-200 ${
+            currentFilter === 'consistent_below' ? 'ring-2 ring-red-500 ring-offset-2' : ''
+          }`}
+          onClick={() => handleCardClick('consistent_below')}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-red-700 flex items-center">
               <AlertTriangle className="h-4 w-4 text-red-500 mr-2" />
@@ -486,7 +500,12 @@ const ChlorineDashboard: React.FC = () => {
         </Card>
         
         {/* Consistent Optimal Card */}
-        <Card className="border border-gray-200 hover:shadow-md transition-all duration-200">
+        <Card 
+          className={`cursor-pointer border border-gray-200 hover:shadow-md transition-all duration-200 ${
+            currentFilter === 'consistent_optimal' ? 'ring-2 ring-green-500 ring-offset-2' : ''
+          }`}
+          onClick={() => handleCardClick('consistent_optimal')}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-green-700 flex items-center">
               <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
@@ -505,7 +524,12 @@ const ChlorineDashboard: React.FC = () => {
         </Card>
         
         {/* Consistent Above Range Card */}
-        <Card className="border border-gray-200 hover:shadow-md transition-all duration-200">
+        <Card 
+          className={`cursor-pointer border border-gray-200 hover:shadow-md transition-all duration-200 ${
+            currentFilter === 'consistent_above' ? 'ring-2 ring-orange-500 ring-offset-2' : ''
+          }`}
+          onClick={() => handleCardClick('consistent_above')}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-orange-700 flex items-center">
               <AlertCircle className="h-4 w-4 text-orange-500 mr-2" />
@@ -531,6 +555,10 @@ const ChlorineDashboard: React.FC = () => {
             {currentFilter === 'below_0.2' && <AlertTriangle className="h-5 w-5 text-red-600" />}
             {currentFilter === 'between_0.2_0.5' && <CheckCircle className="h-5 w-5 text-green-600" />}
             {currentFilter === 'above_0.5' && <AlertCircle className="h-5 w-5 text-orange-600" />}
+            {currentFilter === 'consistent_zero' && <Activity className="h-5 w-5 text-gray-600" />}
+            {currentFilter === 'consistent_below' && <AlertTriangle className="h-5 w-5 text-red-600" />}
+            {currentFilter === 'consistent_optimal' && <CheckCircle className="h-5 w-5 text-green-600" />}
+            {currentFilter === 'consistent_above' && <AlertCircle className="h-5 w-5 text-orange-600" />}
             {getFilterTitle(currentFilter)} 
             <span className="ml-2 text-sm font-normal text-gray-500">
               ({filteredData.length} ESRs found)
