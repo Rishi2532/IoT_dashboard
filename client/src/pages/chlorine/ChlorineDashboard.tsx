@@ -65,6 +65,10 @@ interface ChlorineDashboardStats {
   belowRangeSensors: number;
   optimalRangeSensors: number;
   aboveRangeSensors: number;
+  consistentZeroSensors: number;
+  consistentBelowRangeSensors: number;
+  consistentOptimalSensors: number;
+  consistentAboveRangeSensors: number;
 }
 
 type ChlorineRange = 'all' | 'below_0.2' | 'between_0.2_0.5' | 'above_0.5';

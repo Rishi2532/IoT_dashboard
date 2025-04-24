@@ -1552,18 +1552,130 @@ export class PostgresStorage implements IStorage {
       const aboveRangeSensors = Number(aboveRangeResult[0]?.count || 0);
       console.log("Above range sensors:", aboveRangeSensors);
       
+      // Get sensors with consistent zero readings for 7 days
+      const consistentZeroResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(chlorineData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND 
+               ${chlorineData.Chlorine_value_1} = 0 AND 
+               ${chlorineData.Chlorine_value_2} = 0 AND 
+               ${chlorineData.Chlorine_value_3} = 0 AND 
+               ${chlorineData.Chlorine_value_4} = 0 AND 
+               ${chlorineData.Chlorine_value_5} = 0 AND 
+               ${chlorineData.Chlorine_value_6} = 0 AND 
+               ${chlorineData.Chlorine_value_7} = 0` :
+            sql`${chlorineData.Chlorine_value_1} = 0 AND 
+                ${chlorineData.Chlorine_value_2} = 0 AND 
+                ${chlorineData.Chlorine_value_3} = 0 AND 
+                ${chlorineData.Chlorine_value_4} = 0 AND 
+                ${chlorineData.Chlorine_value_5} = 0 AND 
+                ${chlorineData.Chlorine_value_6} = 0 AND 
+                ${chlorineData.Chlorine_value_7} = 0`
+        );
+      
+      const consistentZeroSensors = Number(consistentZeroResult[0]?.count || 0);
+      console.log("Consistent zero sensors:", consistentZeroSensors);
+      
+      // Get sensors with consistently below range readings (>0 and <0.2) for 7 days
+      const consistentBelowRangeResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(chlorineData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND 
+               ${chlorineData.Chlorine_value_1} > 0 AND ${chlorineData.Chlorine_value_1} < 0.2 AND 
+               ${chlorineData.Chlorine_value_2} > 0 AND ${chlorineData.Chlorine_value_2} < 0.2 AND 
+               ${chlorineData.Chlorine_value_3} > 0 AND ${chlorineData.Chlorine_value_3} < 0.2 AND 
+               ${chlorineData.Chlorine_value_4} > 0 AND ${chlorineData.Chlorine_value_4} < 0.2 AND 
+               ${chlorineData.Chlorine_value_5} > 0 AND ${chlorineData.Chlorine_value_5} < 0.2 AND 
+               ${chlorineData.Chlorine_value_6} > 0 AND ${chlorineData.Chlorine_value_6} < 0.2 AND 
+               ${chlorineData.Chlorine_value_7} > 0 AND ${chlorineData.Chlorine_value_7} < 0.2` :
+            sql`${chlorineData.Chlorine_value_1} > 0 AND ${chlorineData.Chlorine_value_1} < 0.2 AND 
+                ${chlorineData.Chlorine_value_2} > 0 AND ${chlorineData.Chlorine_value_2} < 0.2 AND 
+                ${chlorineData.Chlorine_value_3} > 0 AND ${chlorineData.Chlorine_value_3} < 0.2 AND 
+                ${chlorineData.Chlorine_value_4} > 0 AND ${chlorineData.Chlorine_value_4} < 0.2 AND 
+                ${chlorineData.Chlorine_value_5} > 0 AND ${chlorineData.Chlorine_value_5} < 0.2 AND 
+                ${chlorineData.Chlorine_value_6} > 0 AND ${chlorineData.Chlorine_value_6} < 0.2 AND 
+                ${chlorineData.Chlorine_value_7} > 0 AND ${chlorineData.Chlorine_value_7} < 0.2`
+        );
+      
+      const consistentBelowRangeSensors = Number(consistentBelowRangeResult[0]?.count || 0);
+      console.log("Consistent below range sensors:", consistentBelowRangeSensors);
+      
+      // Get sensors with consistently optimal range readings (0.2-0.5) for 7 days
+      const consistentOptimalResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(chlorineData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND 
+               ${chlorineData.Chlorine_value_1} >= 0.2 AND ${chlorineData.Chlorine_value_1} <= 0.5 AND 
+               ${chlorineData.Chlorine_value_2} >= 0.2 AND ${chlorineData.Chlorine_value_2} <= 0.5 AND 
+               ${chlorineData.Chlorine_value_3} >= 0.2 AND ${chlorineData.Chlorine_value_3} <= 0.5 AND 
+               ${chlorineData.Chlorine_value_4} >= 0.2 AND ${chlorineData.Chlorine_value_4} <= 0.5 AND 
+               ${chlorineData.Chlorine_value_5} >= 0.2 AND ${chlorineData.Chlorine_value_5} <= 0.5 AND 
+               ${chlorineData.Chlorine_value_6} >= 0.2 AND ${chlorineData.Chlorine_value_6} <= 0.5 AND 
+               ${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5` :
+            sql`${chlorineData.Chlorine_value_1} >= 0.2 AND ${chlorineData.Chlorine_value_1} <= 0.5 AND 
+                ${chlorineData.Chlorine_value_2} >= 0.2 AND ${chlorineData.Chlorine_value_2} <= 0.5 AND 
+                ${chlorineData.Chlorine_value_3} >= 0.2 AND ${chlorineData.Chlorine_value_3} <= 0.5 AND 
+                ${chlorineData.Chlorine_value_4} >= 0.2 AND ${chlorineData.Chlorine_value_4} <= 0.5 AND 
+                ${chlorineData.Chlorine_value_5} >= 0.2 AND ${chlorineData.Chlorine_value_5} <= 0.5 AND 
+                ${chlorineData.Chlorine_value_6} >= 0.2 AND ${chlorineData.Chlorine_value_6} <= 0.5 AND 
+                ${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5`
+        );
+      
+      const consistentOptimalSensors = Number(consistentOptimalResult[0]?.count || 0);
+      console.log("Consistent optimal range sensors:", consistentOptimalSensors);
+      
+      // Get sensors with consistently above range readings (>0.5) for 7 days
+      const consistentAboveRangeResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(chlorineData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND 
+               ${chlorineData.Chlorine_value_1} > 0.5 AND 
+               ${chlorineData.Chlorine_value_2} > 0.5 AND 
+               ${chlorineData.Chlorine_value_3} > 0.5 AND 
+               ${chlorineData.Chlorine_value_4} > 0.5 AND 
+               ${chlorineData.Chlorine_value_5} > 0.5 AND 
+               ${chlorineData.Chlorine_value_6} > 0.5 AND 
+               ${chlorineData.Chlorine_value_7} > 0.5` :
+            sql`${chlorineData.Chlorine_value_1} > 0.5 AND 
+                ${chlorineData.Chlorine_value_2} > 0.5 AND 
+                ${chlorineData.Chlorine_value_3} > 0.5 AND 
+                ${chlorineData.Chlorine_value_4} > 0.5 AND 
+                ${chlorineData.Chlorine_value_5} > 0.5 AND 
+                ${chlorineData.Chlorine_value_6} > 0.5 AND 
+                ${chlorineData.Chlorine_value_7} > 0.5`
+        );
+      
+      const consistentAboveRangeSensors = Number(consistentAboveRangeResult[0]?.count || 0);
+      console.log("Consistent above range sensors:", consistentAboveRangeSensors);
+      
       console.log("Dashboard stats:", { 
         totalSensors, 
         belowRangeSensors, 
         optimalRangeSensors, 
-        aboveRangeSensors 
+        aboveRangeSensors,
+        consistentZeroSensors,
+        consistentBelowRangeSensors,
+        consistentOptimalSensors,
+        consistentAboveRangeSensors
       });
       
       return {
         totalSensors,
         belowRangeSensors,
         optimalRangeSensors,
-        aboveRangeSensors
+        aboveRangeSensors,
+        consistentZeroSensors,
+        consistentBelowRangeSensors,
+        consistentOptimalSensors,
+        consistentAboveRangeSensors
       };
     } catch (error) {
       console.error("Error fetching chlorine dashboard stats:", error);
@@ -1571,7 +1683,11 @@ export class PostgresStorage implements IStorage {
         totalSensors: 0,
         belowRangeSensors: 0,
         optimalRangeSensors: 0,
-        aboveRangeSensors: 0
+        aboveRangeSensors: 0,
+        consistentZeroSensors: 0,
+        consistentBelowRangeSensors: 0,
+        consistentOptimalSensors: 0,
+        consistentAboveRangeSensors: 0
       };
     }
   }
