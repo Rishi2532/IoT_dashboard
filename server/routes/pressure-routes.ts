@@ -175,9 +175,29 @@ router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res)
       return res.status(400).json({ error: "Uploaded file is empty" });
     }
     
+    // Check for CSV mimetype (though not always reliable)
+    if (req.file.mimetype !== 'text/csv' && 
+        !req.file.originalname.toLowerCase().endsWith('.csv')) {
+      return res.status(400).json({ 
+        error: "Invalid file format", 
+        details: "Please upload a CSV file with .csv extension"
+      });
+    }
+    
     // Log a preview of the file content for debugging
     const filePreview = req.file.buffer.toString('utf8').substring(0, 200);
     console.log("CSV content preview:", filePreview);
+    
+    // Check if content is likely not CSV by looking for HTML or XML tags
+    if (filePreview.includes('<!DOCTYPE') || 
+        filePreview.includes('<html') || 
+        filePreview.trim().startsWith('<')) {
+      return res.status(400).json({ 
+        error: "Invalid file content", 
+        details: "The file appears to be HTML or XML, not a CSV file",
+        preview: filePreview.substring(0, 100)
+      });
+    }
     
     // Process CSV file with improved error handling
     try {

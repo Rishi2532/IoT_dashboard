@@ -83,7 +83,7 @@ const PressureImport: React.FC = () => {
     formData.append('file', file);
 
     try {
-      const response = await fetch('/api/pressure/import', {
+      const response = await fetch('/api/pressure/import/csv', {
         method: 'POST',
         body: formData,
       });
@@ -271,8 +271,9 @@ const PressureImport: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={() => {
-                // Generate sample CSV content
+                // Generate sample CSV content with header row
                 const sampleData = [
+                  "region,circle,division,sub_division,block,scheme_id,scheme_name,village_name,esr_name,pressure_value_1,pressure_value_2,pressure_value_3,pressure_value_4,pressure_value_5,pressure_value_6,pressure_value_7,pressure_date_day_1,pressure_date_day_2,pressure_date_day_3,pressure_date_day_4,pressure_date_day_5,pressure_date_day_6,pressure_date_day_7,number_of_consistent_zero_value_in_pressure,pressure_less_than_02_bar,pressure_between_02_07_bar,pressure_greater_than_07_bar",
                   "Amravati,Circle1,Division1,SubDiv1,Block1,AMR2001,Sample Scheme,Village1,ESR1,0.3,0.4,0.5,0.3,0.4,0.2,0.5,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,0,0,1,0",
                   "Nagpur,Circle2,Division2,SubDiv2,Block2,NAG2002,Sample Scheme 2,Village2,ESR2,0.1,0.2,0.1,0.3,0.1,0.1,0.2,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,0,1,0,0"
                 ].join('\n');
