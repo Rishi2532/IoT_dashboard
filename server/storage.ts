@@ -1318,33 +1318,67 @@ export class PostgresStorage implements IStorage {
     const db = await this.ensureInitialized();
     
     try {
-      // Base query - filter by region if specified
-      let baseQuery = db.select().from(chlorineData);
-      if (regionName) {
-        baseQuery = baseQuery.where(eq(chlorineData.region, regionName));
-      }
+      console.log("Fetching chlorine dashboard stats...");
+      
+      // Base conditions - filter by region if specified
+      const whereConditions = regionName 
+        ? eq(chlorineData.region, regionName)
+        : undefined;
       
       // Get total count
-      const totalResult = await baseQuery.count();
-      const totalSensors = parseInt(totalResult[0].count, 10) || 0;
+      const totalResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(chlorineData)
+        .where(whereConditions);
+      
+      const totalSensors = Number(totalResult[0]?.count || 0);
+      console.log("Total sensors:", totalSensors);
       
       // Get below 0.2 mg/l count
-      const belowRangeResult = await baseQuery
-        .where(sql`${chlorineData.Chlorine_value_7} < 0.2 AND ${chlorineData.Chlorine_value_7} >= 0`)
-        .count();
-      const belowRangeSensors = parseInt(belowRangeResult[0].count, 10) || 0;
+      const belowRangeResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(chlorineData)
+        .where(
+          whereConditions ? 
+            sql`${whereConditions} AND ${chlorineData.Chlorine_value_7} < 0.2 AND ${chlorineData.Chlorine_value_7} >= 0` :
+            sql`${chlorineData.Chlorine_value_7} < 0.2 AND ${chlorineData.Chlorine_value_7} >= 0`
+        );
+      
+      const belowRangeSensors = Number(belowRangeResult[0]?.count || 0);
+      console.log("Below range sensors:", belowRangeSensors);
       
       // Get optimal range (0.2-0.5 mg/l) count
-      const optimalRangeResult = await baseQuery
-        .where(sql`${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5`)
-        .count();
-      const optimalRangeSensors = parseInt(optimalRangeResult[0].count, 10) || 0;
+      const optimalRangeResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(chlorineData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND ${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5` :
+            sql`${chlorineData.Chlorine_value_7} >= 0.2 AND ${chlorineData.Chlorine_value_7} <= 0.5`
+        );
+      
+      const optimalRangeSensors = Number(optimalRangeResult[0]?.count || 0);
+      console.log("Optimal range sensors:", optimalRangeSensors);
       
       // Get above 0.5 mg/l count
-      const aboveRangeResult = await baseQuery
-        .where(sql`${chlorineData.Chlorine_value_7} > 0.5`)
-        .count();
-      const aboveRangeSensors = parseInt(aboveRangeResult[0].count, 10) || 0;
+      const aboveRangeResult = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(chlorineData)
+        .where(
+          whereConditions ?
+            sql`${whereConditions} AND ${chlorineData.Chlorine_value_7} > 0.5` :
+            sql`${chlorineData.Chlorine_value_7} > 0.5`
+        );
+        
+      const aboveRangeSensors = Number(aboveRangeResult[0]?.count || 0);
+      console.log("Above range sensors:", aboveRangeSensors);
+      
+      console.log("Dashboard stats:", { 
+        totalSensors, 
+        belowRangeSensors, 
+        optimalRangeSensors, 
+        aboveRangeSensors 
+      });
       
       return {
         totalSensors,
