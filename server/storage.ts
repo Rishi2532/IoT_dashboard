@@ -98,11 +98,13 @@ export interface IStorage {
   importWaterSchemeDataFromExcel(fileBuffer: Buffer): Promise<{
     inserted: number;
     updated: number;
+    removed: number;
     errors: string[];
   }>;
   importWaterSchemeDataFromCSV(fileBuffer: Buffer): Promise<{
     inserted: number;
     updated: number;
+    removed: number;
     errors: string[];
   }>;
   
@@ -117,11 +119,13 @@ export interface IStorage {
   importChlorineDataFromExcel(fileBuffer: Buffer): Promise<{
     inserted: number;
     updated: number;
+    removed: number;
     errors: string[];
   }>;
   importChlorineDataFromCSV(fileBuffer: Buffer): Promise<{
     inserted: number;
     updated: number;
+    removed: number;
     errors: string[];
   }>;
   
@@ -1980,7 +1984,7 @@ export class PostgresStorage implements IStorage {
         console.log("Excel first row column headers:", Object.keys(jsonData[0]));
       } else {
         console.log("No data found in Excel file");
-        return { inserted: 0, updated: 0, errors: ["No data found in Excel file"] };
+        return { inserted: 0, updated: 0, removed: 0, errors: ["No data found in Excel file"] };
       }
       
       // Determine if the file uses numeric positional columns or named headers
@@ -2200,6 +2204,7 @@ export class PostgresStorage implements IStorage {
   async importWaterSchemeDataFromCSV(fileBuffer: Buffer): Promise<{
     inserted: number;
     updated: number;
+    removed: number;
     errors: string[];
   }> {
     const db = await this.ensureInitialized();
