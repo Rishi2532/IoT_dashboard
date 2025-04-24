@@ -109,7 +109,7 @@ type LpcdRange =
   | "25to35"
   | "15to25"
   | "0to15"
-  | "noSupply"  // New filter for villages with 0 LPCD
+  | "noSupply" // Filter for villages with 0 water supply
   | "55to60"
   | "60to65"
   | "65to70"
@@ -151,6 +151,23 @@ const EnhancedLpcdDashboard = () => {
     // Try to get the latest non-null value
     for (const day of [7, 6, 5, 4, 3, 2, 1]) {
       const value = scheme[`lpcd_value_day${day}` as keyof WaterSchemeData];
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        !isNaN(Number(value))
+      ) {
+        return Number(value);
+      }
+    }
+    return null;
+  };
+
+  // Get latest water supply value
+  const getLatestWaterSupplyValue = (scheme: WaterSchemeData): number | null => {
+    // Try to get the latest non-null water supply value
+    for (const day of [6, 5, 4, 3, 2, 1]) {
+      const value = scheme[`water_value_day${day}` as keyof WaterSchemeData];
       if (
         value !== undefined &&
         value !== null &&
@@ -267,8 +284,8 @@ const EnhancedLpcdDashboard = () => {
         break;
       case "noSupply":
         filtered = filtered.filter((scheme) => {
-          const lpcdValue = getLatestLpcdValue(scheme);
-          return lpcdValue !== null && lpcdValue === 0;
+          const waterSupplyValue = getLatestWaterSupplyValue(scheme);
+          return waterSupplyValue !== null && waterSupplyValue === 0;
         });
         break;
       case "55to60":
@@ -683,12 +700,12 @@ const EnhancedLpcdDashboard = () => {
 
       // Special handling for all-zero values - check if ALL values are 0
       const allZeros = validValues.every((item) => Number(item.value) === 0);
-      
+
       let daysAbove = 0;
       let daysBelow = 0;
       // Only mark as consistent zero if we have exactly 7 days of data and all are zero
-      let isConsistentZero = (allZeros && validValues.length === 7) ? 1 : 0;
-      
+      let isConsistentZero = allZeros && validValues.length === 7 ? 1 : 0;
+
       if (allZeros && validValues.length > 0) {
         // If all values are zero, count all days as "below 55"
         daysAbove = 0;
@@ -714,8 +731,13 @@ const EnhancedLpcdDashboard = () => {
       };
     };
 
-    const { daysAbove, daysBelow, daysAboveCount, daysBelowCount, consistentZeroLpcd } =
-      calculateDaysAboveBelow();
+    const {
+      daysAbove,
+      daysBelow,
+      daysAboveCount,
+      daysBelowCount,
+      consistentZeroLpcd,
+    } = calculateDaysAboveBelow();
 
     return (
       <Dialog open={villageDetailsOpen} onOpenChange={setVillageDetailsOpen}>
@@ -1092,6 +1114,26 @@ const EnhancedLpcdDashboard = () => {
                   <CardFooter className="pt-0 pb-4">
                     <div className="w-full grid grid-cols-1 gap-2">
                       <Card
+                        className="border border-red-300 bg-red-50 hover:bg-red-100 transition"
+                        onClick={() => handleFilterChange("noSupply")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer">
+                          <span className="text-sm text-[#8B0000]">
+                            No Water Supply for Village
+                          </span>
+
+                          <span className="font-medium text-red-900">
+                            {
+                              filteredSchemes.filter((scheme) => {
+                                const waterSupplyValue = getLatestWaterSupplyValue(scheme);
+                                return waterSupplyValue !== null && waterSupplyValue === 0;
+                              }).length
+                            }
+                          </span>
+                        </CardContent>
+                      </Card>
+
+                      <Card
                         className="border-red-100"
                         onClick={() => handleFilterChange("45to55")}
                       >
@@ -1153,22 +1195,6 @@ const EnhancedLpcdDashboard = () => {
                           </span>
                           <span className="font-medium text-red-700">
                             {filterCounts.ranges["0to15"]}
-                          </span>
-                        </CardContent>
-                      </Card>
-                      <Card
-                        className="border-gray-800"
-                        onClick={() => handleFilterChange("noSupply")}
-                      >
-                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-gray-800 hover:text-white">
-                          <span className="text-sm text-gray-800 font-semibold hover:text-white">
-                            No Supply (0 LPCD)
-                          </span>
-                          <span className="font-medium text-gray-900">
-                            {filteredSchemes.filter(scheme => {
-                              const lpcdValue = getLatestLpcdValue(scheme);
-                              return lpcdValue !== null && lpcdValue === 0;
-                            }).length}
                           </span>
                         </CardContent>
                       </Card>
