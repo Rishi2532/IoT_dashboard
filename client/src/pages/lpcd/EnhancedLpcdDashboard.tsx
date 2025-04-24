@@ -136,7 +136,27 @@ const EnhancedLpcdDashboard = () => {
     error: schemesError,
     refetch,
   } = useQuery<WaterSchemeData[]>({
-    queryKey: ["/api/water-scheme-data"],
+    queryKey: ["/api/water-scheme-data", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      if (selectedRegion && selectedRegion !== 'all') {
+        params.append('region', selectedRegion);
+      }
+      
+      const queryString = params.toString();
+      const url = `/api/water-scheme-data${queryString ? `?${queryString}` : ''}`;
+      
+      console.log('Fetching LPCD data with URL:', url);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error('Failed to fetch LPCD data');
+      }
+      
+      const data = await response.json();
+      console.log(`Received ${data.length} LPCD records`);
+      return data;
+    }
   });
 
   // Fetch region data
@@ -228,11 +248,6 @@ const EnhancedLpcdDashboard = () => {
     if (!allWaterSchemeData) return [];
 
     let filtered = [...allWaterSchemeData];
-
-    // Filter by region
-    if (selectedRegion !== "all") {
-      filtered = filtered.filter((scheme) => scheme.region === selectedRegion);
-    }
 
     // Apply search query filter (for scheme name or village name)
     if (searchQuery.trim() !== "") {
@@ -359,19 +374,11 @@ const EnhancedLpcdDashboard = () => {
 
     if (!allWaterSchemeData) return counts;
 
-    // Apply region filter first
-    let regionFiltered = [...allWaterSchemeData];
-    if (selectedRegion !== "all") {
-      regionFiltered = regionFiltered.filter(
-        (scheme) => scheme.region === selectedRegion,
-      );
-    }
-
-    // Update total after region filtering
-    counts.total = regionFiltered.length;
+    // Update total count
+    counts.total = allWaterSchemeData.length;
 
     // Count schemes in each category
-    regionFiltered.forEach((scheme) => {
+    allWaterSchemeData.forEach((scheme) => {
       const lpcdValue = getLatestLpcdValue(scheme);
       const population = scheme.population ? Number(scheme.population) : 0;
 
