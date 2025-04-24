@@ -387,7 +387,15 @@ const PressureDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="ml-auto self-end">
+          <div className="ml-auto self-end flex gap-2">
+            <Button 
+              onClick={() => exportToExcel(filteredData, `Pressure_Data_${selectedRegion}_${currentFilter}_${new Date().toISOString().split('T')[0]}`)} 
+              variant="outline"
+              className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export to Excel
+            </Button>
             <Button 
               onClick={() => refetch()} 
               variant="outline"
