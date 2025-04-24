@@ -288,7 +288,7 @@ const EnhancedLpcdDashboard = () => {
       case "0to15":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
-          return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 15;
+          return lpcdValue !== null && lpcdValue >= 0 && lpcdValue < 15;
         });
         break;
       case "noSupply":
