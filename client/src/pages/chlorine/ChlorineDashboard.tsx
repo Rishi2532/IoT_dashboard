@@ -583,6 +583,7 @@ const ChlorineDashboard: React.FC = () => {
                   <TableHeader className="bg-blue-50/50">
                     <TableRow className="hover:bg-blue-50/80">
                       <TableHead className="font-semibold text-blue-800">Region</TableHead>
+                      <TableHead className="font-semibold text-blue-800">Scheme ID</TableHead>
                       <TableHead className="font-semibold text-blue-800">Scheme Name</TableHead>
                       <TableHead className="font-semibold text-blue-800">Village</TableHead>
                       <TableHead className="font-semibold text-blue-800">ESR Name</TableHead>
