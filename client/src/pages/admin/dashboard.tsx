@@ -21,7 +21,8 @@ import {
   Trash2,
   Cog,
   List,
-  Droplets
+  Droplets,
+  Gauge
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
 import ProtectedRoute from '@/components/auth/protected-route';
@@ -467,7 +468,7 @@ export default function AdminDashboard() {
 
         <div className="px-6">
           <Tabs defaultValue="region-import" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5 mb-6">
+            <TabsList className="grid w-full grid-cols-6 mb-6">
               <TabsTrigger value="region-import" className="flex items-center">
                 <Database className="h-4 w-4 mr-2" />
                 Import Region Data
@@ -483,6 +484,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="chlorine-import" className="flex items-center">
                 <Droplets className="h-4 w-4 mr-2" />
                 Import Chlorine Data
+              </TabsTrigger>
+              <TabsTrigger value="pressure-import" className="flex items-center">
+                <Gauge className="h-4 w-4 mr-2" />
+                Import Pressure Data
               </TabsTrigger>
               <TabsTrigger value="manage-schemes" className="flex items-center">
                 <Cog className="h-4 w-4 mr-2" />
