@@ -1308,7 +1308,7 @@ export class PostgresStorage implements IStorage {
     
     // Add timing for performance analysis
     const startTime = Date.now();
-    console.log("Starting CSV import at:", new Date().toISOString());
+    console.log("Starting CSV import at:", new Date().toISOString(), "with retry functionality");
 
     try {
       console.log("Starting chlorine data import from CSV...");
@@ -2408,6 +2408,13 @@ export class PostgresStorage implements IStorage {
   private async ensureInitialized() {
     await this.initialized;
     return getDB();
+  }
+  
+  // Helper to execute database operations with retry logic
+  private async executeWithRetry<T>(operation: () => Promise<T>): Promise<T> {
+    // Import executeWithRetry from db.ts
+    const { executeWithRetry } = await import('./db');
+    return executeWithRetry(operation);
   }
 
   // User methods (from original schema)

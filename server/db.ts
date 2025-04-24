@@ -10,7 +10,7 @@ dotenv.config();
 // Database connection
 let db: any;
 
-// Create database connection
+// Create database connection with retry logic
 export async function getDB() {
   if (!db) {
     try {
@@ -29,6 +29,46 @@ export async function getDB() {
   }
 
   return db;
+}
+
+// Function to execute database operations with retries
+export async function executeWithRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries = 3,
+  delay = 1000,
+  retryOn = ["terminating connection due to administrator command"]
+): Promise<T> {
+  let lastError: any;
+  
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await operation();
+    } catch (error: any) {
+      lastError = error;
+      
+      // Check if this is a retryable error
+      const errorMessage = error?.message || String(error);
+      const shouldRetry = retryOn.some(errText => errorMessage.includes(errText));
+      
+      if (!shouldRetry) {
+        console.error(`Non-retryable database error: ${errorMessage}`);
+        throw error;
+      }
+      
+      if (attempt < maxRetries) {
+        const waitTime = delay * attempt; // Exponential backoff
+        console.warn(`Database operation failed on attempt ${attempt}/${maxRetries}. Retrying in ${waitTime}ms...`);
+        console.warn(`Error was: ${errorMessage}`);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      } else {
+        console.error(`Failed database operation after ${maxRetries} attempts`);
+        throw error;
+      }
+    }
+  }
+  
+  // This should never be reached, but TypeScript requires a return value
+  throw lastError;
 }
 
 // Function to update region summary data based on scheme data
