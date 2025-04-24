@@ -140,6 +140,12 @@ function App() {
             </ProtectedRoute>
           </Route>
           
+          <Route path="/admin/chlorine-import">
+            <ProtectedRoute>
+              <ChlorineImport />
+            </ProtectedRoute>
+          </Route>
+          
           {/* Fallback route */}
           <Route component={NotFound} />
         </Switch>

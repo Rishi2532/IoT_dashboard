@@ -1031,10 +1031,41 @@ export class PostgresStorage implements IStorage {
     let updated = 0;
 
     try {
+      // CSV column mapping without headers (as per requirements)
+      const csvColumnMapping = [
+        'region',                                     // Column 0
+        'circle',                                     // Column 1
+        'division',                                   // Column 2
+        'sub_division',                               // Column 3
+        'block',                                      // Column 4
+        'scheme_id',                                  // Column 5
+        'scheme_name',                                // Column 6
+        'village_name',                               // Column 7
+        'esr_name',                                   // Column 8
+        'Chlorine_value_1',                           // Column 9
+        'Chlorine_value_2',                           // Column 10
+        'Chlorine_value_3',                           // Column 11
+        'Chlorine_value_4',                           // Column 12
+        'Chlorine_value_5',                           // Column 13
+        'Chlorine_value_6',                           // Column 14
+        'Chlorine_value_7',                           // Column 15
+        'Chlorine_date_day_1',                        // Column 16
+        'Chlorine_date_day_2',                        // Column 17
+        'Chlorine_date_day_3',                        // Column 18
+        'Chlorine_date_day_4',                        // Column 19
+        'Chlorine_date_day_5',                        // Column 20
+        'Chlorine_date_day_6',                        // Column 21
+        'Chlorine_date_day_7',                        // Column 22
+        'number_of_consistent_zero_value_in_Chlorine', // Column 23
+        'Chlorine_less_than_02_mgl',                  // Column 24
+        'Chlorine_between_02__05_mgl',                // Column 25
+        'Chlorine_greater_than_05_mgl'                // Column 26
+      ];
+
       const csvString = fileBuffer.toString('utf8');
       const { parse } = require('csv-parse/sync');
       const records = parse(csvString, {
-        columns: true,
+        columns: false, // No headers in the CSV file
         skip_empty_lines: true,
         trim: true
       });
@@ -1046,18 +1077,28 @@ export class PostgresStorage implements IStorage {
 
       // Process each row in the CSV
       for (let i = 0; i < records.length; i++) {
-        const row = records[i];
+        const rowValues = records[i];
         try {
           const recordData: Partial<InsertChlorineData> = {};
           
-          // Map CSV headers to database fields
-          for (const [header, value] of Object.entries(row)) {
-            const fieldName = this.excelColumnMapping[header.trim()];
-            if (fieldName) {
+          // Map each column value to the corresponding field based on predefined mapping
+          for (let colIndex = 0; colIndex < rowValues.length && colIndex < csvColumnMapping.length; colIndex++) {
+            const fieldName = csvColumnMapping[colIndex];
+            const value = rowValues[colIndex];
+            
+            if (fieldName && value !== undefined && value !== '') {
               // Handle numeric chlorine values and ensure they are decimal numbers
               if (fieldName.startsWith('Chlorine_value_')) {
-                recordData[fieldName as keyof InsertChlorineData] = this.parseNumericValue(value as string);
-              } else {
+                recordData[fieldName as keyof InsertChlorineData] = this.parseNumericValue(value);
+              } 
+              // Handle analysis fields which should be numeric
+              else if (fieldName === 'number_of_consistent_zero_value_in_Chlorine' || 
+                       fieldName === 'Chlorine_less_than_02_mgl' || 
+                       fieldName === 'Chlorine_between_02__05_mgl' || 
+                       fieldName === 'Chlorine_greater_than_05_mgl') {
+                recordData[fieldName as keyof InsertChlorineData] = this.parseNumericValue(value);
+              }
+              else {
                 recordData[fieldName as keyof InsertChlorineData] = value;
               }
             }
@@ -1069,7 +1110,8 @@ export class PostgresStorage implements IStorage {
             continue;
           }
 
-          // Calculate analysis fields
+          // Calculate analysis fields if they weren't provided in the CSV
+          // This ensures we have proper values even if columns 23-26 are empty or invalid
           const enhancedData = this.calculateChlorineAnalysisFields(recordData);
 
           // Check if record exists
