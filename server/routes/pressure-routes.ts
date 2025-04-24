@@ -204,7 +204,7 @@ router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res)
       const result = await storage.importPressureDataFromCSV(req.file.buffer);
       console.log("CSV import completed successfully:", result);
       res.json(result);
-    } catch (importError) {
+    } catch (importError: any) {
       console.error("Detailed CSV import error:", importError);
       // Send detailed error to client
       res.status(500).json({ 
@@ -213,7 +213,7 @@ router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res)
         preview: filePreview
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in CSV upload route:", error);
     res.status(500).json({ 
       error: "Failed to process CSV file upload",

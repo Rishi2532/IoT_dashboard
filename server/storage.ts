@@ -2233,14 +2233,27 @@ export class PostgresStorage implements IStorage {
     try {
       console.log("Starting pressure data CSV import...");
       
-      // Parse CSV file
+      // Define column names for CSV without headers
+      const columns = [
+        'region', 'circle', 'division', 'sub_division', 'block', 
+        'scheme_id', 'scheme_name', 'village_name', 'esr_name', 
+        'pressure_value_1', 'pressure_value_2', 'pressure_value_3', 'pressure_value_4', 
+        'pressure_value_5', 'pressure_value_6', 'pressure_value_7',
+        'pressure_date_day_1', 'pressure_date_day_2', 'pressure_date_day_3', 'pressure_date_day_4',
+        'pressure_date_day_5', 'pressure_date_day_6', 'pressure_date_day_7',
+        'number_of_consistent_zero_value_in_pressure', 'pressure_less_than_02_bar',
+        'pressure_between_02_07_bar', 'pressure_greater_than_07_bar'
+      ];
+      
+      // Parse CSV file without expecting headers
       const csvString = fileBuffer.toString('utf8');
       const parsed = await new Promise<any[]>((resolve, reject) => {
         parse(csvString, {
-          columns: true,
+          columns: columns,
           skip_empty_lines: true,
           trim: true,
-          cast: true
+          cast: true,
+          from_line: 1 // Start from the first line (no headers)
         }, (err, records) => {
           if (err) {
             reject(err);

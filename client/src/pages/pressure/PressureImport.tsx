@@ -139,7 +139,7 @@ const PressureImport: React.FC = () => {
           <CardTitle>Upload Pressure Data CSV</CardTitle>
           <CardDescription>
             Upload a CSV file containing pressure data for ESRs. The file should include scheme_id, village_name, 
-            esr_name, and pressure values for each day.
+            esr_name, and pressure values for each day. The file should NOT have a header row - please upload data rows only.
           </CardDescription>
         </CardHeader>
         
@@ -271,9 +271,8 @@ const PressureImport: React.FC = () => {
               variant="outline"
               size="sm"
               onClick={() => {
-                // Generate sample CSV content with header row
+                // Generate sample CSV content without headers (as per government format)
                 const sampleData = [
-                  "region,circle,division,sub_division,block,scheme_id,scheme_name,village_name,esr_name,pressure_value_1,pressure_value_2,pressure_value_3,pressure_value_4,pressure_value_5,pressure_value_6,pressure_value_7,pressure_date_day_1,pressure_date_day_2,pressure_date_day_3,pressure_date_day_4,pressure_date_day_5,pressure_date_day_6,pressure_date_day_7,number_of_consistent_zero_value_in_pressure,pressure_less_than_02_bar,pressure_between_02_07_bar,pressure_greater_than_07_bar",
                   "Amravati,Circle1,Division1,SubDiv1,Block1,AMR2001,Sample Scheme,Village1,ESR1,0.3,0.4,0.5,0.3,0.4,0.2,0.5,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,0,0,1,0",
                   "Nagpur,Circle2,Division2,SubDiv2,Block2,NAG2002,Sample Scheme 2,Village2,ESR2,0.1,0.2,0.1,0.3,0.1,0.1,0.2,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,0,1,0,0"
                 ].join('\n');
@@ -312,7 +311,7 @@ const PressureImport: React.FC = () => {
         <CardHeader>
           <CardTitle>CSV Format Instructions</CardTitle>
           <CardDescription>
-            Your CSV file must include the following columns:
+            Your CSV file must follow this column order (NO HEADER ROW):
           </CardDescription>
         </CardHeader>
         
@@ -424,6 +423,17 @@ const PressureImport: React.FC = () => {
             </div>
             
             <div className="text-sm text-gray-700">
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-md mb-3">
+                <p className="font-medium text-blue-800 flex items-center">
+                  <AlertCircle className="h-4 w-4 mr-2" />
+                  Important CSV Format Note:
+                </p>
+                <p className="mt-1 text-blue-700">
+                  Your CSV file should NOT contain a header row. The first row of your file should contain data values. 
+                  Column positions must match exactly as shown in the table above.
+                </p>
+              </div>
+              
               <p className="font-medium mb-2">Notes:</p>
               <ul className="list-disc list-inside space-y-1">
                 <li>The system will update records if they already exist based on scheme_id, village_name, and esr_name</li>
