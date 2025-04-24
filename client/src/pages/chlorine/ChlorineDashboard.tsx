@@ -313,7 +313,6 @@ const ChlorineDashboard: React.FC = () => {
           "Sensor ID": item.sensor_id || "N/A",
           "Latest Chlorine Value (mg/l)":
             latestChlorine !== null ? latestChlorine.toFixed(2) : "No data",
-          "Last Updated": latestDate || "No data",
           Status: statusText,
           "Days Below Range (<0.2 mg/l)": item.chlorine_less_than_02_mgl || 0,
           "Days Optimal Range (0.2-0.5 mg/l)":
@@ -822,9 +821,7 @@ const ChlorineDashboard: React.FC = () => {
                       <TableHead className="font-semibold text-blue-800">
                         Latest Chlorine (mg/l)
                       </TableHead>
-                      <TableHead className="font-semibold text-blue-800">
-                        Last Updated
-                      </TableHead>
+
                       <TableHead className="font-semibold text-blue-800">
                         Status
                       </TableHead>
@@ -844,7 +841,7 @@ const ChlorineDashboard: React.FC = () => {
                       for (const day of [7, 6, 5, 4, 3, 2, 1]) {
                         const dateValue =
                           item[
-                            `Chlorine_date_day_${day}` as keyof ChlorineData
+                            `chlorine_date_day_${day}` as keyof ChlorineData
                           ];
                         if (dateValue) {
                           latestDate = dateValue;
@@ -895,7 +892,7 @@ const ChlorineDashboard: React.FC = () => {
                               "-"
                             )}
                           </TableCell>
-                          <TableCell>{latestDate || "-"}</TableCell>
+
                           <TableCell>
                             <Badge
                               className={`${className} ${textColor} flex items-center gap-1 w-fit shadow-sm border`}
