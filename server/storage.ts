@@ -921,7 +921,9 @@ export class PostgresStorage implements IStorage {
     let updated = 0;
 
     try {
-      const xlsx = require('xlsx');
+      // Import xlsx using dynamic import
+      const xlsxModule = await import('xlsx');
+      const xlsx = xlsxModule.default;
       const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
 
       // Process each sheet in the workbook
@@ -1063,7 +1065,11 @@ export class PostgresStorage implements IStorage {
       ];
 
       const csvString = fileBuffer.toString('utf8');
-      const { parse } = require('csv-parse/sync');
+      
+      // Import csv-parse using dynamic import instead of require
+      const csvParseModule = await import('csv-parse/sync');
+      const { parse } = csvParseModule;
+      
       const records = parse(csvString, {
         columns: false, // No headers in the CSV file
         skip_empty_lines: true,
@@ -1958,8 +1964,9 @@ export class PostgresStorage implements IStorage {
     let updated = 0;
     
     try {
-      // Import csv-parse library
-      const { parse } = require('csv-parse/sync');
+      // Import csv-parse library using dynamic import
+      const csvParseModule = await import('csv-parse/sync');
+      const { parse } = csvParseModule;
       
       // Parse CSV file (no headers)
       const records = parse(fileBuffer, {
