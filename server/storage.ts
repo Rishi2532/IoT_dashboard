@@ -923,7 +923,7 @@ export class PostgresStorage implements IStorage {
     try {
       // Import xlsx using dynamic import
       const xlsxModule = await import('xlsx');
-      const xlsx = xlsxModule.default;
+      const xlsx = xlsxModule.default || xlsxModule;
       const workbook = xlsx.read(fileBuffer, { type: 'buffer' });
 
       // Process each sheet in the workbook
@@ -943,19 +943,21 @@ export class PostgresStorage implements IStorage {
         const columnMap: Record<number, string> = {};
         
         // Map Excel columns to database fields
-        headers.forEach((header: string, index: number) => {
-          if (header && typeof header === 'string') {
-            const dbField = this.excelColumnMapping[header.trim()];
-            if (dbField) {
-              columnMap[index] = dbField;
+        if (Array.isArray(headers)) {
+          headers.forEach((header: unknown, index: number) => {
+            if (header && typeof header === 'string') {
+              const dbField = this.excelColumnMapping[header.trim()];
+              if (dbField) {
+                columnMap[index] = dbField;
+              }
             }
-          }
-        });
+          });
+        }
 
         // Process data rows
         for (let i = headerRow + 1; i < data.length; i++) {
           const row = data[i];
-          if (!row || row.length === 0) continue;
+          if (!row || !Array.isArray(row) || row.length === 0) continue;
 
           try {
             const recordData: Partial<InsertChlorineData> = {};
@@ -1008,15 +1010,17 @@ export class PostgresStorage implements IStorage {
               inserted++;
             }
           } catch (rowError) {
-            errors.push(`Row ${i + 1}: ${rowError}`);
+            const errorMessage = rowError instanceof Error ? rowError.message : String(rowError);
+            errors.push(`Row ${i + 1}: ${errorMessage}`);
           }
         }
       }
 
       return { inserted, updated, errors };
     } catch (error) {
-      console.error("Error importing chlorine data from Excel:", error);
-      errors.push(`General import error: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Error importing chlorine data from Excel:", errorMessage);
+      errors.push(`General import error: ${errorMessage}`);
       return { inserted, updated, errors };
     }
   }
@@ -1065,16 +1069,29 @@ export class PostgresStorage implements IStorage {
       ];
 
       const csvString = fileBuffer.toString('utf8');
+      console.log("CSV String preview (first 100 chars):", csvString.substring(0, 100));
       
-      // Import csv-parse using dynamic import instead of require
-      const csvParseModule = await import('csv-parse/sync');
-      const { parse } = csvParseModule;
+      // Import csv-parse using dynamic import
+      const parseModule = await import('csv-parse/sync');
+      const parse = parseModule.parse;
       
-      const records = parse(csvString, {
+      console.log("CSV parse function imported successfully:", typeof parse);
+      
+      const options = {
         columns: false, // No headers in the CSV file
         skip_empty_lines: true,
-        trim: true
-      });
+        trim: true,
+        relax_column_count: true // Allow different column counts in rows
+      };
+      
+      console.log("Parsing CSV with options:", JSON.stringify(options));
+      
+      const records = parse(csvString, options);
+      
+      console.log("CSV parsed successfully. Number of records:", records.length);
+      if (records.length > 0) {
+        console.log("First record sample:", JSON.stringify(records[0]).substring(0, 200) + "...");
+      }
 
       if (records.length === 0) {
         errors.push("No data found in CSV file");
@@ -1099,9 +1116,9 @@ export class PostgresStorage implements IStorage {
               } 
               // Handle analysis fields which should be numeric
               else if (fieldName === 'number_of_consistent_zero_value_in_Chlorine' || 
-                       fieldName === 'Chlorine_less_than_02_mgl' || 
-                       fieldName === 'Chlorine_between_02__05_mgl' || 
-                       fieldName === 'Chlorine_greater_than_05_mgl') {
+                      fieldName === 'Chlorine_less_than_02_mgl' || 
+                      fieldName === 'Chlorine_between_02__05_mgl' || 
+                      fieldName === 'Chlorine_greater_than_05_mgl') {
                 recordData[fieldName as keyof InsertChlorineData] = this.parseNumericValue(value);
               }
               else {
@@ -1144,14 +1161,16 @@ export class PostgresStorage implements IStorage {
             inserted++;
           }
         } catch (rowError) {
-          errors.push(`Row ${i + 1}: ${rowError}`);
+          const errorMessage = rowError instanceof Error ? rowError.message : String(rowError);
+          errors.push(`Row ${i + 1}: ${errorMessage}`);
         }
       }
 
       return { inserted, updated, errors };
     } catch (error) {
-      console.error("Error importing chlorine data from CSV:", error);
-      errors.push(`General import error: ${error}`);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error("Error importing chlorine data from CSV:", errorMessage);
+      errors.push(`General import error: ${errorMessage}`);
       return { inserted, updated, errors };
     }
   }

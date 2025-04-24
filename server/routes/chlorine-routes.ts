@@ -178,11 +178,42 @@ router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res)
       return res.status(400).json({ error: "No file uploaded" });
     }
     
-    const result = await storage.importChlorineDataFromCSV(req.file.buffer);
-    res.json(result);
+    console.log("CSV Import - File received:", {
+      originalname: req.file.originalname,
+      mimetype: req.file.mimetype,
+      size: req.file.size,
+      encoding: req.file.encoding
+    });
+    
+    // Check if file is empty
+    if (req.file.size === 0) {
+      return res.status(400).json({ error: "Uploaded file is empty" });
+    }
+    
+    // Log a preview of the file content for debugging
+    const filePreview = req.file.buffer.toString('utf8').substring(0, 200);
+    console.log("CSV content preview:", filePreview);
+    
+    // Process CSV file with improved error handling
+    try {
+      const result = await storage.importChlorineDataFromCSV(req.file.buffer);
+      console.log("CSV import completed successfully:", result);
+      res.json(result);
+    } catch (importError) {
+      console.error("Detailed CSV import error:", importError);
+      // Send detailed error to client
+      res.status(500).json({ 
+        error: "Failed to import chlorine data from CSV", 
+        details: importError.message || String(importError),
+        preview: filePreview
+      });
+    }
   } catch (error) {
-    console.error("Error importing chlorine data from CSV:", error);
-    res.status(500).json({ error: "Failed to import chlorine data from CSV" });
+    console.error("Error in CSV upload route:", error);
+    res.status(500).json({ 
+      error: "Failed to process CSV file upload",
+      details: error.message || String(error)
+    });
   }
 });
 
