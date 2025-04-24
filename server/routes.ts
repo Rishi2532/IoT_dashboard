@@ -665,10 +665,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.warn('Error cleaning up temp file:', e);
       }
 
+      // Access the 'removed' count if available
+      const removedCount = importResult.removed || 0;
+      
       res.json({
-        message: `Excel data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated.`,
+        message: `Excel data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated, ${removedCount} records removed.`,
         inserted: importResult.inserted,
         updated: importResult.updated,
+        removed: removedCount,
         errors: importResult.errors,
       });
     } catch (error) {
@@ -687,10 +691,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileBuffer = req.file.buffer;
       const importResult = await storage.importWaterSchemeDataFromCSV(fileBuffer);
 
+      // Access the 'removed' count if available
+      const removedCount = importResult.removed || 0;
+      
       res.json({
-        message: `CSV data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated.`,
+        message: `CSV data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated, ${removedCount} records removed.`,
         inserted: importResult.inserted,
         updated: importResult.updated,
+        removed: removedCount,
         errors: importResult.errors,
       });
     } catch (error) {
