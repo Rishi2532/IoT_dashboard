@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import PressureDashboard from './PressureDashboard';
-import { BarChart2, FileSpreadsheet, Gauge } from 'lucide-react';
+import { FileSpreadsheet, Gauge } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
 import Sidebar from '@/components/dashboard/sidebar';
 
@@ -57,15 +57,6 @@ const PressurePage: React.FC = () => {
                     <span>Import Data</span>
                   </TabsTrigger>
                 </TabsList>
-
-                <div className="flex gap-2">
-                  <Link href="/chlorine">
-                    <Button className="bg-blue-100 text-blue-700 hover:bg-blue-200 border border-blue-200" variant="outline">
-                      <BarChart2 className="h-5 w-5 mr-2" />
-                      Chlorine Dashboard
-                    </Button>
-                  </Link>
-                </div>
               </div>
 
               <TabsContent value="dashboard" className="mt-0">
