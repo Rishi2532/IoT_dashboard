@@ -771,7 +771,7 @@ export class PostgresStorage implements IStorage {
     esrName: string
   ): Promise<ChlorineData | undefined> {
     await this.initialized;
-    const { db } = getDB();
+    const db = await this.ensureInitialized();
     
     try {
       const result = await db
@@ -792,7 +792,7 @@ export class PostgresStorage implements IStorage {
   
   async createChlorineData(data: InsertChlorineData): Promise<ChlorineData> {
     await this.initialized;
-    const { db } = getDB();
+    const db = await this.ensureInitialized();
     
     try {
       // Calculate derived fields for analysis
@@ -818,7 +818,7 @@ export class PostgresStorage implements IStorage {
     data: UpdateChlorineData
   ): Promise<ChlorineData> {
     await this.initialized;
-    const { db } = getDB();
+    const db = await this.ensureInitialized();
     
     try {
       // Calculate derived fields for analysis
@@ -852,7 +852,7 @@ export class PostgresStorage implements IStorage {
     esrName: string
   ): Promise<boolean> {
     await this.initialized;
-    const { db } = getDB();
+    const db = await this.ensureInitialized();
     
     try {
       await db
@@ -915,7 +915,7 @@ export class PostgresStorage implements IStorage {
     errors: string[];
   }> {
     await this.initialized;
-    const { db } = getDB();
+    const db = await this.ensureInitialized();
     const errors: string[] = [];
     let inserted = 0;
     let updated = 0;
@@ -1025,7 +1025,7 @@ export class PostgresStorage implements IStorage {
     errors: string[];
   }> {
     await this.initialized;
-    const { db } = getDB();
+    const db = await this.ensureInitialized();
     const errors: string[] = [];
     let inserted = 0;
     let updated = 0;
