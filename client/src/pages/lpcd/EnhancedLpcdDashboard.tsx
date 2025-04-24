@@ -1156,6 +1156,22 @@ const EnhancedLpcdDashboard = () => {
                           </span>
                         </CardContent>
                       </Card>
+                      <Card
+                        className="border-gray-800"
+                        onClick={() => handleFilterChange("noSupply")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-gray-800 hover:text-white">
+                          <span className="text-sm text-gray-800 font-semibold hover:text-white">
+                            No Supply (0 LPCD)
+                          </span>
+                          <span className="font-medium text-gray-900">
+                            {filteredSchemes.filter(scheme => {
+                              const lpcdValue = getLatestLpcdValue(scheme);
+                              return lpcdValue !== null && lpcdValue === 0;
+                            }).length}
+                          </span>
+                        </CardContent>
+                      </Card>
                     </div>
                   </CardFooter>
                 )}
