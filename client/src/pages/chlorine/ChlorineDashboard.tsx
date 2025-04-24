@@ -33,22 +33,25 @@ interface ChlorineData {
   village_name: string;
   esr_name: string;
   sensor_id?: string;
-  chlorine_value_day1?: number | null;
-  chlorine_date_day1?: string | null;
-  chlorine_value_day2?: number | null;
-  chlorine_date_day2?: string | null;
-  chlorine_value_day3?: number | null;
-  chlorine_date_day3?: string | null;
-  chlorine_value_day4?: number | null;
-  chlorine_date_day4?: string | null;
-  chlorine_value_day5?: number | null;
-  chlorine_date_day5?: string | null;
-  chlorine_value_day6?: number | null;
-  chlorine_date_day6?: string | null;
-  chlorine_value_day7?: number | null;
-  chlorine_date_day7?: string | null;
-  chlorine_status?: string | null;
-  last_updated?: string | null;
+  Chlorine_value_1?: number | null;
+  Chlorine_date_day_1?: string | null;
+  Chlorine_value_2?: number | null;
+  Chlorine_date_day_2?: string | null;
+  Chlorine_value_3?: number | null;
+  Chlorine_date_day_3?: string | null;
+  Chlorine_value_4?: number | null;
+  Chlorine_date_day_4?: string | null;
+  Chlorine_value_5?: number | null;
+  Chlorine_date_day_5?: string | null;
+  Chlorine_value_6?: number | null;
+  Chlorine_date_day_6?: string | null;
+  Chlorine_value_7?: number | null;
+  Chlorine_date_day_7?: string | null;
+  // Additional analysis fields
+  number_of_consistent_zero_value_in_Chlorine?: number | null;
+  Chlorine_less_than_02_mgl?: number | null;
+  Chlorine_between_02__05_mgl?: number | null;
+  Chlorine_greater_than_05_mgl?: number | null;
 }
 
 interface RegionData {
@@ -147,7 +150,7 @@ const ChlorineDashboard: React.FC = () => {
   const getLatestChlorineValue = (data: ChlorineData): number | null => {
     // Try to get the latest non-null value
     for (const day of [7, 6, 5, 4, 3, 2, 1]) {
-      const value = data[`chlorine_value_day${day}` as keyof ChlorineData];
+      const value = data[`Chlorine_value_${day}` as keyof ChlorineData];
       if (
         value !== undefined &&
         value !== null &&
@@ -401,7 +404,7 @@ const ChlorineDashboard: React.FC = () => {
                       // Get the latest date
                       let latestDate = null;
                       for (const day of [7, 6, 5, 4, 3, 2, 1]) {
-                        const dateValue = item[`chlorine_date_day${day}` as keyof ChlorineData];
+                        const dateValue = item[`Chlorine_date_day_${day}` as keyof ChlorineData];
                         if (dateValue) {
                           latestDate = dateValue;
                           break;
@@ -468,9 +471,9 @@ const ChlorineDashboard: React.FC = () => {
                                       <h3 className="font-medium text-lg mb-3">7-Day Chlorine History</h3>
                                       <div className="grid grid-cols-7 gap-2">
                                         {[7, 6, 5, 4, 3, 2, 1].map((day) => {
-                                          const value = selectedESR[`chlorine_value_day${day}` as keyof ChlorineData];
+                                          const value = selectedESR[`Chlorine_value_${day}` as keyof ChlorineData];
                                           const numValue = value !== undefined && value !== null ? Number(value) : null;
-                                          const dateValue = selectedESR[`chlorine_date_day${day}` as keyof ChlorineData];
+                                          const dateValue = selectedESR[`Chlorine_date_day_${day}` as keyof ChlorineData];
                                           const { className: dayClassName } = getChlorineStatusInfo(numValue);
                                           
                                           return (

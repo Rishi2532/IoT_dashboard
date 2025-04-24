@@ -720,7 +720,7 @@ export class PostgresStorage implements IStorage {
   // Chlorine Data CRUD operations
   async getAllChlorineData(filter?: ChlorineDataFilter): Promise<ChlorineData[]> {
     await this.initialized;
-    const { db } = getDB();
+    const db = await this.ensureInitialized();
     
     try {
       let query = db.select().from(chlorineData);
@@ -1156,7 +1156,7 @@ export class PostgresStorage implements IStorage {
     aboveRangeSensors: number;
   }> {
     await this.initialized;
-    const { db } = getDB();
+    const db = await this.ensureInitialized();
     
     try {
       // Base query - filter by region if specified
