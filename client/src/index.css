@@ -7,6 +7,17 @@ div[data-plugin-id="runtime-errors"] {
   display: none !important;
 }
 
+/* Fix select dropdown visibility */
+[data-radix-popper-content-wrapper] {
+  z-index: 9999 !important;
+}
+
+.region-select-dropdown {
+  background-color: white !important;
+  z-index: 9999 !important;
+  position: absolute !important;
+}
+
 /* Map styling */
 area {
   cursor: pointer; 

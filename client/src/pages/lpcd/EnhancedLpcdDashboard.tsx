@@ -940,7 +940,7 @@ const EnhancedLpcdDashboard = () => {
             )}
           </div>
           <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-            <SelectTrigger className="w-[180px] bg-white">
+            <SelectTrigger className="w-[180px] bg-white border-2 border-gray-300 shadow-sm">
               <SelectValue placeholder="All Regions" />
             </SelectTrigger>
             <SelectContent>
