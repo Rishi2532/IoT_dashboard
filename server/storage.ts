@@ -1952,8 +1952,11 @@ export class PostgresStorage implements IStorage {
     const errors: string[] = [];
     let inserted = 0;
     let updated = 0;
+    let removed = 0;
     
     try {
+      console.log("Starting LPCD data import from Excel with full replacement mode...");
+      
       // Import xlsx library
       const xlsx = require('xlsx');
       
@@ -1986,7 +1989,97 @@ export class PostgresStorage implements IStorage {
       
       console.log(`Excel format: ${hasPositionalColumns ? 'Positional' : 'Named headers'}`);
       
-      // Process each row
+      // Track all villages in the Excel file by scheme_id and village_name
+      const importedVillages = new Set<string>();
+      
+      // First pass - collect all scheme_id/village_name combinations in the Excel
+      for (const row of jsonData) {
+        try {
+          let schemeId: string | undefined;
+          let villageName: string | undefined;
+          
+          if (hasPositionalColumns) {
+            // Extract from positional columns
+            for (const [position, dbField] of Object.entries(this.positionalColumnMapping)) {
+              if (dbField === 'scheme_id' && row[position] !== undefined) {
+                schemeId = String(row[position]).trim();
+              } else if (dbField === 'village_name' && row[position] !== undefined) {
+                villageName = String(row[position]).trim();
+              }
+            }
+          } else {
+            // Extract from named headers
+            for (const [excelHeader, dbField] of Object.entries(this.excelColumnMapping)) {
+              if (dbField === 'scheme_id' && row[excelHeader] !== undefined) {
+                schemeId = String(row[excelHeader]).trim();
+              } else if (dbField === 'village_name' && row[excelHeader] !== undefined) {
+                villageName = String(row[excelHeader]).trim();
+              }
+            }
+            
+            // Try case-insensitive matching if needed
+            if (!schemeId || !villageName) {
+              for (const origHeader of Object.keys(row)) {
+                const lowerHeader = origHeader.toLowerCase();
+                for (const [excelHeader, dbField] of Object.entries(this.excelColumnMapping)) {
+                  if (excelHeader.toLowerCase() === lowerHeader) {
+                    if (dbField === 'scheme_id' && !schemeId) {
+                      schemeId = String(row[origHeader]).trim();
+                    } else if (dbField === 'village_name' && !villageName) {
+                      villageName = String(row[origHeader]).trim();
+                    }
+                  }
+                }
+              }
+            }
+          }
+          
+          if (schemeId && villageName) {
+            // Register this scheme/village combination
+            importedVillages.add(`${schemeId}::${villageName}`);
+          }
+        } catch (error) {
+          console.error('Error collecting village registry:', error);
+        }
+      }
+      
+      console.log(`Found ${importedVillages.size} villages in the Excel file`);
+      
+      // Get all existing water scheme data
+      const allExistingData = await this.getAllWaterSchemeData();
+      
+      // Identify entries that should be removed (exist in DB but not in Excel)
+      const entriesToDelete: {scheme_id: string, village_name: string}[] = [];
+      
+      for (const entry of allExistingData) {
+        const key = `${entry.scheme_id}::${entry.village_name}`;
+        if (!importedVillages.has(key)) {
+          entriesToDelete.push({
+            scheme_id: entry.scheme_id,
+            village_name: entry.village_name
+          });
+        }
+      }
+      
+      console.log(`Found ${entriesToDelete.length} villages to remove (not present in Excel file)`);
+      
+      // Delete entries not in the Excel file
+      for (const entry of entriesToDelete) {
+        try {
+          await db
+            .delete(waterSchemeData)
+            .where(
+              sql`${waterSchemeData.scheme_id} = ${entry.scheme_id} AND 
+                  ${waterSchemeData.village_name} = ${entry.village_name}`
+            );
+          removed++;
+        } catch (deleteError) {
+          console.error(`Error deleting village ${entry.scheme_id}/${entry.village_name}:`, deleteError);
+          errors.push(`Failed to delete village: ${entry.scheme_id}/${entry.village_name}`);
+        }
+      }
+      
+      // Second pass - process and insert/update data
       for (const row of jsonData) {
         try {
           // Map to database schema format
@@ -2057,31 +2150,36 @@ export class PostgresStorage implements IStorage {
           // Calculate derived values (consistency metrics)
           this.calculateDerivedValues(schemeData);
           
-          console.log(`Processed record for scheme_id ${schemeData.scheme_id}, village ${schemeData.village_name}: ` +
-                     `water_value_day1=${schemeData.water_value_day1}, lpcd_value_day1=${schemeData.lpcd_value_day1}`);
+          // Check if scheme/village combination already exists
+          const existingRecords = await db
+            .select()
+            .from(waterSchemeData)
+            .where(
+              sql`${waterSchemeData.scheme_id} = ${schemeData.scheme_id} AND 
+                  ${waterSchemeData.village_name} = ${schemeData.village_name}`
+            );
           
-          // Check if scheme already exists
-          let existingScheme;
-          try {
-            existingScheme = await this.getWaterSchemeDataById(schemeData.scheme_id);
-          } catch (error) {
-            console.error(`Error checking for existing scheme: ${error}`);
-            existingScheme = null;
-          }
+          const exists = existingRecords.length > 0;
           
           try {
-            if (existingScheme) {
-              // Update existing scheme
-              await this.updateWaterSchemeData(schemeData.scheme_id, schemeData);
+            if (exists) {
+              // Update existing entry
+              await db
+                .update(waterSchemeData)
+                .set(schemeData)
+                .where(
+                  sql`${waterSchemeData.scheme_id} = ${schemeData.scheme_id} AND 
+                      ${waterSchemeData.village_name} = ${schemeData.village_name}`
+                );
               updated++;
             } else {
-              // Insert new scheme
-              await this.createWaterSchemeData(schemeData as InsertWaterSchemeData);
+              // Insert new entry
+              await db.insert(waterSchemeData).values(schemeData as any);
               inserted++;
             }
           } catch (saveError: any) {
             console.error(`Error saving data: ${saveError.message}`);
-            errors.push(`Error saving data for ${schemeData.scheme_id}: ${saveError.message}`);
+            errors.push(`Error saving data for ${schemeData.scheme_id}/${schemeData.village_name}: ${saveError.message}`);
           }
         } catch (rowError: any) {
           console.error(`Row processing error: ${rowError.message}`);
@@ -2089,7 +2187,7 @@ export class PostgresStorage implements IStorage {
         }
       }
       
-      console.log(`Successfully processed water scheme data: ${inserted} inserted, ${updated} updated`);
+      console.log(`LPCD import complete: ${inserted} inserted, ${updated} updated, ${removed} removed, ${errors.length} errors`);
       return { inserted, updated, errors };
     } catch (error: any) {
       console.error(`Excel import error: ${error.message}`);
@@ -2107,8 +2205,11 @@ export class PostgresStorage implements IStorage {
     const errors: string[] = [];
     let inserted = 0;
     let updated = 0;
+    let removed = 0;
     
     try {
+      console.log("Starting LPCD data import from CSV with full replacement mode...");
+      
       // Import csv-parse library using dynamic import
       const csvParseModule = await import('csv-parse/sync');
       const { parse } = csvParseModule;
@@ -2129,8 +2230,61 @@ export class PostgresStorage implements IStorage {
         console.log('- Has LPCD headers:', records[0].some((h: string) => h?.includes('lpcd')));
       }
       
-      // Process each row
-      for (const record of records) {
+      // Track all villages in the CSV file
+      const importedVillages = new Set<string>();
+      
+      // First pass - collect all villages in the CSV
+      for (let i = 1; i < records.length; i++) { // Skip header row (i=0)
+        const record = records[i];
+        
+        // Get scheme_id and village_name from CSV (fixed column positions)
+        const schemeId = record[5]; // Fixed position for scheme_id
+        const villageName = record[6]; // Fixed position for village_name
+        
+        if (schemeId && villageName) {
+          importedVillages.add(`${schemeId}::${villageName}`);
+        }
+      }
+      
+      console.log(`Found ${importedVillages.size} villages in the CSV file`);
+      
+      // Get all existing water scheme data
+      const allExistingData = await this.getAllWaterSchemeData();
+      
+      // Identify entries that should be removed (exist in DB but not in CSV)
+      const entriesToDelete: {scheme_id: string, village_name: string}[] = [];
+      
+      for (const entry of allExistingData) {
+        const key = `${entry.scheme_id}::${entry.village_name}`;
+        if (!importedVillages.has(key)) {
+          entriesToDelete.push({
+            scheme_id: entry.scheme_id,
+            village_name: entry.village_name
+          });
+        }
+      }
+      
+      console.log(`Found ${entriesToDelete.length} villages to remove (not present in CSV file)`);
+      
+      // Delete entries not in the CSV file
+      for (const entry of entriesToDelete) {
+        try {
+          await db
+            .delete(waterSchemeData)
+            .where(
+              sql`${waterSchemeData.scheme_id} = ${entry.scheme_id} AND 
+                  ${waterSchemeData.village_name} = ${entry.village_name}`
+            );
+          removed++;
+        } catch (deleteError) {
+          console.error(`Error deleting village ${entry.scheme_id}/${entry.village_name}:`, deleteError);
+          errors.push(`Failed to delete ${entry.scheme_id}/${entry.village_name}`);
+        }
+      }
+      
+      // Second pass - process and insert/update data
+      for (let i = 1; i < records.length; i++) { // Skip header row (i=0)
+        const record = records[i];
         try {
           // Map CSV columns to database fields based on index
           const schemeData: Partial<InsertWaterSchemeData> = {};
@@ -2224,9 +2378,11 @@ export class PostgresStorage implements IStorage {
         }
       }
       
+      console.log(`LPCD CSV import complete: ${inserted} inserted, ${updated} updated, ${removed} removed, ${errors.length} errors`);
       return { inserted, updated, errors };
     } catch (error) {
-      errors.push(`CSV import error: ${error.message}`);
+      console.error(`CSV import error:`, error);
+      errors.push(`CSV import error: ${error instanceof Error ? error.message : String(error)}`);
       return { inserted, updated, errors };
     }
   }
