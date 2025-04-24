@@ -3,6 +3,7 @@ import multer from "multer";
 import { storage } from "../storage";
 import { ZodError } from "zod";
 import { insertChlorineDataSchema, updateChlorineDataSchema } from "@shared/schema";
+import { executeWithRetry } from "../db-retry";
 
 const router = express.Router();
 
@@ -194,21 +195,25 @@ router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res)
     const filePreview = req.file.buffer.toString('utf8').substring(0, 200);
     console.log("CSV content preview:", filePreview);
     
-    // Process CSV file with improved error handling
+    // Process CSV file with improved error handling and retry functionality
     try {
-      const result = await storage.importChlorineDataFromCSV(req.file.buffer);
-      console.log("CSV import completed successfully:", result);
+      // Use retry functionality for the import operation
+      const result = await executeWithRetry(async () => {
+        return storage.importChlorineDataFromCSV(req.file!.buffer);
+      }, 5, 2000); // 5 retries with 2 second initial delay (with exponential backoff)
+      
+      console.log("CSV import completed successfully with retry support:", result);
       res.json(result);
-    } catch (importError) {
-      console.error("Detailed CSV import error:", importError);
+    } catch (importError: any) {
+      console.error("Detailed CSV import error (after retries):", importError);
       // Send detailed error to client
       res.status(500).json({ 
-        error: "Failed to import chlorine data from CSV", 
+        error: "Failed to import chlorine data from CSV after multiple retry attempts", 
         details: importError.message || String(importError),
         preview: filePreview
       });
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in CSV upload route:", error);
     res.status(500).json({ 
       error: "Failed to process CSV file upload",
