@@ -24,7 +24,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Search, AlertTriangle, CheckCircle, AlertCircle, X, RefreshCw, Droplet, Activity } from 'lucide-react';
+import { Search, AlertTriangle, CheckCircle, AlertCircle, X, RefreshCw, Droplet, Activity, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 // Define types for Chlorine Data
 interface ChlorineData {
@@ -243,6 +244,66 @@ const ChlorineDashboard: React.FC = () => {
     setCurrentFilter(range);
     setPage(1); // Reset to first page when filter changes
   };
+  
+  // Function to export data to Excel
+  const exportToExcel = (data: ChlorineData[], filename: string) => {
+    try {
+      // Format data for Excel
+      const worksheetData = data.map((item) => {
+        const latestChlorine = getLatestChlorineValue(item);
+        const { statusText } = getChlorineStatusInfo(latestChlorine);
+        
+        // Get the latest date
+        let latestDate = null;
+        for (const day of [7, 6, 5, 4, 3, 2, 1]) {
+          const dateValue = item[`Chlorine_date_day_${day}` as keyof ChlorineData];
+          if (dateValue) {
+            latestDate = dateValue;
+            break;
+          }
+        }
+        
+        return {
+          'Scheme ID': item.scheme_id,
+          'Scheme Name': item.scheme_name || 'N/A',
+          'Region': item.region || 'N/A',
+          'Village Name': item.village_name || 'N/A',
+          'ESR Name': item.esr_name || 'N/A',
+          'Sensor ID': item.sensor_id || 'N/A',
+          'Latest Chlorine Value (mg/l)': latestChlorine !== null ? latestChlorine.toFixed(2) : 'No data',
+          'Last Updated': latestDate || 'No data',
+          'Status': statusText,
+          'Days Below Range (<0.2 mg/l)': item.Chlorine_less_than_02_mgl || 0,
+          'Days Optimal Range (0.2-0.5 mg/l)': item.Chlorine_between_02__05_mgl || 0,
+          'Days Above Range (>0.5 mg/l)': item.Chlorine_greater_than_05_mgl || 0,
+          'Consistent Zero for 7 Days': item.number_of_consistent_zero_value_in_Chlorine === 7 ? 'Yes' : 'No'
+        };
+      });
+      
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      
+      // Create workbook and add the worksheet
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Chlorine Data');
+      
+      // Generate Excel file and trigger download
+      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      
+      toast({
+        title: "Export Successful",
+        description: `${worksheetData.length} records exported to Excel`,
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export data to Excel. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
 
   // Loading state for dashboard
   if (isLoadingChlorine || isLoadingStats || isLoadingRegions) {
@@ -326,7 +387,15 @@ const ChlorineDashboard: React.FC = () => {
             </div>
           </div>
           
-          <div className="ml-auto self-end">
+          <div className="ml-auto self-end flex gap-2">
+            <Button 
+              onClick={() => exportToExcel(filteredData, `Chlorine_Data_${selectedRegion}_${currentFilter}_${new Date().toISOString().split('T')[0]}`)} 
+              variant="outline"
+              className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 gap-2"
+            >
+              <Download className="h-4 w-4" />
+              Export to Excel
+            </Button>
             <Button 
               onClick={() => refetch()} 
               variant="outline"

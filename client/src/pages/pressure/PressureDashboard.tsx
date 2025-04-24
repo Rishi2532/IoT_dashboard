@@ -24,7 +24,8 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import { Search, AlertTriangle, CheckCircle, AlertCircle, X, RefreshCw, Gauge } from 'lucide-react';
+import { Search, AlertTriangle, CheckCircle, AlertCircle, X, RefreshCw, Gauge, Download } from 'lucide-react';
+import * as XLSX from 'xlsx';
 
 // Define types for Pressure Data
 interface PressureData {
@@ -242,6 +243,66 @@ const PressureDashboard: React.FC = () => {
   const handleCardClick = (range: PressureRange) => {
     setCurrentFilter(range);
     setPage(1); // Reset to first page when filter changes
+  };
+  
+  // Function to export data to Excel
+  const exportToExcel = (data: PressureData[], filename: string) => {
+    try {
+      // Format data for Excel
+      const worksheetData = data.map((item) => {
+        const latestPressure = getLatestPressureValue(item);
+        const { statusText } = getPressureStatusInfo(latestPressure);
+        
+        // Get the latest date
+        let latestDate = null;
+        for (const day of [7, 6, 5, 4, 3, 2, 1]) {
+          const dateValue = item[`pressure_date_day_${day}` as keyof PressureData];
+          if (dateValue) {
+            latestDate = dateValue;
+            break;
+          }
+        }
+        
+        return {
+          'Scheme ID': item.scheme_id,
+          'Scheme Name': item.scheme_name || 'N/A',
+          'Region': item.region || 'N/A',
+          'Village Name': item.village_name || 'N/A',
+          'ESR Name': item.esr_name || 'N/A',
+          'Sensor ID': item.sensor_id || 'N/A',
+          'Latest Pressure Value (bar)': latestPressure !== null ? latestPressure.toFixed(2) : 'No data',
+          'Last Updated': latestDate || 'No data',
+          'Status': statusText,
+          'Days Below Range (<0.2 bar)': item.pressure_less_than_02_bar || 0,
+          'Days Optimal Range (0.2-0.7 bar)': item.pressure_between_02_07_bar || 0,
+          'Days Above Range (>0.7 bar)': item.pressure_greater_than_07_bar || 0,
+          'Consistent Zero for 7 Days': item.number_of_consistent_zero_value_in_pressure === 7 ? 'Yes' : 'No'
+        };
+      });
+      
+      // Create worksheet
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      
+      // Create workbook and add the worksheet
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Pressure Data');
+      
+      // Generate Excel file and trigger download
+      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      
+      toast({
+        title: "Export Successful",
+        description: `${worksheetData.length} records exported to Excel`,
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Export error:', error);
+      toast({
+        title: "Export Failed",
+        description: "Failed to export data to Excel. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Loading state for dashboard
@@ -588,71 +649,187 @@ const PressureDashboard: React.FC = () => {
                               View Details
                             </Button>
                           </DialogTrigger>
-                          <DialogContent className="sm:max-w-lg">
-                            <DialogHeader>
-                              <DialogTitle>Pressure Data History</DialogTitle>
-                              <DialogDescription>
-                                {item.scheme_name} - {item.village_name} - {item.esr_name}
-                              </DialogDescription>
-                            </DialogHeader>
-                            <div className="grid gap-4 py-4">
-                              {selectedESR && (
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-7 gap-2">
-                                    {[7, 6, 5, 4, 3, 2, 1].map((day) => {
-                                      const value = selectedESR[`pressure_value_${day}` as keyof PressureData] as number | null;
-                                      const date = selectedESR[`pressure_date_day_${day}` as keyof PressureData] as string | null;
-                                      const statusInfo = getPressureStatusInfo(value);
+                          <DialogContent className="max-w-4xl bg-white">
+                            {selectedESR && (
+                              <>
+                                <DialogHeader>
+                                  <DialogTitle className="text-xl font-bold flex items-center gap-2">
+                                    <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
+                                      <Gauge className="h-5 w-5 text-blue-600" />
+                                    </div>
+                                    {selectedESR.esr_name} - {selectedESR.village_name}
+                                  </DialogTitle>
+                                  <DialogDescription>
+                                    Detailed pressure monitoring data for this ESR
+                                  </DialogDescription>
+                                </DialogHeader>
+                                
+                                <div className="py-4">
+                                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                    <div className="bg-blue-50/50 rounded-lg p-4 border border-blue-100">
+                                      <h3 className="text-sm font-medium text-blue-800 mb-3">ESR Information</h3>
                                       
-                                      return (
-                                        <div 
-                                          key={`day-${day}`} 
-                                          className={`rounded-lg p-3 text-center ${statusInfo.className} border`}
-                                        >
-                                          <p className="text-sm text-gray-600">Day {day}</p>
-                                          <p className="font-semibold text-xl">
-                                            {value !== null ? `${typeof value === 'number' ? value.toFixed(2) : value} bar` : '-'}
-                                          </p>
-                                          <p className="text-xs text-gray-500">{date || '-'}</p>
+                                      <div className="space-y-3">
+                                        <div className="flex justify-between items-center border-b border-blue-100 pb-2">
+                                          <span className="text-sm text-blue-700">Region</span>
+                                          <span className="font-medium">{selectedESR.region}</span>
                                         </div>
-                                      );
-                                    })}
+                                        
+                                        <div className="flex justify-between items-center border-b border-blue-100 pb-2">
+                                          <span className="text-sm text-blue-700">Scheme ID</span>
+                                          <span className="font-medium font-mono">{selectedESR.scheme_id}</span>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center border-b border-blue-100 pb-2">
+                                          <span className="text-sm text-blue-700">Scheme</span>
+                                          <span className="font-medium">{selectedESR.scheme_name}</span>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center border-b border-blue-100 pb-2">
+                                          <span className="text-sm text-blue-700">Village</span>
+                                          <span className="font-medium">{selectedESR.village_name}</span>
+                                        </div>
+                                        
+                                        <div className="flex justify-between items-center border-b border-blue-100 pb-2">
+                                          <span className="text-sm text-blue-700">Sensor ID</span>
+                                          <span className="font-medium">{selectedESR.sensor_id || "N/A"}</span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg p-4 border border-blue-100 flex flex-col">
+                                      <h3 className="text-sm font-medium text-blue-800 mb-3">Current Status</h3>
+                                      
+                                      {(() => {
+                                        const latestValue = getLatestPressureValue(selectedESR);
+                                        const statusInfo = getPressureStatusInfo(latestValue);
+                                        
+                                        let statusBgClass = "bg-gray-100";
+                                        let statusTextClass = "text-gray-800";
+                                        
+                                        if (latestValue !== null) {
+                                          if (latestValue < 0.2) {
+                                            statusBgClass = "bg-red-100";
+                                            statusTextClass = "text-red-800";
+                                          } else if (latestValue >= 0.2 && latestValue <= 0.7) {
+                                            statusBgClass = "bg-green-100";
+                                            statusTextClass = "text-green-800";
+                                          } else {
+                                            statusBgClass = "bg-orange-100";
+                                            statusTextClass = "text-orange-800";
+                                          }
+                                        }
+                                        
+                                        return (
+                                          <div className={`${statusBgClass} rounded-lg p-4 flex-1 flex flex-col justify-center items-center`}>
+                                            <div className="flex items-center gap-2 mb-2">
+                                              {statusInfo.icon}
+                                              <span className={`text-lg font-bold ${statusTextClass}`}>{statusInfo.statusText}</span>
+                                            </div>
+                                            
+                                            <div className="text-4xl font-bold mb-2">
+                                              {latestValue !== null ? (
+                                                <span className={statusTextClass}>{latestValue.toFixed(2)}</span>
+                                              ) : "—"}
+                                            </div>
+                                            
+                                            <div className={`text-sm ${statusTextClass}`}>
+                                              bar
+                                            </div>
+                                            
+                                            <div className="mt-4 text-xs text-gray-600">
+                                              Target Range: 0.2-0.7 bar
+                                            </div>
+                                          </div>
+                                        );
+                                      })()}
+                                    </div>
                                   </div>
                                   
-                                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                                    <h4 className="font-semibold mb-2">7-Day Analysis:</h4>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      <div>
-                                        <p className="text-sm text-gray-600">Below Range (&lt;0.2 bar):</p>
-                                        <p className="font-semibold">
-                                          {selectedESR.pressure_less_than_02_bar || 0} days
+                                  <div className="border-t border-gray-200 pt-6">
+                                    <h3 className="font-medium text-lg mb-4 text-blue-800 flex items-center gap-2">
+                                      <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
+                                        <AlertCircle className="h-3 w-3 text-blue-600" />
+                                      </div>
+                                      7-Day Pressure History
+                                    </h3>
+                                    <div className="grid grid-cols-7 gap-3">
+                                      {[7, 6, 5, 4, 3, 2, 1].map((day) => {
+                                        const value = selectedESR[`pressure_value_${day}` as keyof PressureData];
+                                        const numValue = value !== undefined && value !== null ? Number(value) : null;
+                                        const dateValue = selectedESR[`pressure_date_day_${day}` as keyof PressureData];
+                                        const { className: dayClassName } = getPressureStatusInfo(numValue);
+                                        
+                                        let cardBgClass = "bg-white border-gray-200";
+                                        let valueTextClass = "text-gray-400";
+                                        
+                                        if (numValue !== null) {
+                                          if (numValue < 0.2) {
+                                            cardBgClass = "bg-gradient-to-br from-red-50 to-white border-red-200";
+                                            valueTextClass = "text-red-600";
+                                          } else if (numValue >= 0.2 && numValue <= 0.7) {
+                                            cardBgClass = "bg-gradient-to-br from-green-50 to-white border-green-200";
+                                            valueTextClass = "text-green-600";
+                                          } else {
+                                            cardBgClass = "bg-gradient-to-br from-orange-50 to-white border-orange-200";
+                                            valueTextClass = "text-orange-600";
+                                          }
+                                        }
+                                        
+                                        return (
+                                          <div
+                                            key={`pressure-day-${day}`}
+                                            className={`${cardBgClass} p-3 rounded-md text-center shadow-sm border relative overflow-hidden`}
+                                          >
+                                            <div className="relative">
+                                              <p className="text-xs text-gray-700 font-medium">
+                                                {day === 1 ? "Today" : day === 2 ? "Yesterday" : `Day ${day}`}
+                                              </p>
+                                              <p className={`text-xl font-bold ${valueTextClass}`}>
+                                                {numValue !== null ? numValue.toFixed(2) : "—"}
+                                              </p>
+                                              <p className="text-xs text-gray-500 truncate">
+                                                {dateValue || "No data"}
+                                              </p>
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="mt-6 bg-blue-50/50 rounded-lg p-4 border border-blue-100">
+                                    <h4 className="font-medium text-blue-800 mb-3">7-Day Analysis</h4>
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                      <div className="bg-white p-3 rounded border border-red-100">
+                                        <p className="text-sm text-red-700 mb-1">Below Range Days</p>
+                                        <p className="text-xl font-bold text-red-600">
+                                          {selectedESR.pressure_less_than_02_bar || 0}
                                         </p>
                                       </div>
-                                      <div>
-                                        <p className="text-sm text-gray-600">Optimal Range (0.2-0.7 bar):</p>
-                                        <p className="font-semibold">
-                                          {selectedESR.pressure_between_02_07_bar || 0} days
+                                      <div className="bg-white p-3 rounded border border-green-100">
+                                        <p className="text-sm text-green-700 mb-1">Optimal Range Days</p>
+                                        <p className="text-xl font-bold text-green-600">
+                                          {selectedESR.pressure_between_02_07_bar || 0}
                                         </p>
                                       </div>
-                                      <div>
-                                        <p className="text-sm text-gray-600">Above Range (&gt;0.7 bar):</p>
-                                        <p className="font-semibold">
-                                          {selectedESR.pressure_greater_than_07_bar || 0} days
+                                      <div className="bg-white p-3 rounded border border-orange-100">
+                                        <p className="text-sm text-orange-700 mb-1">Above Range Days</p>
+                                        <p className="text-xl font-bold text-orange-600">
+                                          {selectedESR.pressure_greater_than_07_bar || 0}
                                         </p>
                                       </div>
-                                      <div>
-                                        <p className="text-sm text-gray-600">Zero Pressure:</p>
-                                        <p className="font-semibold">
-                                          {selectedESR.number_of_consistent_zero_value_in_pressure === 7 
-                                            ? 'All 7 days' 
-                                            : `${selectedESR.number_of_consistent_zero_value_in_pressure || 0} days`}
+                                      <div className="bg-white p-3 rounded border border-gray-200">
+                                        <p className="text-sm text-gray-700 mb-1">Zero Pressure Days</p>
+                                        <p className="text-xl font-bold text-gray-600">
+                                          {selectedESR.number_of_consistent_zero_value_in_pressure || 0}
                                         </p>
                                       </div>
                                     </div>
                                   </div>
                                 </div>
-                              )}
-                            </div>
+                              </>
+                            )}
                           </DialogContent>
                         </Dialog>
                       </TableCell>
@@ -661,7 +838,7 @@ const PressureDashboard: React.FC = () => {
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
                     {allPressureData.length === 0 ? (
                       <>No pressure data available for this region</>
                     ) : (
