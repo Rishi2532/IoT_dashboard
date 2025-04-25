@@ -411,6 +411,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get aggregated data for a scheme across all blocks
+  app.get("/api/schemes/aggregate/:name", async (req, res) => {
+    try {
+      const schemeName = req.params.name;
+
+      if (!schemeName || schemeName.trim() === "") {
+        return res.status(400).json({ message: "Invalid scheme name" });
+      }
+
+      const schemes = await storage.getSchemesByName(schemeName);
+
+      if (!schemes || schemes.length === 0) {
+        return res.status(404).json({ message: "No schemes found with this name" });
+      }
+      
+      // If there's only one scheme/block, just return it
+      if (schemes.length === 1) {
+        return res.json(schemes[0]);
+      }
+      
+      // Create an aggregated scheme object that sums up numerical values
+      const aggregatedScheme = { ...schemes[0] };
+      
+      // Fields to sum up across all blocks
+      const numericFields = [
+        'number_of_village',
+        'total_villages_integrated',
+        'fully_completed_villages',
+        'functional_villages',
+        'partial_villages',
+        'non_functional_villages',
+        'total_number_of_esr',
+        'total_esr_integrated',
+        'no_fully_completed_esr',
+        'balance_esr',
+        'no_partial_completed_esr',
+        'flow_meters_connected',
+        'pressure_transmitters_connected',
+        'residual_chlorine_analyzer_connected'
+      ];
+      
+      // Sum up the numeric fields
+      for (let i = 1; i < schemes.length; i++) {
+        const scheme = schemes[i];
+        
+        for (const field of numericFields) {
+          if (typeof scheme[field] === 'number') {
+            aggregatedScheme[field] = (aggregatedScheme[field] || 0) + (scheme[field] || 0);
+          }
+        }
+      }
+      
+      // Set a special flag to indicate this is an aggregated result
+      aggregatedScheme.isAggregated = true;
+      aggregatedScheme.block = 'All Blocks';
+      
+      res.json(aggregatedScheme);
+    } catch (error) {
+      console.error("Error aggregating scheme data:", error);
+      res.status(500).json({ message: "Failed to aggregate scheme data" });
+    }
+  });
+  
   // Get blocks for a specific scheme name
   app.get("/api/schemes/blocks/:name", async (req, res) => {
     try {
