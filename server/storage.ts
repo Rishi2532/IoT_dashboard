@@ -2580,18 +2580,12 @@ export class PostgresStorage implements IStorage {
   // Scheme methods
   async getAllSchemes(
     statusFilter?: string,
-    schemeId?: string,
-    includeInactive: boolean = false,
+    schemeId?: string
   ): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
 
     // Start with the basic query
     let query = db.select().from(schemeStatuses);
-    
-    // Only include active schemes by default
-    if (!includeInactive) {
-      query = query.where(eq(schemeStatuses.active, true));
-    }
 
     // Apply scheme_id filter if provided
     if (schemeId) {
@@ -2628,11 +2622,10 @@ export class PostgresStorage implements IStorage {
    */
   async getConsolidatedSchemes(
     statusFilter?: string,
-    schemeId?: string,
-    includeInactive: boolean = false,
+    schemeId?: string
   ): Promise<SchemeStatus[]> {
     // First, get all schemes using the existing method
-    const allSchemes = await this.getAllSchemes(statusFilter, schemeId, includeInactive);
+    const allSchemes = await this.getAllSchemes(statusFilter, schemeId);
     
     // Create a map to group schemes by name
     const schemeMap = new Map<string, SchemeStatus>();
@@ -2654,8 +2647,7 @@ export class PostgresStorage implements IStorage {
   async getSchemesByRegion(
     regionName: string,
     statusFilter?: string,
-    schemeId?: string,
-    includeInactive: boolean = false,
+    schemeId?: string
   ): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
 
@@ -2664,11 +2656,6 @@ export class PostgresStorage implements IStorage {
       .select()
       .from(schemeStatuses)
       .where(eq(schemeStatuses.region, regionName));
-      
-    // Only include active schemes by default
-    if (!includeInactive) {
-      query = query.where(eq(schemeStatuses.active, true));
-    }
 
     // Apply scheme_id filter if provided
     if (schemeId) {
@@ -2706,11 +2693,10 @@ export class PostgresStorage implements IStorage {
   async getConsolidatedSchemesByRegion(
     regionName: string,
     statusFilter?: string,
-    schemeId?: string,
-    includeInactive: boolean = false,
+    schemeId?: string
   ): Promise<SchemeStatus[]> {
     // First, get all schemes for the region using the existing method
-    const regionSchemes = await this.getSchemesByRegion(regionName, statusFilter, schemeId, includeInactive);
+    const regionSchemes = await this.getSchemesByRegion(regionName, statusFilter, schemeId);
     
     // Create a map to group schemes by name
     const schemeMap = new Map<string, SchemeStatus>();
@@ -2729,17 +2715,12 @@ export class PostgresStorage implements IStorage {
     return Array.from(schemeMap.values());
   }
 
-  async getSchemeById(schemeId: string, includeInactive: boolean = true): Promise<SchemeStatus | undefined> {
+  async getSchemeById(schemeId: string): Promise<SchemeStatus | undefined> {
     const db = await this.ensureInitialized();
-    let query = db
+    const query = db
       .select()
       .from(schemeStatuses)
       .where(eq(schemeStatuses.scheme_id, schemeId));
-      
-    // Only include active schemes unless explicitly requested
-    if (!includeInactive) {
-      query = query.where(eq(schemeStatuses.active, true));
-    }
       
     const result = await query;
     return result.length > 0 ? result[0] : undefined;
@@ -2767,23 +2748,18 @@ export class PostgresStorage implements IStorage {
     return result;
   }
 
-  async getBlocksByScheme(schemeName: string, includeInactive: boolean = true): Promise<string[]> {
+  async getBlocksByScheme(schemeName: string): Promise<string[]> {
     const db = await this.ensureInitialized();
-    let query = db
+    const query = db
       .select({ block: schemeStatuses.block })
       .from(schemeStatuses)
       .where(eq(schemeStatuses.scheme_name, schemeName));
-    
-    // Only include active schemes unless explicitly requested
-    if (!includeInactive) {
-      query = query.where(eq(schemeStatuses.active, true));
-    }
     
     const result = await query
       .groupBy(schemeStatuses.block)
       .orderBy(schemeStatuses.block);
     
-    return result.map(row => row.block).filter(block => block !== null && block !== undefined && block !== '');
+    return result.map((row: {block: string}) => row.block).filter((block: string) => block !== null && block !== undefined && block !== '');
   }
 
   async createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus> {
