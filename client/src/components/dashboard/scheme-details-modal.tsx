@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -6,6 +7,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   calculatePercentage,
   SchemeCompletionStatus,
@@ -26,13 +34,63 @@ export default function SchemeDetailsModal({
   isOpen,
   onClose,
 }: SchemeDetailsModalProps) {
-  if (!scheme) return null;
+  const [blocks, setBlocks] = useState<string[]>([]);
+  const [selectedBlock, setSelectedBlock] = useState<string>("");
+  const [currentScheme, setCurrentScheme] = useState<SchemeStatus | null>(scheme);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  useEffect(() => {
+    setCurrentScheme(scheme);
+    if (scheme) {
+      setSelectedBlock(scheme.block || "");
+      fetchBlocks(scheme.scheme_name);
+    }
+  }, [scheme]);
+
+  const fetchBlocks = async (schemeName: string) => {
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/schemes/blocks/${encodeURIComponent(schemeName)}`);
+      if (response.ok) {
+        const blocksData = await response.json();
+        setBlocks(blocksData);
+      }
+    } catch (error) {
+      console.error("Error fetching blocks:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBlockChange = async (blockValue: string) => {
+    if (!scheme) return;
+    
+    setSelectedBlock(blockValue);
+    
+    try {
+      setIsLoading(true);
+      const response = await fetch(`/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}`);
+      if (response.ok) {
+        const schemes = await response.json();
+        const matchingScheme = schemes.find((s: SchemeStatus) => s.block === blockValue);
+        if (matchingScheme) {
+          setCurrentScheme(matchingScheme);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching scheme by block:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!currentScheme) return null;
 
   // Handle field names from the database
-  const totalVillages = scheme.number_of_village || 0;
-  const villagesIntegrated = scheme.total_villages_integrated || 0;
-  const totalEsr = scheme.total_number_of_esr || 0;
-  const esrIntegrated = scheme.total_esr_integrated || 0;
+  const totalVillages = currentScheme.number_of_village || 0;
+  const villagesIntegrated = currentScheme.total_villages_integrated || 0;
+  const totalEsr = currentScheme.total_number_of_esr || 0;
+  const esrIntegrated = currentScheme.total_esr_integrated || 0;
 
   const villagesIntegratedPercent = calculatePercentage(
     villagesIntegrated,
@@ -40,14 +98,14 @@ export default function SchemeDetailsModal({
   );
 
   const fullyCompletedVillagesPercent = calculatePercentage(
-    scheme.fully_completed_villages,
+    currentScheme.fully_completed_villages,
     totalVillages,
   );
 
   const esrIntegratedPercent = calculatePercentage(esrIntegrated, totalEsr);
 
   const fullyCompletedEsrPercent = calculatePercentage(
-    scheme.no_fully_completed_esr,
+    currentScheme.no_fully_completed_esr,
     totalEsr,
   );
 
@@ -182,15 +240,36 @@ export default function SchemeDetailsModal({
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Block</h4>
-                <p className="text-xs text-neutral-900">
-                  {!scheme.block ||
-                  scheme.block === "Block" ||
-                  scheme.block === "N/A" ? (
-                    <span className="text-gray-400 italic">Not specified</span>
-                  ) : (
-                    scheme.block
-                  )}
-                </p>
+                {blocks.length > 1 ? (
+                  <div className="mt-1">
+                    <Select
+                      value={selectedBlock}
+                      onValueChange={handleBlockChange}
+                      disabled={isLoading}
+                    >
+                      <SelectTrigger className="w-full text-xs h-7">
+                        <SelectValue placeholder="Select Block" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {blocks.map((block) => (
+                          <SelectItem key={block} value={block}>
+                            {block || "Not specified"}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                ) : (
+                  <p className="text-xs text-neutral-900">
+                    {!currentScheme.block ||
+                    currentScheme.block === "Block" ||
+                    currentScheme.block === "N/A" ? (
+                      <span className="text-gray-400 italic">Not specified</span>
+                    ) : (
+                      currentScheme.block
+                    )}
+                  </p>
+                )}
               </div>
             </div>
           </div>

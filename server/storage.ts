@@ -92,6 +92,8 @@ export interface IStorage {
     schemeId?: string,
   ): Promise<SchemeStatus[]>;
   getSchemeById(schemeId: string): Promise<SchemeStatus | undefined>;
+  getSchemesByName(schemeName: string): Promise<SchemeStatus[]>;
+  getBlocksByScheme(schemeName: string): Promise<string[]>;
   createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus>;
   updateScheme(scheme: SchemeStatus): Promise<SchemeStatus>;
   deleteScheme(schemeId: string): Promise<boolean>;
@@ -2662,6 +2664,28 @@ export class PostgresStorage implements IStorage {
       .from(schemeStatuses)
       .where(eq(schemeStatuses.scheme_id, schemeId));
     return result.length > 0 ? result[0] : undefined;
+  }
+
+  async getSchemesByName(schemeName: string): Promise<SchemeStatus[]> {
+    const db = await this.ensureInitialized();
+    const result = await db
+      .select()
+      .from(schemeStatuses)
+      .where(eq(schemeStatuses.scheme_name, schemeName))
+      .orderBy(schemeStatuses.block);
+    return result;
+  }
+
+  async getBlocksByScheme(schemeName: string): Promise<string[]> {
+    const db = await this.ensureInitialized();
+    const result = await db
+      .select({ block: schemeStatuses.block })
+      .from(schemeStatuses)
+      .where(eq(schemeStatuses.scheme_name, schemeName))
+      .groupBy(schemeStatuses.block)
+      .orderBy(schemeStatuses.block);
+    
+    return result.map(row => row.block).filter(block => block !== null && block !== undefined && block !== '');
   }
 
   async createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus> {

@@ -371,6 +371,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch scheme" });
     }
   });
+  
+  // Get schemes by name (for multi-block schemes)
+  app.get("/api/schemes/by-name/:name", async (req, res) => {
+    try {
+      const schemeName = req.params.name;
+
+      if (!schemeName || schemeName.trim() === "") {
+        return res.status(400).json({ message: "Invalid scheme name" });
+      }
+
+      const schemes = await storage.getSchemesByName(schemeName);
+
+      if (!schemes || schemes.length === 0) {
+        return res.status(404).json({ message: "No schemes found with this name" });
+      }
+
+      res.json(schemes);
+    } catch (error) {
+      console.error("Error fetching schemes by name:", error);
+      res.status(500).json({ message: "Failed to fetch schemes by name" });
+    }
+  });
+  
+  // Get blocks for a specific scheme name
+  app.get("/api/schemes/blocks/:name", async (req, res) => {
+    try {
+      const schemeName = req.params.name;
+
+      if (!schemeName || schemeName.trim() === "") {
+        return res.status(400).json({ message: "Invalid scheme name" });
+      }
+
+      const blocks = await storage.getBlocksByScheme(schemeName);
+
+      res.json(blocks);
+    } catch (error) {
+      console.error("Error fetching blocks for scheme:", error);
+      res.status(500).json({ message: "Failed to fetch blocks for scheme" });
+    }
+  });
 
   // Create a new scheme
   app.post("/api/schemes", async (req, res) => {
