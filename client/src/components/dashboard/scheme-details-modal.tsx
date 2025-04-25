@@ -109,15 +109,17 @@ export default function SchemeDetailsModal({
       if (blockValue === 'All Blocks') {
         await fetchAggregatedData(scheme.scheme_name);
       } else {
-        // Otherwise fetch data for the specific block
-        const response = await fetch(`/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}`);
+        // Otherwise fetch data for the specific block using the new API endpoint
+        const response = await fetch(`/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}?block=${encodeURIComponent(blockValue)}`);
         if (response.ok) {
           const schemes = await response.json();
-          console.log("Fetched schemes:", schemes);
-          const matchingScheme = schemes.find((s: SchemeStatus) => s.block === blockValue);
-          console.log("Selected matching scheme:", matchingScheme);
-          if (matchingScheme) {
-            setCurrentScheme(matchingScheme);
+          console.log("Fetched schemes for block:", schemes);
+          
+          if (schemes && schemes.length > 0) {
+            // Use the first matching scheme for this block
+            setCurrentScheme(schemes[0]);
+          } else {
+            console.error(`No scheme found for block: ${blockValue}`);
           }
         }
       }

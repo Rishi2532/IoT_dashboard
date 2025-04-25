@@ -393,6 +393,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/schemes/by-name/:name", async (req, res) => {
     try {
       const schemeName = req.params.name;
+      const blockName = req.query.block as string | undefined;
 
       if (!schemeName || schemeName.trim() === "") {
         return res.status(400).json({ message: "Invalid scheme name" });
@@ -402,6 +403,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!schemes || schemes.length === 0) {
         return res.status(404).json({ message: "No schemes found with this name" });
+      }
+
+      // If block is specified, filter schemes by block
+      if (blockName && blockName !== "All Blocks") {
+        const filteredSchemes = schemes.filter(scheme => scheme.block === blockName);
+        if (filteredSchemes.length > 0) {
+          return res.json(filteredSchemes);
+        }
       }
 
       res.json(schemes);
