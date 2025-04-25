@@ -27,13 +27,36 @@ router.get("/", async (req, res) => {
   try {
     const { region, pressureRange, minPressure, maxPressure } = req.query;
     
+    console.log("Pressure API Request Filters:", {
+      region,
+      pressureRange,
+      minPressure,
+      maxPressure
+    });
+    
     const filter: any = {};
     if (region) filter.region = region as string;
     if (pressureRange) filter.pressureRange = pressureRange as 'below_0.2' | 'between_0.2_0.7' | 'above_0.7' | 'consistent_zero' | 'consistent_below' | 'consistent_optimal' | 'consistent_above';
     if (minPressure) filter.minPressure = parseFloat(minPressure as string);
     if (maxPressure) filter.maxPressure = parseFloat(maxPressure as string);
     
+    console.log("Applied pressure filter object:", filter);
+    
     const pressureData = await storage.getAllPressureData(filter);
+    console.log(`Returning ${pressureData.length} pressure records after filtering`);
+    
+    // For debugging - log a sample of the first few data points
+    if (pressureData.length > 0) {
+      const sampleData = pressureData.slice(0, Math.min(3, pressureData.length)).map(item => ({
+        scheme_id: item.scheme_id,
+        region: item.region,
+        village_name: item.village_name,
+        esr_name: item.esr_name,
+        pressure_value_7: item.pressure_value_7
+      }));
+      console.log("Sample pressure data:", sampleData);
+    }
+    
     res.json(pressureData);
   } catch (error) {
     console.error("Error getting pressure data:", error);
