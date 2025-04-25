@@ -82,6 +82,7 @@ export const schemeStatuses = pgTable("scheme_status", {
   sub_division: text("sub_division"), // Sub Division
   block: text("block"), // Block
   scheme_name: text("scheme_name").notNull(), // Scheme Name
+  agency: text("agency"), // Agency that manages the scheme
   number_of_village: integer("number_of_village"), // Number of village
   total_villages_integrated: integer("total_villages_integrated"), // Total Villages Integrated
 
