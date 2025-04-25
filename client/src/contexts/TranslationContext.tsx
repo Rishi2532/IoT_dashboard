@@ -79,11 +79,44 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
       return translations[text][language];
     }
 
-    // For browser-based translation, we use a more immediate approach
-    // In a production app, you would integrate with Google Translate API here
+    // Perform translation via API (asynchronously)
+    setIsTranslating(true);
     
-    // For now, we're implementing a simple placeholder translation
-    // that adds language indicator to show the translation is working
+    // Call our translation API
+    fetch('/api/translation/translate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text,
+        targetLanguage: language,
+      }),
+    })
+      .then(response => {
+        if (!response.ok) {
+          throw new Error('Translation request failed');
+        }
+        return response.json();
+      })
+      .then(data => {
+        // Cache the translation result
+        setTranslations(prev => ({
+          ...prev,
+          [text]: {
+            ...(prev[text] || {}),
+            [language]: data.translatedText,
+          },
+        }));
+        setIsTranslating(false);
+      })
+      .catch(error => {
+        console.error('Translation error:', error);
+        setIsTranslating(false);
+      });
+
+    // Return placeholder text while the API request is in progress
+    // In a real implementation, you might show a loading indicator
     if (language === 'hi') {
       return `${text} (हिन्दी)`;
     } else if (language === 'mr') {
@@ -93,13 +126,6 @@ export const TranslationProvider: React.FC<TranslationProviderProps> = ({ childr
     } else {
       return `${text} (${language})`;
     }
-    
-    // In a real implementation with API:
-    // 1. Set isTranslating to true
-    // 2. Make API call to translate
-    // 3. Update translations cache
-    // 4. Set isTranslating to false
-    // 5. Return the translated text
   };
 
   // In a browser environment, we would use the browser's built-in translation API 
