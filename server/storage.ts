@@ -2745,33 +2745,23 @@ export class PostgresStorage implements IStorage {
     return result.length > 0 ? result[0] : undefined;
   }
   
-  async getSchemeByIdAndBlock(schemeId: string, block: string | null, includeInactive: boolean = true): Promise<SchemeStatus | undefined> {
+  async getSchemeByIdAndBlock(schemeId: string, block: string | null): Promise<SchemeStatus | undefined> {
     const db = await this.ensureInitialized();
-    let query = db
+    const query = db
       .select()
       .from(schemeStatuses)
       .where(sql`${schemeStatuses.scheme_id} = ${schemeId} AND ${schemeStatuses.block} IS NOT DISTINCT FROM ${block}`);
-    
-    // Only include active schemes unless explicitly requested
-    if (!includeInactive) {
-      query = query.where(eq(schemeStatuses.active, true));
-    }
     
     const result = await query;
     return result.length > 0 ? result[0] : undefined;
   }
 
-  async getSchemesByName(schemeName: string, includeInactive: boolean = true): Promise<SchemeStatus[]> {
+  async getSchemesByName(schemeName: string): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
-    let query = db
+    const query = db
       .select()
       .from(schemeStatuses)
       .where(eq(schemeStatuses.scheme_name, schemeName));
-      
-    // Only include active schemes unless explicitly requested
-    if (!includeInactive) {
-      query = query.where(eq(schemeStatuses.active, true));
-    }
     
     const result = await query.orderBy(schemeStatuses.block);
     return result;
@@ -2824,8 +2814,7 @@ export class PostgresStorage implements IStorage {
         pressure_transmitter_connected: scheme.pressure_transmitter_connected,
         residual_chlorine_analyzer_connected:
           scheme.residual_chlorine_analyzer_connected,
-        fully_completion_scheme_status: scheme.fully_completion_scheme_status,
-        active: scheme.active, // Include the active flag when updating
+        fully_completion_scheme_status: scheme.fully_completion_scheme_status
       })
       .where(eq(schemeStatuses.scheme_id, scheme.scheme_id));
 
