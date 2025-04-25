@@ -34,6 +34,7 @@ export default function SchemeDetailsModal({
   isOpen,
   onClose,
 }: SchemeDetailsModalProps) {
+  console.log("SchemeDetailsModal opening with scheme:", scheme, "isOpen:", isOpen);
   const [blocks, setBlocks] = useState<string[]>([]);
   const [selectedBlock, setSelectedBlock] = useState<string>("");
   const [currentScheme, setCurrentScheme] = useState<SchemeStatus | null>(scheme);
@@ -50,11 +51,21 @@ export default function SchemeDetailsModal({
   const fetchBlocks = async (schemeName: string) => {
     try {
       setIsLoading(true);
+      console.log("Fetching blocks for scheme:", schemeName);
       const response = await fetch(`/api/schemes/blocks/${encodeURIComponent(schemeName)}`);
       if (response.ok) {
         const blocksData = await response.json();
         console.log("Fetched blocks for scheme:", schemeName, blocksData);
         setBlocks(blocksData);
+        
+        // Ensure the block dropdown shows if we have multiple blocks
+        if (blocksData.length > 1) {
+          console.log("Multiple blocks found:", blocksData.length, "Should show dropdown");
+        } else {
+          console.log("Only one block found, will not show dropdown");
+        }
+      } else {
+        console.error("Error response when fetching blocks:", response.status);
       }
     } catch (error) {
       console.error("Error fetching blocks:", error);
@@ -244,7 +255,8 @@ export default function SchemeDetailsModal({
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Block</h4>
-                {blocks.length > 1 ? (
+                {/* Render blocks dropdown when we have multiple blocks */}
+                {blocks && blocks.length > 1 ? (
                   <div className="mt-1">
                     <Select
                       value={selectedBlock}
