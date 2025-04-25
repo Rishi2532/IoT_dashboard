@@ -2629,9 +2629,10 @@ export class PostgresStorage implements IStorage {
   async getConsolidatedSchemes(
     statusFilter?: string,
     schemeId?: string,
+    includeInactive: boolean = false,
   ): Promise<SchemeStatus[]> {
     // First, get all schemes using the existing method
-    const allSchemes = await this.getAllSchemes(statusFilter, schemeId);
+    const allSchemes = await this.getAllSchemes(statusFilter, schemeId, includeInactive);
     
     // Create a map to group schemes by name
     const schemeMap = new Map<string, SchemeStatus>();
@@ -2654,6 +2655,7 @@ export class PostgresStorage implements IStorage {
     regionName: string,
     statusFilter?: string,
     schemeId?: string,
+    includeInactive: boolean = false,
   ): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
 
@@ -2662,6 +2664,11 @@ export class PostgresStorage implements IStorage {
       .select()
       .from(schemeStatuses)
       .where(eq(schemeStatuses.region, regionName));
+      
+    // Only include active schemes by default
+    if (!includeInactive) {
+      query = query.where(eq(schemeStatuses.active, true));
+    }
 
     // Apply scheme_id filter if provided
     if (schemeId) {
@@ -2700,9 +2707,10 @@ export class PostgresStorage implements IStorage {
     regionName: string,
     statusFilter?: string,
     schemeId?: string,
+    includeInactive: boolean = false,
   ): Promise<SchemeStatus[]> {
     // First, get all schemes for the region using the existing method
-    const regionSchemes = await this.getSchemesByRegion(regionName, statusFilter, schemeId);
+    const regionSchemes = await this.getSchemesByRegion(regionName, statusFilter, schemeId, includeInactive);
     
     // Create a map to group schemes by name
     const schemeMap = new Map<string, SchemeStatus>();
@@ -2721,40 +2729,67 @@ export class PostgresStorage implements IStorage {
     return Array.from(schemeMap.values());
   }
 
-  async getSchemeById(schemeId: string): Promise<SchemeStatus | undefined> {
+  async getSchemeById(schemeId: string, includeInactive: boolean = true): Promise<SchemeStatus | undefined> {
     const db = await this.ensureInitialized();
-    const result = await db
+    let query = db
       .select()
       .from(schemeStatuses)
       .where(eq(schemeStatuses.scheme_id, schemeId));
+      
+    // Only include active schemes unless explicitly requested
+    if (!includeInactive) {
+      query = query.where(eq(schemeStatuses.active, true));
+    }
+      
+    const result = await query;
     return result.length > 0 ? result[0] : undefined;
   }
   
-  async getSchemeByIdAndBlock(schemeId: string, block: string | null): Promise<SchemeStatus | undefined> {
+  async getSchemeByIdAndBlock(schemeId: string, block: string | null, includeInactive: boolean = true): Promise<SchemeStatus | undefined> {
     const db = await this.ensureInitialized();
-    const result = await db
+    let query = db
       .select()
       .from(schemeStatuses)
       .where(sql`${schemeStatuses.scheme_id} = ${schemeId} AND ${schemeStatuses.block} IS NOT DISTINCT FROM ${block}`);
+    
+    // Only include active schemes unless explicitly requested
+    if (!includeInactive) {
+      query = query.where(eq(schemeStatuses.active, true));
+    }
+    
+    const result = await query;
     return result.length > 0 ? result[0] : undefined;
   }
 
-  async getSchemesByName(schemeName: string): Promise<SchemeStatus[]> {
+  async getSchemesByName(schemeName: string, includeInactive: boolean = true): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
-    const result = await db
+    let query = db
       .select()
       .from(schemeStatuses)
-      .where(eq(schemeStatuses.scheme_name, schemeName))
-      .orderBy(schemeStatuses.block);
+      .where(eq(schemeStatuses.scheme_name, schemeName));
+      
+    // Only include active schemes unless explicitly requested
+    if (!includeInactive) {
+      query = query.where(eq(schemeStatuses.active, true));
+    }
+    
+    const result = await query.orderBy(schemeStatuses.block);
     return result;
   }
 
-  async getBlocksByScheme(schemeName: string): Promise<string[]> {
+  async getBlocksByScheme(schemeName: string, includeInactive: boolean = true): Promise<string[]> {
     const db = await this.ensureInitialized();
-    const result = await db
+    let query = db
       .select({ block: schemeStatuses.block })
       .from(schemeStatuses)
-      .where(eq(schemeStatuses.scheme_name, schemeName))
+      .where(eq(schemeStatuses.scheme_name, schemeName));
+    
+    // Only include active schemes unless explicitly requested
+    if (!includeInactive) {
+      query = query.where(eq(schemeStatuses.active, true));
+    }
+    
+    const result = await query
       .groupBy(schemeStatuses.block)
       .orderBy(schemeStatuses.block);
     
@@ -2790,6 +2825,7 @@ export class PostgresStorage implements IStorage {
         residual_chlorine_analyzer_connected:
           scheme.residual_chlorine_analyzer_connected,
         fully_completion_scheme_status: scheme.fully_completion_scheme_status,
+        active: scheme.active, // Include the active flag when updating
       })
       .where(eq(schemeStatuses.scheme_id, scheme.scheme_id));
 
