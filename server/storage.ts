@@ -2618,7 +2618,7 @@ export class PostgresStorage implements IStorage {
   
   /**
    * Gets a consolidated list of schemes by grouping them by scheme_name
-   * This ensures that schemes which appear in multiple blocks are only listed once
+   * and aggregating numeric values across all blocks
    */
   async getConsolidatedSchemes(
     statusFilter?: string,
@@ -2628,7 +2628,11 @@ export class PostgresStorage implements IStorage {
     const allSchemes = await this.getAllSchemes(statusFilter, schemeId);
     
     // Create a map to group schemes by name
-    const schemeMap = new Map<string, SchemeStatus>();
+    const schemeMap = new Map<string, { 
+      scheme: SchemeStatus, 
+      count: number,
+      blocks: string[]
+    }>();
     
     // Process each scheme
     for (const scheme of allSchemes) {
@@ -2636,12 +2640,65 @@ export class PostgresStorage implements IStorage {
       
       if (!schemeMap.has(schemeName)) {
         // First time seeing this scheme name, add it to the map
-        schemeMap.set(schemeName, {...scheme});
+        schemeMap.set(schemeName, {
+          scheme: {...scheme},
+          count: 1,
+          blocks: [scheme.block || '']
+        });
+      } else {
+        // We've seen this scheme before, need to aggregate numeric values
+        const entry = schemeMap.get(schemeName)!;
+        entry.count++;
+        
+        if (scheme.block) {
+          entry.blocks.push(scheme.block);
+        }
+        
+        // Fields to aggregate
+        const numericFields = [
+          'number_of_village',
+          'total_villages_integrated',
+          'fully_completed_villages',
+          'no_of_functional_village',
+          'no_of_partial_village',
+          'no_of_non_functional_village',
+          'total_number_of_esr',
+          'total_esr_integrated',
+          'no_fully_completed_esr',
+          'balance_to_complete_esr',
+          'flow_meters_connected',
+          'pressure_transmitter_connected',
+          'residual_chlorine_analyzer_connected'
+        ];
+        
+        // Sum up the numeric fields from all blocks
+        for (const field of numericFields) {
+          const schemeField = scheme[field as keyof SchemeStatus];
+          const entryField = entry.scheme[field as keyof SchemeStatus];
+          
+          if (typeof schemeField === 'number' && typeof entryField === 'number') {
+            // @ts-ignore - We know these are numbers
+            entry.scheme[field as keyof SchemeStatus] = entryField + schemeField;
+          }
+        }
       }
     }
     
-    // Convert the map back to an array
-    return Array.from(schemeMap.values());
+    // Convert the map back to an array of aggregated schemes
+    const result = Array.from(schemeMap.values()).map(entry => {
+      // For schemes with multiple blocks, add an indicator
+      if (entry.count > 1) {
+        return {
+          ...entry.scheme,
+          block: 'Multiple Blocks',
+          isAggregated: true
+        };
+      }
+      return entry.scheme;
+    });
+    
+    console.log(`Consolidated ${allSchemes.length} schemes into ${result.length} unique schemes`);
+    return result;
   }
 
   async getSchemesByRegion(
@@ -2688,7 +2745,7 @@ export class PostgresStorage implements IStorage {
   
   /**
    * Gets a consolidated list of schemes by grouping them by scheme_name for a specific region
-   * This ensures that schemes which appear in multiple blocks are only listed once
+   * and aggregating numeric values across all blocks
    */
   async getConsolidatedSchemesByRegion(
     regionName: string,
@@ -2699,7 +2756,11 @@ export class PostgresStorage implements IStorage {
     const regionSchemes = await this.getSchemesByRegion(regionName, statusFilter, schemeId);
     
     // Create a map to group schemes by name
-    const schemeMap = new Map<string, SchemeStatus>();
+    const schemeMap = new Map<string, { 
+      scheme: SchemeStatus, 
+      count: number,
+      blocks: string[]
+    }>();
     
     // Process each scheme
     for (const scheme of regionSchemes) {
@@ -2707,12 +2768,65 @@ export class PostgresStorage implements IStorage {
       
       if (!schemeMap.has(schemeName)) {
         // First time seeing this scheme name, add it to the map
-        schemeMap.set(schemeName, {...scheme});
+        schemeMap.set(schemeName, {
+          scheme: {...scheme},
+          count: 1,
+          blocks: [scheme.block || '']
+        });
+      } else {
+        // We've seen this scheme before, need to aggregate numeric values
+        const entry = schemeMap.get(schemeName)!;
+        entry.count++;
+        
+        if (scheme.block) {
+          entry.blocks.push(scheme.block);
+        }
+        
+        // Fields to aggregate
+        const numericFields = [
+          'number_of_village',
+          'total_villages_integrated',
+          'fully_completed_villages',
+          'no_of_functional_village',
+          'no_of_partial_village',
+          'no_of_non_functional_village',
+          'total_number_of_esr',
+          'total_esr_integrated',
+          'no_fully_completed_esr',
+          'balance_to_complete_esr',
+          'flow_meters_connected',
+          'pressure_transmitter_connected',
+          'residual_chlorine_analyzer_connected'
+        ];
+        
+        // Sum up the numeric fields from all blocks
+        for (const field of numericFields) {
+          const schemeField = scheme[field as keyof SchemeStatus];
+          const entryField = entry.scheme[field as keyof SchemeStatus];
+          
+          if (typeof schemeField === 'number' && typeof entryField === 'number') {
+            // @ts-ignore - We know these are numbers
+            entry.scheme[field as keyof SchemeStatus] = entryField + schemeField;
+          }
+        }
       }
     }
     
-    // Convert the map back to an array
-    return Array.from(schemeMap.values());
+    // Convert the map back to an array of aggregated schemes
+    const result = Array.from(schemeMap.values()).map(entry => {
+      // For schemes with multiple blocks, add an indicator
+      if (entry.count > 1) {
+        return {
+          ...entry.scheme,
+          block: 'Multiple Blocks',
+          isAggregated: true
+        };
+      }
+      return entry.scheme;
+    });
+    
+    console.log(`Consolidated ${regionSchemes.length} schemes into ${result.length} unique schemes for region ${regionName}`);
+    return result;
   }
 
   async getSchemeById(schemeId: string): Promise<SchemeStatus | undefined> {
