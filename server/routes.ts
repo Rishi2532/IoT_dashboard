@@ -569,14 +569,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/schemes/blocks/:name", async (req, res) => {
     try {
       const schemeName = req.params.name;
+      console.log(`Received request for blocks of scheme: "${schemeName}"`);
 
       if (!schemeName || schemeName.trim() === "") {
+        console.log("Invalid scheme name provided");
         return res.status(400).json({ message: "Invalid scheme name" });
       }
 
+      console.log(`Looking up blocks for scheme: "${schemeName}"`);
       const blocks = await storage.getBlocksByScheme(schemeName);
-
-      res.json(blocks);
+      
+      console.log(`Found ${blocks.length} blocks for scheme "${schemeName}": ${JSON.stringify(blocks)}`);
+      
+      // Make sure blocks are not empty or contain only empty strings
+      const validBlocks = blocks.filter(block => block && block.trim() !== '');
+      
+      console.log(`Valid blocks: ${validBlocks.length}`);
+      
+      if (validBlocks.length > 0) {
+        console.log(`Returning ${validBlocks.length} blocks for scheme "${schemeName}"`);
+        res.json(validBlocks);
+      } else {
+        console.log(`No valid blocks found for scheme "${schemeName}", checking scheme records directly`);
+        
+        // Fallback: Try to get scheme data directly and extract blocks
+        const schemes = await storage.getSchemesByName(schemeName);
+        console.log(`Found ${schemes.length} scheme records with name "${schemeName}"`);
+        
+        if (schemes.length > 0) {
+          const extractedBlocks = schemes
+            .map(scheme => scheme.block)
+            .filter(block => block && block.trim() !== '');
+            
+          console.log(`Extracted ${extractedBlocks.length} blocks from scheme records: ${JSON.stringify(extractedBlocks)}`);
+          
+          // Return unique blocks only
+          const uniqueBlocks = [...new Set(extractedBlocks)];
+          console.log(`Returning ${uniqueBlocks.length} unique blocks`);
+          res.json(uniqueBlocks);
+        } else {
+          console.log(`No scheme records found, returning empty blocks array`);
+          res.json([]);
+        }
+      }
     } catch (error) {
       console.error("Error fetching blocks for scheme:", error);
       res.status(500).json({ message: "Failed to fetch blocks for scheme" });
