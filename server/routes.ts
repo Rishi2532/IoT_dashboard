@@ -1720,6 +1720,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "import",
         );
         const fileBuffer = req.file.buffer;
+        
+        // Mark all existing schemes as inactive before import
+        // This allows us to track which schemes are in the current import
+        try {
+          const db = await getDB();
+          log("Marking all existing schemes as inactive...", "import");
+          await db.execute(`UPDATE scheme_status SET active = false`);
+          log("All existing schemes marked as inactive", "import");
+        } catch (error) {
+          console.error("Error marking schemes as inactive:", error);
+          // Continue with import even if this fails
+        }
 
         // Try reading with options for better compatibility
         let workbook;
@@ -2823,9 +2835,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   );
 
                   // Update scheme with filtered record (preserving static fields)
+                  // Also set the active flag to true since the scheme is in the current import
                   const updatedScheme = await storage.updateScheme({
                     ...existingScheme,
                     ...filteredRecord,
+                    active: true, // Mark the scheme as active since it's in the current import
                   });
 
                   log(`Updated scheme: ${schemeId}`, "import");
@@ -2870,6 +2884,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     scheme_name: record.scheme_name || `Scheme ${schemeId}`, // Default name if missing
                     scheme_id: record.scheme_id,
                     region: record.region,
+                    // Mark the scheme as active since it's in the current import
+                    active: true,
                     // Include agency
                     agency: record.agency as string | undefined,
                     // Include location fields
