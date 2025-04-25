@@ -312,26 +312,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const regionName = req.query.region as string;
       const status = req.query.status as string;
       const schemeId = req.query.scheme_id as string;
+      const consolidated = req.query.consolidated !== 'false'; // Default to consolidated view unless explicitly set to false
 
       console.log(
-        `Request params: region=${regionName}, status=${status}, schemeId=${schemeId}`,
+        `Request params: region=${regionName}, status=${status}, schemeId=${schemeId}, consolidated=${consolidated}`,
       );
 
       let schemes;
 
       if (regionName && regionName !== "all") {
-        // Pass the filters to storage method for database filtering
-        console.log(`Filtering for region=${regionName}, status=${status}`);
-        schemes = await storage.getSchemesByRegion(
-          regionName,
-          status,
-          schemeId,
-        );
+        // Use consolidated schemes for the region
+        if (consolidated) {
+          console.log(`Filtering for consolidated schemes in region=${regionName}, status=${status}`);
+          schemes = await storage.getConsolidatedSchemesByRegion(
+            regionName,
+            status,
+            schemeId,
+          );
+        } else {
+          // Use original non-consolidated method
+          console.log(`Filtering for all scheme instances in region=${regionName}, status=${status}`);
+          schemes = await storage.getSchemesByRegion(
+            regionName,
+            status,
+            schemeId,
+          );
+        }
         console.log(`Found ${schemes.length} schemes for region ${regionName}`);
       } else {
-        // Pass the filters to storage method for database filtering
-        console.log(`Getting all schemes with status=${status}`);
-        schemes = await storage.getAllSchemes(status, schemeId);
+        // Get all schemes across regions
+        if (consolidated) {
+          console.log(`Getting consolidated schemes with status=${status}`);
+          schemes = await storage.getConsolidatedSchemes(status, schemeId);
+        } else {
+          // Use original non-consolidated method
+          console.log(`Getting all scheme instances with status=${status}`);
+          schemes = await storage.getAllSchemes(status, schemeId);
+        }
         console.log(`Found ${schemes.length} schemes across all regions`);
       }
 

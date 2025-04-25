@@ -2614,6 +2614,34 @@ export class PostgresStorage implements IStorage {
 
     return query.orderBy(schemeStatuses.region, schemeStatuses.scheme_name);
   }
+  
+  /**
+   * Gets a consolidated list of schemes by grouping them by scheme_name
+   * This ensures that schemes which appear in multiple blocks are only listed once
+   */
+  async getConsolidatedSchemes(
+    statusFilter?: string,
+    schemeId?: string,
+  ): Promise<SchemeStatus[]> {
+    // First, get all schemes using the existing method
+    const allSchemes = await this.getAllSchemes(statusFilter, schemeId);
+    
+    // Create a map to group schemes by name
+    const schemeMap = new Map<string, SchemeStatus>();
+    
+    // Process each scheme
+    for (const scheme of allSchemes) {
+      const schemeName = scheme.scheme_name;
+      
+      if (!schemeMap.has(schemeName)) {
+        // First time seeing this scheme name, add it to the map
+        schemeMap.set(schemeName, {...scheme});
+      }
+    }
+    
+    // Convert the map back to an array
+    return Array.from(schemeMap.values());
+  }
 
   async getSchemesByRegion(
     regionName: string,
@@ -2655,6 +2683,35 @@ export class PostgresStorage implements IStorage {
     }
 
     return query.orderBy(schemeStatuses.scheme_name);
+  }
+  
+  /**
+   * Gets a consolidated list of schemes by grouping them by scheme_name for a specific region
+   * This ensures that schemes which appear in multiple blocks are only listed once
+   */
+  async getConsolidatedSchemesByRegion(
+    regionName: string,
+    statusFilter?: string,
+    schemeId?: string,
+  ): Promise<SchemeStatus[]> {
+    // First, get all schemes for the region using the existing method
+    const regionSchemes = await this.getSchemesByRegion(regionName, statusFilter, schemeId);
+    
+    // Create a map to group schemes by name
+    const schemeMap = new Map<string, SchemeStatus>();
+    
+    // Process each scheme
+    for (const scheme of regionSchemes) {
+      const schemeName = scheme.scheme_name;
+      
+      if (!schemeMap.has(schemeName)) {
+        // First time seeing this scheme name, add it to the map
+        schemeMap.set(schemeName, {...scheme});
+      }
+    }
+    
+    // Convert the map back to an array
+    return Array.from(schemeMap.values());
   }
 
   async getSchemeById(schemeId: string): Promise<SchemeStatus | undefined> {
