@@ -102,6 +102,7 @@ export const schemeStatuses = pgTable("scheme_status", {
   ), // Residual Chlorine Analyzer Connected
 
   fully_completion_scheme_status: text("fully_completion_scheme_status"), // Scheme Status (Fully Completion Scheme Status)
+  active: boolean("active").default(true), // Flag to indicate if scheme is active (present in the latest import)
 }, (table) => {
   // Create a composite primary key of scheme_id and block to allow the same scheme in multiple blocks
   return {

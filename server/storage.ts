@@ -2581,11 +2581,17 @@ export class PostgresStorage implements IStorage {
   async getAllSchemes(
     statusFilter?: string,
     schemeId?: string,
+    includeInactive: boolean = false,
   ): Promise<SchemeStatus[]> {
     const db = await this.ensureInitialized();
 
     // Start with the basic query
     let query = db.select().from(schemeStatuses);
+    
+    // Only include active schemes by default
+    if (!includeInactive) {
+      query = query.where(eq(schemeStatuses.active, true));
+    }
 
     // Apply scheme_id filter if provided
     if (schemeId) {
