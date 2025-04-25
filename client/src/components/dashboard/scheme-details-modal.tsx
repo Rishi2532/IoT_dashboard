@@ -53,6 +53,7 @@ export default function SchemeDetailsModal({
       const response = await fetch(`/api/schemes/blocks/${encodeURIComponent(schemeName)}`);
       if (response.ok) {
         const blocksData = await response.json();
+        console.log("Fetched blocks for scheme:", schemeName, blocksData);
         setBlocks(blocksData);
       }
     } catch (error) {
@@ -65,6 +66,7 @@ export default function SchemeDetailsModal({
   const handleBlockChange = async (blockValue: string) => {
     if (!scheme) return;
     
+    console.log("Changing block to:", blockValue);
     setSelectedBlock(blockValue);
     
     try {
@@ -72,7 +74,9 @@ export default function SchemeDetailsModal({
       const response = await fetch(`/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}`);
       if (response.ok) {
         const schemes = await response.json();
+        console.log("Fetched schemes:", schemes);
         const matchingScheme = schemes.find((s: SchemeStatus) => s.block === blockValue);
+        console.log("Selected matching scheme:", matchingScheme);
         if (matchingScheme) {
           setCurrentScheme(matchingScheme);
         }
