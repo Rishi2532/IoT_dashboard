@@ -115,9 +115,13 @@ export default function SchemeDetailsModal({
           const schemes = await response.json();
           console.log("Fetched schemes for block:", schemes);
           
-          if (schemes && schemes.length > 0) {
-            // Use the first matching scheme for this block
+          // Handle both array and single object responses
+          if (Array.isArray(schemes) && schemes.length > 0) {
+            // Use the first matching scheme for this block if response is an array
             setCurrentScheme(schemes[0]);
+          } else if (schemes && typeof schemes === 'object') {
+            // Handle case where a single scheme object is returned
+            setCurrentScheme(schemes);
           } else {
             console.error(`No scheme found for block: ${blockValue}`);
           }

@@ -407,9 +407,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // If block is specified, filter schemes by block
       if (blockName && blockName !== "All Blocks") {
-        const filteredSchemes = schemes.filter(scheme => scheme.block === blockName);
+        console.log(`Filtering for block: "${blockName}" in ${schemes.length} schemes`);
+        
+        // Log all blocks for debugging
+        console.log("Available blocks:", schemes.map(s => s.block));
+        
+        const filteredSchemes = schemes.filter(scheme => {
+          // Handle null or undefined block values
+          const schemeBlock = scheme.block || "";
+          const requestedBlock = blockName || "";
+          
+          // Case-insensitive comparison
+          return schemeBlock.toLowerCase() === requestedBlock.toLowerCase();
+        });
+        
+        console.log(`Found ${filteredSchemes.length} schemes matching block "${blockName}"`);
+        
         if (filteredSchemes.length > 0) {
           return res.json(filteredSchemes);
+        } else {
+          console.log("No schemes found for the specified block, returning all schemes");
         }
       }
 
