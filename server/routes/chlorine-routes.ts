@@ -28,13 +28,36 @@ router.get("/", async (req, res) => {
   try {
     const { region, chlorineRange, minChlorine, maxChlorine } = req.query;
     
+    console.log("Chlorine API Request Filters:", {
+      region,
+      chlorineRange,
+      minChlorine,
+      maxChlorine
+    });
+    
     const filter: any = {};
     if (region) filter.region = region as string;
     if (chlorineRange) filter.chlorineRange = chlorineRange as 'below_0.2' | 'between_0.2_0.5' | 'above_0.5' | 'consistent_zero' | 'consistent_below' | 'consistent_optimal' | 'consistent_above';
     if (minChlorine) filter.minChlorine = parseFloat(minChlorine as string);
     if (maxChlorine) filter.maxChlorine = parseFloat(maxChlorine as string);
     
+    console.log("Applied filter object:", filter);
+    
     const chlorineData = await storage.getAllChlorineData(filter);
+    console.log(`Returning ${chlorineData.length} chlorine records after filtering`);
+    
+    // For debugging - log a sample of the first few data points to see what's returned
+    if (chlorineData.length > 0) {
+      const sampleData = chlorineData.slice(0, Math.min(3, chlorineData.length)).map(item => ({
+        scheme_id: item.scheme_id,
+        region: item.region,
+        village_name: item.village_name,
+        esr_name: item.esr_name,
+        chlorine_value_7: item.chlorine_value_7
+      }));
+      console.log("Sample data:", sampleData);
+    }
+    
     res.json(chlorineData);
   } catch (error) {
     console.error("Error getting chlorine data:", error);
