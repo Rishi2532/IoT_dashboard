@@ -20,6 +20,7 @@ import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
 import ChatbotComponent from "./components/chatbot/ChatbotComponent";
+import { TranslationProvider } from "./contexts/TranslationContext";
 
 function App() {
   const [location] = useLocation();
@@ -43,7 +44,7 @@ function App() {
   
   return (
     <AuthProvider>
-      <>
+      <TranslationProvider>
         {/* Global styles to fix z-index issues */}
         <style dangerouslySetInnerHTML={{
           __html: `
@@ -172,7 +173,7 @@ function App() {
             <ChatbotComponent />
           </FilterContextProvider>
         )}
-      </>
+      </TranslationProvider>
     </AuthProvider>
   );
 }

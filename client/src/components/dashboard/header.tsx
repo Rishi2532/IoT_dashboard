@@ -1,8 +1,11 @@
 import { Button } from "../ui/button";
-import { UserCircle, Settings, Droplet, LogOut, DropletIcon } from "lucide-react";
+import { UserCircle, Settings, Droplet, LogOut, DropletIcon, Globe } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import Sidebar from "./sidebar";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { LanguageSelectorMinimal } from "../ui/language-selector";
+import { useTranslation } from "../../contexts/TranslationContext";
+import { TranslatedText } from "../ui/translated-text";
 
 interface AuthStatusResponse {
   isLoggedIn: boolean;
@@ -71,7 +74,7 @@ export default function Header() {
               
               <div>
                 <h1 className="font-bold text-lg sm:text-xl text-white drop-shadow-md tracking-tight">
-                  STATE WATER AND SANITATION MISSION
+                  <TranslatedText>STATE WATER AND SANITATION MISSION</TranslatedText>
                   <span className="relative ml-1">
                     <span className="absolute inset-0 bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white blur-sm">
                       MAHARASHTRA
@@ -83,7 +86,7 @@ export default function Header() {
                 </h1>
                 <p className="text-xs text-blue-100 -mt-1 hidden sm:block font-medium">
                   <span className="text-white flex items-center gap-1">
-                    <DropletIcon className="h-3 w-3" /> JJM Integration Monitoring System
+                    <DropletIcon className="h-3 w-3" /> <TranslatedText>JJM Integration Monitoring System</TranslatedText>
                   </span>
                 </p>
               </div>
@@ -91,6 +94,12 @@ export default function Header() {
           </div>
           
           <div className="flex items-center space-x-1 sm:space-x-2">
+            {/* Language selector */}
+            <div className="flex items-center mr-2 px-2 py-1 bg-blue-700/30 backdrop-blur-sm rounded-md border border-white/10">
+              <Globe className="h-4 w-4 text-blue-100 mr-2" />
+              <LanguageSelectorMinimal />
+            </div>
+            
             {/* Only show Admin button if user is admin */}
             {authData?.isAdmin && (
               <Link href="/admin">
@@ -100,7 +109,7 @@ export default function Header() {
                   className="text-blue-100 hover:text-white hover:bg-blue-700/50 backdrop-blur-sm px-2 sm:px-3"
                 >
                   <Settings className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline">Admin</span>
+                  <span className="hidden sm:inline"><TranslatedText>Admin</TranslatedText></span>
                 </Button>
               </Link>
             )}
