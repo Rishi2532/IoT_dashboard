@@ -413,6 +413,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         // Create an aggregated scheme object that sums up numerical values
+        // Start with the first scheme's data
         const aggregatedScheme = { ...schemes[0] };
         
         // Fields to sum up across all blocks
@@ -420,37 +421,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'number_of_village',
           'total_villages_integrated',
           'fully_completed_villages',
-          'functional_villages',
-          'partial_villages',
-          'non_functional_villages',
+          'no_of_functional_village',
+          'no_of_partial_village',
+          'no_of_non_functional_village',
           'total_number_of_esr',
           'total_esr_integrated',
           'no_fully_completed_esr',
-          'balance_esr',
-          'no_partial_completed_esr',
+          'balance_to_complete_esr',
           'flow_meters_connected',
-          'pressure_transmitters_connected',
+          'pressure_transmitter_connected',
           'residual_chlorine_analyzer_connected'
         ];
         
-        // Reset the numeric fields to 0 before summing
-        numericFields.forEach(field => {
-          aggregatedScheme[field] = 0;
-        });
+        // Reset the numeric fields in our aggregate result to 0
+        for (const field of numericFields) {
+          if (field in aggregatedScheme) {
+            aggregatedScheme[field] = 0;
+          }
+        }
         
         // Sum up the numeric fields from all blocks
+        console.log(`Aggregating ${schemes.length} blocks for scheme ${schemeName}`);
         for (const scheme of schemes) {
+          console.log(`Adding block ${scheme.block} data`);
           for (const field of numericFields) {
-            if (typeof scheme[field] === 'number') {
-              aggregatedScheme[field] += (scheme[field] || 0);
+            if (field in scheme && typeof scheme[field] === 'number') {
+              // Use += to sum up the values
+              aggregatedScheme[field] = (aggregatedScheme[field] || 0) + (scheme[field] || 0);
+              console.log(`${field}: ${scheme[field]} => Total: ${aggregatedScheme[field]}`);
             }
           }
         }
         
-        // Set a special flag to indicate this is an aggregated result
+        // Set special flags for the aggregated result
         aggregatedScheme.isAggregated = true;
         aggregatedScheme.block = 'All Blocks';
         
+        console.log("Final aggregated data:", aggregatedScheme);
         return res.json(aggregatedScheme);
       }
       
@@ -502,10 +509,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // If there's only one scheme/block, just return it
       if (schemes.length === 1) {
-        return res.json(schemes[0]);
+        return res.json({...schemes[0], block: 'All Blocks'});
       }
       
       // Create an aggregated scheme object that sums up numerical values
+      // Start with the first scheme's data
       const aggregatedScheme = { ...schemes[0] };
       
       // Fields to sum up across all blocks
@@ -513,34 +521,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'number_of_village',
         'total_villages_integrated',
         'fully_completed_villages',
-        'functional_villages',
-        'partial_villages',
-        'non_functional_villages',
+        'no_of_functional_village',
+        'no_of_partial_village',
+        'no_of_non_functional_village',
         'total_number_of_esr',
         'total_esr_integrated',
         'no_fully_completed_esr',
-        'balance_esr',
-        'no_partial_completed_esr',
+        'balance_to_complete_esr',
         'flow_meters_connected',
-        'pressure_transmitters_connected',
+        'pressure_transmitter_connected',
         'residual_chlorine_analyzer_connected'
       ];
       
-      // Sum up the numeric fields
-      for (let i = 1; i < schemes.length; i++) {
-        const scheme = schemes[i];
-        
+      // Reset the numeric fields in our aggregate result to 0
+      for (const field of numericFields) {
+        if (field in aggregatedScheme) {
+          aggregatedScheme[field] = 0;
+        }
+      }
+      
+      // Sum up the numeric fields from all blocks
+      console.log(`Aggregating ${schemes.length} blocks for scheme ${schemeName}`);
+      for (const scheme of schemes) {
+        console.log(`Adding block ${scheme.block} data`);
         for (const field of numericFields) {
-          if (typeof scheme[field] === 'number') {
+          if (field in scheme && typeof scheme[field] === 'number') {
+            // Use += to sum up the values
             aggregatedScheme[field] = (aggregatedScheme[field] || 0) + (scheme[field] || 0);
+            console.log(`${field}: ${scheme[field]} => Total: ${aggregatedScheme[field]}`);
           }
         }
       }
       
-      // Set a special flag to indicate this is an aggregated result
+      // Set special flags for the aggregated result
       aggregatedScheme.isAggregated = true;
       aggregatedScheme.block = 'All Blocks';
       
+      console.log("Final aggregated data:", aggregatedScheme);
       res.json(aggregatedScheme);
     } catch (error) {
       console.error("Error aggregating scheme data:", error);
