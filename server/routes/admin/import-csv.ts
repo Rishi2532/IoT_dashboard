@@ -290,18 +290,18 @@ async function updateDatabaseRecords(
           item.agency = regionAgencyMap[item.region_name] || null;
         }
 
-        // Check if scheme exists
-        const existingScheme = await storage.getSchemeById(item.scheme_id);
+        // Check if scheme exists with same ID and block
+        const existingScheme = await storage.getSchemeByIdAndBlock(item.scheme_id, item.block);
 
         if (existingScheme) {
-          // Update existing scheme
+          // Update existing scheme with the same ID and block
           const schemeData = {
             ...existingScheme,
             ...item,
           };
 
           await storage.updateScheme(schemeData);
-          details += `Updated scheme: ${item.scheme_id}\n`;
+          details += `Updated scheme: ${item.scheme_id} in block ${item.block}\n`;
         } else {
           // Create new scheme
           const schemeData: InsertSchemeStatus = {
