@@ -92,6 +92,7 @@ export interface IStorage {
     schemeId?: string,
   ): Promise<SchemeStatus[]>;
   getSchemeById(schemeId: string): Promise<SchemeStatus | undefined>;
+  getSchemeByIdAndBlock(schemeId: string, block: string | null): Promise<SchemeStatus | undefined>;
   getSchemesByName(schemeName: string): Promise<SchemeStatus[]>;
   getBlocksByScheme(schemeName: string): Promise<string[]>;
   createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus>;
@@ -2720,6 +2721,15 @@ export class PostgresStorage implements IStorage {
       .select()
       .from(schemeStatuses)
       .where(eq(schemeStatuses.scheme_id, schemeId));
+    return result.length > 0 ? result[0] : undefined;
+  }
+  
+  async getSchemeByIdAndBlock(schemeId: string, block: string | null): Promise<SchemeStatus | undefined> {
+    const db = await this.ensureInitialized();
+    const result = await db
+      .select()
+      .from(schemeStatuses)
+      .where(sql`${schemeStatuses.scheme_id} = ${schemeId} AND ${schemeStatuses.block} IS NOT DISTINCT FROM ${block}`);
     return result.length > 0 ? result[0] : undefined;
   }
 
