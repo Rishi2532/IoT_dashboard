@@ -63,8 +63,10 @@ function SchemeManager() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchSchemeId, setSearchSchemeId] = useState<string>("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteAllDialogOpen, setDeleteAllDialogOpen] = useState(false);
   const [schemeToDelete, setSchemeToDelete] = useState<Scheme | null>(null);
   
   // Define region type
@@ -108,13 +110,16 @@ function SchemeManager() {
     residual_chlorine_connected?: number;
   }
   
-  // Fetch schemes based on selected region
+  // Fetch schemes based on selected region and status
   const schemesQuery = useQuery<Scheme[]>({
-    queryKey: ['/api/schemes', selectedRegion, searchSchemeId],
+    queryKey: ['/api/schemes', selectedRegion, selectedStatus, searchSchemeId],
     queryFn: async () => {
       const params = new URLSearchParams();
       if (selectedRegion && selectedRegion !== "all") {
         params.append('region', selectedRegion);
+      }
+      if (selectedStatus && selectedStatus !== "all") {
+        params.append('status', selectedStatus);
       }
       if (searchSchemeId) {
         params.append('scheme_id', searchSchemeId);
@@ -165,6 +170,42 @@ function SchemeManager() {
     }
   });
   
+  // Delete all schemes mutation
+  const deleteAllSchemesMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch(`/api/schemes/all/confirm`, {
+        method: 'DELETE',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to delete all schemes');
+      }
+      
+      return response.json();
+    },
+    onSuccess: (data) => {
+      toast({
+        title: 'Success',
+        description: `All schemes deleted successfully. Total deleted: ${data.deletedCount}`,
+      });
+      
+      // Invalidate queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['/api/schemes'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/regions/summary'] });
+      
+      // Close the dialog
+      setDeleteAllDialogOpen(false);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: 'Error',
+        description: `Failed to delete all schemes: ${error.message}`,
+        variant: 'destructive'
+      });
+    }
+  });
+  
   const handleDelete = (scheme: Scheme) => {
     setSchemeToDelete(scheme);
     setDeleteDialogOpen(true);
@@ -174,6 +215,14 @@ function SchemeManager() {
     if (schemeToDelete) {
       deleteSchemeMutation.mutate(schemeToDelete.scheme_id);
     }
+  };
+  
+  const handleDeleteAll = () => {
+    setDeleteAllDialogOpen(true);
+  };
+  
+  const confirmDeleteAll = () => {
+    deleteAllSchemesMutation.mutate();
   };
   
   return (
@@ -188,7 +237,7 @@ function SchemeManager() {
         <div className="space-y-4">
           {/* Filters */}
           <div className="flex flex-col sm:flex-row gap-4">
-            <div className="w-full sm:w-1/3">
+            <div className="w-full sm:w-1/4">
               <label className="text-sm font-medium mb-1 block">Region</label>
               <Select
                 value={selectedRegion}
@@ -208,7 +257,24 @@ function SchemeManager() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="w-full sm:w-1/3">
+            <div className="w-full sm:w-1/4">
+              <label className="text-sm font-medium mb-1 block">Status</label>
+              <Select
+                value={selectedStatus}
+                onValueChange={setSelectedStatus}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                  <SelectItem value="Non-functional">Non-functional</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-full sm:w-1/4">
               <label className="text-sm font-medium mb-1 block">Scheme ID</label>
               <Input
                 placeholder="Enter scheme ID"
@@ -216,18 +282,43 @@ function SchemeManager() {
                 onChange={(e) => setSearchSchemeId(e.target.value)}
               />
             </div>
-            <div className="w-full sm:w-1/3 flex items-end">
+            <div className="w-full sm:w-1/4 flex items-end">
               <Button
                 className="w-full"
                 variant="outline"
                 onClick={() => {
-                  queryClient.invalidateQueries({ queryKey: ['/api/schemes', selectedRegion, searchSchemeId] });
+                  queryClient.invalidateQueries({ 
+                    queryKey: ['/api/schemes', selectedRegion, selectedStatus, searchSchemeId] 
+                  });
                 }}
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
                 Refresh
               </Button>
             </div>
+          </div>
+          
+          {/* Actions */}
+          <div className="mt-4 flex justify-end">
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={handleDeleteAll}
+              disabled={deleteAllSchemesMutation.isPending || schemesQuery.data?.length === 0}
+              className="flex items-center gap-2"
+            >
+              {deleteAllSchemesMutation.isPending ? (
+                <>
+                  <Spinner className="h-4 w-4" />
+                  Deleting All Schemes...
+                </>
+              ) : (
+                <>
+                  <Trash2 className="h-4 w-4" />
+                  Delete All Schemes
+                </>
+              )}
+            </Button>
           </div>
           
           {/* Schemes Table */}
@@ -328,6 +419,49 @@ function SchemeManager() {
                   <>
                     <Trash2 className="mr-2 h-4 w-4" />
                     Delete
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete All Schemes Confirmation Dialog */}
+        <Dialog open={deleteAllDialogOpen} onOpenChange={setDeleteAllDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle className="text-red-600">Delete All Schemes</DialogTitle>
+              <DialogDescription>
+                <p className="mb-2">
+                  Are you sure you want to delete <strong>ALL SCHEMES</strong> from the database? 
+                </p>
+                <p className="font-semibold text-red-500">
+                  This action cannot be undone and will remove data for all {schemesQuery.data?.length} schemes.
+                </p>
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setDeleteAllDialogOpen(false)}
+                disabled={deleteAllSchemesMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={confirmDeleteAll}
+                disabled={deleteAllSchemesMutation.isPending}
+              >
+                {deleteAllSchemesMutation.isPending ? (
+                  <>
+                    <Spinner className="mr-2 h-4 w-4" />
+                    Deleting All Schemes...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Confirm Delete All
                   </>
                 )}
               </Button>

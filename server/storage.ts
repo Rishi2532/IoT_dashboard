@@ -2798,6 +2798,14 @@ export class PostgresStorage implements IStorage {
     return true;
   }
 
+  async deleteAllSchemes(): Promise<number> {
+    const db = await this.ensureInitialized();
+    const result = await db.delete(schemeStatuses);
+    
+    // Return the count of deleted schemes
+    return result.count || 0;
+  }
+
   // Water Scheme Data operations
   async getAllWaterSchemeData(filter?: WaterSchemeDataFilter): Promise<WaterSchemeData[]> {
     const db = await this.ensureInitialized();

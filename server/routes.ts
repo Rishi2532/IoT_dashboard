@@ -509,6 +509,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete scheme" });
     }
   });
+  
+  // Delete all schemes (admin only)
+  app.delete("/api/schemes/all/confirm", requireAdmin, async (req, res) => {
+    try {
+      console.log("Deleting all schemes from database...");
+      
+      // Delete all schemes
+      const deletedCount = await storage.deleteAllSchemes();
+      
+      // Update region summaries after deletion
+      await updateRegionSummaries();
+      
+      // Force refresh of today's updates
+      await storage.getTodayUpdates();
+      
+      res.json({
+        success: true,
+        message: `All schemes have been deleted successfully. Total schemes deleted: ${deletedCount}`,
+        deletedCount
+      });
+    } catch (error) {
+      console.error("Error deleting all schemes:", error);
+      res.status(500).json({ message: "Failed to delete all schemes" });
+    }
+  });
 
   // --------------------- Water Scheme Data API Routes ---------------------
 
