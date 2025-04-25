@@ -58,9 +58,11 @@ export default function SchemeDetailsModal({
         console.log("Fetched blocks for scheme:", schemeName, blocksData);
         setBlocks(blocksData);
         
-        // Ensure the block dropdown shows if we have multiple blocks
+        // If we have multiple blocks, fetch the aggregated data first
         if (blocksData.length > 1) {
-          console.log("Multiple blocks found:", blocksData.length, "Should show dropdown");
+          console.log("Multiple blocks found:", blocksData.length, "Fetching aggregated data first");
+          // Add an "All Blocks" option
+          fetchAggregatedData(schemeName);
         } else {
           console.log("Only one block found, will not show dropdown");
         }
@@ -69,6 +71,26 @@ export default function SchemeDetailsModal({
       }
     } catch (error) {
       console.error("Error fetching blocks:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  const fetchAggregatedData = async (schemeName: string) => {
+    try {
+      setIsLoading(true);
+      console.log("Fetching aggregated data for scheme:", schemeName);
+      const response = await fetch(`/api/schemes/aggregate/${encodeURIComponent(schemeName)}`);
+      if (response.ok) {
+        const aggregatedScheme = await response.json();
+        console.log("Fetched aggregated data:", aggregatedScheme);
+        setCurrentScheme(aggregatedScheme);
+        setSelectedBlock('All Blocks');
+      } else {
+        console.error("Error response when fetching aggregated data:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching aggregated data:", error);
     } finally {
       setIsLoading(false);
     }
@@ -82,14 +104,21 @@ export default function SchemeDetailsModal({
     
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}`);
-      if (response.ok) {
-        const schemes = await response.json();
-        console.log("Fetched schemes:", schemes);
-        const matchingScheme = schemes.find((s: SchemeStatus) => s.block === blockValue);
-        console.log("Selected matching scheme:", matchingScheme);
-        if (matchingScheme) {
-          setCurrentScheme(matchingScheme);
+      
+      // If "All Blocks" is selected, fetch aggregated data
+      if (blockValue === 'All Blocks') {
+        await fetchAggregatedData(scheme.scheme_name);
+      } else {
+        // Otherwise fetch data for the specific block
+        const response = await fetch(`/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}`);
+        if (response.ok) {
+          const schemes = await response.json();
+          console.log("Fetched schemes:", schemes);
+          const matchingScheme = schemes.find((s: SchemeStatus) => s.block === blockValue);
+          console.log("Selected matching scheme:", matchingScheme);
+          if (matchingScheme) {
+            setCurrentScheme(matchingScheme);
+          }
         }
       }
     } catch (error) {
@@ -267,6 +296,9 @@ export default function SchemeDetailsModal({
                         <SelectValue placeholder="Select Block" />
                       </SelectTrigger>
                       <SelectContent>
+                        <SelectItem key="all-blocks" value="All Blocks">
+                          All Blocks (Combined)
+                        </SelectItem>
                         {blocks.map((block) => (
                           <SelectItem key={block} value={block}>
                             {block || "Not specified"}
@@ -274,6 +306,13 @@ export default function SchemeDetailsModal({
                         ))}
                       </SelectContent>
                     </Select>
+                    
+                    {/* Aggregation indicator */}
+                    {selectedBlock === 'All Blocks' && (
+                      <div className="mt-1 text-xs bg-blue-50 border border-blue-200 rounded-md px-2 py-1 text-blue-600">
+                        Showing combined data across all blocks
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="text-xs text-neutral-900">
