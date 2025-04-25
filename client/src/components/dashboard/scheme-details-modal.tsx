@@ -43,8 +43,20 @@ export default function SchemeDetailsModal({
   useEffect(() => {
     setCurrentScheme(scheme);
     if (scheme) {
-      setSelectedBlock(scheme.block || "");
-      fetchBlocks(scheme.scheme_name);
+      // First check if there are multiple blocks
+      const checkBlocks = async () => {
+        const hasMultipleBlocks = await fetchBlocks(scheme.scheme_name);
+        if (hasMultipleBlocks) {
+          // If there are multiple blocks, default to showing the aggregate view
+          setSelectedBlock('All Blocks');
+          fetchAggregatedData(scheme.scheme_name);
+        } else {
+          // Otherwise, keep the current block
+          setSelectedBlock(scheme.block || "");
+        }
+      };
+      
+      checkBlocks();
     }
   }, [scheme]);
 
@@ -58,14 +70,16 @@ export default function SchemeDetailsModal({
         console.log("Fetched blocks for scheme:", schemeName, blocksData);
         setBlocks(blocksData);
         
-        // If we have multiple blocks, fetch the aggregated data first
-        if (blocksData.length > 1) {
+        // Return true if we have multiple blocks
+        const hasMultipleBlocks = blocksData.length > 1;
+        
+        if (hasMultipleBlocks) {
           console.log("Multiple blocks found:", blocksData.length, "Fetching aggregated data first");
-          // Add an "All Blocks" option
-          fetchAggregatedData(schemeName);
         } else {
           console.log("Only one block found, will not show dropdown");
         }
+        
+        return hasMultipleBlocks;
       } else {
         console.error("Error response when fetching blocks:", response.status);
       }
@@ -74,6 +88,7 @@ export default function SchemeDetailsModal({
     } finally {
       setIsLoading(false);
     }
+    return false;
   };
   
   const fetchAggregatedData = async (schemeName: string) => {

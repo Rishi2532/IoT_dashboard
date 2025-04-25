@@ -405,33 +405,80 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "No schemes found with this name" });
       }
 
-      // If block is specified, filter schemes by block
-      if (blockName && blockName !== "All Blocks") {
-        console.log(`Filtering for block: "${blockName}" in ${schemes.length} schemes`);
+      // If "All Blocks" is specified or no block specified, return aggregated data
+      if (!blockName || blockName === "All Blocks") {
+        // If there's only one scheme/block, just return it
+        if (schemes.length === 1) {
+          return res.json({...schemes[0], block: 'All Blocks'});
+        }
         
-        // Log all blocks for debugging
-        console.log("Available blocks:", schemes.map(s => s.block));
+        // Create an aggregated scheme object that sums up numerical values
+        const aggregatedScheme = { ...schemes[0] };
         
-        const filteredSchemes = schemes.filter(scheme => {
-          // Handle null or undefined block values
-          const schemeBlock = scheme.block || "";
-          const requestedBlock = blockName || "";
-          
-          // Case-insensitive comparison
-          return schemeBlock.toLowerCase() === requestedBlock.toLowerCase();
+        // Fields to sum up across all blocks
+        const numericFields = [
+          'number_of_village',
+          'total_villages_integrated',
+          'fully_completed_villages',
+          'functional_villages',
+          'partial_villages',
+          'non_functional_villages',
+          'total_number_of_esr',
+          'total_esr_integrated',
+          'no_fully_completed_esr',
+          'balance_esr',
+          'no_partial_completed_esr',
+          'flow_meters_connected',
+          'pressure_transmitters_connected',
+          'residual_chlorine_analyzer_connected'
+        ];
+        
+        // Reset the numeric fields to 0 before summing
+        numericFields.forEach(field => {
+          aggregatedScheme[field] = 0;
         });
         
-        console.log(`Found ${filteredSchemes.length} schemes matching block "${blockName}"`);
-        
-        if (filteredSchemes.length > 0) {
-          // Send only the first matching scheme instead of an array
-          return res.json(filteredSchemes[0]);
-        } else {
-          console.log("No schemes found for the specified block, returning all schemes");
+        // Sum up the numeric fields from all blocks
+        for (const scheme of schemes) {
+          for (const field of numericFields) {
+            if (typeof scheme[field] === 'number') {
+              aggregatedScheme[field] += (scheme[field] || 0);
+            }
+          }
         }
+        
+        // Set a special flag to indicate this is an aggregated result
+        aggregatedScheme.isAggregated = true;
+        aggregatedScheme.block = 'All Blocks';
+        
+        return res.json(aggregatedScheme);
       }
-
-      res.json(schemes);
+      
+      // If a specific block is specified, filter schemes by block
+      console.log(`Filtering for block: "${blockName}" in ${schemes.length} schemes`);
+      
+      // Log all blocks for debugging
+      console.log("Available blocks:", schemes.map(s => s.block));
+      
+      const filteredSchemes = schemes.filter(scheme => {
+        // Handle null or undefined block values
+        const schemeBlock = scheme.block || "";
+        const requestedBlock = blockName || "";
+        
+        // Case-insensitive comparison
+        return schemeBlock.toLowerCase() === requestedBlock.toLowerCase();
+      });
+      
+      console.log(`Found ${filteredSchemes.length} schemes matching block "${blockName}"`);
+      
+      if (filteredSchemes.length > 0) {
+        // Send only the first matching scheme instead of an array
+        return res.json(filteredSchemes[0]);
+      } else {
+        console.log("No schemes found for the specified block, returning all schemes");
+        // If the block wasn't found, still return the aggregate view
+        return res.json(schemes);
+      }
     } catch (error) {
       console.error("Error fetching schemes by name:", error);
       res.status(500).json({ message: "Failed to fetch schemes by name" });
