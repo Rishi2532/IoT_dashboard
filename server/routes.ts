@@ -424,7 +424,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log(`Found ${filteredSchemes.length} schemes matching block "${blockName}"`);
         
         if (filteredSchemes.length > 0) {
-          return res.json(filteredSchemes);
+          // Send only the first matching scheme instead of an array
+          return res.json(filteredSchemes[0]);
         } else {
           console.log("No schemes found for the specified block, returning all schemes");
         }

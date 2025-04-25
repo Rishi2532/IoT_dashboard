@@ -112,16 +112,14 @@ export default function SchemeDetailsModal({
         // Otherwise fetch data for the specific block using the new API endpoint
         const response = await fetch(`/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}?block=${encodeURIComponent(blockValue)}`);
         if (response.ok) {
-          const schemes = await response.json();
-          console.log("Fetched schemes for block:", schemes);
+          const schemeData = await response.json();
+          console.log("Fetched scheme for block:", blockValue, schemeData);
           
-          // Handle both array and single object responses
-          if (Array.isArray(schemes) && schemes.length > 0) {
-            // Use the first matching scheme for this block if response is an array
-            setCurrentScheme(schemes[0]);
-          } else if (schemes && typeof schemes === 'object') {
-            // Handle case where a single scheme object is returned
-            setCurrentScheme(schemes);
+          // The server now always returns a single object for a specific block
+          if (schemeData && typeof schemeData === 'object') {
+            // Update the current scheme with the block-specific data
+            setCurrentScheme(schemeData);
+            console.log("Updated current scheme to:", schemeData);
           } else {
             console.error(`No scheme found for block: ${blockValue}`);
           }
