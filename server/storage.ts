@@ -2864,6 +2864,9 @@ export class PostgresStorage implements IStorage {
 
   async getBlocksByScheme(schemeName: string): Promise<string[]> {
     const db = await this.ensureInitialized();
+    
+    console.log(`Finding blocks for scheme name: ${schemeName}`);
+    
     const query = db
       .select({ block: schemeStatuses.block })
       .from(schemeStatuses)
@@ -2873,7 +2876,13 @@ export class PostgresStorage implements IStorage {
       .groupBy(schemeStatuses.block)
       .orderBy(schemeStatuses.block);
     
-    return result.map((row: {block: string}) => row.block).filter((block: string) => block !== null && block !== undefined && block !== '');
+    const blocks = result
+      .map((row: {block: string}) => row.block)
+      .filter((block: string) => block !== null && block !== undefined && block !== '');
+    
+    console.log(`Found ${blocks.length} blocks for scheme "${schemeName}": ${JSON.stringify(blocks)}`);
+    
+    return blocks;
   }
 
   async createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus> {

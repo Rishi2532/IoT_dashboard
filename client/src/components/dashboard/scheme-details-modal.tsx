@@ -34,28 +34,47 @@ export default function SchemeDetailsModal({
   isOpen,
   onClose,
 }: SchemeDetailsModalProps) {
-  console.log("SchemeDetailsModal opening with scheme:", scheme, "isOpen:", isOpen);
+  console.log(
+    "SchemeDetailsModal opening with scheme:",
+    scheme,
+    "isOpen:",
+    isOpen,
+  );
   const [blocks, setBlocks] = useState<string[]>([]);
   const [selectedBlock, setSelectedBlock] = useState<string>("");
-  const [currentScheme, setCurrentScheme] = useState<SchemeStatus | null>(scheme);
+  const [currentScheme, setCurrentScheme] = useState<SchemeStatus | null>(
+    scheme,
+  );
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   useEffect(() => {
     setCurrentScheme(scheme);
     if (scheme) {
+      console.log("SchemeDetailsModal - Scheme updated:", scheme.scheme_name);
+      
       // First check if there are multiple blocks
       const checkBlocks = async () => {
-        const hasMultipleBlocks = await fetchBlocks(scheme.scheme_name);
-        if (hasMultipleBlocks) {
-          // If there are multiple blocks, default to showing the aggregate view
-          setSelectedBlock('All Blocks');
-          fetchAggregatedData(scheme.scheme_name);
-        } else {
-          // Otherwise, keep the current block
-          setSelectedBlock(scheme.block || "");
+        try {
+          console.log("Checking blocks for scheme:", scheme.scheme_name);
+          const hasMultipleBlocks = await fetchBlocks(scheme.scheme_name);
+          
+          console.log("hasMultipleBlocks result:", hasMultipleBlocks, "for scheme:", scheme.scheme_name);
+          
+          if (hasMultipleBlocks) {
+            // If there are multiple blocks, default to showing the aggregate view
+            console.log("Setting to All Blocks view for:", scheme.scheme_name);
+            setSelectedBlock("All Blocks");
+            await fetchAggregatedData(scheme.scheme_name);
+          } else {
+            // Otherwise, keep the current block
+            console.log("Setting to single block view:", scheme.block || "");
+            setSelectedBlock(scheme.block || "");
+          }
+        } catch (error) {
+          console.error("Error in checkBlocks:", error);
         }
       };
-      
+
       checkBlocks();
     }
   }, [scheme]);
@@ -64,21 +83,27 @@ export default function SchemeDetailsModal({
     try {
       setIsLoading(true);
       console.log("Fetching blocks for scheme:", schemeName);
-      const response = await fetch(`/api/schemes/blocks/${encodeURIComponent(schemeName)}`);
+      const response = await fetch(
+        `/api/schemes/blocks/${encodeURIComponent(schemeName)}`,
+      );
       if (response.ok) {
         const blocksData = await response.json();
         console.log("Fetched blocks for scheme:", schemeName, blocksData);
         setBlocks(blocksData);
-        
+
         // Return true if we have multiple blocks
         const hasMultipleBlocks = blocksData.length > 1;
-        
+
         if (hasMultipleBlocks) {
-          console.log("Multiple blocks found:", blocksData.length, "Fetching aggregated data first");
+          console.log(
+            "Multiple blocks found:",
+            blocksData.length,
+            "Fetching aggregated data first",
+          );
         } else {
           console.log("Only one block found, will not show dropdown");
         }
-        
+
         return hasMultipleBlocks;
       } else {
         console.error("Error response when fetching blocks:", response.status);
@@ -90,19 +115,24 @@ export default function SchemeDetailsModal({
     }
     return false;
   };
-  
+
   const fetchAggregatedData = async (schemeName: string) => {
     try {
       setIsLoading(true);
       console.log("Fetching aggregated data for scheme:", schemeName);
-      const response = await fetch(`/api/schemes/aggregate/${encodeURIComponent(schemeName)}`);
+      const response = await fetch(
+        `/api/schemes/aggregate/${encodeURIComponent(schemeName)}`,
+      );
       if (response.ok) {
         const aggregatedScheme = await response.json();
         console.log("Fetched aggregated data:", aggregatedScheme);
         setCurrentScheme(aggregatedScheme);
-        setSelectedBlock('All Blocks');
+        setSelectedBlock("All Blocks");
       } else {
-        console.error("Error response when fetching aggregated data:", response.status);
+        console.error(
+          "Error response when fetching aggregated data:",
+          response.status,
+        );
       }
     } catch (error) {
       console.error("Error fetching aggregated data:", error);
@@ -113,35 +143,46 @@ export default function SchemeDetailsModal({
 
   const handleBlockChange = async (blockValue: string) => {
     if (!scheme) return;
-    
-    console.log("Changing block to:", blockValue);
+
+    console.log("Changing block to:", blockValue, "for scheme:", scheme.scheme_name);
     setSelectedBlock(blockValue);
-    
+
     try {
       setIsLoading(true);
-      
+
       // If "All Blocks" is selected, fetch aggregated data
-      if (blockValue === 'All Blocks') {
+      if (blockValue === "All Blocks") {
+        console.log("Fetching aggregated data for:", scheme.scheme_name);
         await fetchAggregatedData(scheme.scheme_name);
       } else {
+        console.log("Fetching specific block data:", blockValue, "for scheme:", scheme.scheme_name);
         // Otherwise fetch data for the specific block using the new API endpoint
-        const response = await fetch(`/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}?block=${encodeURIComponent(blockValue)}`);
+        const response = await fetch(
+          `/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}?block=${encodeURIComponent(blockValue)}`,
+        );
+        
         if (response.ok) {
           const schemeData = await response.json();
           console.log("Fetched scheme for block:", blockValue, schemeData);
-          
+
           // The server now always returns a single object for a specific block
-          if (schemeData && typeof schemeData === 'object') {
+          if (schemeData && typeof schemeData === "object") {
             // Update the current scheme with the block-specific data
             setCurrentScheme(schemeData);
             console.log("Updated current scheme to:", schemeData);
           } else {
             console.error(`No scheme found for block: ${blockValue}`);
           }
+        } else {
+          console.error(`Failed to fetch data for block ${blockValue}: ${response.status}`);
+          // In case of error, fall back to the original scheme data
+          setCurrentScheme(scheme);
         }
       }
     } catch (error) {
       console.error("Error fetching scheme by block:", error);
+      // In case of error, fall back to the original scheme data
+      setCurrentScheme(scheme);
     } finally {
       setIsLoading(false);
     }
@@ -235,7 +276,7 @@ export default function SchemeDetailsModal({
                   {currentScheme.total_number_of_esr || 0}
                 </p>
               </div>
-              <div>
+              {/* <div>
                 <a
                   href="https://14.99.99.166:18099/PIVision/#/Displays/10108/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD?hidetoolbar=true&hidesidebar=true&mode=kiosk&rootpath=%5C%5CDemoAF%5CJJM%5CJJM%5CMaharashtra%5CRegion-Nagpur%5CCircle-Nagpur%5CDivision-Nagpur%5CSub%20Division-Nagpur%5CBlock-Kamptee%5CScheme-7940695%20-%20Bidgaon%20Tarodi%20wss%3F48487708-9037-11ef-96dd-ecf4bbe0f1d4"
                   target="_blank"
@@ -245,7 +286,7 @@ export default function SchemeDetailsModal({
                     JJM Dashboard
                   </h4>
                 </a>
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -325,9 +366,9 @@ export default function SchemeDetailsModal({
                         ))}
                       </SelectContent>
                     </Select>
-                    
+
                     {/* Aggregation indicator */}
-                    {selectedBlock === 'All Blocks' && (
+                    {selectedBlock === "All Blocks" && (
                       <div className="mt-1 text-xs bg-blue-50 border border-blue-200 rounded-md px-2 py-1 text-blue-600">
                         Showing combined data across all blocks
                       </div>
@@ -338,7 +379,9 @@ export default function SchemeDetailsModal({
                     {!currentScheme.block ||
                     currentScheme.block === "Block" ||
                     currentScheme.block === "N/A" ? (
-                      <span className="text-gray-400 italic">Not specified</span>
+                      <span className="text-gray-400 italic">
+                        Not specified
+                      </span>
                     ) : (
                       currentScheme.block
                     )}
@@ -423,7 +466,8 @@ export default function SchemeDetailsModal({
                     Fully completed villages
                   </span>
                   <span className="text-xs font-semibold text-neutral-700">
-                    {currentScheme.fully_completed_villages || 0} / {totalVillages}
+                    {currentScheme.fully_completed_villages || 0} /{" "}
+                    {totalVillages}
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
