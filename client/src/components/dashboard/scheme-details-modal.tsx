@@ -110,7 +110,7 @@ export default function SchemeDetailsModal({
         console.log("Fetched blocks for scheme:", schemeName, blocksData);
         
         // Filter out any empty or null blocks
-        const validBlocks = blocksData.filter(block => block && block.trim() !== '');
+        const validBlocks = blocksData.filter((block: string) => block && block.trim() !== '');
         setBlocks(validBlocks);
 
         // Return true if we have multiple blocks
