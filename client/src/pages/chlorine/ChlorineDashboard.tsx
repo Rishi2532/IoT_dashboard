@@ -247,6 +247,11 @@ const ChlorineDashboard: React.FC = () => {
       );
     }
 
+    // Note: We don't need to filter by region or range here because
+    // that filtering is already applied at the API level in the useQuery hook
+    // where we send the selectedRegion and currentFilter parameters.
+    // The 'allChlorineData' already contains the filtered data from the API.
+
     return filtered;
   }, [allChlorineData, searchQuery]);
 

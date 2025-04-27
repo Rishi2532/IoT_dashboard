@@ -215,6 +215,11 @@ const PressureDashboard: React.FC = () => {
       );
     }
 
+    // Note: We don't need to filter by region or range here because
+    // that filtering is already applied at the API level in the useQuery hook
+    // where we send the selectedRegion and currentFilter parameters.
+    // The 'allPressureData' already contains the filtered data from the API.
+
     return filtered;
   }, [allPressureData, searchQuery]);
 
