@@ -274,7 +274,6 @@ const PressureDashboard: React.FC = () => {
           'Region': item.region || 'N/A',
           'Village Name': item.village_name || 'N/A',
           'ESR Name': item.esr_name || 'N/A',
-          'Sensor ID': item.sensor_id || 'N/A',
           'Latest Pressure Value (bar)': latestPressure !== null ? latestPressure.toFixed(2) : 'No data',
           'Last Updated': latestDate || 'No data',
           'Status': statusText,
@@ -703,10 +702,7 @@ const PressureDashboard: React.FC = () => {
                                           <span className="font-medium">{selectedESR.village_name}</span>
                                         </div>
                                         
-                                        <div className="flex justify-between items-center border-b border-blue-100 pb-2">
-                                          <span className="text-sm text-blue-700">Sensor ID</span>
-                                          <span className="font-medium">{selectedESR.sensor_id || "N/A"}</span>
-                                        </div>
+
                                       </div>
                                     </div>
                                     
