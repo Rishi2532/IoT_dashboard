@@ -52,6 +52,11 @@ export default function SchemeDetailsModal({
     if (scheme) {
       console.log("SchemeDetailsModal - Scheme updated:", scheme.scheme_name);
       
+      // If we have a block in the scheme, set it as the initial selected block
+      if (scheme.block) {
+        setSelectedBlock(scheme.block);
+      }
+      
       // First check if there are multiple blocks
       const checkBlocks = async () => {
         try {
@@ -67,11 +72,25 @@ export default function SchemeDetailsModal({
             await fetchAggregatedData(scheme.scheme_name);
           } else {
             // Otherwise, keep the current block
-            console.log("Setting to single block view:", scheme.block || "");
-            setSelectedBlock(scheme.block || "");
+            if (scheme.block) {
+              console.log("Setting to single block view:", scheme.block);
+              setSelectedBlock(scheme.block);
+            } else {
+              console.log("No block in scheme, using first block from fetch result");
+              // If no block in the scheme but we got blocks from API
+              const blocks = await fetch(`/api/schemes/blocks/${encodeURIComponent(scheme.scheme_name)}`).then(res => res.json());
+              if (blocks && blocks.length > 0 && blocks[0]) {
+                setSelectedBlock(blocks[0]);
+              }
+            }
           }
         } catch (error) {
           console.error("Error in checkBlocks:", error);
+          // Fallback to scheme's block
+          if (scheme.block) {
+            console.log("Using scheme's block as fallback after error:", scheme.block);
+            setSelectedBlock(scheme.block);
+          }
         }
       };
 
@@ -89,27 +108,49 @@ export default function SchemeDetailsModal({
       if (response.ok) {
         const blocksData = await response.json();
         console.log("Fetched blocks for scheme:", schemeName, blocksData);
-        setBlocks(blocksData);
+        
+        // Filter out any empty or null blocks
+        const validBlocks = blocksData.filter(block => block && block.trim() !== '');
+        setBlocks(validBlocks);
 
         // Return true if we have multiple blocks
-        const hasMultipleBlocks = blocksData.length > 1;
+        const hasMultipleBlocks = validBlocks.length > 1;
 
         if (hasMultipleBlocks) {
           console.log(
             "Multiple blocks found:",
-            blocksData.length,
+            validBlocks.length,
             "Fetching aggregated data first",
           );
         } else {
-          console.log("Only one block found, will not show dropdown");
+          console.log("Only one block found, but will still show dropdown for consistency");
+          // Ensure we set the selected block to the current one
+          if (validBlocks.length === 1) {
+            setSelectedBlock(validBlocks[0]);
+          } else if (scheme && scheme.block) {
+            // If API returned no blocks but we have a block in the scheme
+            setSelectedBlock(scheme.block);
+          }
         }
 
         return hasMultipleBlocks;
       } else {
         console.error("Error response when fetching blocks:", response.status);
+        // If API call fails but we have a scheme with a block, use that
+        if (scheme && scheme.block) {
+          console.log("Using scheme's block as fallback:", scheme.block);
+          setBlocks([scheme.block]);
+          setSelectedBlock(scheme.block);
+        }
       }
     } catch (error) {
       console.error("Error fetching blocks:", error);
+      // Fallback to scheme's block if available
+      if (scheme && scheme.block) {
+        console.log("Using scheme's block as fallback after error:", scheme.block);
+        setBlocks([scheme.block]);
+        setSelectedBlock(scheme.block);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -344,49 +385,43 @@ export default function SchemeDetailsModal({
               </div>
               <div>
                 <h4 className="text-xs font-medium text-neutral-500">Block</h4>
-                {/* Render blocks dropdown when we have multiple blocks */}
-                {blocks && blocks.length > 1 ? (
-                  <div className="mt-1">
-                    <Select
-                      value={selectedBlock}
-                      onValueChange={handleBlockChange}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="w-full text-xs h-7">
-                        <SelectValue placeholder="Select Block" />
-                      </SelectTrigger>
-                      <SelectContent>
+                {/* Always render block dropdown - even for single block schemes to maintain UI consistency */}
+                <div className="mt-1">
+                  <Select
+                    value={selectedBlock}
+                    onValueChange={handleBlockChange}
+                    disabled={isLoading}
+                  >
+                    <SelectTrigger className="w-full text-xs h-7">
+                      <SelectValue placeholder="Select Block" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {blocks && blocks.length > 1 && (
                         <SelectItem key="all-blocks" value="All Blocks">
                           All Blocks (Combined)
                         </SelectItem>
-                        {blocks.map((block) => (
+                      )}
+                      {blocks && blocks.length > 0 ? (
+                        blocks.map((block: string) => (
                           <SelectItem key={block} value={block}>
                             {block || "Not specified"}
                           </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                        ))
+                      ) : (
+                        <SelectItem key={currentScheme.block || "default"} value={currentScheme.block || ""}>
+                          {currentScheme.block || "Not specified"}
+                        </SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
 
-                    {/* Aggregation indicator */}
-                    {selectedBlock === "All Blocks" && (
-                      <div className="mt-1 text-xs bg-blue-50 border border-blue-200 rounded-md px-2 py-1 text-blue-600">
-                        Showing combined data across all blocks
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-xs text-neutral-900">
-                    {!currentScheme.block ||
-                    currentScheme.block === "Block" ||
-                    currentScheme.block === "N/A" ? (
-                      <span className="text-gray-400 italic">
-                        Not specified
-                      </span>
-                    ) : (
-                      currentScheme.block
-                    )}
-                  </p>
-                )}
+                  {/* Aggregation indicator */}
+                  {selectedBlock === "All Blocks" && blocks && blocks.length > 1 && (
+                    <div className="mt-1 text-xs bg-blue-50 border border-blue-200 rounded-md px-2 py-1 text-blue-600">
+                      Showing combined data across all blocks
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
