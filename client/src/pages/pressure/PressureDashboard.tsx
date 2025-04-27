@@ -210,8 +210,7 @@ const PressureDashboard: React.FC = () => {
           item.scheme_name?.toLowerCase().includes(query) ||
           item.region?.toLowerCase().includes(query) ||
           item.village_name?.toLowerCase().includes(query) ||
-          item.esr_name?.toLowerCase().includes(query) ||
-          item.sensor_id?.toLowerCase().includes(query)
+          item.esr_name?.toLowerCase().includes(query)
       );
     }
 
