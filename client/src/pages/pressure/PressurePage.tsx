@@ -1,21 +1,12 @@
 import React from 'react';
-import { Link, useLocation } from 'wouter';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useLocation } from 'wouter';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import PressureDashboard from './PressureDashboard';
-import { FileSpreadsheet, Gauge } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
 import Sidebar from '@/components/dashboard/sidebar';
 
 const PressurePage: React.FC = () => {
-  const [location, setLocation] = useLocation();
-  
-  // Determine which tab to show based on the URL
-  const getActiveTab = () => {
-    if (location === '/pressure/import') return 'import';
-    return 'dashboard';
-  };
+  const [location] = useLocation();
 
   return (
     <DashboardLayout>
@@ -32,33 +23,7 @@ const PressurePage: React.FC = () => {
               </p>
             </div>
 
-            <Tabs 
-              value={getActiveTab()} 
-              onValueChange={(value) => {
-                if (value === 'dashboard') setLocation('/pressure');
-                if (value === 'import') setLocation('/pressure/import');
-              }}
-              className="mb-6"
-            >
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
-                <TabsList className="bg-blue-50 h-12">
-                  <TabsTrigger 
-                    value="dashboard" 
-                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm flex gap-2 h-10"
-                  >
-                    <Gauge className="h-5 w-5" />
-                    <span>Dashboard</span>
-                  </TabsTrigger>
-                  <TabsTrigger 
-                    value="import" 
-                    className="data-[state=active]:bg-white data-[state=active]:text-blue-600 data-[state=active]:shadow-sm flex gap-2 h-10"
-                  >
-                    <FileSpreadsheet className="h-5 w-5" />
-                    <span>Import Data</span>
-                  </TabsTrigger>
-                </TabsList>
-              </div>
-
+            <Tabs defaultValue="dashboard" className="mb-6">
               <TabsContent value="dashboard" className="mt-0">
                 <PressureDashboard />
               </TabsContent>
