@@ -122,6 +122,8 @@ export default function SchemeDetailsModal({
             validBlocks.length,
             "Fetching aggregated data first",
           );
+          // Always start with All Blocks view for multi-block schemes
+          setSelectedBlock("All Blocks");
         } else {
           console.log("Only one block found, but will still show dropdown for consistency");
           // Ensure we set the selected block to the current one
@@ -396,7 +398,8 @@ export default function SchemeDetailsModal({
                       <SelectValue placeholder="Select Block" />
                     </SelectTrigger>
                     <SelectContent>
-                      {blocks && blocks.length > 1 && (
+                      {/* Always show the "All Blocks" option if we have any blocks */}
+                      {blocks && blocks.length > 0 && (
                         <SelectItem key="all-blocks" value="All Blocks">
                           All Blocks (Combined)
                         </SelectItem>
