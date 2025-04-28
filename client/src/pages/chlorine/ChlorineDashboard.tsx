@@ -247,13 +247,16 @@ const ChlorineDashboard: React.FC = () => {
       );
     }
 
-    // Note: We don't need to filter by region or range here because
-    // that filtering is already applied at the API level in the useQuery hook
-    // where we send the selectedRegion and currentFilter parameters.
-    // The 'allChlorineData' already contains the filtered data from the API.
+    // Double-check region filtering to ensure only data from selected region is shown
+    if (selectedRegion && selectedRegion !== 'all') {
+      filtered = filtered.filter(item => item.region === selectedRegion);
+    }
+
+    // Note: The API should already apply most filtering, but we're adding an extra
+    // check here to ensure only data from the selected region is displayed
 
     return filtered;
-  }, [allChlorineData, searchQuery]);
+  }, [allChlorineData, searchQuery, selectedRegion]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -460,7 +463,7 @@ const ChlorineDashboard: React.FC = () => {
               className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 gap-2"
             >
               <Download className="h-4 w-4" />
-              Export to Excel
+              Export to Excel{filteredData.length > 0 ? ` (${filteredData.length})` : ''}
             </Button>
             <Button
               onClick={() => refetch()}
