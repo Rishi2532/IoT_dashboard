@@ -280,6 +280,7 @@ const PressureDashboard: React.FC = () => {
           'Days Optimal Range (0.2-0.7 bar)': item.pressure_between_02_07_bar || 0,
           'Days Above Range (>0.7 bar)': item.pressure_greater_than_07_bar || 0,
           'Consistent Zero for 7 Days': item.number_of_consistent_zero_value_in_pressure === 7 ? 'Yes' : 'No'
+          // Removed Sensor ID as requested
         };
       });
       

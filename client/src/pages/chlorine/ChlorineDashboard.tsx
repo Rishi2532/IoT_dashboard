@@ -242,8 +242,8 @@ const ChlorineDashboard: React.FC = () => {
           item.scheme_name?.toLowerCase().includes(query) ||
           item.region?.toLowerCase().includes(query) ||
           item.village_name?.toLowerCase().includes(query) ||
-          item.esr_name?.toLowerCase().includes(query) ||
-          item.sensor_id?.toLowerCase().includes(query),
+          item.esr_name?.toLowerCase().includes(query)
+          // Removed sensor_id from search as requested
       );
     }
 
@@ -315,7 +315,7 @@ const ChlorineDashboard: React.FC = () => {
           Region: item.region || "N/A",
           "Village Name": item.village_name || "N/A",
           "ESR Name": item.esr_name || "N/A",
-          "Sensor ID": item.sensor_id || "N/A",
+          // Removed "Sensor ID" as requested
           "Latest Chlorine Value (mg/l)":
             latestChlorine !== null ? latestChlorine.toFixed(2) : "No data",
           Status: statusText,
