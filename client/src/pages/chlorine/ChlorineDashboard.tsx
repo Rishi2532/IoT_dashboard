@@ -149,7 +149,7 @@ const ChlorineDashboard: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log(`Received ${data.length} chlorine records`);
+      console.log(`Received ${data.length} chlorine records for region: ${selectedRegion}, filter: ${currentFilter}`);
       return data;
     },
   });

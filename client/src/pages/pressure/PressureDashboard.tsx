@@ -118,7 +118,7 @@ const PressureDashboard: React.FC = () => {
       }
       
       const data = await response.json();
-      console.log(`Received ${data.length} pressure records`);
+      console.log(`Received ${data.length} pressure records for region: ${selectedRegion}, filter: ${currentFilter}`);
       return data;
     }
   });
