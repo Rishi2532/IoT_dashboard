@@ -2302,6 +2302,59 @@ export class PostgresStorage implements IStorage {
       let updated = 0;
       let errors: string[] = [];
       
+      // OPTIMIZATION: Create a lookup map of existing records to avoid individual DB checks
+      console.log("Creating lookup map of existing records...");
+      
+      // Get unique identifiers to query efficiently
+      const uniqueKeys = new Set<string>();
+      parsed.forEach(record => {
+        if (record.scheme_id && record.village_name && record.esr_name) {
+          uniqueKeys.add(`${record.scheme_id}|${record.village_name}|${record.esr_name}`);
+        }
+      });
+      
+      // Fetch all existing records in a single query using IN (much faster than individual queries)
+      const existingRecordsMap = new Map<string, PressureData>();
+      
+      // Process in batches of 100 to prevent overly large queries
+      const batchSize = 100;
+      const keyArray = Array.from(uniqueKeys);
+      
+      for (let i = 0; i < keyArray.length; i += batchSize) {
+        const batch = keyArray.slice(i, i + batchSize);
+        
+        // Build a query that can find records matching any of the keys in this batch
+        // Using multiple OR conditions for the 3-part composite key
+        const conditions = batch.map(key => {
+          const [schemeId, villageName, esrName] = key.split('|');
+          return and(
+            eq(pressureData.scheme_id, schemeId),
+            eq(pressureData.village_name, villageName),
+            eq(pressureData.esr_name, esrName)
+          );
+        });
+        
+        const batchExistingRecords = await db
+          .select()
+          .from(pressureData)
+          .where(sql`${conditions.reduce((acc, condition, idx) => 
+            idx === 0 ? condition : sql`${acc} OR ${condition}`, sql``)}`);
+        
+        // Add to our lookup map
+        batchExistingRecords.forEach(record => {
+          const key = `${record.scheme_id}|${record.village_name}|${record.esr_name}`;
+          existingRecordsMap.set(key, record);
+        });
+      }
+      
+      console.log(`Found ${existingRecordsMap.size} existing records out of ${uniqueKeys.size} unique keys`);
+      
+      // OPTIMIZATION: Process in batches for updates and inserts
+      const toUpdate: Partial<InsertPressureData>[] = [];
+      const toInsert: Partial<InsertPressureData>[] = [];
+      const updateWhereConditions: any[] = [];
+      
+      // Prepare the records without making DB calls
       for (const record of parsed) {
         try {
           // Map CSV columns to database fields using the mappings
@@ -2337,49 +2390,61 @@ export class PostgresStorage implements IStorage {
           
           // Required fields check
           if (!pressureRecord.scheme_id || !pressureRecord.village_name || !pressureRecord.esr_name) {
-            errors.push(`Missing required fields in record: ${JSON.stringify(record)}`);
+            errors.push(`Missing required fields in record`);
             continue;
           }
           
           // Calculate pressure analysis fields
           this.calculatePressureAnalysisFields(pressureRecord);
           
-          // Check if record already exists
-          const existingRecords = await db
-            .select()
-            .from(pressureData)
-            .where(
-              and(
-                eq(pressureData.scheme_id, pressureRecord.scheme_id!),
-                eq(pressureData.village_name, pressureRecord.village_name!),
-                eq(pressureData.esr_name, pressureRecord.esr_name!)
-              )
-            );
+          // Check if record exists using our lookup map
+          const key = `${pressureRecord.scheme_id}|${pressureRecord.village_name}|${pressureRecord.esr_name}`;
           
-          if (existingRecords.length > 0) {
-            // Update existing record
-            await db
-              .update(pressureData)
-              .set(pressureRecord)
-              .where(
-                and(
-                  eq(pressureData.scheme_id, pressureRecord.scheme_id!),
-                  eq(pressureData.village_name, pressureRecord.village_name!),
-                  eq(pressureData.esr_name, pressureRecord.esr_name!)
-                )
-              );
-            updated++;
+          if (existingRecordsMap.has(key)) {
+            // Add to update batch
+            toUpdate.push(pressureRecord);
+            updateWhereConditions.push(and(
+              eq(pressureData.scheme_id, pressureRecord.scheme_id!),
+              eq(pressureData.village_name, pressureRecord.village_name!),
+              eq(pressureData.esr_name, pressureRecord.esr_name!)
+            ));
           } else {
-            // Insert new record
-            await db
-              .insert(pressureData)
-              .values(pressureRecord as InsertPressureData);
-            inserted++;
+            // Add to insert batch
+            toInsert.push(pressureRecord as InsertPressureData);
           }
         } catch (recordError: any) {
-          errors.push(`Error processing record: ${JSON.stringify(record)} - ${recordError instanceof Error ? recordError.message : String(recordError)}`);
+          errors.push(`Error processing record: ${recordError instanceof Error ? recordError.message : String(recordError)}`);
         }
       }
+      
+      // OPTIMIZATION: Execute batch operations for faster performance
+      // Process inserts in batches of 100
+      const insertBatchSize = 100;
+      for (let i = 0; i < toInsert.length; i += insertBatchSize) {
+        const batch = toInsert.slice(i, i + insertBatchSize);
+        if (batch.length > 0) {
+          await db.insert(pressureData).values(batch as InsertPressureData[]);
+          inserted += batch.length;
+        }
+      }
+      
+      // Process updates in batches of 100
+      const updateBatchSize = 100;
+      for (let i = 0; i < toUpdate.length; i += updateBatchSize) {
+        const batchRecords = toUpdate.slice(i, i + updateBatchSize);
+        const batchConditions = updateWhereConditions.slice(i, i + updateBatchSize);
+        
+        // For each record in the batch, perform an update
+        for (let j = 0; j < batchRecords.length; j++) {
+          await db
+            .update(pressureData)
+            .set(batchRecords[j])
+            .where(batchConditions[j]);
+        }
+        updated += batchRecords.length;
+      }
+      
+      console.log(`Completed import: ${inserted} inserted, ${updated} updated, ${errors.length} errors`);
       
       return {
         inserted,
