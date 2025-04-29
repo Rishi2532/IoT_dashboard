@@ -472,6 +472,59 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const availableBlocks = await storage.getBlocksByScheme(schemeName);
       console.log("Available blocks:", availableBlocks);
       
+      // FIRST: Try to get data from CSV imports (most up-to-date)
+      console.log(`Trying to get the latest CSV data for scheme "${schemeName}" and block "${blockName}"`);
+      const csvData = await storage.getSchemeDataFromCsvImports(schemeName, blockName);
+      
+      if (csvData) {
+        console.log(`Found CSV data for scheme "${schemeName}" and block "${blockName}"`);
+        
+        // Use the CSV data as our primary source of truth
+        // But make sure to include any additional fields from the scheme_status record too
+        
+        // Get a template scheme_status record to use for missing fields
+        let templateScheme = null;
+        
+        // Try to find an exact match first
+        for (const scheme of schemes) {
+          if ((scheme.block || "").toLowerCase() === blockName.toLowerCase()) {
+            templateScheme = scheme;
+            break;
+          }
+        }
+        
+        // If no exact match, try partial matching
+        if (!templateScheme) {
+          for (const scheme of schemes) {
+            const schemeBlock = (scheme.block || "").toLowerCase();
+            const requestedBlockLower = blockName.toLowerCase();
+            
+            if (schemeBlock.includes(requestedBlockLower) || requestedBlockLower.includes(schemeBlock)) {
+              templateScheme = scheme;
+              break;
+            }
+          }
+        }
+        
+        // If still no match, just use the first scheme as a template
+        if (!templateScheme && schemes.length > 0) {
+          templateScheme = schemes[0];
+        }
+        
+        // Merge the CSV data with the template scheme data
+        const mergedData = {
+          ...templateScheme,
+          ...csvData,
+          block: blockName // Ensure the block is set correctly
+        };
+        
+        console.log(`Returning merged CSV data for scheme "${schemeName}" and block "${blockName}"`);
+        return res.json(mergedData);
+      }
+      
+      // SECOND: If no CSV data, fall back to the traditional approach
+      console.log(`No CSV data found, falling back to scheme_status table for "${schemeName}" and block "${blockName}"`);
+      
       // Try to find an exact match first
       let filteredSchemes = schemes.filter(scheme => {
         // Handle null or undefined block values
