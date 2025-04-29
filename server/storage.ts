@@ -2253,9 +2253,10 @@ export class PostgresStorage implements IStorage {
   }> {
     await this.initialized;
     const db = await this.ensureInitialized();
+    const errors: string[] = [];
     
     try {
-      console.log("Starting pressure data CSV import...");
+      console.log("Starting pressure data CSV import with optimized parsing...");
       
       // Define column names for CSV without headers
       const columns = [
@@ -2269,26 +2270,28 @@ export class PostgresStorage implements IStorage {
         'pressure_between_02_07_bar', 'pressure_greater_than_07_bar'
       ];
       
-      // Parse CSV file without expecting headers
+      // Parse CSV file without expecting headers - using synchronous parser
       const csvString = fileBuffer.toString('utf8');
-      const parsed = await new Promise<any[]>((resolve, reject) => {
-        parse(csvString, {
-          columns: columns,
-          skip_empty_lines: true,
-          trim: true,
-          cast: true,
-          from_line: 1 // Start from the first line (no headers)
-        }, (err, records) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(records);
-          }
-        });
+      
+      // Import the synchronous parser
+      const { parse } = await import('csv-parse/sync');
+      
+      // Use the synchronous parse function for better performance and reliability
+      const parsed = parse(csvString, {
+        columns: columns,
+        skip_empty_lines: true,
+        trim: true,
+        bom: true, // Handle byte order mark
+        relax_column_count: true // Be more forgiving with column counts
       });
       
       if (!parsed || parsed.length === 0) {
-        throw new Error("Empty or invalid CSV file");
+        return {
+          inserted: 0,
+          updated: 0,
+          removed: 0,
+          errors: ["Empty or invalid CSV file. Please check the format and try again."]
+        };
       }
       
       console.log(`CSV parsed successfully. Found ${parsed.length} records.`);
@@ -2424,20 +2427,25 @@ export class PostgresStorage implements IStorage {
         }
       }
       
-      // Process updates in batches of 100
-      const updateBatchSize = 100;
+      // Process updates in parallel batches for better performance
+      const updateBatchSize = 50;
       for (let i = 0; i < toUpdate.length; i += updateBatchSize) {
         const batchRecords = toUpdate.slice(i, i + updateBatchSize);
         const batchConditions = updateWhereConditions.slice(i, i + updateBatchSize);
         
-        // For each record in the batch, perform an update
-        for (let j = 0; j < batchRecords.length; j++) {
-          await db
-            .update(pressureData)
-            .set(batchRecords[j])
-            .where(batchConditions[j]);
-        }
+        console.log(`Processing update batch ${Math.floor(i/updateBatchSize) + 1}/${Math.ceil(toUpdate.length/updateBatchSize)}`);
+        
+        // Create array of update promises to execute in parallel
+        const updatePromises = batchRecords.map((record, idx) => 
+          db.update(pressureData)
+            .set(record)
+            .where(batchConditions[idx])
+        );
+        
+        // Execute all updates in this batch in parallel
+        await Promise.all(updatePromises);
         updated += batchRecords.length;
+        console.log(`Updated batch ${Math.floor(i/updateBatchSize) + 1}/${Math.ceil(toUpdate.length/updateBatchSize)}, total: ${updated}`);
       }
       
       console.log(`Completed import: ${inserted} inserted, ${updated} updated, ${errors.length} errors`);
