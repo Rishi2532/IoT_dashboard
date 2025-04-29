@@ -2505,6 +2505,61 @@ export class PostgresStorage implements IStorage {
       
       console.log(`Completed import: ${inserted} inserted, ${updated} updated, ${errors.length} errors`);
       
+      // IMPORTANT: Update scheme_status table with block information from this import
+      console.log("Synchronizing scheme_status table with block information from pressure import...");
+      
+      // Extract unique scheme and block combinations from the imported data
+      const schemeBlockMap = new Map<string, Set<string>>();
+      
+      // Process all records to gather unique scheme-block combinations
+      [...toInsert, ...toUpdate].forEach(record => {
+        if (record.scheme_id && record.block && record.scheme_name) {
+          if (!schemeBlockMap.has(record.scheme_name)) {
+            schemeBlockMap.set(record.scheme_name, new Set<string>());
+          }
+          schemeBlockMap.get(record.scheme_name)?.add(record.block);
+        }
+      });
+      
+      // For each scheme, ensure we have entries in scheme_status for all its blocks
+      let schemeStatusUpdated = 0;
+      for (const [schemeName, blocks] of schemeBlockMap.entries()) {
+        try {
+          // First get all existing scheme status entries for this scheme
+          const existingSchemeStatus = await db
+            .select()
+            .from(schemeStatuses)
+            .where(eq(schemeStatuses.scheme_name, schemeName));
+          
+          console.log(`Found ${existingSchemeStatus.length} existing scheme status records for scheme "${schemeName}"`);
+          
+          // Create a map of existing blocks for this scheme
+          const existingBlocks = new Set(existingSchemeStatus.map(s => s.block));
+          
+          // Check for blocks in our import that don't exist in scheme_status
+          for (const block of blocks) {
+            if (!existingBlocks.has(block)) {
+              console.log(`Adding missing block "${block}" to scheme_status for scheme "${schemeName}"`);
+              
+              // If we have an existing record for this scheme, clone it for the new block
+              if (existingSchemeStatus.length > 0) {
+                const templateRecord = {...existingSchemeStatus[0]};
+                templateRecord.block = block;
+                
+                // Insert the new block record
+                await db.insert(schemeStatuses).values(templateRecord);
+                schemeStatusUpdated++;
+              }
+            }
+          }
+        } catch (error) {
+          console.error(`Error synchronizing scheme_status for scheme "${schemeName}":`, error);
+          errors.push(`Failed to sync scheme status for ${schemeName}: ${error instanceof Error ? error.message : String(error)}`);
+        }
+      }
+      
+      console.log(`Synchronized ${schemeStatusUpdated} new block entries in scheme_status table from pressure import`);
+      
       return {
         inserted,
         updated,
