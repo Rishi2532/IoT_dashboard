@@ -468,17 +468,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If a specific block is specified, filter schemes by block
       console.log(`Filtering for block: "${blockName}" in ${schemes.length} schemes`);
       
-      // Log all blocks for debugging
-      console.log("Available blocks:", schemes.map(s => s.block));
+      // First get a list of all available blocks from the database for this scheme
+      const availableBlocks = await storage.getBlocksByScheme(schemeName);
+      console.log("Available blocks:", availableBlocks);
       
-      const filteredSchemes = schemes.filter(scheme => {
+      // Try to find an exact match first
+      let filteredSchemes = schemes.filter(scheme => {
         // Handle null or undefined block values
         const schemeBlock = scheme.block || "";
         const requestedBlock = blockName || "";
         
-        // Case-insensitive comparison
+        // Exact case-insensitive comparison
         return schemeBlock.toLowerCase() === requestedBlock.toLowerCase();
       });
+      
+      // If no exact match, try partial matching for CSV imported data
+      if (filteredSchemes.length === 0 && blockName) {
+        console.log(`No exact match found for block "${blockName}", trying partial match...`);
+        
+        // Try to find the block using partial matching (in case of CSV import data)
+        filteredSchemes = schemes.filter(scheme => {
+          // Check if the block name contains the requested block or vice versa
+          const schemeBlock = (scheme.block || "").toLowerCase();
+          const requestedBlockLower = blockName.toLowerCase();
+          
+          return schemeBlock.includes(requestedBlockLower) || 
+                 requestedBlockLower.includes(schemeBlock);
+        });
+        
+        if (filteredSchemes.length > 0) {
+          console.log(`Found ${filteredSchemes.length} schemes with partial block match for "${blockName}"`);
+        }
+      }
       
       console.log(`Found ${filteredSchemes.length} schemes matching block "${blockName}"`);
       
@@ -486,6 +507,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Send only the first matching scheme instead of an array
         return res.json(filteredSchemes[0]);
       } else {
+        // If we still have no matches, check if this block exists in the database
+        // but just doesn't have any scheme_status records yet
+        const blockExists = availableBlocks.some(block => 
+          block.toLowerCase() === (blockName || "").toLowerCase()
+        );
+        
+        if (blockExists) {
+          console.log(`Block "${blockName}" exists but has no scheme_status records, creating template`);
+          
+          // Use the first scheme as a template and change the block
+          const templateScheme = {...schemes[0]};
+          templateScheme.block = blockName;
+          
+          // Clear numeric values since this is a new block with no data yet
+          const numericFields = [
+            'number_of_village',
+            'total_villages_integrated',
+            'fully_completed_villages',
+            'no_of_functional_village',
+            'no_of_partial_village',
+            'no_of_non_functional_village',
+            'total_number_of_esr',
+            'total_esr_integrated',
+            'no_fully_completed_esr',
+            'balance_to_complete_esr',
+            'flow_meters_connected',
+            'pressure_transmitter_connected',
+            'residual_chlorine_analyzer_connected'
+          ];
+          
+          for (const field of numericFields) {
+            if (field in templateScheme) {
+              templateScheme[field] = 0;
+            }
+          }
+          
+          return res.json(templateScheme);
+        }
+        
         console.log("No schemes found for the specified block, returning all schemes");
         // If the block wasn't found, still return the aggregate view
         return res.json(schemes);
