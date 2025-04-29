@@ -3537,82 +3537,41 @@ export class PostgresStorage implements IStorage {
     let updated = 0;
     let removed = 0;
     
+    // Add timing for performance analysis
+    const startTime = Date.now();
+    
     try {
-      console.log("Starting LPCD data import from CSV with full replacement mode...");
+      console.log("Starting LPCD data import from CSV with optimized batch processing...");
       
       // Import csv-parse library using dynamic import
-      const csvParseModule = await import('csv-parse/sync');
-      const { parse } = csvParseModule;
+      const { parse } = await import('csv-parse/sync');
       
-      // Parse CSV file (no headers)
+      // Parse CSV file with improved options
       const records = parse(fileBuffer, {
         delimiter: ',',
         columns: false, // No headers in CSV
-        skip_empty_lines: true
+        skip_empty_lines: true,
+        trim: true,
+        bom: true, // Handle byte order mark if present
+        relax_column_count: true // Be more forgiving with column counts
       });
       
-      // Show headers for debugging
-      if (records.length > 0) {
-        console.log('CSV import analysis:');
-        console.log('- Headers:', records[0]);
-        console.log('- Water value columns:', records[0].filter((h: string) => h?.includes('water')));
-        console.log('- LPCD value columns:', records[0].filter((h: string) => h?.includes('lpcd')));
-        console.log('- Has LPCD headers:', records[0].some((h: string) => h?.includes('lpcd')));
+      console.log(`CSV parsed successfully. Found ${records.length} records.`);
+      
+      if (records.length === 0) {
+        return {
+          inserted: 0,
+          updated: 0,
+          removed: 0,
+          errors: ["Empty or invalid CSV file. Please check the format and try again."]
+        };
       }
       
-      // Track all villages in the CSV file
-      const importedVillages = new Set<string>();
+      // OPTIMIZATION: Store batch mapping data for faster processing
+      const recordsMap = new Map<string, Partial<InsertWaterSchemeData>>();
+      const uniqueKeys = new Set<string>();
       
-      // First pass - collect all villages in the CSV
-      for (let i = 1; i < records.length; i++) { // Skip header row (i=0)
-        const record = records[i];
-        
-        // Get scheme_id and village_name from CSV (fixed column positions)
-        const schemeId = record[5]; // Fixed position for scheme_id
-        const villageName = record[6]; // Fixed position for village_name
-        
-        if (schemeId && villageName) {
-          importedVillages.add(`${schemeId}::${villageName}`);
-        }
-      }
-      
-      console.log(`Found ${importedVillages.size} villages in the CSV file`);
-      
-      // Get all existing water scheme data
-      const allExistingData = await this.getAllWaterSchemeData();
-      
-      // Identify entries that should be removed (exist in DB but not in CSV)
-      const entriesToDelete: {scheme_id: string, village_name: string}[] = [];
-      
-      for (const entry of allExistingData) {
-        const key = `${entry.scheme_id}::${entry.village_name}`;
-        if (!importedVillages.has(key)) {
-          entriesToDelete.push({
-            scheme_id: entry.scheme_id,
-            village_name: entry.village_name
-          });
-        }
-      }
-      
-      console.log(`Found ${entriesToDelete.length} villages to remove (not present in CSV file)`);
-      
-      // Delete entries not in the CSV file
-      for (const entry of entriesToDelete) {
-        try {
-          await db
-            .delete(waterSchemeData)
-            .where(
-              sql`${waterSchemeData.scheme_id} = ${entry.scheme_id} AND 
-                  ${waterSchemeData.village_name} = ${entry.village_name}`
-            );
-          removed++;
-        } catch (deleteError) {
-          console.error(`Error deleting village ${entry.scheme_id}/${entry.village_name}:`, deleteError);
-          errors.push(`Failed to delete ${entry.scheme_id}/${entry.village_name}`);
-        }
-      }
-      
-      // Second pass - process and insert/update data
+      // Process all records and collect unique keys
       for (let i = 1; i < records.length; i++) { // Skip header row (i=0)
         const record = records[i];
         try {
@@ -3621,94 +3580,197 @@ export class PostgresStorage implements IStorage {
           
           // Check if we have the scheme_id (required field)
           const schemeIdIndex = 5; // According to the mapping, scheme_id is at index 5
-          if (!record[schemeIdIndex]) {
-            errors.push(`Row missing required field: scheme_id at column ${schemeIdIndex}`);
+          const villageNameIndex = 6; // Position for village_name
+          
+          if (!record[schemeIdIndex] || !record[villageNameIndex]) {
+            errors.push(`Row ${i+1} missing required field: scheme_id or village_name`);
             continue;
           }
           
-          // Map fields from CSV to database schema based on column index
-          for (const [indexStr, dbField] of Object.entries(this.positionalColumnMapping)) {
-            const index = parseInt(indexStr);
-            if (record[index] !== undefined && record[index] !== "") {
-              // Convert string values to numbers for numeric fields, with safety check
-              if (dbField.includes('value') || 
-                  dbField === 'population' || 
-                  dbField === 'number_of_esr' ||
-                  dbField.includes('count')) {
-                try {
-                  // Handle overflow issues by capping values to safe range
-                  let numberValue = parseFloat(String(record[index]).replace(/,/g, ""));
-                  
-                  // Check if number is within safe range for decimal(20,6)
-                  if (!isNaN(numberValue)) {
-                    // Max value for decimal(20,6) is approximately 10^14
-                    const MAX_SAFE_DECIMAL = 1e14;
+          // Get the required identifier fields
+          const schemeId = record[schemeIdIndex];
+          const villageName = record[villageNameIndex];
+          
+          // Only process if we have both required fields for composite key
+          if (schemeId && villageName) {
+            // Map fields from CSV to database schema based on column index
+            for (const [indexStr, dbField] of Object.entries(this.positionalColumnMapping)) {
+              const index = parseInt(indexStr);
+              if (record[index] !== undefined && record[index] !== "") {
+                // Convert string values to numbers for numeric fields, with safety check
+                if (dbField.includes('value') || 
+                    dbField === 'population' || 
+                    dbField === 'number_of_esr' ||
+                    dbField.includes('count')) {
+                  try {
+                    // Handle overflow issues by capping values to safe range
+                    let numberValue = parseFloat(String(record[index]).replace(/,/g, ""));
                     
-                    if (Math.abs(numberValue) > MAX_SAFE_DECIMAL) {
-                      console.warn(`Value too large for ${dbField}: ${numberValue}, capping to ${MAX_SAFE_DECIMAL}`);
-                      numberValue = numberValue > 0 ? MAX_SAFE_DECIMAL : -MAX_SAFE_DECIMAL;
+                    // Check if number is within safe range for decimal(20,6)
+                    if (!isNaN(numberValue)) {
+                      // Max value for decimal(20,6) is approximately 10^14
+                      const MAX_SAFE_DECIMAL = 1e14;
+                      
+                      if (Math.abs(numberValue) > MAX_SAFE_DECIMAL) {
+                        numberValue = numberValue > 0 ? MAX_SAFE_DECIMAL : -MAX_SAFE_DECIMAL;
+                      }
+                      
+                      schemeData[dbField as keyof InsertWaterSchemeData] = numberValue as any;
                     }
-                    
-                    schemeData[dbField] = numberValue;
-                  } else {
-                    // Skip invalid number values
-                    console.warn(`Invalid number for ${dbField}: ${record[index]}, using null instead`);
+                  } catch (e) {
+                    // Silent failure - just don't set the field
                   }
-                } catch (e) {
-                  console.warn(`Error converting value for ${dbField}: ${e.message}`);
+                } else {
+                  schemeData[dbField as keyof InsertWaterSchemeData] = record[index] as any;
                 }
-              } else {
-                schemeData[dbField] = record[index];
               }
             }
-          }
-          
-          // Ensure village_name is present (required for composite primary key)
-          if (!schemeData.village_name) {
-            errors.push(`Row missing required field: village_name for scheme_id ${schemeData.scheme_id}`);
-            continue;
-          }
-          
-          // Calculate derived values (consistent zero, below/above 55 LPCD)
-          this.calculateDerivedValues(schemeData);
-          
-          // Generate a composite key for lookup
-          const lookupKey = `${schemeData.scheme_id}-${schemeData.village_name}`;
-          
-          // Check if scheme already exists
-          let existingScheme = null;
-          try {
-            const schemes = await db.select().from(waterSchemeData)
-              .where(sql`${waterSchemeData.scheme_id} = ${schemeData.scheme_id} AND 
-                     ${waterSchemeData.village_name} = ${schemeData.village_name}`);
             
-            if (schemes.length > 0) {
-              existingScheme = schemes[0];
-            }
-          } catch (error) {
-            console.error(`Error checking for existing scheme: ${error}`);
-          }
-          
-          try {
-            if (existingScheme) {
-              // Update existing scheme
-              await this.updateWaterSchemeData(schemeData.scheme_id, schemeData);
-              updated++;
-            } else {
-              // Insert new scheme
-              await this.createWaterSchemeData(schemeData as InsertWaterSchemeData);
-              inserted++;
-            }
-          } catch (saveError) {
-            console.error(`Error saving data: ${saveError.message}`);
-            errors.push(`Error saving data for ${lookupKey}: ${saveError.message}`);
+            // Calculate derived values (consistent zero, below/above 55 LPCD)
+            this.calculateDerivedValues(schemeData);
+            
+            // Generate a composite key for lookup
+            const key = `${schemeId}::${villageName}`;
+            uniqueKeys.add(key);
+            recordsMap.set(key, schemeData);
           }
         } catch (rowError) {
-          errors.push(`Error processing row: ${rowError.message}`);
+          const errorMessage = rowError instanceof Error ? rowError.message : String(rowError);
+          errors.push(`Error processing row ${i+1}: ${errorMessage}`);
         }
       }
       
-      console.log(`LPCD CSV import complete: ${inserted} inserted, ${updated} updated, ${removed} removed, ${errors.length} errors`);
+      console.log(`Processed ${recordsMap.size} unique water records from CSV`);
+      
+      // OPTIMIZATION: Get all existing water scheme data in a single query
+      console.log("Fetching all existing water scheme data...");
+      const allExistingData = await this.getAllWaterSchemeData();
+      console.log(`Found ${allExistingData.length} existing water scheme records`);
+      
+      // Create a lookup map for existing data
+      const existingDataMap = new Map<string, WaterSchemeData>();
+      for (const entry of allExistingData) {
+        const key = `${entry.scheme_id}::${entry.village_name}`;
+        existingDataMap.set(key, entry);
+      }
+      
+      // OPTIMIZATION: Identify entries for batch operations
+      const recordsToUpdate: Partial<InsertWaterSchemeData>[] = [];
+      const recordsToInsert: Partial<InsertWaterSchemeData>[] = [];
+      const entriesToDelete: {scheme_id: string, village_name: string}[] = [];
+      
+      // Process records for insert/update
+      for (const [key, record] of recordsMap.entries()) {
+        if (existingDataMap.has(key)) {
+          recordsToUpdate.push(record);
+        } else {
+          recordsToInsert.push(record);
+        }
+      }
+      
+      // Identify records to delete (in DB but not in CSV)
+      for (const [key, entry] of existingDataMap.entries()) {
+        if (!uniqueKeys.has(key)) {
+          entriesToDelete.push({
+            scheme_id: entry.scheme_id,
+            village_name: entry.village_name
+          });
+        }
+      }
+      
+      console.log(`Operations to perform: ${recordsToInsert.length} inserts, ${recordsToUpdate.length} updates, ${entriesToDelete.length} deletes`);
+      
+      // OPTIMIZATION: Process batch deletes
+      if (entriesToDelete.length > 0) {
+        const deleteBatchSize = 50;
+        for (let i = 0; i < entriesToDelete.length; i += deleteBatchSize) {
+          const batch = entriesToDelete.slice(i, i + deleteBatchSize);
+          console.log(`Processing delete batch ${Math.floor(i/deleteBatchSize) + 1}/${Math.ceil(entriesToDelete.length/deleteBatchSize)}`);
+          
+          // Create batch of delete promises to execute in parallel
+          const deletePromises = batch.map(entry => 
+            db.delete(waterSchemeData)
+              .where(
+                sql`${waterSchemeData.scheme_id} = ${entry.scheme_id} AND 
+                    ${waterSchemeData.village_name} = ${entry.village_name}`
+              )
+          );
+          
+          // Execute all deletes in this batch in parallel
+          await Promise.all(deletePromises);
+          removed += batch.length;
+        }
+      }
+      
+      // OPTIMIZATION: Process batch inserts
+      if (recordsToInsert.length > 0) {
+        const insertBatchSize = 50;
+        for (let i = 0; i < recordsToInsert.length; i += insertBatchSize) {
+          const batch = recordsToInsert.slice(i, i + insertBatchSize);
+          console.log(`Processing insert batch ${Math.floor(i/insertBatchSize) + 1}/${Math.ceil(recordsToInsert.length/insertBatchSize)}`);
+          
+          try {
+            await db.insert(waterSchemeData).values(batch as InsertWaterSchemeData[]);
+            inserted += batch.length;
+          } catch (insertError) {
+            console.error(`Error in batch insert: ${insertError instanceof Error ? insertError.message : String(insertError)}`);
+            
+            // Fall back to individual inserts if batch fails
+            for (const record of batch) {
+              try {
+                await db.insert(waterSchemeData).values(record as InsertWaterSchemeData);
+                inserted++;
+              } catch (individualError) {
+                errors.push(`Failed to insert ${record.scheme_id}/${record.village_name}: ${individualError instanceof Error ? individualError.message : String(individualError)}`);
+              }
+            }
+          }
+        }
+      }
+      
+      // OPTIMIZATION: Process updates in parallel batches
+      if (recordsToUpdate.length > 0) {
+        const updateBatchSize = 30;
+        for (let i = 0; i < recordsToUpdate.length; i += updateBatchSize) {
+          const batch = recordsToUpdate.slice(i, i + updateBatchSize);
+          console.log(`Processing update batch ${Math.floor(i/updateBatchSize) + 1}/${Math.ceil(recordsToUpdate.length/updateBatchSize)}`);
+          
+          // Create update promises
+          const updatePromises = batch.map(record => 
+            db.update(waterSchemeData)
+              .set(record as Partial<WaterSchemeData>)
+              .where(sql`${waterSchemeData.scheme_id} = ${record.scheme_id} AND 
+                         ${waterSchemeData.village_name} = ${record.village_name}`)
+          );
+          
+          // Execute all updates in parallel
+          try {
+            await Promise.all(updatePromises);
+            updated += batch.length;
+          } catch (updateError) {
+            console.error(`Error in batch update: ${updateError instanceof Error ? updateError.message : String(updateError)}`);
+            
+            // Fall back to individual updates
+            for (const record of batch) {
+              try {
+                await db.update(waterSchemeData)
+                  .set(record as Partial<WaterSchemeData>)
+                  .where(sql`${waterSchemeData.scheme_id} = ${record.scheme_id} AND 
+                             ${waterSchemeData.village_name} = ${record.village_name}`);
+                updated++;
+              } catch (individualError) {
+                errors.push(`Failed to update ${record.scheme_id}/${record.village_name}: ${individualError instanceof Error ? individualError.message : String(individualError)}`);
+              }
+            }
+          }
+        }
+      }
+      
+      // Calculate elapsed time
+      const endTime = Date.now();
+      const elapsedSeconds = (endTime - startTime) / 1000;
+      
+      console.log(`LPCD CSV import completed in ${elapsedSeconds.toFixed(2)} seconds: ${inserted} inserted, ${updated} updated, ${removed} removed, ${errors.length} errors`);
       return { inserted, updated, removed, errors };
     } catch (error) {
       console.error(`CSV import error:`, error);
