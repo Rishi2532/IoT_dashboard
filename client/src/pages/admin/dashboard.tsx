@@ -94,6 +94,7 @@ function SchemeManager() {
     scheme_name: string;
     region_name: string;
     scheme_status: string;
+    block?: string | null; // Added block field for handling block-specific schemes
     agency?: string;
     total_villages?: number;
     villages_integrated?: number;
@@ -348,6 +349,7 @@ function SchemeManager() {
                   <TableRow>
                     <TableHead>Scheme ID</TableHead>
                     <TableHead>Name</TableHead>
+                    <TableHead>Block</TableHead>
                     <TableHead>Region</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -355,9 +357,10 @@ function SchemeManager() {
                 </TableHeader>
                 <TableBody>
                   {schemesQuery.data?.map((scheme: Scheme) => (
-                    <TableRow key={scheme.scheme_id}>
+                    <TableRow key={`${scheme.scheme_id}-${scheme.block || 'null'}`}>
                       <TableCell className="font-mono text-xs">{scheme.scheme_id}</TableCell>
                       <TableCell>{scheme.scheme_name}</TableCell>
+                      <TableCell>{scheme.block || '-'}</TableCell>
                       <TableCell>{scheme.region_name}</TableCell>
                       <TableCell>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${
