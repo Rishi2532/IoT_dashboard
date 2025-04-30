@@ -10,8 +10,8 @@ import { v4 as uuidv4 } from 'uuid';
 
 const { Pool } = pg;
 
-// Base URL for PI Vision dashboard
-const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10108/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD';
+// Base URL for PI Vision dashboard - using the correct display ID
+const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10020/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD';
 
 // Standard parameters for the dashboard
 const STANDARD_PARAMS = 'hidetoolbar=true&hidesidebar=true&mode=kiosk';
@@ -25,7 +25,7 @@ function generateDashboardUrl(scheme) {
   // Skip if missing required hierarchical information
   if (!scheme.region || !scheme.circle || !scheme.division || 
       !scheme.sub_division || !scheme.block || !scheme.scheme_id || !scheme.scheme_name) {
-    console.warn(`Cannot generate URL for scheme ${scheme.scheme_id} (${scheme.scheme_name}) - missing hierarchical information.`);
+    console.warn(`Cannot generate URL for scheme ${scheme.scheme_id} - missing hierarchical information.`);
     return null;
   }
   
@@ -59,76 +59,59 @@ async function fixAllDashboardUrls() {
     const client = await pool.connect();
     
     try {
-      // Get all regions for detailed reporting
-      const regionsResult = await client.query(`
-        SELECT DISTINCT region FROM scheme_status
-        ORDER BY region
-      `);
+      // Get the count of all schemes for reporting progress
+      const countResult = await client.query('SELECT COUNT(*) FROM scheme_status');
+      const totalSchemes = parseInt(countResult.rows[0].count);
+      console.log(`Found ${totalSchemes} schemes to update.`);
       
-      const regions = regionsResult.rows.map(r => r.region).filter(Boolean);
-      console.log(`Found ${regions.length} regions: ${regions.join(', ')}`);
+      console.log('Updating dashboard URLs for all schemes...');
       
-      let totalSuccess = 0;
-      let totalErrors = 0;
+      // Get all schemes in batches to prevent memory issues
+      const batchSize = 100;
+      let processedCount = 0;
+      let updatedCount = 0;
+      let skippedCount = 0;
       
-      // Process each region separately
-      for (const region of regions) {
-        console.log(`\nProcessing schemes for region: ${region}`);
+      for (let offset = 0; offset < totalSchemes; offset += batchSize) {
+        // Get a batch of schemes
+        const batchResult = await client.query(
+          'SELECT * FROM scheme_status LIMIT $1 OFFSET $2',
+          [batchSize, offset]
+        );
         
-        // Get all schemes for this region
-        const result = await client.query(`
-          SELECT * FROM scheme_status 
-          WHERE region = $1
-        `, [region]);
+        const schemes = batchResult.rows;
         
-        console.log(`Found ${result.rows.length} scheme entries for region ${region}.`);
-        
-        if (result.rows.length === 0) {
-          console.log(`No schemes found for region ${region}. Skipping.`);
-          continue;
-        }
-        
-        let regionSuccess = 0;
-        let regionErrors = 0;
-        
-        // Process each scheme entry
-        for (const scheme of result.rows) {
-          try {
-            // Generate URL
-            const dashboardUrl = generateDashboardUrl(scheme);
+        // Process each scheme in the batch
+        for (const scheme of schemes) {
+          processedCount++;
+          
+          // Generate a new dashboard URL
+          const dashboardUrl = generateDashboardUrl(scheme);
+          
+          if (dashboardUrl) {
+            // Update the database
+            await client.query(
+              'UPDATE scheme_status SET dashboard_url = $1 WHERE scheme_id = $2 AND block = $3',
+              [dashboardUrl, scheme.scheme_id, scheme.block]
+            );
             
-            if (dashboardUrl) {
-              // Update the database
-              await client.query(
-                'UPDATE scheme_status SET dashboard_url = $1 WHERE scheme_id = $2 AND block = $3',
-                [dashboardUrl, scheme.scheme_id, scheme.block]
-              );
-              
-              regionSuccess++;
-              
-              // Log progress every 10 schemes
-              if (regionSuccess % 10 === 0) {
-                console.log(`Processed ${regionSuccess} schemes for region ${region}...`);
-              }
-            } else {
-              console.warn(`Skipping scheme ${scheme.scheme_id} (${scheme.scheme_name}) for block ${scheme.block} - couldn't generate URL.`);
-              regionErrors++;
+            updatedCount++;
+            
+            // Log progress periodically
+            if (updatedCount % 50 === 0 || updatedCount === 1) {
+              console.log(`Updated ${updatedCount} of ${totalSchemes} dashboard URLs...`);
             }
-          } catch (err) {
-            console.error(`Error processing scheme ${scheme.scheme_id} in ${scheme.block}: ${err.message}`);
-            regionErrors++;
+          } else {
+            console.warn(`Skipped scheme ${scheme.scheme_id} for block ${scheme.block} - couldn't generate URL`);
+            skippedCount++;
           }
         }
-        
-        console.log(`Region ${region} complete - Successfully updated: ${regionSuccess}, Errors: ${regionErrors}`);
-        
-        totalSuccess += regionSuccess;
-        totalErrors += regionErrors;
       }
       
-      console.log('\nAll dashboard URL updates complete.');
-      console.log(`Successfully updated: ${totalSuccess} schemes`);
-      console.log(`Errors/Skipped: ${totalErrors} schemes`);
+      console.log('\nDashboard URL update completed:');
+      console.log(`- Total schemes processed: ${processedCount}`);
+      console.log(`- Successfully updated: ${updatedCount}`);
+      console.log(`- Skipped (incomplete data): ${skippedCount}`);
       
     } finally {
       // Release the client back to the pool
