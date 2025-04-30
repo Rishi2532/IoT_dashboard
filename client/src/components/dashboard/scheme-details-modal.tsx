@@ -320,17 +320,35 @@ export default function SchemeDetailsModal({
                   {currentScheme.total_number_of_esr || 0}
                 </p>
               </div>
-              {/* <div>
-                <a
-                  href="https://14.99.99.166:18099/PIVision/#/Displays/10108/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD?hidetoolbar=true&hidesidebar=true&mode=kiosk&rootpath=%5C%5CDemoAF%5CJJM%5CJJM%5CMaharashtra%5CRegion-Nagpur%5CCircle-Nagpur%5CDivision-Nagpur%5CSub%20Division-Nagpur%5CBlock-Kamptee%5CScheme-7940695%20-%20Bidgaon%20Tarodi%20wss%3F48487708-9037-11ef-96dd-ecf4bbe0f1d4"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <h4 className="text-xs font-medium text-blue-500 hover:underline cursor-pointer">
-                    JJM Dashboard
-                  </h4>
-                </a>
-              </div> */}
+              {currentScheme.dashboard_url && (
+                <div>
+                  <a
+                    href={currentScheme.dashboard_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <h4 className="text-xs font-medium text-blue-500 hover:underline cursor-pointer flex items-center">
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        width="14" 
+                        height="14" 
+                        viewBox="0 0 24 24" 
+                        fill="none" 
+                        stroke="currentColor" 
+                        strokeWidth="2" 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        className="mr-1"
+                      >
+                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="3" y1="9" x2="21" y2="9"></line>
+                        <line x1="9" y1="21" x2="9" y2="9"></line>
+                      </svg>
+                      PI Vision Dashboard
+                    </h4>
+                  </a>
+                </div>
+              )}
             </div>
           </div>
 

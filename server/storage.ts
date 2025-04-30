@@ -25,7 +25,7 @@ import {
 import { getDB, initializeDatabase } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { parse } from "csv-parse";
-import { v1 as uuidv1 } from "uuid";
+import { v4 as uuidv4 } from "uuid";
 
 // Declare global variables for storing updates data
 declare global {
@@ -812,6 +812,40 @@ export class PostgresStorage implements IStorage {
       console.error("Failed to initialize database in constructor:", error);
       throw error;
     });
+  }
+  
+  /**
+   * Generate a dashboard URL for a scheme
+   * @param scheme - The scheme object with region, circle, division, etc.
+   * @returns The complete URL or null if missing required fields
+   */
+  private generateDashboardUrl(scheme: SchemeStatus | InsertSchemeStatus): string | null {
+    // Skip if missing required hierarchical information
+    if (!scheme.region || !scheme.circle || !scheme.division || 
+        !scheme.sub_division || !scheme.block || !scheme.scheme_id || !scheme.scheme_name) {
+      return null;
+    }
+    
+    // Base URL for PI Vision dashboard
+    const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10108/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD';
+    
+    // Standard parameters for the dashboard
+    const STANDARD_PARAMS = 'hidetoolbar=true&hidesidebar=true&mode=kiosk';
+    
+    // Generate a UUID for this scheme (based on its unique properties)
+    const schemeUuid = uuidv4();
+    
+    // Handle the special case for Amravati region (change to Amaravati in the URL)
+    const regionDisplay = scheme.region === 'Amravati' ? 'Amaravati' : scheme.region;
+
+    // Create the path without URL encoding
+    const path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${scheme.circle}\\Division-${scheme.division}\\Sub Division-${scheme.sub_division}\\Block-${scheme.block}\\Scheme-${scheme.scheme_id} - ${scheme.scheme_name}?${schemeUuid}`;
+    
+    // URL encode the path
+    const encodedPath = encodeURIComponent(path);
+    
+    // Combine all parts to create the complete URL
+    return `${BASE_URL}?${STANDARD_PARAMS}&rootpath=${encodedPath}`;
   }
   
   // Chlorine Data CRUD operations
@@ -3548,12 +3582,27 @@ export class PostgresStorage implements IStorage {
 
   async createScheme(scheme: InsertSchemeStatus): Promise<SchemeStatus> {
     const db = await this.ensureInitialized();
-    const result = await db.insert(schemeStatuses).values(scheme).returning();
+    
+    // Generate a dashboard URL for the new scheme
+    const dashboardUrl = this.generateDashboardUrl(scheme);
+    
+    // Add the dashboard URL to the scheme data
+    const schemeWithUrl = {
+      ...scheme,
+      dashboard_url: dashboardUrl
+    };
+    
+    const result = await db.insert(schemeStatuses).values(schemeWithUrl).returning();
     return result[0];
   }
 
   async updateScheme(scheme: SchemeStatus): Promise<SchemeStatus> {
     const db = await this.ensureInitialized();
+    
+    // Check if we need to generate a dashboard URL (if missing or hierarchical info changed)
+    if (!scheme.dashboard_url) {
+      scheme.dashboard_url = this.generateDashboardUrl(scheme);
+    }
     
     // FIXED: Update based on both scheme_id AND block to preserve block-specific data
     await db
@@ -3576,7 +3625,8 @@ export class PostgresStorage implements IStorage {
         pressure_transmitter_connected: scheme.pressure_transmitter_connected,
         residual_chlorine_analyzer_connected:
           scheme.residual_chlorine_analyzer_connected,
-        fully_completion_scheme_status: scheme.fully_completion_scheme_status
+        fully_completion_scheme_status: scheme.fully_completion_scheme_status,
+        dashboard_url: scheme.dashboard_url
       })
       .where(
         and(
