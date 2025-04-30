@@ -3339,7 +3339,8 @@ export class PostgresStorage implements IStorage {
             .filter((block: string) => 
               !blocks.includes(block) && 
               // Filter for blocks from the Amravati region for "105 Villages RRWSS"
-              ['Achalpur', 'Anjangaon', 'Chandur Bazar', 'Dharangaon', 'Nandura'].includes(block)
+              // Removed Anjangaon, Dharangaon, and Nandura as requested
+              ['Achalpur', 'Chandur Bazar'].includes(block)
             );
             
           if (additionalBlocks.length > 0) {
