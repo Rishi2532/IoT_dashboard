@@ -838,8 +838,17 @@ export class PostgresStorage implements IStorage {
     // Handle the special case for Amravati region (change to Amaravati in the URL)
     const regionDisplay = scheme.region === 'Amravati' ? 'Amaravati' : scheme.region;
 
-    // Create the path without URL encoding - with the exact spacing format
-    const path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${scheme.circle}\\Division-${scheme.division}\\Sub Division-${scheme.sub_division}\\Block -${scheme.block}\\Scheme - ${scheme.scheme_id} -${scheme.scheme_name}`;
+    // Create the path without URL encoding
+    // Use different spacing formats based on the region
+    let path;
+    
+    if (scheme.region === 'Pune') {
+      // Pune region format: Block -Name, Scheme - ID -Name (space before hyphens)
+      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${scheme.circle}\\Division-${scheme.division}\\Sub Division-${scheme.sub_division}\\Block -${scheme.block}\\Scheme - ${scheme.scheme_id} -${scheme.scheme_name}`;
+    } else {
+      // Format for other regions: Block-Name, Scheme-ID - Name (no space before first hyphen)
+      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${scheme.circle}\\Division-${scheme.division}\\Sub Division-${scheme.sub_division}\\Block-${scheme.block}\\Scheme-${scheme.scheme_id} - ${scheme.scheme_name}`;
+    }
     
     // URL encode the path
     const encodedPath = encodeURIComponent(path);
