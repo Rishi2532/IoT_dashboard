@@ -25,6 +25,7 @@ import {
 import { getDB, initializeDatabase } from "./db";
 import { eq, sql, and } from "drizzle-orm";
 import { parse } from "csv-parse";
+import { v1 as uuidv1 } from "uuid";
 
 // Declare global variables for storing updates data
 declare global {
