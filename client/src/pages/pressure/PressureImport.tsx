@@ -16,6 +16,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/hooks/use-toast';
 import { AlertCircle, CheckCircle, FilePlus, UploadCloud, Download } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
@@ -26,6 +27,7 @@ const PressureImport: React.FC = () => {
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [clearExisting, setClearExisting] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
     success: boolean;
     inserted: number;
@@ -83,6 +85,7 @@ const PressureImport: React.FC = () => {
 
     const formData = new FormData();
     formData.append('file', file);
+    formData.append('clearExisting', clearExisting.toString());
 
     try {
       const response = await fetch('/api/pressure/import/csv', {
@@ -109,7 +112,9 @@ const PressureImport: React.FC = () => {
 
       toast({
         title: "Upload successful",
-        description: `Processed ${result.inserted + result.updated} records`,
+        description: clearExisting 
+          ? `Existing data cleared. Processed ${result.inserted + result.updated} new records.`
+          : `Processed ${result.inserted + result.updated} records (${result.inserted} inserted, ${result.updated} updated).`,
       });
     } catch (error: any) {
       clearInterval(progressInterval);
@@ -157,6 +162,17 @@ const PressureImport: React.FC = () => {
                     <Label htmlFor="csvFile">Select CSV file</Label>
                     <div className="flex items-center gap-4">
                       <div className="flex-1">
+                        <div className="flex items-center mb-3">
+                          <Checkbox 
+                            id="clearExisting" 
+                            checked={clearExisting}
+                            onCheckedChange={(checked) => setClearExisting(checked === true)}
+                          />
+                          <Label htmlFor="clearExisting" className="ml-2 cursor-pointer">
+                            Clear existing pressure data before import
+                          </Label>
+                          <span className="ml-1 text-xs text-orange-500">(Use with caution)</span>
+                        </div>
                         <div 
                           className={`border-2 border-dashed rounded-lg p-6 text-center hover:bg-gray-50 transition-colors
                             ${file ? 'border-blue-300 bg-blue-50' : 'border-gray-300'}`}

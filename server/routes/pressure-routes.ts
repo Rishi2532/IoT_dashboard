@@ -222,10 +222,14 @@ router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res)
       });
     }
     
+    // Check if the user wants to clear existing data before import
+    const clearExisting = req.body.clearExisting === 'true';
+    
     // Process CSV file with improved error handling
     try {
-      const result = await storage.importPressureDataFromCSV(req.file.buffer);
-      console.log("CSV import completed successfully:", result);
+      // Pass the clearExisting option to the import function
+      const result = await storage.importPressureDataFromCSV(req.file.buffer, { clearExisting });
+      console.log(`CSV import completed successfully (clearExisting=${clearExisting}):`, result);
       res.json(result);
     } catch (importError: any) {
       console.error("Detailed CSV import error:", importError);
