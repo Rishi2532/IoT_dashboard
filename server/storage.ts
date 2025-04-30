@@ -826,8 +826,8 @@ export class PostgresStorage implements IStorage {
       return null;
     }
     
-    // Base URL for PI Vision dashboard with the correct display ID
-    const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10020/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD';
+    // Base URL for PI Vision dashboard with the correct display ID (10108)
+    const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10108/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD';
     
     // Standard parameters for the dashboard
     const STANDARD_PARAMS = 'hidetoolbar=true&hidesidebar=true&mode=kiosk';
