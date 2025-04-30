@@ -135,10 +135,16 @@ function SchemeManager() {
     refetchOnWindowFocus: false
   });
   
-  // Delete scheme mutation
+  // Delete scheme mutation - Updated to handle block parameter
   const deleteSchemeMutation = useMutation({
-    mutationFn: async (schemeId: string) => {
-      const response = await fetch(`/api/schemes/${schemeId}`, {
+    mutationFn: async (params: { schemeId: string, block?: string | null }) => {
+      // Build the URL with query parameters for the block
+      let url = `/api/schemes/${params.schemeId}`;
+      if (params.block) {
+        url += `?block=${encodeURIComponent(params.block)}`;
+      }
+      
+      const response = await fetch(url, {
         method: 'DELETE',
       });
       
@@ -214,7 +220,10 @@ function SchemeManager() {
   
   const confirmDelete = () => {
     if (schemeToDelete) {
-      deleteSchemeMutation.mutate(schemeToDelete.scheme_id);
+      deleteSchemeMutation.mutate({
+        schemeId: schemeToDelete.scheme_id,
+        block: schemeToDelete.block
+      });
     }
   };
   
@@ -396,7 +405,8 @@ function SchemeManager() {
             <DialogHeader>
               <DialogTitle>Confirm Deletion</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete the scheme "{schemeToDelete?.scheme_name}"? 
+                Are you sure you want to delete the scheme "{schemeToDelete?.scheme_name}"
+                {schemeToDelete?.block ? ` in block "${schemeToDelete.block}"` : ''}? 
                 This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
