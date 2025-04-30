@@ -167,11 +167,14 @@ export default function SchemeTable({
                   <TableHead className="w-[12%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">
                     Scheme ID
                   </TableHead>
-                  <TableHead className="w-[25%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">
+                  <TableHead className="w-[20%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium">
                     Scheme Name
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">
                     Region
+                  </TableHead>
+                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">
+                    Block
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-700 font-medium text-center">
                     Circle/Division
@@ -194,7 +197,7 @@ export default function SchemeTable({
                 {isLoading ? (
                   [...Array(5)].map((_, index) => (
                     <TableRow key={index}>
-                      <TableCell colSpan={8}>
+                      <TableCell colSpan={9}>
                         <div className="animate-pulse h-4 sm:h-6 lg:h-8 bg-gray-200 rounded"></div>
                       </TableCell>
                     </TableRow>
@@ -202,7 +205,7 @@ export default function SchemeTable({
                 ) : currentItems.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={8}
+                      colSpan={9}
                       className="text-center py-4 sm:py-6 lg:py-8 text-xs sm:text-sm lg:text-base text-neutral-500"
                     >
                       No schemes found matching your criteria
@@ -211,7 +214,7 @@ export default function SchemeTable({
                 ) : (
                   currentItems.map((scheme) => (
                     <TableRow
-                      key={scheme.scheme_id}
+                      key={`${scheme.scheme_id}-${scheme.block || 'default'}`}
                       className="hover:bg-blue-50 transition-colors duration-150"
                     >
                       <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100">
@@ -225,6 +228,11 @@ export default function SchemeTable({
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
                         <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
                           {scheme.region}
+                        </span>
+                      </TableCell>
+                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
+                        <span className="px-2 py-1 bg-green-50 text-green-700 rounded-md">
+                          {scheme.block || <span className="text-gray-400 italic">No block</span>}
                         </span>
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
