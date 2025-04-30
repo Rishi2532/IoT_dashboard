@@ -3284,8 +3284,7 @@ export class PostgresStorage implements IStorage {
       
       console.log(`Special query results for "${schemeName}" in "${blockName}":`, specialQueryForSchemeData.rows);
       
-      // Look up the data from your CSV screenshot that was imported
-      // This is a direct match to your CSV screenshot data
+      // Use database values from scheme_status table first (most accurate source)
       let number_of_village = 0;
       let total_villages_integrated = 0;
       let fully_completed_villages = 0;
@@ -3293,36 +3292,28 @@ export class PostgresStorage implements IStorage {
       let total_esr_integrated = 0;
       let no_fully_completed_esr = 0;
       
-      // Use direct lookup for block values based on your screenshot
-      if (blockName === 'Achalpur') {
-        number_of_village = 10;
-        total_villages_integrated = 7;
-        fully_completed_villages = 5;
-        total_number_of_esr = 20;
-        total_esr_integrated = 7;
-        no_fully_completed_esr = 6;
-      } else if (blockName === 'Amravati') {
-        number_of_village = 21;
-        total_villages_integrated = 10;
-        fully_completed_villages = 7;
-        total_number_of_esr = 53;
-        total_esr_integrated = 17;
-        no_fully_completed_esr = 13;
-      } else if (blockName === 'Bhatkuli') {
-        number_of_village = 58;
-        total_villages_integrated = 21;
-        fully_completed_villages = 10;
-        total_number_of_esr = 105;
-        total_esr_integrated = 25;
-        no_fully_completed_esr = 19;
-      } else if (blockName === 'Chandur Bazar') {
-        number_of_village = 25;
-        total_villages_integrated = 11;
-        fully_completed_villages = 7;
-        total_number_of_esr = 53;
-        total_esr_integrated = 10;
-        no_fully_completed_esr = 11;
+      // PRIORITIZE the schemeStatusData from the database over hardcoded values
+      if (schemeStatusData.length > 0) {
+        console.log(`Using database values from scheme_status table for "${schemeName}" in block "${blockName}"`);
+        number_of_village = schemeStatusData[0].number_of_village || 0;
+        total_villages_integrated = schemeStatusData[0].total_villages_integrated || 0;
+        fully_completed_villages = schemeStatusData[0].fully_completed_villages || 0;
+        total_number_of_esr = schemeStatusData[0].total_number_of_esr || 0;
+        total_esr_integrated = schemeStatusData[0].total_esr_integrated || 0;
+        no_fully_completed_esr = schemeStatusData[0].no_fully_completed_esr || 0;
+        
+        console.log(`Database values for "${schemeName}" in block "${blockName}":`, {
+          number_of_village,
+          total_villages_integrated,
+          fully_completed_villages,
+          total_number_of_esr,
+          total_esr_integrated,
+          no_fully_completed_esr
+        });
       } else {
+        // Only use fallback values if no database records exist
+        console.log(`No database values found, using fallback data for "${schemeName}" in block "${blockName}"`);
+        
         // For other blocks, use data from water_scheme_data if available
         if (waterDataQuery.length > 0) {
           number_of_village = parseInt(waterDataQuery[0].totalVillages);
@@ -3366,16 +3357,16 @@ export class PostgresStorage implements IStorage {
         total_esr_integrated,
         no_fully_completed_esr,
         
-        // Calculate remaining fields based on these values using exact numbers from your CSV
-        no_of_functional_village: Math.max(1, Math.round(total_villages_integrated * 0.65)),
-        no_of_partial_village: Math.max(1, Math.round(total_villages_integrated * 0.35)),
-        no_of_non_functional_village: number_of_village - total_villages_integrated,
-        balance_to_complete_esr: total_number_of_esr - total_esr_integrated,
+        // Use database values for these fields if available, otherwise calculate them
+        no_of_functional_village: schemeStatusData.length > 0 ? (schemeStatusData[0].no_of_functional_village || Math.max(1, Math.round(total_villages_integrated * 0.65))) : Math.max(1, Math.round(total_villages_integrated * 0.65)),
+        no_of_partial_village: schemeStatusData.length > 0 ? (schemeStatusData[0].no_of_partial_village || Math.max(1, Math.round(total_villages_integrated * 0.35))) : Math.max(1, Math.round(total_villages_integrated * 0.35)),
+        no_of_non_functional_village: schemeStatusData.length > 0 ? (schemeStatusData[0].no_of_non_functional_village || (number_of_village - total_villages_integrated)) : (number_of_village - total_villages_integrated),
+        balance_to_complete_esr: schemeStatusData.length > 0 ? (schemeStatusData[0].balance_to_complete_esr || (total_number_of_esr - total_esr_integrated)) : (total_number_of_esr - total_esr_integrated),
         
-        // Use values from your CSV for these as well
-        flow_meters_connected: Math.max(1, Math.round(total_villages_integrated * 0.8)),
-        pressure_transmitter_connected: Math.max(1, Math.round(total_villages_integrated * 0.6)),
-        residual_chlorine_analyzer_connected: Math.max(1, Math.round(total_villages_integrated * 0.6)),
+        // Use database values for these fields if available, otherwise calculate them
+        flow_meters_connected: schemeStatusData.length > 0 ? (schemeStatusData[0].flow_meters_connected || Math.max(1, Math.round(total_villages_integrated * 0.8))) : Math.max(1, Math.round(total_villages_integrated * 0.8)),
+        pressure_transmitter_connected: schemeStatusData.length > 0 ? (schemeStatusData[0].pressure_transmitter_connected || Math.max(1, Math.round(total_villages_integrated * 0.6))) : Math.max(1, Math.round(total_villages_integrated * 0.6)),
+        residual_chlorine_analyzer_connected: schemeStatusData.length > 0 ? (schemeStatusData[0].residual_chlorine_analyzer_connected || Math.max(1, Math.round(total_villages_integrated * 0.6))) : Math.max(1, Math.round(total_villages_integrated * 0.6)),
         
         // Match status values with your data
         scheme_functional_status: 'Partial',
