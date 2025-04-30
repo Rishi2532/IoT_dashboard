@@ -100,7 +100,7 @@ async function fixFinalRegionUrls() {
           }
         }
         
-        console.log(`Completed region ${region.region}. Updated: ${updatedCount}, Skipped: ${skippedCount}`);
+        console.log(`Completed region ${region}. Updated: ${updatedCount}, Skipped: ${skippedCount}`);
       }
       
       console.log(`\nAll regions updated. Total Updated: ${totalUpdated}, Total Skipped: ${totalSkipped}`);

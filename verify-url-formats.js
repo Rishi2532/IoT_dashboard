@@ -1,18 +1,10 @@
 /**
- * Verify URL Formats across all regions
- * 
- * This script checks that all dashboard URLs follow the exact spacing format:
- * - Block -BlockName (space before hyphen)
- * - Scheme - SchemeID -SchemeName (space before and after first hyphen, no space after second hyphen)
+ * Verify URL formats across all regions
+ * This script checks that all dashboard URLs follow the correct formatting pattern
  */
 
 import pg from 'pg';
 const { Pool } = pg;
-
-// Note: These patterns are URL-encoded in the database
-const BLOCK_PATTERN = 'Block%20-';
-const SCHEME_PATTERN = 'Scheme%20-%20';
-const SCHEME_ID_PATTERN = '%20-'; // Space only before hyphen after scheme ID
 
 async function verifyUrlFormats() {
   // Create a connection pool using the DATABASE_URL environment variable
@@ -25,84 +17,83 @@ async function verifyUrlFormats() {
     const client = await pool.connect();
     
     try {
-      // Get all regions to check
+      // Get all regions
       const regionsResult = await client.query('SELECT DISTINCT region FROM scheme_status');
       const regions = regionsResult.rows.map(row => row.region);
       
-      console.log(`Found ${regions.length} regions to check`);
+      console.log(`Found ${regions.length} regions to verify`);
+      
+      // Define the patterns to check
+      const blockPattern = 'Block%20-';
+      const schemePattern = 'Scheme%20-%20';
+      const schemeIdPattern = '%20-';
       
       let totalSchemes = 0;
-      let correctFormatSchemes = 0;
+      let correctlyFormatted = 0;
+      let incorrectlyFormatted = 0;
       
       // Check each region
       for (const region of regions) {
-        // Get one sample URL for each region
-        const schemeResult = await client.query(
-          'SELECT scheme_id, block, scheme_name, dashboard_url FROM scheme_status WHERE region = $1 LIMIT 1', 
-          [region]
-        );
+        console.log(`\nVerifying region: ${region}`);
         
-        if (schemeResult.rows.length > 0) {
-          const scheme = schemeResult.rows[0];
-          
-          // Count schemes in this region
-          const countResult = await client.query(
-            'SELECT COUNT(*) as count FROM scheme_status WHERE region = $1',
-            [region]
-          );
-          const schemeCount = parseInt(countResult.rows[0].count);
-          
-          totalSchemes += schemeCount;
-          
-          // Check URL format
-          const url = scheme.dashboard_url;
-          
-          if (url && 
-              url.includes(BLOCK_PATTERN) && 
-              url.includes(SCHEME_PATTERN) && 
-              url.includes(scheme.scheme_id + SCHEME_ID_PATTERN)) {
-            
-            // Check format of all schemes in this region
-            const correctFormatResult = await client.query(
-              "SELECT COUNT(*) as count FROM scheme_status WHERE region = $1 AND " +
-              "dashboard_url LIKE '%Block%20-%' AND " +
-              "dashboard_url LIKE '%Scheme%20-%20%' AND " +
-              "dashboard_url LIKE '%" + scheme.scheme_id + "%20-%'", 
-              [region]
-            );
-            
-            const correctCount = parseInt(correctFormatResult.rows[0].count);
-            correctFormatSchemes += correctCount;
-            
-            console.log(`Region ${region}: ${correctCount}/${schemeCount} schemes have correct URL format`);
-            console.log(`Sample URL pattern: ${url}`);
-          } else {
-            console.log(`Region ${region}: URL format check FAILED`);
-            console.log(`Sample URL: ${url}`);
+        // Get schemes for this region
+        const schemesResult = await client.query('SELECT scheme_id, scheme_name, block, dashboard_url FROM scheme_status WHERE region = $1', [region]);
+        const schemes = schemesResult.rows;
+        
+        console.log(`Found ${schemes.length} schemes in region ${region}`);
+        totalSchemes += schemes.length;
+        
+        let regionCorrect = 0;
+        let regionIncorrect = 0;
+        
+        // Check format of each scheme's URL
+        for (const scheme of schemes) {
+          // Skip null URLs
+          if (!scheme.dashboard_url) {
+            console.log(`  WARNING: Missing URL for scheme "${scheme.scheme_name}" (ID: ${scheme.scheme_id})`);
+            regionIncorrect++;
+            incorrectlyFormatted++;
+            continue;
           }
-        } else {
-          console.log(`Region ${region}: No schemes found`);
+          
+          // Check the patterns
+          const hasCorrectBlockPattern = scheme.dashboard_url.includes(blockPattern);
+          const hasCorrectSchemePattern = scheme.dashboard_url.includes(schemePattern);
+          const hasCorrectIdPattern = scheme.dashboard_url.includes(scheme.scheme_id + schemeIdPattern);
+          
+          if (hasCorrectBlockPattern && hasCorrectSchemePattern && hasCorrectIdPattern) {
+            regionCorrect++;
+            correctlyFormatted++;
+          } else {
+            console.log(`  INCORRECT FORMAT: Scheme "${scheme.scheme_name}" (ID: ${scheme.scheme_id}) in block "${scheme.block}"`);
+            console.log(`    Block pattern: ${hasCorrectBlockPattern ? 'OK' : 'MISSING'}`);
+            console.log(`    Scheme pattern: ${hasCorrectSchemePattern ? 'OK' : 'MISSING'}`);
+            console.log(`    Scheme ID pattern: ${hasCorrectIdPattern ? 'OK' : 'MISSING'}`);
+            regionIncorrect++;
+            incorrectlyFormatted++;
+          }
         }
         
-        console.log('----------------------------');
+        console.log(`Region ${region} summary: ${regionCorrect} correct, ${regionIncorrect} incorrect`);
       }
       
-      // Summary
-      console.log(`\nOverall: ${correctFormatSchemes}/${totalSchemes} schemes (${Math.round(correctFormatSchemes/totalSchemes*100)}%) have the correct URL format`);
+      // Print overall summary
+      console.log(`\n========== VERIFICATION SUMMARY ==========`);
+      console.log(`Total schemes checked: ${totalSchemes}`);
+      console.log(`Correctly formatted URLs: ${correctlyFormatted} (${Math.round(correctlyFormatted/totalSchemes*100)}%)`);
+      console.log(`Incorrectly formatted URLs: ${incorrectlyFormatted} (${Math.round(incorrectlyFormatted/totalSchemes*100)}%)`);
       
     } finally {
-      // Release the client back to the pool
       client.release();
     }
   } catch (err) {
     console.error('Error connecting to the database:', err.message);
   } finally {
-    // Close the pool when done
     await pool.end();
   }
 }
 
-// Run the main function
+// Run the function
 verifyUrlFormats().catch(err => {
   console.error('Fatal error:', err);
   process.exit(1);
