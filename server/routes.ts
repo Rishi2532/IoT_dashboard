@@ -316,7 +316,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const regionName = req.query.region as string;
       const status = req.query.status as string;
       const schemeId = req.query.scheme_id as string;
-      const consolidated = req.query.consolidated !== 'false'; // Default to consolidated view unless explicitly set to false
+      const consolidated = req.query.consolidated === 'true'; // Default to non-consolidated view to show schemes multiple times for different blocks
 
       console.log(
         `Request params: region=${regionName}, status=${status}, schemeId=${schemeId}, consolidated=${consolidated}`,
