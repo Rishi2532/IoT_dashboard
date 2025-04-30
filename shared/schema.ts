@@ -108,8 +108,10 @@ export const schemeStatuses = pgTable("scheme_status", {
 });
 
 export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses);
+export const updateSchemeStatusSchema = createInsertSchema(schemeStatuses);
 
 export type InsertSchemeStatus = z.infer<typeof insertSchemeStatusSchema>;
+export type UpdateSchemeStatus = z.infer<typeof updateSchemeStatusSchema>;
 export type SchemeStatus = typeof schemeStatuses.$inferSelect;
 
 // App state table for storing persistent application state
