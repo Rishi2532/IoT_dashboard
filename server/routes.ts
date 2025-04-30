@@ -621,43 +621,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid scheme name" });
       }
       
-      // Special handling for 105 Villages RRWSS
-      if (schemeName === "105 Villages RRWSS") {
-        console.log("Using hardcoded aggregation data for 105 Villages RRWSS");
-        
-        // These values exactly match the screenshot values
-        return res.json({
-          sr_no: 3,
-          scheme_id: "20003791",
-          region: "Amravati",
-          circle: "Amravati",
-          division: "Amravati W.M",
-          sub_division: "W.M.Amravati - 2",
-          block: "All Blocks",
-          scheme_name: "105 Villages RRWSS",
-          agency: "M/s Censys",
-          
-          // These values match the screenshot exactly
-          number_of_village: 100,
-          total_villages_integrated: 44,
-          fully_completed_villages: 20,
-          no_of_functional_village: 29,
-          no_of_partial_village: 15,
-          no_of_non_functional_village: 56,
-          total_number_of_esr: 212,
-          total_esr_integrated: 40,
-          no_fully_completed_esr: 36,
-          balance_to_complete_esr: 172,
-          flow_meters_connected: 44,
-          pressure_transmitter_connected: 36,
-          residual_chlorine_analyzer_connected: 44,
-          
-          // Status values
-          scheme_functional_status: "Partial",
-          fully_completion_scheme_status: "In Progress",
-          isAggregated: true
-        });
-      }
+      // Removed special hardcoded handling for 105 Villages RRWSS
+      // Now we use dynamic aggregation from actual database values for all schemes
 
       const schemes = await storage.getSchemesByName(schemeName);
 
