@@ -107,11 +107,11 @@ export async function initializeTables(db: any) {
       );
     `);
     
-    // Create scheme_status table
+    // Create scheme_status table - without primary key to allow duplicate entries
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "scheme_status" (
         "sr_no" INTEGER,
-        "scheme_id" TEXT PRIMARY KEY,
+        "scheme_id" TEXT NOT NULL,
         "region" TEXT,
         "circle" TEXT,
         "division" TEXT,

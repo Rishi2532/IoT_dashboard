@@ -74,8 +74,8 @@ export type Region = typeof regions.$inferSelect;
 
 // SchemeStatus table - with updated structure as per requirements
 export const schemeStatuses = pgTable("scheme_status", {
-  sr_no: integer("sr_no"), // Serial number
-  scheme_id: text("scheme_id").notNull(), // Scheme ID (not primary key by itself)
+  sr_no: integer("sr_no"), // Serial number - can be used as a unique identifier
+  scheme_id: text("scheme_id").notNull(), // Scheme ID (not primary key)
   region: text("region"), // Region name
   circle: text("circle"), // Circle
   division: text("division"), // Division
@@ -103,11 +103,7 @@ export const schemeStatuses = pgTable("scheme_status", {
   ), // Residual Chlorine Analyzer Connected
 
   fully_completion_scheme_status: text("fully_completion_scheme_status"), // Scheme Status (Fully Completion Scheme Status)
-}, (table) => {
-  // Create a composite primary key of scheme_id and block to allow the same scheme in multiple blocks
-  return {
-    pk: primaryKey({ columns: [table.scheme_id, table.block] }),
-  };
+  // No primary key - allows multiple entries with the same scheme_id and block
 });
 
 export const insertSchemeStatusSchema = createInsertSchema(schemeStatuses);
