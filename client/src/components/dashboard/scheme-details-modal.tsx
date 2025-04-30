@@ -193,34 +193,30 @@ export default function SchemeDetailsModal({
     try {
       setIsLoading(true);
 
-      // If "All Blocks" is selected, fetch aggregated data
-      if (blockValue === "All Blocks") {
-        console.log("Fetching aggregated data for:", scheme.scheme_name);
-        await fetchAggregatedData(scheme.scheme_name);
-      } else {
-        console.log("Fetching specific block data:", blockValue, "for scheme:", scheme.scheme_name);
-        // Otherwise fetch data for the specific block using the new API endpoint
-        const response = await fetch(
-          `/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}?block=${encodeURIComponent(blockValue)}`,
-        );
-        
-        if (response.ok) {
-          const schemeData = await response.json();
-          console.log("Fetched scheme for block:", blockValue, schemeData);
+      // Both "All Blocks" and specific blocks should use the by-name endpoint
+      console.log(`Fetching data for ${blockValue} for scheme:`, scheme.scheme_name);
+      
+      // Use the by-name endpoint for both All Blocks and specific blocks
+      const response = await fetch(
+        `/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}?block=${encodeURIComponent(blockValue)}`,
+      );
+      
+      if (response.ok) {
+        const schemeData = await response.json();
+        console.log("Fetched scheme for block:", blockValue, schemeData);
 
-          // The server now always returns a single object for a specific block
-          if (schemeData && typeof schemeData === "object") {
-            // Update the current scheme with the block-specific data
-            setCurrentScheme(schemeData);
-            console.log("Updated current scheme to:", schemeData);
-          } else {
-            console.error(`No scheme found for block: ${blockValue}`);
-          }
+        // The server now always returns a single object for a specific block
+        if (schemeData && typeof schemeData === "object") {
+          // Update the current scheme with the block-specific data
+          setCurrentScheme(schemeData);
+          console.log("Updated current scheme to:", schemeData);
         } else {
-          console.error(`Failed to fetch data for block ${blockValue}: ${response.status}`);
-          // In case of error, fall back to the original scheme data
-          setCurrentScheme(scheme);
+          console.error(`No scheme found for block: ${blockValue}`);
         }
+      } else {
+        console.error(`Failed to fetch data for block ${blockValue}: ${response.status}`);
+        // In case of error, fall back to the original scheme data
+        setCurrentScheme(scheme);
       }
     } catch (error) {
       console.error("Error fetching scheme by block:", error);
