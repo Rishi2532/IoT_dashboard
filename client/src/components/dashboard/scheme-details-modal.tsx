@@ -193,10 +193,15 @@ export default function SchemeDetailsModal({
     try {
       setIsLoading(true);
 
-      // Both "All Blocks" and specific blocks should use the by-name endpoint
-      console.log(`Fetching data for ${blockValue} for scheme:`, scheme.scheme_name);
+      // If "All Blocks" is selected, use the dedicated aggregated endpoint
+      if (blockValue === "All Blocks") {
+        console.log("Fetching aggregated data for:", scheme.scheme_name);
+        await fetchAggregatedData(scheme.scheme_name);
+        return; // Exit early as fetchAggregatedData handles all the state updates
+      }
       
-      // Use the by-name endpoint for both All Blocks and specific blocks
+      // For specific blocks, use the by-name endpoint
+      console.log(`Fetching data for specific block ${blockValue} for scheme:`, scheme.scheme_name);
       const response = await fetch(
         `/api/schemes/by-name/${encodeURIComponent(scheme.scheme_name)}?block=${encodeURIComponent(blockValue)}`,
       );
