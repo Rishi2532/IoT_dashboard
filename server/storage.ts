@@ -2300,7 +2300,7 @@ export class PostgresStorage implements IStorage {
   }
   
   // CSV Import for pressure data
-  async importPressureDataFromCSV(fileBuffer: Buffer): Promise<{
+  async importPressureDataFromCSV(fileBuffer: Buffer, options: { clearExisting?: boolean } = {}): Promise<{
     inserted: number;
     updated: number;
     removed: number;
@@ -2312,6 +2312,13 @@ export class PostgresStorage implements IStorage {
     
     try {
       console.log("Starting pressure data CSV import with optimized parsing...");
+      
+      // Clear existing data if requested
+      if (options.clearExisting) {
+        console.log("Clearing existing pressure data before import...");
+        await db.delete(pressureData);
+        console.log("Existing pressure data cleared successfully");
+      }
       
       // Define column names for CSV without headers
       const columns = [
@@ -2472,13 +2479,115 @@ export class PostgresStorage implements IStorage {
       }
       
       // OPTIMIZATION: Execute batch operations for faster performance
-      // Process inserts in batches of 100
+      // Process inserts in batches of 100, using ON CONFLICT DO UPDATE to handle duplicates
       const insertBatchSize = 100;
       for (let i = 0; i < toInsert.length; i += insertBatchSize) {
         const batch = toInsert.slice(i, i + insertBatchSize);
         if (batch.length > 0) {
-          await db.insert(pressureData).values(batch as InsertPressureData[]);
-          inserted += batch.length;
+          try {
+            // Use raw SQL for ON CONFLICT DO UPDATE since Drizzle doesn't directly support it
+            const insertValues = [];
+            const insertParams = [];
+            let paramCounter = 1;
+            
+            // Build the value lists for the INSERT statement
+            for (const record of batch) {
+              // Collect all the non-null fields from the record
+              const fields = Object.keys(record).filter(key => 
+                record[key as keyof typeof record] !== null && 
+                record[key as keyof typeof record] !== undefined
+              );
+              
+              // Generate the values placeholders ($1, $2, etc)
+              const valuePlaceholders = [];
+              for (let j = 0; j < fields.length; j++) {
+                valuePlaceholders.push(`$${paramCounter}`);
+                insertParams.push(record[fields[j] as keyof typeof record]);
+                paramCounter++;
+              }
+              
+              // Create a value list with column names
+              insertValues.push(`(${fields.map(f => `"${f}"`).join(', ')}) VALUES (${valuePlaceholders.join(', ')})`);
+            }
+            
+            // Build the complete query with ON CONFLICT DO UPDATE
+            // This will update all fields if there's a conflict on the primary key
+            const query = `
+              WITH batch_data AS (
+                ${insertValues.join(' UNION ALL SELECT ')}
+              )
+              INSERT INTO pressure_data 
+              SELECT * FROM batch_data
+              ON CONFLICT (scheme_id, village_name, esr_name) 
+              DO UPDATE SET
+                region = EXCLUDED.region,
+                circle = EXCLUDED.circle,
+                division = EXCLUDED.division,
+                sub_division = EXCLUDED.sub_division,
+                block = EXCLUDED.block,
+                scheme_name = EXCLUDED.scheme_name,
+                pressure_value_1 = EXCLUDED.pressure_value_1,
+                pressure_value_2 = EXCLUDED.pressure_value_2,
+                pressure_value_3 = EXCLUDED.pressure_value_3,
+                pressure_value_4 = EXCLUDED.pressure_value_4,
+                pressure_value_5 = EXCLUDED.pressure_value_5,
+                pressure_value_6 = EXCLUDED.pressure_value_6,
+                pressure_value_7 = EXCLUDED.pressure_value_7,
+                pressure_date_day_1 = EXCLUDED.pressure_date_day_1,
+                pressure_date_day_2 = EXCLUDED.pressure_date_day_2,
+                pressure_date_day_3 = EXCLUDED.pressure_date_day_3,
+                pressure_date_day_4 = EXCLUDED.pressure_date_day_4,
+                pressure_date_day_5 = EXCLUDED.pressure_date_day_5,
+                pressure_date_day_6 = EXCLUDED.pressure_date_day_6,
+                pressure_date_day_7 = EXCLUDED.pressure_date_day_7,
+                number_of_consistent_zero_value_in_pressure = EXCLUDED.number_of_consistent_zero_value_in_pressure,
+                pressure_less_than_02_bar = EXCLUDED.pressure_less_than_02_bar,
+                pressure_between_02_07_bar = EXCLUDED.pressure_between_02_07_bar,
+                pressure_greater_than_07_bar = EXCLUDED.pressure_greater_than_07_bar
+            `;
+            
+            // Execute the query
+            const result = await db.execute(sql.raw(query, insertParams));
+            
+            // Count inserted/updated records based on result
+            const affectedCount = result.rowCount || batch.length;
+            
+            // Since we're using ON CONFLICT DO UPDATE, we need to determine how many were inserts vs updates
+            // For simplicity, we'll count them all as inserts in this batch approach
+            inserted += affectedCount;
+            
+            console.log(`Processed batch ${Math.floor(i/insertBatchSize) + 1}/${Math.ceil(toInsert.length/insertBatchSize)}, affected rows: ${affectedCount}`);
+          } catch (error) {
+            console.error(`Error in batch insert with ON CONFLICT clause:`, error);
+            
+            // Fall back to individual inserts on error
+            console.log("Falling back to individual insert operations...");
+            
+            for (const record of batch) {
+              try {
+                await db.insert(pressureData).values(record as InsertPressureData);
+                inserted++;
+              } catch (individualError: any) {
+                // If it's a duplicate key error, try updating instead
+                if (individualError.code === '23505') {
+                  try {
+                    await db.update(pressureData)
+                      .set(record)
+                      .where(and(
+                        eq(pressureData.scheme_id, record.scheme_id!),
+                        eq(pressureData.village_name, record.village_name!),
+                        eq(pressureData.esr_name, record.esr_name!)
+                      ));
+                    updated++;
+                  } catch (updateError) {
+                    errors.push(`Failed to update record: ${updateError instanceof Error ? updateError.message : String(updateError)}`);
+                  }
+                } else {
+                  errors.push(`Failed to insert record: ${individualError instanceof Error ? individualError.message : String(individualError)}`);
+                }
+              }
+            }
+          }
         }
       }
       
