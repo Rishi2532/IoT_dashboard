@@ -126,6 +126,9 @@ function SchemeManager() {
         params.append('scheme_id', searchSchemeId);
       }
       
+      // Set the view_type to 'summary' to get the consolidated view by default
+      params.append('view_type', 'summary');
+      
       const response = await fetch(`/api/schemes?${params.toString()}`);
       if (!response.ok) {
         throw new Error('Failed to fetch schemes');

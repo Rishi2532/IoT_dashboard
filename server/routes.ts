@@ -316,10 +316,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const regionName = req.query.region as string;
       const status = req.query.status as string;
       const schemeId = req.query.scheme_id as string;
-      const consolidated = req.query.consolidated === 'true'; // Default to non-consolidated view to show schemes multiple times for different blocks
+      const viewType = req.query.view_type as string || 'summary';
+      // Default to consolidated view (true) for summary, non-consolidated (false) for detailed
+      const consolidated = req.query.consolidated === 'true' || 
+                           (req.query.consolidated === undefined && viewType === 'summary');
 
       console.log(
-        `Request params: region=${regionName}, status=${status}, schemeId=${schemeId}, consolidated=${consolidated}`,
+        `Request params: region=${regionName}, status=${status}, schemeId=${schemeId}, consolidated=${consolidated}, viewType=${viewType}`,
       );
 
       let schemes;
