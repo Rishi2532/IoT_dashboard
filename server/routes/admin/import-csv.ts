@@ -295,9 +295,31 @@ async function updateDatabaseRecords(
 
         if (existingScheme) {
           // Update existing scheme with the same ID and block
+          // FIXED: Only update specific fields from the import, don't blindly apply all fields with spread
           const schemeData = {
             ...existingScheme,
-            ...item,
+            scheme_name: item.scheme_name || existingScheme.scheme_name,
+            region: item.region || existingScheme.region,
+            circle: item.circle || existingScheme.circle,
+            division: item.division || existingScheme.division,
+            sub_division: item.sub_division || existingScheme.sub_division,
+            block: item.block, // Keep the original block
+            agency: item.agency || existingScheme.agency,
+            number_of_village: item.number_of_village !== undefined ? item.number_of_village : existingScheme.number_of_village,
+            total_villages_integrated: item.total_villages_integrated !== undefined ? item.total_villages_integrated : existingScheme.total_villages_integrated,
+            no_of_functional_village: item.no_of_functional_village !== undefined ? item.no_of_functional_village : existingScheme.no_of_functional_village,
+            no_of_partial_village: item.no_of_partial_village !== undefined ? item.no_of_partial_village : existingScheme.no_of_partial_village,
+            no_of_non_functional_village: item.no_of_non_functional_village !== undefined ? item.no_of_non_functional_village : existingScheme.no_of_non_functional_village,
+            fully_completed_villages: item.fully_completed_villages !== undefined ? item.fully_completed_villages : existingScheme.fully_completed_villages,
+            total_number_of_esr: item.total_number_of_esr !== undefined ? item.total_number_of_esr : existingScheme.total_number_of_esr,
+            total_esr_integrated: item.total_esr_integrated !== undefined ? item.total_esr_integrated : existingScheme.total_esr_integrated,
+            no_fully_completed_esr: item.no_fully_completed_esr !== undefined ? item.no_fully_completed_esr : existingScheme.no_fully_completed_esr,
+            balance_to_complete_esr: item.balance_to_complete_esr !== undefined ? item.balance_to_complete_esr : existingScheme.balance_to_complete_esr,
+            flow_meters_connected: item.flow_meters_connected !== undefined ? item.flow_meters_connected : existingScheme.flow_meters_connected,
+            pressure_transmitter_connected: item.pressure_transmitter_connected !== undefined ? item.pressure_transmitter_connected : existingScheme.pressure_transmitter_connected,
+            residual_chlorine_analyzer_connected: item.residual_chlorine_analyzer_connected !== undefined ? item.residual_chlorine_analyzer_connected : existingScheme.residual_chlorine_analyzer_connected,
+            scheme_functional_status: item.scheme_functional_status || existingScheme.scheme_functional_status,
+            fully_completion_scheme_status: item.fully_completion_scheme_status || existingScheme.fully_completion_scheme_status,
           };
 
           await storage.updateScheme(schemeData);

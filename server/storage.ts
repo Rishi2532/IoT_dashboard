@@ -3443,6 +3443,8 @@ export class PostgresStorage implements IStorage {
 
   async updateScheme(scheme: SchemeStatus): Promise<SchemeStatus> {
     const db = await this.ensureInitialized();
+    
+    // FIXED: Update based on both scheme_id AND block to preserve block-specific data
     await db
       .update(schemeStatuses)
       .set({
@@ -3465,16 +3467,37 @@ export class PostgresStorage implements IStorage {
           scheme.residual_chlorine_analyzer_connected,
         fully_completion_scheme_status: scheme.fully_completion_scheme_status
       })
-      .where(eq(schemeStatuses.scheme_id, scheme.scheme_id));
+      .where(
+        and(
+          eq(schemeStatuses.scheme_id, scheme.scheme_id),
+          sql`${schemeStatuses.block} IS NOT DISTINCT FROM ${scheme.block}`
+        )
+      );
 
     return scheme;
   }
 
-  async deleteScheme(schemeId: string): Promise<boolean> {
+  async deleteScheme(schemeId: string, block?: string | null): Promise<boolean> {
     const db = await this.ensureInitialized();
-    const result = await db
-      .delete(schemeStatuses)
-      .where(eq(schemeStatuses.scheme_id, schemeId));
+    
+    // FIXED: Delete scheme by ID and block (if provided) or just by ID if no block specified
+    if (block !== undefined) {
+      // If block is provided, delete only the specific scheme+block combination
+      await db
+        .delete(schemeStatuses)
+        .where(
+          and(
+            eq(schemeStatuses.scheme_id, schemeId),
+            sql`${schemeStatuses.block} IS NOT DISTINCT FROM ${block}`
+          )
+        );
+    } else {
+      // If no block is provided, delete all schemes with this ID (backwards compatibility)
+      await db
+        .delete(schemeStatuses)
+        .where(eq(schemeStatuses.scheme_id, schemeId));
+    }
+    
     return true;
   }
 

@@ -825,18 +825,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/schemes/:id", requireAdmin, async (req, res) => {
     try {
       const schemeId = req.params.id;
+      // FIXED: Get block from query params if provided
+      const block = req.query.block ? String(req.query.block) : undefined;
 
       if (!schemeId || schemeId.trim() === "") {
         return res.status(400).json({ message: "Invalid scheme ID" });
       }
 
-      const existingScheme = await storage.getSchemeById(schemeId);
+      // FIXED: If block is specified, get scheme by ID and block
+      const existingScheme = block !== undefined 
+        ? await storage.getSchemeByIdAndBlock(schemeId, block)
+        : await storage.getSchemeById(schemeId);
 
       if (!existingScheme) {
         return res.status(404).json({ message: "Scheme not found" });
       }
 
-      await storage.deleteScheme(schemeId);
+      // FIXED: Pass block to deleteScheme to delete specific scheme+block combination
+      await storage.deleteScheme(schemeId, existingScheme.block);
 
       // Return the deleted scheme info and success message
       res.json({
