@@ -49,8 +49,8 @@ async function fixSakolDashboardUrl() {
     for (const scheme of result.rows) {
       console.log(`Processing Sakol scheme in block: ${scheme.block}`);
 
-      // Generate the correct path with exact required format
-      const path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${scheme.region}\\Circle-${scheme.circle}\\Division-${scheme.division}\\Sub Division-${scheme.sub_division}\\Block-${scheme.block}\\Scheme-${scheme.scheme_id}-${scheme.scheme_name}`;
+      // Generate the correct path with exact required format (with a space after the hyphen)
+      const path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${scheme.region}\\Circle-${scheme.circle}\\Division-${scheme.division}\\Sub Division-${scheme.sub_division}\\Block-${scheme.block}\\Scheme-${scheme.scheme_id}- ${scheme.scheme_name}`;
       
       // URL encode the path
       const encodedPath = encodeURIComponent(path);

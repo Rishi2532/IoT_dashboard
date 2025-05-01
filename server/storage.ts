@@ -849,8 +849,8 @@ export class PostgresStorage implements IStorage {
     
     // Special case for Sakol 7 villages WSS
     if (scheme_name === 'Sakol 7 villages WSS') {
-      // Exact format for Sakol 7 villages WSS with specific hyphen placement
-      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id}-${scheme_name}`;
+      // Exact format for Sakol 7 villages WSS with specific hyphen placement (hyphen followed by space)
+      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id}- ${scheme_name}`;
     } else if (region === 'Pune') {
       // Pune region format: Block -Name, Scheme - ID -Name (space before hyphens)
       path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block -${block}\\Scheme - ${scheme_id} -${scheme_name}`;
