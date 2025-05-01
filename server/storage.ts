@@ -915,6 +915,34 @@ export class PostgresStorage implements IStorage {
         path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block -${block}\\Scheme - ${scheme_id} -${scheme_name}`;
       }
     } 
+    else if (region === 'Konkan') {
+      // Use exact formats from examples for Konkan region
+      
+      if (scheme_id === '20028168' && scheme_name.includes('Devnhave water supply scheme')) {
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-Panvel\\Division-Raigadh\\Sub Division-Mangaon\\Block-Khalapur\\Scheme-20028168 - Devnhave water supply scheme`;
+      }
+      else if (scheme_id === '20020563' && scheme_name.includes('Shahapada 38 Villages')) {
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-Panvel\\Division-Raigadh\\Sub Division-Mangaon\\Block-Pen\\Scheme-20020563-Shahapada 38 Villages`;
+      }
+      else if (scheme_id === '20092478' && scheme_name.includes('Retrofiting of Gotheghar Dahisar R.R. Water Supply Scheme')) {
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-Thane\\Division-Thane\\Sub Division-Thane\\Block-Kalyan\\Scheme-20092478-Retrofiting of Gotheghar Dahisar R.R. Water Supply Scheme`;
+      }
+      else {
+        // Standard format for other Konkan schemes
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} - ${scheme_name}`;
+      }
+    }
+    else if (region === 'Amravati') {
+      // Use exact formats from examples for Amravati region
+      
+      if (scheme_id === '7945938' && scheme_name.includes('83 Village RRWS Scheme MJP RR')) {
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-Amaravati\\Circle-Amravati\\Division-Amravati\\Sub Division-Achalpur\\Block-Chandur Bazar\\Scheme-7945938 - 83 Village RRWS Scheme MJP RR (C 39)`;
+      }
+      else {
+        // Standard format for other Amravati schemes (with Amaravati display name)
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-Amaravati\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} - ${scheme_name}`;
+      }
+    }
     else {
       // Format for all other regions: Block-Name, Scheme-ID - Name (no space before first hyphen)
       path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} - ${scheme_name}`;
