@@ -870,17 +870,20 @@ export class PostgresStorage implements IStorage {
     else if (region === 'Pune') {
       // Pune region format without UUID suffix
       
-      // Check for schemes with specific formats
+      // Check for schemes with specific formats based on examples
       if (scheme_name === 'LONI BHAPKAR RRWSS' || 
           scheme_name === 'HOL SASTEWADI' || 
           scheme_name === 'MURTI & 7 VILLAGES RRWSS' ||
           scheme_name === 'Wangani RRWSS' ||
           scheme_name === 'RR Girvi WSS' ||
-          scheme_name === 'Done Adhale RR') {
+          scheme_name === 'Done Adhale RR' ||
+          scheme_name === 'Gar, Sonwadi, Nanviz RR' ||
+          scheme_name === 'Peth & two Villages') {
         // Format with no spaces around hyphens
         path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id}-${scheme_name}`;
       } 
-      else if (scheme_name === 'Peth RR') {
+      else if (scheme_name === 'Peth RR' || 
+              scheme_name.includes('Alegaon shirbhavi 82 Village')) {
         // Format with space after scheme_id
         path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} - ${scheme_name}`;
       }
@@ -888,7 +891,14 @@ export class PostgresStorage implements IStorage {
                scheme_name.includes('Andhalgaon and 3 villages') ||
                scheme_name.includes('Dhuldev Algudewadi')) {
         // Format with spaces around scheme_id and hyphen
-        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block -${block}\\Scheme - ${scheme_id} -${scheme_name}`;
+        // Special handling for block with space before hyphen
+        if (scheme_name.includes('Andhalgaon and 3 villages')) {
+          path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block - ${block}\\Scheme - ${scheme_id} -${scheme_name}`;
+        } else if (scheme_name.includes('Dhuldev Algudewadi')) {
+          path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block- ${block}\\Scheme- ${scheme_id} -${scheme_name}`;
+        } else {
+          path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block -${block}\\Scheme - ${scheme_id} -${scheme_name}`;
+        }
       }
       else {
         // Standard Pune format
