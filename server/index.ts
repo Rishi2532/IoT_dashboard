@@ -3,6 +3,7 @@ import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import { randomBytes } from "crypto";
+import "./init-database.js"; // Run database initialization on startup
 
 const app = express();
 app.use(express.json());

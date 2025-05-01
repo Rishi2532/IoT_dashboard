@@ -1,103 +1,70 @@
-# Maharashtra Water Dashboard
+# Maharashtra Water Infrastructure Management Platform
 
-## Getting Started with VS Code and pgAdmin
+An advanced water infrastructure management platform for Maharashtra, providing intelligent insights into regional water projects through comprehensive data analysis and multi-block scheme management.
 
-This project is configured to run easily with your pgAdmin database. Choose the simplest option that works for you:
+## Key Features
 
-### Option 1: One-Click Setup (Easiest)
+- **TypeScript/React Frontend**: Dynamic, consolidated data visualization
+- **Express.js Backend**: Robust data import, processing, and aggregation
+- **PostgreSQL Database**: Enhanced scheme and block-level tracking
+- **PI Vision Dashboard Integration**: Automatic URL generation and regional data synchronization
+- **Multi-Region Monitoring**: Comprehensive water infrastructure performance tracking
 
-1. **Extract the project** to a folder on your computer
-2. **Double-click** the appropriate script:
-   - Windows: `run-with-pgadmin.bat`
-   - Mac/Linux: `run-with-pgadmin.sh`
+## Project Structure
 
-The script automatically sets up the database connection to your pgAdmin database named `water_scheme_dashboard` with password `Salunke@123`.
+- `/client`: Frontend React application
+- `/server`: Backend Express API
+- `/shared`: Shared types and schemas
+- `/uploads`: Temporary storage for uploaded files
 
-For detailed setup instructions, see `PGADMIN-SETUP.md`
+## Getting Started
 
-### Option 2: VS Code Setup (Alternative)
+This project is already configured to run properly on Replit. When you fork/remix this project, the database will be automatically set up for you.
 
-1. **Extract the project** to a folder on your computer
-2. **Open the project** in VS Code
-3. **Run the pgAdmin setup script** by right-clicking on `setup-vscode-pgadmin.bat` and selecting "Run" (Windows) or by running `node setup-pgadmin.js` in the terminal
-4. Install dependencies by running:
-   ```
-   npm install
-   ```
-5. Press **F5** to launch the application with your pgAdmin database
+### 1. Automatic Database Setup
 
-### Option 3: Manual Setup
+The project includes an automatic database initialization script that runs on startup. This ensures that:
+- All required database tables are created
+- All necessary columns are present
+- Default admin user is created (if needed)
 
-1. **Open the project** in VS Code
-2. Make sure the `.env.vscode` file contains the correct pgAdmin database credentials:
-   ```
-   DATABASE_URL=postgres://postgres:Salunke@123@localhost:5432/water_scheme_dashboard
-   PGPORT=5432
-   PGUSER=postgres
-   PGPASSWORD=Salunke@123
-   PGDATABASE=water_scheme_dashboard
-   PGHOST=localhost
-   ```
-3. Install dependencies by running:
-   ```
-   npm install
-   ```
-4. Press **F5** to launch the application
+### 2. Running the Application
 
-### Testing pgAdmin Connection
-
-You can test your pgAdmin database connection by running:
-```
-node test-pgadmin-connection.js
-```
-
-The application will be accessible at http://localhost:5000
-
-## pgAdmin Database Configuration
-
-This application is configured to connect to your pgAdmin PostgreSQL database with:
-
-- **Database Name**: water_scheme_dashboard
-- **Username**: postgres
-- **Password**: Salunke@123
-- **Host**: localhost
-- **Port**: 5432
-
-All tables from your pgAdmin database will be automatically accessible in the dashboard, including:
-- Region data from the "region" table
-- Scheme data from the "scheme_status" table
-- LPCD data from the "water_scheme_data" table
-
-## Features
-
-- Interactive dashboard for Maharashtra water infrastructure
-- Regional water scheme visualization
-- Voice-enabled chatbot assistant (supports multiple Indian languages)
-- Data filtering by region, scheme status, etc.
-- LPCD (Liters Per Capita per Day) visualization and analysis
-- Import/export functionality for water scheme data
-
-## Environment Variables
-
-If you need to change any database credentials, edit the `.env.vscode` file.
-
-### Perplexity API Key
-
-The AI chatbot functionality requires a Perplexity API key. You'll need to add this to the `.env.pgadmin` file:
+The application starts automatically when you run the project. It uses the following startup command:
 
 ```
-PERPLEXITY_API_KEY=your_actual_key_here
+npm run dev
 ```
 
-Without this key, the dashboard will still work but the chatbot feature won't be available.
+### 3. Default Login
+
+You can access the administrative features using the default credentials:
+- Username: `admin`
+- Password: `admin123`
+
+**Note**: For production use, it's recommended to change these default credentials.
+
+## CSV Import Feature
+
+The platform supports importing scheme data via CSV files. The CSV should match the structure of the `scheme_status` table in the database.
+
+## Development Guidelines
+
+If you're developing or extending this project, here are some key points to remember:
+
+1. Database schema is defined in `shared/schema.ts`
+2. API routes are defined in `server/routes.ts`
+3. The frontend uses React Query for data fetching
+4. The application uses Tailwind CSS for styling
 
 ## Troubleshooting
 
-If you encounter issues connecting to pgAdmin:
+If you encounter any issues:
 
-1. Ensure PostgreSQL is running in pgAdmin
-2. Verify the database name is "water_scheme_dashboard"
-3. Check that your username and password are correct in `.env.vscode`
-4. Run the test connection script: `node test-pgadmin-connection.js`
+1. Check the server logs for error messages
+2. Ensure the database connection is working properly
+3. Verify that all database tables and columns match the schema in `shared/schema.ts`
 
-For more detailed instructions, see `VS-CODE-README.md`
+## License
+
+MIT
