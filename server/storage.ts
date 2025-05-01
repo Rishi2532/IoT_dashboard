@@ -895,12 +895,8 @@ export class PostgresStorage implements IStorage {
         path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block -${block}\\Scheme - ${scheme_id} -${scheme_name}`;
       }
     } 
-    else if (region === 'Chhatrapati Sambhajinagar') {
-      // Chhatrapati Sambhajinagar format: Block-Name, Scheme-ID- Name (no space before hyphen, space after)
-      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id}- ${scheme_name}`;
-    } 
     else {
-      // Format for other regions: Block-Name, Scheme-ID - Name (no space before first hyphen)
+      // Format for all other regions: Block-Name, Scheme-ID - Name (no space before first hyphen)
       path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} - ${scheme_name}`;
     }
     
