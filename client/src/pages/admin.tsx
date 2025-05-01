@@ -222,15 +222,12 @@ export default function AdminPage() {
       <footer className="w-full py-6 bg-white/50 border-t border-blue-100 mt-auto">
         <div className="flex flex-col items-center justify-center">
           <img
-            src="/images/company/cstech-ai-logo.svg"
+            src="/images/company/cstech-ai-logo.jpg"
             alt="CS Tech AI"
-            className="h-12 mb-3"
+            className="h-16 mb-3"
           />
           <p className="text-sm text-blue-700 font-medium">
-            Powered by CS Tech AI
-          </p>
-          <p className="text-xs text-blue-500 mt-1">
-            © {new Date().getFullYear()} CS Tech AI. All rights reserved.
+            Powered by CSTECH AI
           </p>
         </div>
       </footer>
