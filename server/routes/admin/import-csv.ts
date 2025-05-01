@@ -320,7 +320,7 @@ async function updateDatabaseRecords(
             residual_chlorine_analyzer_connected: item.residual_chlorine_analyzer_connected !== undefined ? item.residual_chlorine_analyzer_connected : existingScheme.residual_chlorine_analyzer_connected,
             scheme_functional_status: item.scheme_functional_status || existingScheme.scheme_functional_status,
             fully_completion_scheme_status: item.fully_completion_scheme_status || existingScheme.fully_completion_scheme_status,
-            dashboard_url: item.dashboard_url || existingScheme.dashboard_url, // Preserve existing dashboard_url if not in import
+            dashboard_url: item.dashboard_url || (item.scheme_name !== existingScheme.scheme_name ? null : existingScheme.dashboard_url), // Force regeneration if scheme name changed
           };
 
           await storage.updateScheme(schemeData);
