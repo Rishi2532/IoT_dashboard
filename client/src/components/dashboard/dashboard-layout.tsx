@@ -24,16 +24,13 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <div className="flex items-center mb-3 sm:mb-0">
               <img 
-                src="/images/company/cstech-ai-logo.svg" 
+                src="/images/company/cstech-ai-logo.jpg" 
                 alt="CS Tech AI" 
-                className="h-8 sm:h-10"
+                className="h-10 sm:h-12"
               />
             </div>
             <div className="text-center sm:text-right text-sm text-blue-800">
-              <p>© {currentYear} CS Tech AI. All rights reserved.</p>
-              <p className="text-xs text-blue-600 mt-1">
-                Developed and maintained by CS Tech AI
-              </p>
+              <p className="font-medium">Powered by CSTECH AI</p>
             </div>
           </div>
         </div>
