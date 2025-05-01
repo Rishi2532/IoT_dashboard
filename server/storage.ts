@@ -3718,6 +3718,11 @@ export class PostgresStorage implements IStorage {
     
     if (!scheme.dashboard_url || hierarchicalFieldsChanged || isSakolScheme) {
       scheme.dashboard_url = this.generateDashboardUrl(scheme);
+      
+      // If the scheme name or other hierarchical info changed, also update village dashboard URLs
+      if (hierarchicalFieldsChanged && existingScheme) {
+        this.updateVillageDashboardUrls(scheme);
+      }
     }
     
     // FIXED: Update based on both scheme_id AND block to preserve block-specific data
@@ -3970,6 +3975,88 @@ export class PostgresStorage implements IStorage {
   }
   
   // Function to calculate derived values like consistent zeros, below/above LPCD counts
+  /**
+   * Updates the dashboard URLs for all villages in a scheme when the scheme name or other hierarchical info changes
+   * @param scheme The updated scheme information
+   */
+  async updateVillageDashboardUrls(scheme: SchemeStatus): Promise<void> {
+    try {
+      console.log(`Updating village dashboard URLs for scheme ${scheme.scheme_name} (${scheme.scheme_id})`);
+      const db = await this.ensureInitialized();
+      
+      // Get all villages for this scheme
+      const villages = await db
+        .select()
+        .from(waterSchemeData)
+        .where(eq(waterSchemeData.scheme_id, scheme.scheme_id));
+      
+      // Update each village's dashboard URL
+      let updatedCount = 0;
+      for (const village of villages) {
+        // Only update if the scheme name changed
+        if (village.scheme_name !== scheme.scheme_name) {
+          // Update the scheme name in the village record
+          await db
+            .update(waterSchemeData)
+            .set({
+              scheme_name: scheme.scheme_name,
+              // Generate new dashboard URL with updated scheme name
+              dashboard_url: this.generateVillageDashboardUrl({
+                ...village,
+                scheme_name: scheme.scheme_name
+              })
+            })
+            .where(
+              and(
+                eq(waterSchemeData.scheme_id, village.scheme_id),
+                eq(waterSchemeData.village_name, village.village_name)
+              )
+            );
+          
+          updatedCount++;
+        }
+      }
+      
+      if (updatedCount > 0) {
+        console.log(`✅ Updated dashboard URLs for ${updatedCount} villages in scheme ${scheme.scheme_name}`);
+      }
+    } catch (error) {
+      console.error('Error updating village dashboard URLs:', error);
+    }
+  }
+  
+  /**
+   * Generates a dashboard URL for a village
+   * @param village The village information
+   * @returns The complete dashboard URL for the village
+   */
+  private generateVillageDashboardUrl(village: WaterSchemeData): string | null {
+    // Skip if missing required hierarchical information
+    if (!village.region || !village.circle || !village.division || 
+        !village.sub_division || !village.block || !village.scheme_id || 
+        !village.scheme_name || !village.village_name) {
+      console.warn(`Cannot generate URL for village ${village.village_name} - missing hierarchical information.`);
+      return null;
+    }
+    
+    // Base URL and parameters for the dashboard URLs
+    const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10109/CEREBULB_JJM_MAHARASHTRA_VILLAGE_LEVEL_DASHBOARD';
+    const STANDARD_PARAMS = 'hidetoolbar=true&hidesidebar=true&mode=kiosk';
+    
+    // Handle the special case for Amravati region (change to Amaravati in the URL)
+    const regionDisplay = village.region === 'Amravati' ? 'Amaravati' : village.region;
+
+    // Create the path with proper block and village information
+    // Important: Use the village's specific block, which may differ from the scheme's primary block
+    const path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${village.circle}\\Division-${village.division}\\Sub Division-${village.sub_division}\\Block-${village.block}\\Scheme-${village.scheme_id} - ${village.scheme_name}\\${village.village_name}`;
+    
+    // URL encode the path
+    const encodedPath = encodeURIComponent(path);
+    
+    // Combine all parts to create the complete URL
+    return `${BASE_URL}?${STANDARD_PARAMS}&rootpath=${encodedPath}`;
+  }
+
   private calculateDerivedValues(data: any): any {
     // Extract LPCD values
     const lpcdValues = [
