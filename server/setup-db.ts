@@ -134,7 +134,8 @@ export async function initializeTables(db: any) {
         "flow_meters_connected" INTEGER,
         "pressure_transmitter_connected" INTEGER,
         "residual_chlorine_analyzer_connected" INTEGER,
-        "fully_completion_scheme_status" TEXT
+        "fully_completion_scheme_status" TEXT,
+        "dashboard_url" TEXT
       );
     `);
     
