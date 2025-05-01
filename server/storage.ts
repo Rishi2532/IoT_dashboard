@@ -851,13 +851,55 @@ export class PostgresStorage implements IStorage {
     if (scheme_name === 'Sakol 7 villages WSS') {
       // Exact format for Sakol 7 villages WSS with specific hyphen placement (hyphen followed by space)
       path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id}- ${scheme_name}`;
-    } else if (region === 'Pune') {
-      // Pune region format: Block -Name, Scheme - ID -Name (space before hyphens)
-      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block -${block}\\Scheme - ${scheme_id} -${scheme_name}`;
-    } else if (region === 'Chhatrapati Sambhajinagar') {
+    } 
+    // Special case for Pangaon 10 villages WSS
+    else if (scheme_name === 'Pangaon 10 villages WSS') {
+      // Exact format for Pangaon 10 villages WSS with specific hyphen placement (hyphen followed by space)
+      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id}- ${scheme_name}`;
+    }
+    // Special case for Shirsala & 4 Village  
+    else if (scheme_name === 'Shirsala & 4 Village') {
+      // Exact format for Shirsala & 4 Village with RRWS suffix
+      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} - ${scheme_name} RRWS`;
+    }
+    // Special case for Kawtha Bk & 9 Vill RR WSS
+    else if (scheme_name === 'Kawtha Bk & 9 Vill RR WSS') {
+      // Exact format for Kawtha scheme with no space between scheme_id and hyphen
+      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} -${scheme_name}`;
+    }
+    else if (region === 'Pune') {
+      // Pune region format without UUID suffix
+      
+      // Check for schemes with specific formats
+      if (scheme_name === 'LONI BHAPKAR RRWSS' || 
+          scheme_name === 'HOL SASTEWADI' || 
+          scheme_name === 'MURTI & 7 VILLAGES RRWSS' ||
+          scheme_name === 'Wangani RRWSS' ||
+          scheme_name === 'RR Girvi WSS' ||
+          scheme_name === 'Done Adhale RR') {
+        // Format with no spaces around hyphens
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id}-${scheme_name}`;
+      } 
+      else if (scheme_name === 'Peth RR') {
+        // Format with space after scheme_id
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} - ${scheme_name}`;
+      }
+      else if (scheme_name.includes('Penur Patkul') || 
+               scheme_name.includes('Andhalgaon and 3 villages') ||
+               scheme_name.includes('Dhuldev Algudewadi')) {
+        // Format with spaces around scheme_id and hyphen
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block -${block}\\Scheme - ${scheme_id} -${scheme_name}`;
+      }
+      else {
+        // Standard Pune format
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block -${block}\\Scheme - ${scheme_id} -${scheme_name}`;
+      }
+    } 
+    else if (region === 'Chhatrapati Sambhajinagar') {
       // Chhatrapati Sambhajinagar format: Block-Name, Scheme-ID- Name (no space before hyphen, space after)
       path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id}- ${scheme_name}`;
-    } else {
+    } 
+    else {
       // Format for other regions: Block-Name, Scheme-ID - Name (no space before first hyphen)
       path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} - ${scheme_name}`;
     }
