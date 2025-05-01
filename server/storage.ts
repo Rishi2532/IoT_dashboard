@@ -844,14 +844,18 @@ export class PostgresStorage implements IStorage {
     const regionDisplay = region === 'Amravati' ? 'Amaravati' : region;
 
     // Create the path without URL encoding
-    // Use different spacing formats based on the region
+    // Use different spacing formats based on the region and scheme name
     let path;
     
-    if (region === 'Pune') {
+    // Special case for Sakol 7 villages WSS
+    if (scheme_name === 'Sakol 7 villages WSS') {
+      // Exact format for Sakol 7 villages WSS with specific hyphen placement
+      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id}-${scheme_name}`;
+    } else if (region === 'Pune') {
       // Pune region format: Block -Name, Scheme - ID -Name (space before hyphens)
       path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block -${block}\\Scheme - ${scheme_id} -${scheme_name}`;
     } else if (region === 'Chhatrapati Sambhajinagar') {
-      // Chhatrapati Sambhajinagar format: Block-Name, Scheme-ID-Name (no spaces around hyphen)
+      // Chhatrapati Sambhajinagar format: Block-Name, Scheme-ID- Name (no space before hyphen, space after)
       path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id}- ${scheme_name}`;
     } else {
       // Format for other regions: Block-Name, Scheme-ID - Name (no space before first hyphen)
@@ -3620,7 +3624,10 @@ export class PostgresStorage implements IStorage {
       existingScheme.scheme_name !== scheme.scheme_name
     );
     
-    if (!scheme.dashboard_url || hierarchicalFieldsChanged) {
+    // Special case: Always regenerate URL for "Sakol 7 villages WSS"
+    const isSakolScheme = scheme.scheme_name === 'Sakol 7 villages WSS';
+    
+    if (!scheme.dashboard_url || hierarchicalFieldsChanged || isSakolScheme) {
       scheme.dashboard_url = this.generateDashboardUrl(scheme);
     }
     
