@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import { storage } from "../../storage";
 import { parse } from "csv-parse/sync";
 import { updateRegionSummaries } from "../../db";
-import { type InsertSchemeStatus } from "@shared/schema";
+import { type InsertSchemeStatus, type SchemeStatus } from "@shared/schema";
 
 /**
  * Handle CSV import with column mapping and advanced configuration options
@@ -296,7 +296,7 @@ async function updateDatabaseRecords(
         if (existingScheme) {
           // Update existing scheme with the same ID and block
           // FIXED: Only update specific fields from the import, don't blindly apply all fields with spread
-          const schemeData = {
+          const schemeData: SchemeStatus = {
             ...existingScheme,
             scheme_name: item.scheme_name || existingScheme.scheme_name,
             region: item.region || existingScheme.region,
@@ -320,12 +320,13 @@ async function updateDatabaseRecords(
             residual_chlorine_analyzer_connected: item.residual_chlorine_analyzer_connected !== undefined ? item.residual_chlorine_analyzer_connected : existingScheme.residual_chlorine_analyzer_connected,
             scheme_functional_status: item.scheme_functional_status || existingScheme.scheme_functional_status,
             fully_completion_scheme_status: item.fully_completion_scheme_status || existingScheme.fully_completion_scheme_status,
+            dashboard_url: item.dashboard_url || existingScheme.dashboard_url, // Preserve existing dashboard_url if not in import
           };
 
           await storage.updateScheme(schemeData);
           details += `Updated scheme: ${item.scheme_id} in block ${item.block}\n`;
         } else {
-          // Create new scheme
+          // Create new scheme (dashboard_url is automatically generated in the storage.createScheme method)
           const schemeData: InsertSchemeStatus = {
             scheme_id: item.scheme_id,
             scheme_name: item.scheme_name || `Scheme ${item.scheme_id}`,
@@ -355,6 +356,7 @@ async function updateDatabaseRecords(
               item.residual_chlorine_analyzer_connected || 0,
             fully_completion_scheme_status:
               item.fully_completion_scheme_status || "In Progress",
+            dashboard_url: item.dashboard_url || null, // Use dashboard_url from import if available
           };
 
           await storage.createScheme(schemeData);

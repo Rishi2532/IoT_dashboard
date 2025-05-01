@@ -820,11 +820,19 @@ export class PostgresStorage implements IStorage {
    * @returns The complete URL or null if missing required fields
    */
   private generateDashboardUrl(scheme: SchemeStatus | InsertSchemeStatus): string | null {
-    // Skip if missing required hierarchical information
-    if (!scheme.region || !scheme.circle || !scheme.division || 
-        !scheme.sub_division || !scheme.block || !scheme.scheme_id || !scheme.scheme_name) {
-      return null;
+    // If dashboard_url is already present in the scheme and we're not forcing regeneration, return it
+    if ('dashboard_url' in scheme && scheme.dashboard_url) {
+      return scheme.dashboard_url;
     }
+    
+    // Default values for missing fields to ensure URL generation works even with partial data
+    const region = scheme.region || 'Unknown Region';
+    const circle = scheme.circle || 'Unknown Circle';
+    const division = scheme.division || 'Unknown Division';
+    const sub_division = scheme.sub_division || 'Unknown Sub Division';
+    const block = scheme.block || 'Unknown Block';
+    const scheme_id = scheme.scheme_id || `Unknown-${Date.now()}`;
+    const scheme_name = scheme.scheme_name || `Unknown Scheme ${scheme_id}`;
     
     // Base URL for PI Vision dashboard with the correct display ID (10108)
     const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10108/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD';
@@ -832,22 +840,19 @@ export class PostgresStorage implements IStorage {
     // Standard parameters for the dashboard
     const STANDARD_PARAMS = 'hidetoolbar=true&hidesidebar=true&mode=kiosk';
     
-    // Generate a UUID for this scheme (based on its unique properties)
-    const schemeUuid = uuidv4();
-    
     // Handle the special case for Amravati region (change to Amaravati in the URL)
-    const regionDisplay = scheme.region === 'Amravati' ? 'Amaravati' : scheme.region;
+    const regionDisplay = region === 'Amravati' ? 'Amaravati' : region;
 
     // Create the path without URL encoding
     // Use different spacing formats based on the region
     let path;
     
-    if (scheme.region === 'Pune') {
+    if (region === 'Pune') {
       // Pune region format: Block -Name, Scheme - ID -Name (space before hyphens)
-      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${scheme.circle}\\Division-${scheme.division}\\Sub Division-${scheme.sub_division}\\Block -${scheme.block}\\Scheme - ${scheme.scheme_id} -${scheme.scheme_name}`;
+      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block -${block}\\Scheme - ${scheme_id} -${scheme_name}`;
     } else {
       // Format for other regions: Block-Name, Scheme-ID - Name (no space before first hyphen)
-      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${scheme.circle}\\Division-${scheme.division}\\Sub Division-${scheme.sub_division}\\Block-${scheme.block}\\Scheme-${scheme.scheme_id} - ${scheme.scheme_name}`;
+      path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} - ${scheme_name}`;
     }
     
     // URL encode the path
@@ -3599,8 +3604,20 @@ export class PostgresStorage implements IStorage {
   async updateScheme(scheme: SchemeStatus): Promise<SchemeStatus> {
     const db = await this.ensureInitialized();
     
+    // Retrieve the existing scheme to check if hierarchical fields have changed
+    const existingScheme = await this.getSchemeByIdAndBlock(scheme.scheme_id, scheme.block);
+    
     // Check if we need to generate a dashboard URL (if missing or hierarchical info changed)
-    if (!scheme.dashboard_url) {
+    const hierarchicalFieldsChanged = existingScheme && (
+      existingScheme.region !== scheme.region || 
+      existingScheme.circle !== scheme.circle || 
+      existingScheme.division !== scheme.division || 
+      existingScheme.sub_division !== scheme.sub_division || 
+      existingScheme.block !== scheme.block || 
+      existingScheme.scheme_name !== scheme.scheme_name
+    );
+    
+    if (!scheme.dashboard_url || hierarchicalFieldsChanged) {
       scheme.dashboard_url = this.generateDashboardUrl(scheme);
     }
     
