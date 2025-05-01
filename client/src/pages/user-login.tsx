@@ -230,16 +230,11 @@ export default function UserLoginPage() {
         </Card>
       </div>
       
-      {/* Company footer branding */}
+      {/* Footer branding */}
       <footer className="w-full py-6 bg-white/50 border-t border-blue-100 mt-auto">
         <div className="flex flex-col items-center justify-center">
-          <img
-            src="/images/company/cstech-ai-logo.jpg"
-            alt="CS Tech AI"
-            className="h-16 mb-3"
-          />
           <p className="text-sm text-blue-700 font-medium">
-            Powered by CSTECH AI
+            Powered by AI
           </p>
         </div>
       </footer>
