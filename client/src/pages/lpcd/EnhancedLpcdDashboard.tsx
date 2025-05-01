@@ -39,6 +39,8 @@ import {
   Filter,
   RefreshCw,
   X,
+  BarChart,
+  ExternalLink,
 } from "lucide-react";
 import {
   Dialog,
@@ -93,6 +95,7 @@ export interface WaterSchemeData {
   consistent_zero_lpcd_for_a_week: number;
   below_55_lpcd_count: number;
   above_55_lpcd_count: number;
+  dashboard_url?: string;
 }
 
 export interface RegionData {
@@ -757,7 +760,19 @@ const EnhancedLpcdDashboard = () => {
         <DialogContent className="max-w-3xl max-h-[90vh] bg-gradient-to-b from-blue-50 to-white">
           <DialogHeader className="bg-white p-4 rounded-lg">
             <DialogTitle className="text-xl flex items-center justify-between">
-              <span>{selectedVillage.village_name}</span>
+              <div className="flex items-center space-x-2">
+                <span>{selectedVillage.village_name}</span>
+                {selectedVillage.dashboard_url && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-2 text-xs" 
+                    onClick={() => window.open(selectedVillage.dashboard_url, '_blank')}
+                  >
+                    <BarChart className="h-4 w-4 mr-1" /> PI Vision Dashboard
+                  </Button>
+                )}
+              </div>
               <LpcdBadge value={lpcdValue} />
             </DialogTitle>
             <DialogDescription>
@@ -1295,7 +1310,7 @@ const EnhancedLpcdDashboard = () => {
                             <TableHead>Population</TableHead>
                             <TableHead>Current LPCD</TableHead>
                             <TableHead>Status</TableHead>
-                            <TableHead className="w-[80px]">Actions</TableHead>
+                            <TableHead className="w-[120px]">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1326,14 +1341,26 @@ const EnhancedLpcdDashboard = () => {
                                   </Badge>
                                 </TableCell>
                                 <TableCell>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleViewVillage(scheme)}
-                                    title="View Details"
-                                  >
-                                    <Eye className="h-4 w-4" />
-                                  </Button>
+                                  <div className="flex space-x-1">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleViewVillage(scheme)}
+                                      title="View Details"
+                                    >
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                    {scheme.dashboard_url && (
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => window.open(scheme.dashboard_url, '_blank')}
+                                        title="Open PI Vision Dashboard"
+                                      >
+                                        <BarChart className="h-4 w-4" />
+                                      </Button>
+                                    )}
+                                  </div>
                                 </TableCell>
                               </TableRow>
                             );
