@@ -927,6 +927,9 @@ export class PostgresStorage implements IStorage {
       else if (scheme_id === '20092478' && scheme_name.includes('Retrofiting of Gotheghar Dahisar R.R. Water Supply Scheme')) {
         path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-Thane\\Division-Thane\\Sub Division-Thane\\Block-Kalyan\\Scheme-20092478-Retrofiting of Gotheghar Dahisar R.R. Water Supply Scheme`;
       }
+      else if (scheme_id === '20047871' && (scheme_name.includes('Modgaon & Tornipada RWSS') || scheme_name.includes('�Modgaon & Tornipada RWSS'))) {
+        path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-Thane\\Division-Thane\\Sub Division-Palghar\\Block-Dahanu\\Scheme-20047871-Modgaon & Tornipada RWSS`;
+      }
       else {
         // Standard format for other Konkan schemes
         path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} - ${scheme_name}`;
