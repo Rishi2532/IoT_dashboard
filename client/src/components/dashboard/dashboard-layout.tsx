@@ -6,6 +6,8 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
+  const currentYear = new Date().getFullYear();
+  
   return (
     <div className="min-h-screen flex flex-col bg-gradient-to-br from-blue-50 via-white to-blue-50">
       <div className="absolute inset-0 bg-[url('/images/water-pattern.svg')] opacity-[0.03] bg-repeat z-0 pointer-events-none"></div>
@@ -15,6 +17,27 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </div>
       </main>
+      
+      {/* Company footer */}
+      <footer className="bg-gradient-to-r from-blue-50 to-blue-100 border-t border-blue-200 py-4 relative z-10">
+        <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 max-w-full lg:max-w-[90rem] 2xl:max-w-[120rem]">
+          <div className="flex flex-col sm:flex-row justify-between items-center">
+            <div className="flex items-center mb-3 sm:mb-0">
+              <img 
+                src="/images/company/cstech-ai-logo.svg" 
+                alt="CS Tech AI" 
+                className="h-8 sm:h-10"
+              />
+            </div>
+            <div className="text-center sm:text-right text-sm text-blue-800">
+              <p>© {currentYear} CS Tech AI. All rights reserved.</p>
+              <p className="text-xs text-blue-600 mt-1">
+                Developed and maintained by CS Tech AI
+              </p>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -87,6 +87,9 @@ export default function Header() {
                 <p className="text-xs text-blue-100 -mt-1 hidden sm:block font-medium">
                   <span className="text-white flex items-center gap-1">
                     <DropletIcon className="h-3 w-3" /> <TranslatedText>JJM Integration Monitoring System</TranslatedText>
+                    <span className="ml-1 bg-blue-500/30 px-1.5 py-0.5 rounded text-[10px] border border-blue-400/30 font-bold">
+                      POWERED BY CS TECH AI
+                    </span>
                   </span>
                 </p>
               </div>
