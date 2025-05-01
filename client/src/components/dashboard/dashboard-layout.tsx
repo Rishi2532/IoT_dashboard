@@ -22,15 +22,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <footer className="bg-gradient-to-r from-blue-50 to-blue-100 border-t border-blue-200 py-4 relative z-10">
         <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 max-w-full lg:max-w-[90rem] 2xl:max-w-[120rem]">
           <div className="flex flex-col sm:flex-row justify-between items-center">
-            <div className="flex items-center mb-3 sm:mb-0">
-              <img 
-                src="/images/company/cstech-ai-logo.jpg" 
-                alt="CS Tech AI" 
-                className="h-10 sm:h-12"
-              />
-            </div>
             <div className="text-center sm:text-right text-sm text-blue-800">
-              <p className="font-medium">Powered by CSTECH AI</p>
             </div>
           </div>
         </div>
