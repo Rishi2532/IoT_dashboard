@@ -234,7 +234,7 @@ export default function UserLoginPage() {
       <footer className="w-full py-6 bg-white/50 border-t border-blue-100 mt-auto">
         <div className="flex flex-col items-center justify-center">
           <p className="text-sm text-blue-700 font-medium">
-            Powered by AI
+            Powered by CSTECH AI
           </p>
         </div>
       </footer>
