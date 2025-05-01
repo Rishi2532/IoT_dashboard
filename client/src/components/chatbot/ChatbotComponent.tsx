@@ -599,9 +599,23 @@ const CustomChatbot = () => {
           }
         }
 
-        // Apply filters if available
+        // Apply filters if available, with logging to debug the issue
         if (filterContext && (filters.region || filters.status)) {
-          filterContext.applyFilters(filters);
+          console.log('Applying filters to dashboard:', filters);
+          try {
+            filterContext.applyFilters(filters);
+            console.log('Successfully applied filters to dashboard');
+            
+            // For status filter, ensure it's properly mapped to the actual status value used by the dashboard
+            if (filters.status === "Fully Completed") {
+              // Make sure this matches the exact string expected by the dashboard filter component
+              const actualFilterValue = "Fully Completed";
+              console.log(`Mapping "Fully Completed" filter to dashboard value: ${actualFilterValue}`);
+              filterContext.setStatusFilter(actualFilterValue);
+            }
+          } catch (e) {
+            console.error('Error applying filters to dashboard:', e);
+          }
 
           // Check if previous message was from voice input to enable auto-speak
           const prevMessage = messages[messages.length - 1];
