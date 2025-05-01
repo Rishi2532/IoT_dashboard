@@ -3907,6 +3907,20 @@ export class PostgresStorage implements IStorage {
   
   async createWaterSchemeData(data: InsertWaterSchemeData): Promise<WaterSchemeData> {
     const db = await this.ensureInitialized();
+    
+    // Generate dashboard URL if not provided
+    if (!data.dashboard_url) {
+      // We need to ensure all required hierarchical data is present
+      if (data.region && data.circle && data.division && data.sub_division && 
+          data.block && data.scheme_id && data.scheme_name && data.village_name) {
+        // Generate the dashboard URL using our existing method
+        data.dashboard_url = this.generateVillageDashboardUrl(data as WaterSchemeData);
+        console.log(`Generated dashboard URL for new village ${data.village_name} in scheme ${data.scheme_name}`);
+      } else {
+        console.warn(`Cannot generate dashboard URL for new village - missing hierarchical data. Village: ${data.village_name}`);
+      }
+    }
+    
     const result = await db.insert(waterSchemeData).values(data).returning();
     return result[0];
   }
@@ -4347,6 +4361,14 @@ export class PostgresStorage implements IStorage {
           // Calculate derived values (consistency metrics)
           this.calculateDerivedValues(schemeData);
           
+          // Generate dashboard URL if not present
+          if (!schemeData.dashboard_url && schemeData.region && schemeData.circle && 
+              schemeData.division && schemeData.sub_division && schemeData.block && 
+              schemeData.scheme_id && schemeData.scheme_name && schemeData.village_name) {
+            schemeData.dashboard_url = this.generateVillageDashboardUrl(schemeData as WaterSchemeData);
+            console.log(`Generated dashboard URL for imported village ${schemeData.village_name} in scheme ${schemeData.scheme_name}`);
+          }
+          
           // Check if scheme/village combination already exists
           const existingRecords = await db
             .select()
@@ -4496,6 +4518,13 @@ export class PostgresStorage implements IStorage {
             
             // Calculate derived values (consistent zero, below/above 55 LPCD)
             this.calculateDerivedValues(schemeData);
+            
+            // Generate dashboard URL if not present
+            if (!schemeData.dashboard_url && schemeData.region && schemeData.circle && 
+                schemeData.division && schemeData.sub_division && schemeData.block && 
+                schemeData.scheme_id && schemeData.scheme_name && schemeData.village_name) {
+              schemeData.dashboard_url = this.generateVillageDashboardUrl(schemeData as WaterSchemeData);
+            }
             
             // Generate a composite key for lookup
             const key = `${schemeId}::${villageName}`;
