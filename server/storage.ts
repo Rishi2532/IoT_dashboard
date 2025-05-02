@@ -4068,6 +4068,34 @@ export class PostgresStorage implements IStorage {
    * @param village The village information
    * @returns The complete dashboard URL for the village
    */
+  /**
+   * Check if this is a village in the special case Bargaonpimpri scheme
+   * @param village The village data to check
+   * @returns A special case URL or null if not a special case
+   */
+  private generateSpecialCaseVillageUrl(village: WaterSchemeData): string | null {
+    // Special case for Bargaonpimpri scheme in Nashik region
+    if (village.scheme_id === '20019176' && village.scheme_name.includes('Bargaonpimpri')) {
+      // Base URL parameters
+      const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10109/CEREBULB_JJM_MAHARASHTRA_VILLAGE_LEVEL_DASHBOARD';
+      const STANDARD_PARAMS = 'hidetoolbar=true&hidesidebar=true&mode=kiosk';
+      
+      // Special scheme path with non-breaking space
+      const schemePath = '\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-Nashik\\\\Circle-Nashik\\\\Division-Nashik\\\\Sub Division-Sinnar\\\\Block-Sinnar\\\\Scheme-20019176 - Retro. Bargaonpimpri & 6 VRWSS' + String.fromCharCode(160) + ' Tal Sinnar';
+      
+      // Append village name to path
+      const path = `${schemePath}\\\\\\\\${village.village_name}`;
+      
+      // URL encode the path
+      const encodedPath = encodeURIComponent(path);
+      
+      // Return the complete URL
+      return `${BASE_URL}?${STANDARD_PARAMS}&rootpath=${encodedPath}`;
+    }
+    
+    return null; // Not a special case
+  }
+
   private generateVillageDashboardUrl(village: WaterSchemeData): string | null {
     // Skip if missing required hierarchical information
     if (!village.region || !village.circle || !village.division || 
@@ -4075,6 +4103,12 @@ export class PostgresStorage implements IStorage {
         !village.scheme_name || !village.village_name) {
       console.warn(`Cannot generate URL for village ${village.village_name} - missing hierarchical information.`);
       return null;
+    }
+    
+    // Check for special case URLs first
+    const specialCaseUrl = this.generateSpecialCaseVillageUrl(village);
+    if (specialCaseUrl) {
+      return specialCaseUrl;
     }
     
     // Base URL and parameters for the dashboard URLs
