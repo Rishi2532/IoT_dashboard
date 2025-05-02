@@ -201,9 +201,27 @@ export async function initializeTables(db: any) {
         "consistent_zero_lpcd_for_a_week" INTEGER,
         "below_55_lpcd_count" INTEGER,
         "above_55_lpcd_count" INTEGER,
+        "dashboard_url" TEXT,
         PRIMARY KEY ("scheme_id", "village_name")
       );
     `);
+    
+    // Check if dashboard_url column exists in water_scheme_data, add if missing
+    try {
+      const result = await db.execute(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'water_scheme_data' AND column_name = 'dashboard_url';
+      `);
+      
+      if (result.rows.length === 0) {
+        console.log('Adding missing dashboard_url column to water_scheme_data table...');
+        await db.execute(`ALTER TABLE "water_scheme_data" ADD COLUMN "dashboard_url" TEXT;`);
+        console.log('Successfully added dashboard_url column to water_scheme_data table');
+      }
+    } catch (error) {
+      console.error('Error checking for dashboard_url column:', error);
+    }
     
     // Create chlorine_data table
     await db.execute(`

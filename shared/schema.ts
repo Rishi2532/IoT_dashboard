@@ -182,6 +182,9 @@ export const waterSchemeData = pgTable("water_scheme_data", {
   consistent_zero_lpcd_for_a_week: integer("consistent_zero_lpcd_for_a_week"),
   below_55_lpcd_count: integer("below_55_lpcd_count"),
   above_55_lpcd_count: integer("above_55_lpcd_count"),
+  
+  // Dashboard URL for PI Vision integration
+  dashboard_url: text("dashboard_url"),
 }, (table) => {
   return {
     pk: primaryKey({ columns: [table.scheme_id, table.village_name] }),
