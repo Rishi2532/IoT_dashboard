@@ -819,10 +819,33 @@ export class PostgresStorage implements IStorage {
    * @param scheme - The scheme object with region, circle, division, etc.
    * @returns The complete URL or null if missing required fields
    */
+  private generateSpecialCaseUrl(scheme: SchemeStatus | InsertSchemeStatus): string | null {
+    // Handle special case URLs that need exact formatting
+    const { scheme_id, scheme_name } = scheme;
+    
+    // Bargaonpimpri scheme in Nashik region
+    if (scheme_id === '20019176' && scheme_name.includes('Bargaonpimpri')) {
+      const path = '\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-Nashik\\\\Circle-Nashik\\\\Division-Nashik\\\\Sub Division-Sinnar\\\\Block-Sinnar\\\\Scheme-20019176 - Retro. Bargaonpimpri & 6 VRWSS' + String.fromCharCode(160) + ' Tal Sinnar';
+      const encodedPath = encodeURIComponent(path);
+      const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10108/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD';
+      const STANDARD_PARAMS = 'hidetoolbar=true&hidesidebar=true&mode=kiosk';
+      
+      return `${BASE_URL}?${STANDARD_PARAMS}&rootpath=${encodedPath}`;
+    }
+    
+    return null; // No special case matched
+  }
+
   private generateDashboardUrl(scheme: SchemeStatus | InsertSchemeStatus): string | null {
     // If dashboard_url is already present in the scheme and we're not forcing regeneration, return it
     if ('dashboard_url' in scheme && scheme.dashboard_url) {
       return scheme.dashboard_url;
+    }
+    
+    // Check if this is a special case URL that needs exact formatting
+    const specialCaseUrl = this.generateSpecialCaseUrl(scheme);
+    if (specialCaseUrl) {
+      return specialCaseUrl;
     }
     
     // Default values for missing fields to ensure URL generation works even with partial data
