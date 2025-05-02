@@ -890,11 +890,7 @@ export class PostgresStorage implements IStorage {
       // Exact format for Kawtha scheme with no space between scheme_id and hyphen
       path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${circle}\\Division-${division}\\Sub Division-${sub_division}\\Block-${block}\\Scheme-${scheme_id} -${scheme_name}`;
     }
-    // Special case for Bargaonpimpri scheme in Nashik region
-    else if (scheme_id === '20019176' && scheme_name.includes('Bargaonpimpri')) {
-      // Exact format for Bargaonpimpri scheme with non-breaking space
-      path = `\\DemoAF\JJM\JJM\Maharashtra\Region-Nashik\Circle-Nashik\Division-Nashik\Sub Division-Sinnar\Block-Sinnar\Scheme-20019176 - Retro. Bargaonpimpri & 6 VRWSS${String.fromCharCode(160)} Tal Sinnar`;
-    }
+    // Bargaonpimpri scheme is handled in generateSpecialCaseUrl()
     else if (region === 'Pune') {
       // Use exact formats from examples for Pune region
       
