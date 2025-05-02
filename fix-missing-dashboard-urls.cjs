@@ -7,10 +7,8 @@
  * be visible due to missing URLs.
  */
 
-import pg from 'pg';
-import dotenv from 'dotenv';
-
-const { Pool } = pg;
+const { Pool } = require('pg');
+const dotenv = require('dotenv');
 
 // Load environment variables
 dotenv.config();
