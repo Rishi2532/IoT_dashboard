@@ -84,7 +84,7 @@ function generateSpecialCaseVillageUrl(village) {
   // Bargaonpimpri scheme in Nashik region (includes non-breaking space character)
   if (scheme_id === '20019176' && scheme_name.includes('Bargaonpimpri')) {
     // Insert the non-breaking space character (\u00A0) in the right position
-    const path = `\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-Nashik\\\\Circle-Nashik\\\\Division-Nashik\\\\Sub Division-Sinnar\\\\Block-Sinnar\\\\Scheme-20019176 - Retro. Bargaonpimpri & 6 VRWSS${String.fromCharCode(160)} Tal Sinnar\\\\Village-${village_name}`;
+    const path = `\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-Nashik\\\\Circle-Nashik\\\\Division-Nashik\\\\Sub Division-Sinnar\\\\Block-Sinnar\\\\Scheme-20019176 - Retro. Bargaonpimpri & 6 VRWSS${String.fromCharCode(160)} Tal Sinnar\\\\${village_name}`;
     const encodedPath = encodeURIComponent(path);
     const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10109/CEREBULB_JJM_MAHARASHTRA_VILLAGE_LEVEL_DASHBOARD';
     const STANDARD_PARAMS = 'hidetoolbar=true&hidesidebar=true&mode=kiosk';
@@ -124,10 +124,10 @@ function generateVillageDashboardUrl(village) {
   // Different format for Pune region
   if (village.region === 'Pune') {
     // Format for Pune region (no space between scheme_id and hyphen)
-    path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${village.circle}\\Division-${village.division}\\Sub Division-${village.sub_division}\\Block-${village.block}\\Scheme-${village.scheme_id}-${village.scheme_name}\\Village-${village.village_name}`;
+    path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${village.circle}\\Division-${village.division}\\Sub Division-${village.sub_division}\\Block-${village.block}\\Scheme-${village.scheme_id}-${village.scheme_name}\\${village.village_name}`;
   } else {
     // Standard format for other regions (space between scheme_id and hyphen)
-    path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${village.circle}\\Division-${village.division}\\Sub Division-${village.sub_division}\\Block-${village.block}\\Scheme-${village.scheme_id} - ${village.scheme_name}\\Village-${village.village_name}`;
+    path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${village.circle}\\Division-${village.division}\\Sub Division-${village.sub_division}\\Block-${village.block}\\Scheme-${village.scheme_id} - ${village.scheme_name}\\${village.village_name}`;
   }
   
   // Encode the path for use in URL

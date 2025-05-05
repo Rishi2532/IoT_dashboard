@@ -120,10 +120,10 @@ function generateVillageDashboardUrl(village) {
   // Different format for Pune region
   if (village.region === 'Pune') {
     // Format for Pune region (no space between scheme_id and hyphen)
-    path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${village.circle}\\Division-${village.division}\\Sub Division-${village.sub_division}\\Block-${village.block}\\Scheme-${village.scheme_id}-${village.scheme_name}\\Village-${village.village_name}`;
+    path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${village.circle}\\Division-${village.division}\\Sub Division-${village.sub_division}\\Block-${village.block}\\Scheme-${village.scheme_id}-${village.scheme_name}\\${village.village_name}`;
   } else {
     // Standard format for other regions (space between scheme_id and hyphen)
-    path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${village.circle}\\Division-${village.division}\\Sub Division-${village.sub_division}\\Block-${village.block}\\Scheme-${village.scheme_id} - ${village.scheme_name}\\Village-${village.village_name}`;
+    path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${village.circle}\\Division-${village.division}\\Sub Division-${village.sub_division}\\Block-${village.block}\\Scheme-${village.scheme_id} - ${village.scheme_name}\\${village.village_name}`;
   }
   
   // Encode the path for use in URL
