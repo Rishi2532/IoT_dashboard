@@ -528,6 +528,28 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
                   continue;
                 }
                 
+                // Check if we need to generate a dashboard URL for this record
+                if (!batchRecord.dashboard_url) {
+                  // Get the full record data from the database first
+                  const existingRecord = await client.query(
+                    'SELECT * FROM water_scheme_data WHERE scheme_id = $1 AND village_name = $2',
+                    [batchRecord.scheme_id, batchRecord.village_name]
+                  );
+                  
+                  if (existingRecord.rows.length > 0) {
+                    const fullRecord = {...existingRecord.rows[0], ...batchRecord};
+                    batchRecord.dashboard_url = generateVillageDashboardUrl(fullRecord);
+                    
+                    if (batchRecord.dashboard_url) {
+                      console.log(`Generated dashboard URL for existing village: ${batchRecord.village_name} in scheme: ${batchRecord.scheme_id}`);
+                      // Add dashboard_url to updateFields if it's not already there
+                      if (!updateFields.includes('dashboard_url')) {
+                        updateFields.push('dashboard_url');
+                      }
+                    }
+                  }
+                }
+                
                 const updateQuery = `
                   UPDATE water_scheme_data 
                   SET ${updateFields.map((key, idx) => `${key} = $${idx + 3}`).join(', ')} 
@@ -542,6 +564,14 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
                 await client.query(updateQuery, updateValues);
                 updated++;
               } else {
+                // For new records, generate dashboard URL if not already present
+                if (!batchRecord.dashboard_url) {
+                  batchRecord.dashboard_url = generateVillageDashboardUrl(batchRecord);
+                  if (batchRecord.dashboard_url) {
+                    console.log(`Generated dashboard URL for village: ${batchRecord.village_name} in scheme: ${batchRecord.scheme_id}`);
+                  }
+                }
+                
                 // Insert new record
                 const fields = Object.keys(batchRecord);
                 const insertQuery = `
