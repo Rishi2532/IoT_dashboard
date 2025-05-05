@@ -27,7 +27,7 @@ function generateSpecialCaseUrl(scheme: any): string | null {
 }
 
 // Generate dashboard URL for a scheme
-function generateDashboardUrl(scheme: any): string | null {
+export function generateDashboardUrl(scheme: any): string | null {
   // Check for special case URLs first
   const specialCaseUrl = generateSpecialCaseUrl(scheme);
   if (specialCaseUrl) {
@@ -91,7 +91,7 @@ function generateSpecialCaseVillageUrl(village: any): string | null {
 }
 
 // Generate dashboard URL for a village
-function generateVillageDashboardUrl(village: any): string | null {
+export function generateVillageDashboardUrl(village: any): string | null {
   // Skip if missing required hierarchical information
   if (!village.region || !village.circle || !village.division || 
       !village.sub_division || !village.block || !village.scheme_id || 

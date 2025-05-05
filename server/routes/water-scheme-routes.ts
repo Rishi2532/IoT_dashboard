@@ -453,6 +453,9 @@ async function processCsvFile(filePath: string) {
   });
 }
 
+// Import dashboard URL generation functions from auto-generate-dashboard-urls.ts
+import { generateVillageDashboardUrl, generateDashboardUrl } from '../auto-generate-dashboard-urls';
+
 // Import data to database
 async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplate: boolean = false) {
   let inserted = 0;
