@@ -160,6 +160,7 @@ async function initializeDatabase() {
         "consistent_zero_lpcd_for_a_week" INTEGER,
         "below_55_lpcd_count" INTEGER,
         "above_55_lpcd_count" INTEGER,
+        "dashboard_url" TEXT,
         PRIMARY KEY ("scheme_id", "village_name")
       );
     `);
@@ -233,7 +234,7 @@ async function initializeDatabase() {
     `);
     
     // Check if the scheme_status table has the dashboard_url column
-    const columnCheckResult = await pool.query(`
+    const schemeColumnCheckResult = await pool.query(`
       SELECT column_name 
       FROM information_schema.columns 
       WHERE table_name = 'scheme_status' 
@@ -241,13 +242,31 @@ async function initializeDatabase() {
     `);
     
     // Add the dashboard_url column if it doesn't exist
-    if (columnCheckResult.rows.length === 0) {
+    if (schemeColumnCheckResult.rows.length === 0) {
       console.log('🔄 Adding missing dashboard_url column to scheme_status table...');
       await pool.query(`
         ALTER TABLE scheme_status 
         ADD COLUMN dashboard_url TEXT;
       `);
-      console.log('✅ Successfully added dashboard_url column');
+      console.log('✅ Successfully added dashboard_url column to scheme_status table');
+    }
+    
+    // Check if the water_scheme_data table has the dashboard_url column
+    const villageColumnCheckResult = await pool.query(`
+      SELECT column_name 
+      FROM information_schema.columns 
+      WHERE table_name = 'water_scheme_data' 
+      AND column_name = 'dashboard_url';
+    `);
+    
+    // Add the dashboard_url column if it doesn't exist
+    if (villageColumnCheckResult.rows.length === 0) {
+      console.log('🔄 Adding missing dashboard_url column to water_scheme_data table...');
+      await pool.query(`
+        ALTER TABLE water_scheme_data 
+        ADD COLUMN dashboard_url TEXT;
+      `);
+      console.log('✅ Successfully added dashboard_url column to water_scheme_data table');
     }
     
     // Check if there's an admin user, create one if not
@@ -277,6 +296,9 @@ async function initializeDatabase() {
   }
 }
 
+// Import auto-generate-dashboard-urls script
+import './auto-generate-dashboard-urls.js';
+
 // Only run initialization if it hasn't been run before
 const initMarkerPath = path.join(process.cwd(), '.db-initialized');
 const shouldInitialize = !fs.existsSync(initMarkerPath);
@@ -284,8 +306,12 @@ const shouldInitialize = !fs.existsSync(initMarkerPath);
 if (shouldInitialize) {
   console.log('🚀 Running first-time database initialization...');
   initializeDatabase();
+  // Auto-generate-dashboard-urls will run automatically when imported above
 } else {
   console.log('✅ Database already initialized, skipping...');
+  // Still run the dashboard URL generator to fix any missing URLs
+  console.log('Generating any missing dashboard URLs...');
+  // Note: auto-generate-dashboard-urls.js will run automatically when imported above
 }
 
 export default initializeDatabase;
