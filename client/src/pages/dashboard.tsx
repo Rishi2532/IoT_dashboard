@@ -132,32 +132,6 @@ export default function Dashboard() {
         "ESRs": "76",
         "Status": "Operational"
       }
-    },
-    
-    // Additional Nagpur marker to ensure visibility
-    {
-      name: "Nagpur City",
-      latitude: 21.1458,
-      longitude: 79.0882,
-      type: "scheme",
-      details: {
-        "Flow Meters": "163",
-        "Pressure Sensors": "128",
-        "Status": "Operational"
-      }
-    },
-    
-    // Additional Konkan marker to ensure visibility
-    {
-      name: "Konkan Coast",
-      latitude: 18.07,
-      longitude: 72.90,
-      type: "scheme",
-      details: {
-        "Flow Meters": "94",
-        "Pressure Sensors": "76",
-        "Status": "Operational"
-      }
     }
   ]);
 

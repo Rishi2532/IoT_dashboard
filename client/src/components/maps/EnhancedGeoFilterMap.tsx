@@ -302,20 +302,11 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
               <Tooltip 
                 direction="top" 
                 offset={tooltipOffset} 
-                opacity={1} 
+                opacity={1}
+                permanent={false}
                 className={`${location.type}-tooltip`}
               >
                 <div className="text-sm font-medium">{location.name}</div>
-                {location.details && (
-                  <div className="text-xs mt-1">
-                    {Object.entries(location.details).map(([key, value]) => (
-                      <div key={key}>
-                        <span className="font-semibold">{key}: </span>
-                        <span>{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </Tooltip>
             </Marker>
           );
