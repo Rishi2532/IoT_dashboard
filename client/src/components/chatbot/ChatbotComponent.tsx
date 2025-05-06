@@ -884,26 +884,22 @@ const ChatbotComponent: React.FC = () => {
   const dragRef = React.useRef<HTMLDivElement>(null);
   const startPositionRef = React.useRef({ x: 0, y: 0 });
 
-  // Show welcome popup a few seconds after component mounts (simulating after login)
+  // Show welcome popup after login (force it to show in this update)
   useEffect(() => {
-    // Check if we've already shown the welcome popup in this session
-    const hasShownWelcome = sessionStorage.getItem('welcomeShown');
-    
-    if (!hasShownWelcome && !welcomeShown) {
-      const timer = setTimeout(() => {
-        setShowWelcome(true);
-        setWelcomeShown(true);
-        sessionStorage.setItem('welcomeShown', 'true');
-        
-        // Auto-hide the welcome popup after 8 seconds
-        setTimeout(() => {
-          setShowWelcome(false);
-        }, 8000);
-      }, 3000); // Show popup 3 seconds after component mounts
+    // Immediately show welcome popup
+    const timer = setTimeout(() => {
+      setShowWelcome(true);
       
-      return () => clearTimeout(timer);
-    }
-  }, [welcomeShown]);
+      // Auto-hide the welcome popup after 8 seconds
+      const hideTimer = setTimeout(() => {
+        setShowWelcome(false);
+      }, 8000);
+      
+      return () => clearTimeout(hideTimer);
+    }, 1500); // Show popup 1.5 seconds after component mounts
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // Load TensorFlow model on component mount but don't block rendering
   useEffect(() => {

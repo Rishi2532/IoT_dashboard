@@ -435,13 +435,7 @@ export default function Dashboard() {
         onClose={handleCloseModal}
       />
       
-      {/* AI Assistant Chatbot - wrapped with FilterContextProvider for dashboard integration */}
-      <FilterContextProvider 
-        setSelectedRegion={setSelectedRegion}
-        setStatusFilter={setStatusFilter}
-      >
-        <ChatbotComponent />
-      </FilterContextProvider>
+      {/* AI Assistant Chatbot is now managed globally in App.tsx */}
     </DashboardLayout>
   );
 }
