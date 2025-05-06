@@ -48,16 +48,17 @@ export default function Dashboard() {
     isLoading: isGeoFilteredSchemesLoading,
   } = useGeographicFilteredSchemes();
   
-  // Sample locations for demonstration (these would come from the database in production)
+  // Maharashtra region main locations with proper coordinates
   const [sampleLocations, setSampleLocations] = useState<MapLocation[]>([
+    // Pune Region
     {
-      name: "Ozar Sakore Scheme",
-      latitude: 20.09,
-      longitude: 73.92,
+      name: "Pune MJP Scheme",
+      latitude: 18.52,
+      longitude: 73.85,
       type: "scheme",
       details: {
-        "ESRs": "3",
-        "Villages": "5",
+        "ESRs": "12",
+        "Villages": "32",
         "Status": "Operational"
       }
     },
@@ -72,23 +73,188 @@ export default function Dashboard() {
       }
     },
     {
-      name: "Chandur Bazar ESR",
+      name: "Khadakwasla ESR",
+      latitude: 18.44,
+      longitude: 73.77,
+      type: "esr",
+      details: {
+        "Capacity": "15ML",
+        "Status": "Operational"
+      }
+    },
+    {
+      name: "Yerwada WTP",
+      latitude: 18.55,
+      longitude: 73.89,
+      type: "wtp",
+      details: {
+        "Capacity": "18 MLD",
+        "Online": "Yes"
+      }
+    },
+    
+    // Nashik Region
+    {
+      name: "Ozar Sakore Scheme",
+      latitude: 20.09,
+      longitude: 73.92,
+      type: "scheme",
+      details: {
+        "ESRs": "3",
+        "Villages": "5",
+        "Status": "Operational"
+      }
+    },
+    {
+      name: "Trimbakeshwar Village",
+      latitude: 19.93,
+      longitude: 73.53,
+      type: "village",
+      details: {
+        "LPCD": "65L",
+        "Status": "Good"
+      }
+    },
+    {
+      name: "Nashik ESR",
+      latitude: 19.99,
+      longitude: 73.78,
+      type: "esr",
+      details: {
+        "Capacity": "10ML",
+        "Status": "Operational"
+      }
+    },
+    
+    // Amravati Region
+    {
+      name: "Chandur Bazar Scheme",
       latitude: 20.81,
       longitude: 77.98,
+      type: "scheme",
+      details: {
+        "ESRs": "4",
+        "Villages": "8",
+        "Status": "Operational"
+      }
+    },
+    {
+      name: "Daryapur Village",
+      latitude: 20.92,
+      longitude: 77.82,
+      type: "village",
+      details: {
+        "LPCD": "58L",
+        "Status": "Good"
+      }
+    },
+    {
+      name: "Amravati ESR",
+      latitude: 20.93,
+      longitude: 77.75,
       type: "esr",
       details: {
         "Capacity": "8ML",
         "Status": "Operational"
       }
     },
+    
+    // Chhatrapati Sambhajinagar Region
     {
-      name: "Nilphad WTP",
-      latitude: 20.01,
-      longitude: 74.75,
+      name: "Paithan Scheme",
+      latitude: 19.48,
+      longitude: 75.38,
+      type: "scheme",
+      details: {
+        "ESRs": "5",
+        "Villages": "12",
+        "Status": "Operational"
+      }
+    },
+    {
+      name: "Vaijapur Village",
+      latitude: 19.92,
+      longitude: 74.73,
+      type: "village",
+      details: {
+        "LPCD": "62L",
+        "Status": "Good"
+      }
+    },
+    {
+      name: "Sambhajinagar ESR",
+      latitude: 19.87,
+      longitude: 75.34,
+      type: "esr",
+      details: {
+        "Capacity": "12ML",
+        "Status": "Operational"
+      }
+    },
+    
+    // Nagpur Region
+    {
+      name: "Nagpur Rural Scheme",
+      latitude: 21.15,
+      longitude: 79.09,
+      type: "scheme",
+      details: {
+        "ESRs": "7",
+        "Villages": "15",
+        "Status": "Operational"
+      }
+    },
+    {
+      name: "Ramtek Village",
+      latitude: 21.40,
+      longitude: 79.33,
+      type: "village",
+      details: {
+        "LPCD": "68L",
+        "Status": "Good"
+      }
+    },
+    {
+      name: "Nagpur WTP",
+      latitude: 21.17,
+      longitude: 79.04,
       type: "wtp",
       details: {
-        "Capacity": "12 MLD",
+        "Capacity": "25 MLD",
         "Online": "Yes"
+      }
+    },
+    
+    // Konkan Region
+    {
+      name: "Ratnagiri Scheme",
+      latitude: 16.99,
+      longitude: 73.30,
+      type: "scheme",
+      details: {
+        "ESRs": "4",
+        "Villages": "9",
+        "Status": "Operational"
+      }
+    },
+    {
+      name: "Sindhudurg Village",
+      latitude: 16.04,
+      longitude: 73.46,
+      type: "village",
+      details: {
+        "LPCD": "70L",
+        "Status": "Good"
+      }
+    },
+    {
+      name: "Alibag ESR",
+      latitude: 18.64,
+      longitude: 72.87,
+      type: "esr",
+      details: {
+        "Capacity": "6ML",
+        "Status": "Operational"
       }
     }
   ]);

@@ -148,17 +148,17 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
     }));
   };
 
-  // Style function for GeoJSON regions
+  // Style function for GeoJSON regions - with no fill, only boundaries
   const regionStyle = (feature: any) => {
     const regionName = feature.properties.name;
     const isSelected = regionName === filter.region;
     
     return {
-      fillColor: isSelected ? '#3b82f6' : '#64748b',
+      fillColor: 'transparent',
       weight: isSelected ? 2 : 1,
       opacity: 1,
-      color: isSelected ? '#1d4ed8' : '#475569',
-      fillOpacity: isSelected ? 0.6 : 0.3,
+      color: isSelected ? '#1d4ed8' : '#94a3b8',
+      fillOpacity: 0,
     };
   };
 
@@ -189,8 +189,9 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
       mouseover: (e: any) => {
         const layer = e.target;
         layer.setStyle({
-          fillOpacity: 0.7,
-          weight: 3
+          fillOpacity: 0.1,
+          weight: 2.5,
+          color: '#2563eb'
         });
       },
       mouseout: (e: any) => {
@@ -244,7 +245,7 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
         <ZoomControl position="bottomright" />
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          attribution=""
         />
         
         {/* Map zoom event handler */}
