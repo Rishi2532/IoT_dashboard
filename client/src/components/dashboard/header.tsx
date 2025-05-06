@@ -1,11 +1,12 @@
 import { Button } from "../ui/button";
-import { UserCircle, Settings, Droplet, LogOut, DropletIcon, Globe } from "lucide-react";
+import { UserCircle, Settings, Droplet, LogOut, DropletIcon, Globe, Moon, Sun } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import Sidebar from "./sidebar";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { LanguageSelectorMinimal } from "../ui/language-selector";
 import { useTranslation } from "../../contexts/TranslationContext";
 import { TranslatedText } from "../ui/translated-text";
+import { useTheme } from "../theme/theme-provider";
 
 interface AuthStatusResponse {
   isLoggedIn: boolean;
@@ -13,6 +14,9 @@ interface AuthStatusResponse {
 }
 
 export default function Header() {
+  // Get theme context
+  const { theme, toggleTheme } = useTheme();
+  
   // Check if user is admin
   const { data: authData } = useQuery<AuthStatusResponse>({
     queryKey: ["/api/auth/status"],

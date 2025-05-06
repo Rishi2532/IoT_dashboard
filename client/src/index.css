@@ -395,6 +395,35 @@ input, select, textarea {
 @layer base {
   :root {
     --background: #f9fafb; /* Lighter background color */
+    --card-bg: #ffffff;
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+    --border-color: #e5e7eb;
+    --hover-bg: rgba(239, 246, 255, 0.7);
+    --header-bg: #f3f4f6;
+    --highlight: #dbeafe;
+    --button-bg: #1e40af;
+    --button-text: #ffffff;
+    --shadow: rgba(0, 0, 0, 0.05);
+    
+    /* Animation variables */
+    --transition-fast: 150ms;
+    --transition-normal: 250ms;
+    --transition-slow: 350ms;
+  }
+
+  .dark-theme {
+    --background: #111827;
+    --card-bg: #1f2937;
+    --text-primary: #f9fafb;
+    --text-secondary: #e5e7eb; 
+    --border-color: #374151;
+    --hover-bg: rgba(30, 58, 138, 0.3);
+    --header-bg: #1e3a8a;
+    --highlight: #1e40af;
+    --button-bg: #3b82f6;
+    --button-text: #ffffff;
+    --shadow: rgba(0, 0, 0, 0.2);
   }
 
   * {
@@ -405,14 +434,16 @@ input, select, textarea {
     @apply antialiased bg-background text-foreground;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 16px;
-    color: #1f2937;
+    color: var(--text-primary);
+    background-color: var(--background);
+    transition: background-color var(--transition-normal) ease;
   }
   
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Inter', sans-serif;
     font-weight: 600;
     line-height: 1.3;
-    color: #111827;
+    color: var(--text-primary);
   }
   
   h1 { font-size: 2rem; }
@@ -422,5 +453,28 @@ input, select, textarea {
   
   p, span, div {
     font-family: 'Inter', sans-serif;
+  }
+
+  /* Add animations for page transitions */
+  .page-transition-enter {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  
+  .page-transition-enter-active {
+    opacity: 1;
+    transform: translateY(0);
+    transition: opacity var(--transition-normal) ease, transform var(--transition-normal) ease;
+  }
+  
+  .page-transition-exit {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  
+  .page-transition-exit-active {
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity var(--transition-normal) ease, transform var(--transition-normal) ease;
   }
 }

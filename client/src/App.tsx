@@ -21,6 +21,7 @@ import { AuthProvider } from "./hooks/use-auth";
 import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
 import ChatbotComponent from "./components/chatbot/ChatbotComponent";
 import { TranslationProvider } from "./contexts/TranslationContext";
+import { ThemeProvider } from "./components/theme/theme-provider";
 
 function App() {
   const [location] = useLocation();
@@ -43,132 +44,134 @@ function App() {
   const shouldHideChatbot = hideChatbotRoutes.includes(location) || isAdminRoute;
   
   return (
-    <AuthProvider>
-      <TranslationProvider>
-        {/* Global styles to fix z-index issues */}
-        <style dangerouslySetInnerHTML={{
-          __html: `
-            /* Force dropdown menus to have higher z-index than maps */
-            [data-radix-popper-content-wrapper] {
-              z-index: 9999 !important;
-            }
+    <ThemeProvider>
+      <AuthProvider>
+        <TranslationProvider>
+          {/* Global styles to fix z-index issues */}
+          <style dangerouslySetInnerHTML={{
+            __html: `
+              /* Force dropdown menus to have higher z-index than maps */
+              [data-radix-popper-content-wrapper] {
+                z-index: 9999 !important;
+              }
+              
+              /* Lower z-index for maps and containers */
+              .leaflet-container,
+              .leaflet-pane,
+              .leaflet-top,
+              .leaflet-bottom,
+              .leaflet-control,
+              #maharashtra-map-preview {
+                z-index: 1 !important;
+              }
+              
+              /* Ensure the dropdown doesn't get cut off */
+              [data-state="open"].Select-content {
+                overflow: visible !important;
+              }
+            `
+          }} />
+          
+          <Switch>
+            {/* Public routes */}
+            <Route path="/" component={LoginPage} />
+            <Route path="/login" component={LoginPage} />
+            <Route path="/user-login" component={UserLoginPage} />
+            <Route path="/register" component={RegisterPage} />
+            <Route path="/forgot-password" component={ForgotPasswordPage} />
+            <Route path="/admin" component={Admin} />
             
-            /* Lower z-index for maps and containers */
-            .leaflet-container,
-            .leaflet-pane,
-            .leaflet-top,
-            .leaflet-bottom,
-            .leaflet-control,
-            #maharashtra-map-preview {
-              z-index: 1 !important;
-            }
+            {/* User protected routes */}
+            <Route path="/dashboard">
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/schemes">
+              <ProtectedRoute>
+                <Schemes />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/regions">
+              <ProtectedRoute>
+                <Regions />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/reports">
+              <ProtectedRoute>
+                <Reports />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/settings">
+              <ProtectedRoute>
+                <Settings />
+              </ProtectedRoute>
+            </Route>
+            <Route path="/lpcd">
+              <ProtectedRoute>
+                <LpcdPage />
+              </ProtectedRoute>
+            </Route>
             
-            /* Ensure the dropdown doesn't get cut off */
-            [data-state="open"].Select-content {
-              overflow: visible !important;
-            }
-          `
-        }} />
-        
-        <Switch>
-          {/* Public routes */}
-          <Route path="/" component={LoginPage} />
-          <Route path="/login" component={LoginPage} />
-          <Route path="/user-login" component={UserLoginPage} />
-          <Route path="/register" component={RegisterPage} />
-          <Route path="/forgot-password" component={ForgotPasswordPage} />
-          <Route path="/admin" component={Admin} />
+            <Route path="/chlorine">
+              <ProtectedRoute>
+                <ChlorinePage />
+              </ProtectedRoute>
+            </Route>
+            
+            <Route path="/chlorine/import">
+              <ProtectedRoute>
+                <ChlorineImport />
+              </ProtectedRoute>
+            </Route>
+            
+            <Route path="/pressure">
+              <ProtectedRoute>
+                <PressurePage />
+              </ProtectedRoute>
+            </Route>
+            
+            <Route path="/map-preview">
+              <ProtectedRoute>
+                <MapPreviewPage />
+              </ProtectedRoute>
+            </Route>
+            
+            {/* Admin protected routes */}
+            <Route path="/admin/dashboard">
+              <ProtectedRoute>
+                <AdminDashboard />
+              </ProtectedRoute>
+            </Route>
+            
+            <Route path="/admin/import-data">
+              <ProtectedRoute>
+                <ImportDataPage />
+              </ProtectedRoute>
+            </Route>
+            
+            <Route path="/admin/chlorine-import">
+              <ProtectedRoute>
+                <ChlorineImport />
+              </ProtectedRoute>
+            </Route>
+            
+            {/* Fallback route */}
+            <Route component={NotFound} />
+          </Switch>
           
-          {/* User protected routes */}
-          <Route path="/dashboard">
-            <ProtectedRoute>
-              <Dashboard />
-            </ProtectedRoute>
-          </Route>
-          <Route path="/schemes">
-            <ProtectedRoute>
-              <Schemes />
-            </ProtectedRoute>
-          </Route>
-          <Route path="/regions">
-            <ProtectedRoute>
-              <Regions />
-            </ProtectedRoute>
-          </Route>
-          <Route path="/reports">
-            <ProtectedRoute>
-              <Reports />
-            </ProtectedRoute>
-          </Route>
-          <Route path="/settings">
-            <ProtectedRoute>
-              <Settings />
-            </ProtectedRoute>
-          </Route>
-          <Route path="/lpcd">
-            <ProtectedRoute>
-              <LpcdPage />
-            </ProtectedRoute>
-          </Route>
-          
-          <Route path="/chlorine">
-            <ProtectedRoute>
-              <ChlorinePage />
-            </ProtectedRoute>
-          </Route>
-          
-          <Route path="/chlorine/import">
-            <ProtectedRoute>
-              <ChlorineImport />
-            </ProtectedRoute>
-          </Route>
-          
-          <Route path="/pressure">
-            <ProtectedRoute>
-              <PressurePage />
-            </ProtectedRoute>
-          </Route>
-          
-          <Route path="/map-preview">
-            <ProtectedRoute>
-              <MapPreviewPage />
-            </ProtectedRoute>
-          </Route>
-          
-          {/* Admin protected routes */}
-          <Route path="/admin/dashboard">
-            <ProtectedRoute>
-              <AdminDashboard />
-            </ProtectedRoute>
-          </Route>
-          
-          <Route path="/admin/import-data">
-            <ProtectedRoute>
-              <ImportDataPage />
-            </ProtectedRoute>
-          </Route>
-          
-          <Route path="/admin/chlorine-import">
-            <ProtectedRoute>
-              <ChlorineImport />
-            </ProtectedRoute>
-          </Route>
-          
-          {/* Fallback route */}
-          <Route component={NotFound} />
-        </Switch>
-        
-        {/* JJM Assistant Chatbot (conditionally rendered based on route) */}
-        {!shouldHideChatbot && (
-          <FilterContextProvider 
-            setSelectedRegion={() => {}} 
-            setStatusFilter={() => {}}
-          >
-            <ChatbotComponent />
-          </FilterContextProvider>
-        )}
-      </TranslationProvider>
-    </AuthProvider>
+          {/* JJM Assistant Chatbot (conditionally rendered based on route) */}
+          {!shouldHideChatbot && (
+            <FilterContextProvider 
+              setSelectedRegion={() => {}} 
+              setStatusFilter={() => {}}
+            >
+              <ChatbotComponent />
+            </FilterContextProvider>
+          )}
+        </TranslationProvider>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 
