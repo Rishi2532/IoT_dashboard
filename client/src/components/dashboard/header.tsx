@@ -116,9 +116,9 @@ export default function Header() {
               title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
             >
               {theme === 'light' ? (
-                <Moon className="h-4 w-4 transition-all duration-300 animate-pulse" />
+                <Moon className="h-4 w-4 transition-all duration-300" />
               ) : (
-                <Sun className="h-4 w-4 transition-all duration-300 animate-spin-slow" />
+                <Sun className="h-4 w-4 transition-all duration-300" />
               )}
             </Button>
             

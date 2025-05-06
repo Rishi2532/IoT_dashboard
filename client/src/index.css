@@ -709,22 +709,22 @@ input, select, textarea {
     --sidebar-border: 217.2 32.6% 17.5%;
     --sidebar-ring: 224.3 76.3% 48%;
     
-    /* Custom theming variables - dark mode */
-    --background-custom: #111827;
-    --card-bg: #1f2937;
+    /* Custom theming variables - dark mode with lighter colors */
+    --background-custom: #2d3748;
+    --card-bg: #374151;
     --text-primary: #f9fafb;
     --text-secondary: #e5e7eb; 
-    --border-color: #374151;
-    --hover-bg: rgba(30, 58, 138, 0.3);
-    --header-bg: #1e3a8a;
-    --highlight: #1e40af;
+    --border-color: #4b5563;
+    --hover-bg: rgba(96, 165, 250, 0.2);
+    --header-bg: #3b82f6;
+    --highlight: #60a5fa;
     --button-bg: #3b82f6;
     --button-text: #ffffff;
     --shadow: rgba(0, 0, 0, 0.2);
-    --table-header-bg: #1e3a8a;
-    --table-row-odd: #111827;
-    --table-row-even: #1f2937;
-    --table-row-hover: #2563eb;
+    --table-header-bg: #3b82f6;
+    --table-row-odd: #374151;
+    --table-row-even: #4b5563;
+    --table-row-hover: #60a5fa;
   }
 
   * {
@@ -732,11 +732,11 @@ input, select, textarea {
   }
 
   body {
-    @apply antialiased bg-background text-foreground;
+    @apply antialiased;
     font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
     font-size: 16px;
     color: var(--text-primary);
-    background-color: var(--background);
+    background-color: var(--background-custom);
     transition: background-color var(--transition-normal) ease;
   }
   
