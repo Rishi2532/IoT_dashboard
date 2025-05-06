@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState } from 'react';
 import { GeoFilterLevel } from '@/components/maps/EnhancedGeoFilterMap';
 
-// Define the structure of our geographic filter
+// Define the structure of our filter state
 export interface GeoFilter {
   level: GeoFilterLevel;
   region: string | null;
@@ -12,7 +12,7 @@ export interface GeoFilter {
   village: string | null;
 }
 
-// Define the context type including the state and update function
+// Define the context type
 export interface GeoFilterContextType {
   filter: GeoFilter;
   setFilter: React.Dispatch<React.SetStateAction<GeoFilter>>;
@@ -33,11 +33,12 @@ const GeoFilterContext = createContext<GeoFilterContextType>({
   },
   setFilter: () => {},
   isFiltering: false,
-  clearFilter: () => {},
+  clearFilter: () => {}
 });
 
-// Provider component to wrap around components that need access to the context
+// Provider component to wrap the app
 export const GeoFilterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  // Initialize filter state
   const [filter, setFilter] = useState<GeoFilter>({
     level: 'region',
     region: null,
@@ -48,15 +49,9 @@ export const GeoFilterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     village: null
   });
 
-  // Check if any filter is active
-  const isFiltering = Boolean(
-    filter.region || 
-    filter.division || 
-    filter.subdivision || 
-    filter.circle || 
-    filter.block || 
-    filter.village
-  );
+  // Determine if any filtering is active
+  const isFiltering = !!filter.region || !!filter.division || !!filter.subdivision || 
+                     !!filter.circle || !!filter.block || !!filter.village;
 
   // Function to clear all filters
   const clearFilter = () => {
@@ -71,6 +66,7 @@ export const GeoFilterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
   };
 
+  // Provide the context values to children
   return (
     <GeoFilterContext.Provider value={{ filter, setFilter, isFiltering, clearFilter }}>
       {children}
@@ -78,7 +74,7 @@ export const GeoFilterProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   );
 };
 
-// Custom hook to make using the context easier
+// Custom hook for accessing the geo filter context
 export const useGeoFilter = () => useContext(GeoFilterContext);
 
 export default GeoFilterContext;

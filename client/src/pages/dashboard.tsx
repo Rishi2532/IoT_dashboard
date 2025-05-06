@@ -33,13 +33,14 @@ export default function Dashboard() {
     null,
   );
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showEnhancedMap, setShowEnhancedMap] = useState(false);
   const { toast } = useToast();
   
   // Map configuration
   const mapRef = useRef(null);
   
   // Get geographic filter context
-  const { filter, isFiltering } = useGeoFilter();
+  const { filter, isFiltering, clearFilter } = useGeoFilter();
   
   // Use our geographic filtered schemes
   const {
@@ -340,17 +341,13 @@ export default function Dashboard() {
           <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
               {/* Enhanced Geographic Filter Map */}
-              <div className="map-container" id="maharashtra-map-preview">
+              <div className="map-container" id="maharashtra-map-preview" style={{ height: '300px' }}>
                 {/* Add the enhanced map with GeoJSON data */}
                 <EnhancedGeoFilterMap 
-                  geoJsonData={getMaharashtraGeoJson()}
-                  height="300px"
-                  initialZoom={7}
-                  showTooltips={true}
-                  onFeatureClick={(properties) => {
-                    if (properties.region) {
-                      handleRegionChange(properties.region);
-                    }
+                  mapHeight="300px"
+                  className="h-full w-full"
+                  onRegionClick={(regionName) => {
+                    handleRegionChange(regionName);
                   }}
                 />
               </div>

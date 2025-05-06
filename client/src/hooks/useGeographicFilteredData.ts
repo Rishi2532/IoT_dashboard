@@ -1,20 +1,17 @@
 import { useQuery } from '@tanstack/react-query';
-import { SchemeStatus } from '@shared/schema';
 import { useGeoFilter } from '@/contexts/GeoFilterContext';
+import { SchemeStatus } from '@/types';
 
 /**
- * Custom hook to fetch schemes based on the current geographic filter
+ * Hook to fetch scheme data filtered by geographic area
+ * This uses our GeoFilterContext to determine which geographic filters to apply
  */
 export const useGeographicFilteredSchemes = () => {
   const { filter, isFiltering } = useGeoFilter();
-
+  
   return useQuery<SchemeStatus[]>({
-    queryKey: ['/api/schemes/geo-filtered', filter],
+    queryKey: ['/api/schemes/geographic', filter],
     queryFn: async () => {
-      // If no filtering is active, return empty array
-      if (!isFiltering) return [];
-
-      // Build the query parameters based on the active filters
       const params = new URLSearchParams();
       
       if (filter.region) params.append('region', filter.region);
@@ -24,48 +21,12 @@ export const useGeographicFilteredSchemes = () => {
       if (filter.block) params.append('block', filter.block);
       if (filter.village) params.append('village', filter.village);
       
-      // Add the filter level for backend logic
       params.append('level', filter.level);
       
-      // Make the API request with the constructed parameters
       const response = await fetch(`/api/schemes/geographic?${params.toString()}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch filtered schemes');
-      }
-      
-      return response.json();
-    },
-    enabled: isFiltering, // Only run the query if filtering is active
-  });
-};
-
-/**
- * Custom hook to fetch water scheme data based on the current geographic filter
- */
-export const useGeographicFilteredWaterData = () => {
-  const { filter, isFiltering } = useGeoFilter();
-
-  return useQuery({
-    queryKey: ['/api/water-data/geo-filtered', filter],
-    queryFn: async () => {
-      if (!isFiltering) return [];
-
-      const params = new URLSearchParams();
-      
-      if (filter.region) params.append('region', filter.region);
-      if (filter.division) params.append('division', filter.division);
-      if (filter.subdivision) params.append('subdivision', filter.subdivision);
-      if (filter.circle) params.append('circle', filter.circle);
-      if (filter.block) params.append('block', filter.block);
-      if (filter.village) params.append('village', filter.village);
-      
-      params.append('level', filter.level);
-      
-      const response = await fetch(`/api/water-scheme-data?${params.toString()}`);
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch filtered water data');
       }
       
       return response.json();
@@ -75,16 +36,78 @@ export const useGeographicFilteredWaterData = () => {
 };
 
 /**
- * Custom hook to fetch chlorine data based on the current geographic filter
+ * Hook to fetch village data filtered by geographic area
+ */
+export const useGeographicFilteredVillages = () => {
+  const { filter, isFiltering } = useGeoFilter();
+  
+  return useQuery({
+    queryKey: ['/api/villages/geographic', filter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      if (filter.region) params.append('region', filter.region);
+      if (filter.division) params.append('division', filter.division);
+      if (filter.subdivision) params.append('subdivision', filter.subdivision);
+      if (filter.circle) params.append('circle', filter.circle);
+      if (filter.block) params.append('block', filter.block);
+      if (filter.village) params.append('village', filter.village);
+      
+      params.append('level', filter.level);
+      
+      const response = await fetch(`/api/villages/geographic?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch filtered villages');
+      }
+      
+      return response.json();
+    },
+    enabled: isFiltering,
+  });
+};
+
+/**
+ * Hook to fetch LPCD (Liters Per Capita per Day) data filtered by geographic area
+ */
+export const useGeographicFilteredLpcdData = () => {
+  const { filter, isFiltering } = useGeoFilter();
+  
+  return useQuery({
+    queryKey: ['/api/lpcd/geographic', filter],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      
+      if (filter.region) params.append('region', filter.region);
+      if (filter.division) params.append('division', filter.division);
+      if (filter.subdivision) params.append('subdivision', filter.subdivision);
+      if (filter.circle) params.append('circle', filter.circle);
+      if (filter.block) params.append('block', filter.block);
+      if (filter.village) params.append('village', filter.village);
+      
+      params.append('level', filter.level);
+      
+      const response = await fetch(`/api/lpcd/geographic?${params.toString()}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch filtered LPCD data');
+      }
+      
+      return response.json();
+    },
+    enabled: isFiltering,
+  });
+};
+
+/**
+ * Hook to fetch chlorine data filtered by geographic area
  */
 export const useGeographicFilteredChlorineData = () => {
   const { filter, isFiltering } = useGeoFilter();
-
+  
   return useQuery({
-    queryKey: ['/api/chlorine-data/geo-filtered', filter],
+    queryKey: ['/api/chlorine/geographic', filter],
     queryFn: async () => {
-      if (!isFiltering) return [];
-
       const params = new URLSearchParams();
       
       if (filter.region) params.append('region', filter.region);
