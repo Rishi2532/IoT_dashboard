@@ -87,7 +87,17 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
   const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
   
   // Define style based on feature properties
-  const getFeatureStyle = (feature: Feature<Geometry, any>) => {
+  const getFeatureStyle = (feature: Feature<Geometry, any> | undefined) => {
+    if (!feature || !feature.properties) {
+      return {
+        fillColor: '#3182CE',
+        weight: 1,
+        opacity: 1,
+        color: '#2B6CB0',
+        fillOpacity: 0.3
+      };
+    }
+
     const isHovered = hoveredFeature === feature.properties.name;
     const isSelected = feature.properties.name === filter.region 
       || feature.properties.name === filter.division

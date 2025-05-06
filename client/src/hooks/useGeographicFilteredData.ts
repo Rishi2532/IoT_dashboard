@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { SchemeStatus } from '@shared/schema';
 import { useGeoFilter } from '@/contexts/GeoFilterContext';
 
 /**
@@ -6,49 +7,36 @@ import { useGeoFilter } from '@/contexts/GeoFilterContext';
  */
 export const useGeographicFilteredSchemes = () => {
   const { filter, isFiltering } = useGeoFilter();
-  
-  return useQuery({
-    queryKey: ['geographic-schemes', filter],
+
+  return useQuery<SchemeStatus[]>({
+    queryKey: ['/api/schemes/geo-filtered', filter],
     queryFn: async () => {
-      // If there's no active filtering, return empty array
-      if (!isFiltering || filter.level === 'none') {
-        return [];
-      }
-      
-      // Build query parameters based on the current filter
+      // If no filtering is active, return empty array
+      if (!isFiltering) return [];
+
+      // Build the query parameters based on the active filters
       const params = new URLSearchParams();
       
-      if (filter.region) {
-        params.append('region', filter.region);
-      }
+      if (filter.region) params.append('region', filter.region);
+      if (filter.division) params.append('division', filter.division);
+      if (filter.subdivision) params.append('subdivision', filter.subdivision);
+      if (filter.circle) params.append('circle', filter.circle);
+      if (filter.block) params.append('block', filter.block);
+      if (filter.village) params.append('village', filter.village);
       
-      if (filter.division) {
-        params.append('division', filter.division);
-      }
+      // Add the filter level for backend logic
+      params.append('level', filter.level);
       
-      if (filter.subdivision) {
-        params.append('subdivision', filter.subdivision);
-      }
-      
-      if (filter.circle) {
-        params.append('circle', filter.circle);
-      }
-      
-      if (filter.block) {
-        params.append('block', filter.block);
-      }
-      
-      // Make the API call with the constructed parameters
-      const response = await fetch(`/api/schemes/geographic?${params.toString()}`);
+      // Make the API request with the constructed parameters
+      const response = await fetch(`/api/schemes/filtered?${params.toString()}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch geographically filtered schemes');
+        throw new Error('Failed to fetch filtered schemes');
       }
       
       return response.json();
     },
-    enabled: isFiltering && filter.level !== 'none',
-    refetchOnWindowFocus: false,
+    enabled: isFiltering, // Only run the query if filtering is active
   });
 };
 
@@ -57,35 +45,32 @@ export const useGeographicFilteredSchemes = () => {
  */
 export const useGeographicFilteredWaterData = () => {
   const { filter, isFiltering } = useGeoFilter();
-  
+
   return useQuery({
-    queryKey: ['geographic-water-data', filter],
+    queryKey: ['/api/water-data/geo-filtered', filter],
     queryFn: async () => {
-      // If there's no active filtering, return empty array
-      if (!isFiltering || filter.level === 'none') {
-        return [];
-      }
-      
-      // Build query parameters based on the current filter
+      if (!isFiltering) return [];
+
       const params = new URLSearchParams();
       
-      if (filter.region) {
-        params.append('region', filter.region);
-      }
+      if (filter.region) params.append('region', filter.region);
+      if (filter.division) params.append('division', filter.division);
+      if (filter.subdivision) params.append('subdivision', filter.subdivision);
+      if (filter.circle) params.append('circle', filter.circle);
+      if (filter.block) params.append('block', filter.block);
+      if (filter.village) params.append('village', filter.village);
       
-      // Add other filters if needed for water data filtering
+      params.append('level', filter.level);
       
-      // Make the API call with the constructed parameters
-      const response = await fetch(`/api/water-scheme-data?${params.toString()}`);
+      const response = await fetch(`/api/water-data/filtered?${params.toString()}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch geographically filtered water scheme data');
+        throw new Error('Failed to fetch filtered water data');
       }
       
       return response.json();
     },
-    enabled: isFiltering && filter.level !== 'none',
-    refetchOnWindowFocus: false,
+    enabled: isFiltering,
   });
 };
 
@@ -94,34 +79,31 @@ export const useGeographicFilteredWaterData = () => {
  */
 export const useGeographicFilteredChlorineData = () => {
   const { filter, isFiltering } = useGeoFilter();
-  
+
   return useQuery({
-    queryKey: ['geographic-chlorine-data', filter],
+    queryKey: ['/api/chlorine-data/geo-filtered', filter],
     queryFn: async () => {
-      // If there's no active filtering, return empty array
-      if (!isFiltering || filter.level === 'none') {
-        return [];
-      }
-      
-      // Build query parameters based on the current filter
+      if (!isFiltering) return [];
+
       const params = new URLSearchParams();
       
-      if (filter.region) {
-        params.append('region', filter.region);
-      }
+      if (filter.region) params.append('region', filter.region);
+      if (filter.division) params.append('division', filter.division);
+      if (filter.subdivision) params.append('subdivision', filter.subdivision);
+      if (filter.circle) params.append('circle', filter.circle);
+      if (filter.block) params.append('block', filter.block);
+      if (filter.village) params.append('village', filter.village);
       
-      // Add other filters if needed for chlorine data filtering
+      params.append('level', filter.level);
       
-      // Make the API call with the constructed parameters
-      const response = await fetch(`/api/chlorine-data?${params.toString()}`);
+      const response = await fetch(`/api/chlorine-data/filtered?${params.toString()}`);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch geographically filtered chlorine data');
+        throw new Error('Failed to fetch filtered chlorine data');
       }
       
       return response.json();
     },
-    enabled: isFiltering && filter.level !== 'none',
-    refetchOnWindowFocus: false,
+    enabled: isFiltering,
   });
 };

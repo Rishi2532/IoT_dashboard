@@ -1,58 +1,84 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState } from 'react';
+import { GeoFilterLevel } from '@/components/maps/EnhancedGeoFilterMap';
 
-// Define the geographic filter types
-export type GeoFilterLevel = 'region' | 'division' | 'subdivision' | 'circle' | 'block' | 'village' | 'none';
-
+// Define the structure of our geographic filter
 export interface GeoFilter {
   level: GeoFilterLevel;
-  region?: string;
-  division?: string;
-  subdivision?: string;
-  circle?: string;
-  block?: string;
-  village?: string;
+  region: string | null;
+  division: string | null;
+  subdivision: string | null;
+  circle: string | null;
+  block: string | null;
+  village: string | null;
 }
 
-interface GeoFilterContextType {
+// Define the context type including the state and update function
+export interface GeoFilterContextType {
   filter: GeoFilter;
   setFilter: React.Dispatch<React.SetStateAction<GeoFilter>>;
-  resetFilter: () => void;
   isFiltering: boolean;
+  clearFilter: () => void;
 }
 
 // Create the context with default values
 const GeoFilterContext = createContext<GeoFilterContextType>({
-  filter: { level: 'none' },
+  filter: {
+    level: 'region',
+    region: null,
+    division: null,
+    subdivision: null,
+    circle: null,
+    block: null,
+    village: null
+  },
   setFilter: () => {},
-  resetFilter: () => {},
-  isFiltering: false
+  isFiltering: false,
+  clearFilter: () => {},
 });
 
-// Custom hook to use the context
-export const useGeoFilter = () => useContext(GeoFilterContext);
+// Provider component to wrap around components that need access to the context
+export const GeoFilterProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [filter, setFilter] = useState<GeoFilter>({
+    level: 'region',
+    region: null,
+    division: null,
+    subdivision: null,
+    circle: null,
+    block: null,
+    village: null
+  });
 
-interface GeoFilterProviderProps {
-  children: ReactNode;
-}
+  // Check if any filter is active
+  const isFiltering = Boolean(
+    filter.region || 
+    filter.division || 
+    filter.subdivision || 
+    filter.circle || 
+    filter.block || 
+    filter.village
+  );
 
-// Provider component
-export const GeoFilterProvider: React.FC<GeoFilterProviderProps> = ({ children }) => {
-  const [filter, setFilter] = useState<GeoFilter>({ level: 'none' });
-  const [isFiltering, setIsFiltering] = useState(false);
-
-  // Reset filter to default state
-  const resetFilter = () => {
-    setFilter({ level: 'none' });
+  // Function to clear all filters
+  const clearFilter = () => {
+    setFilter({
+      level: 'region',
+      region: null,
+      division: null,
+      subdivision: null,
+      circle: null,
+      block: null,
+      village: null
+    });
   };
 
-  // Update isFiltering based on filter state
-  useEffect(() => {
-    setIsFiltering(filter.level !== 'none');
-  }, [filter]);
-
   return (
-    <GeoFilterContext.Provider value={{ filter, setFilter, resetFilter, isFiltering }}>
+    <GeoFilterContext.Provider value={{ filter, setFilter, isFiltering, clearFilter }}>
       {children}
     </GeoFilterContext.Provider>
   );
 };
+
+// Custom hook to make using the context easier
+export const useGeoFilter = () => useContext(GeoFilterContext);
+
+export default GeoFilterContext;

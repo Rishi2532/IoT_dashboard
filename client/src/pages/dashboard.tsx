@@ -24,6 +24,8 @@ import EnhancedGeoFilterMap from "@/components/maps/EnhancedGeoFilterMap";
 import { useGeoFilter } from "@/contexts/GeoFilterContext";
 // Import data hooks for geographic filtering
 import { useGeographicFilteredSchemes } from "@/hooks/useGeographicFilteredData";
+// Import GeoJSON data for our map
+import getMaharashtraGeoJson from "@/lib/maharashtra-geojson";
 
 export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState("all");
@@ -337,12 +339,19 @@ export default function Dashboard() {
           </div>
           <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
-              {/* GitHub-style Map Preview with region filtering */}
+              {/* Enhanced Geographic Filter Map */}
               <div className="map-container" id="maharashtra-map-preview">
-                <GitHubStyleMapPreview 
-                  title="maharashtra.topo.json"
-                  description="Add division maps for states"
-                  onRegionClick={handleRegionChange}
+                {/* Add the enhanced map with GeoJSON data */}
+                <EnhancedGeoFilterMap 
+                  geoJsonData={getMaharashtraGeoJson()}
+                  height="300px"
+                  initialZoom={7}
+                  showTooltips={true}
+                  onFeatureClick={(properties) => {
+                    if (properties.region) {
+                      handleRegionChange(properties.region);
+                    }
+                  }}
                 />
               </div>
               
