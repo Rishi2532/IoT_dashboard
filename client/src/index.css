@@ -43,9 +43,23 @@
     background-color: #f0f7ff;
   }
   
-  /* Hover effect */
+  /* Enhanced hover effect for tables */
+  table tbody tr {
+    transition: all 0.2s ease-in-out;
+    position: relative;
+  }
+  
   table tbody tr:hover {
-    background-color: #e6f0fd !important;
+    background-color: #dbeafe !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    z-index: 10;
+  }
+  
+  /* Highlight cell content on hover */
+  table tbody tr:hover td {
+    color: #1e40af !important;
+    font-weight: 500 !important;
   }
 }
 
@@ -159,15 +173,57 @@ area {
 .data-display-card {
   border-radius: 10px !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-  transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out !important;
+  transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out, border-color 0.15s ease !important;
   padding: 1.25rem !important;
   border: 1px solid rgba(0, 0, 0, 0.08) !important;
   background: white !important;
+  position: relative;
+  overflow: hidden;
 }
 
 .data-display-card:hover {
   transform: translateY(-2px) !important;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08) !important;
+  border-color: #60a5fa !important;
+}
+
+/* Enhanced hover for scheme and village items */
+.scheme-item, .village-item, .water-scheme-item, .chlorine-item, .pressure-item {
+  transition: all 0.2s ease-in-out !important;
+  border: 1px solid transparent !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.scheme-item:hover, .village-item:hover, .water-scheme-item:hover, .chlorine-item:hover, .pressure-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  border-color: #60a5fa !important;
+  z-index: 5;
+}
+
+.scheme-item:hover::before, .village-item:hover::before, 
+.water-scheme-item:hover::before, .chlorine-item:hover::before, .pressure-item:hover::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, rgba(219, 234, 254, 0.4), transparent);
+  z-index: -1;
+}
+
+/* Highlight important data on hover */
+.scheme-item:hover .scheme-name, .village-item:hover .village-name,
+.water-scheme-item:hover .scheme-name, .chlorine-item:hover .village-name, .pressure-item:hover .village-name {
+  color: #1e40af !important;
+  font-weight: 600 !important;
+}
+
+.scheme-item:hover .metric-value, .village-item:hover .metric-value,
+.water-scheme-item:hover .metric-value, .chlorine-item:hover .metric-value, .pressure-item:hover .metric-value {
+  color: #2563eb !important;
 }
 
 /* Card titles for scheme, LPCD, chlorine and pressure sections */

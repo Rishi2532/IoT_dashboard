@@ -215,7 +215,7 @@ export default function SchemeTable({
                   currentItems.map((scheme) => (
                     <TableRow
                       key={`${scheme.scheme_id}-${scheme.block || 'default'}`}
-                      className="hover:bg-blue-50 transition-colors duration-150"
+                      className="scheme-item hover:bg-blue-50 transition-all duration-150"
                     >
                       <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100">
                         <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-mono">
