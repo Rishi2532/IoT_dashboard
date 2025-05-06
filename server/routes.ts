@@ -688,6 +688,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // Get schemes by geographic filter (region, division, subdivision, circle, block)
+  app.get("/api/schemes/geographic", async (req, res) => {
+    try {
+      // Extract geographic filters from query params
+      const region = req.query.region as string || 'all';
+      const division = req.query.division as string || 'all';
+      const subdivision = req.query.subdivision as string || 'all';
+      const circle = req.query.circle as string || 'all';
+      const block = req.query.block as string || 'all';
+      
+      console.log(`Getting schemes with geographic filters: 
+        region=${region}, division=${division}, subdivision=${subdivision}, 
+        circle=${circle}, block=${block}`);
+      
+      // Start with all schemes
+      let schemes = await storage.getAllSchemes();
+      
+      // Apply filters
+      if (region !== 'all') {
+        schemes = schemes.filter(scheme => scheme.region === region);
+      }
+      
+      if (division !== 'all') {
+        schemes = schemes.filter(scheme => scheme.division === division);
+      }
+      
+      if (subdivision !== 'all') {
+        schemes = schemes.filter(scheme => scheme.sub_division === subdivision);
+      }
+      
+      if (circle !== 'all') {
+        schemes = schemes.filter(scheme => scheme.circle === circle);
+      }
+      
+      if (block !== 'all') {
+        schemes = schemes.filter(scheme => scheme.block === block);
+      }
+      
+      console.log(`Found ${schemes.length} schemes matching geographic filters`);
+      
+      // Return the filtered schemes
+      return res.json(schemes);
+    } catch (error) {
+      console.error("Error getting schemes by geographic filter:", error);
+      res.status(500).json({ message: "Failed to fetch schemes by geographic filter" });
+    }
+  });
+  
   // Get blocks for a specific scheme name
   app.get("/api/schemes/blocks/:name", async (req, res) => {
     try {
