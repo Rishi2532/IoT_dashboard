@@ -1300,39 +1300,41 @@ const EnhancedLpcdDashboard = () => {
                 {filteredSchemes.length > 0 ? (
                   <>
                     <div className="rounded-md border">
-                      <Table>
+                      <Table className="border-collapse">
                         <TableHeader>
-                          <TableRow>
-                            <TableHead className="w-[50px]">#</TableHead>
-                            <TableHead>Region</TableHead>
-                            <TableHead>Scheme Name</TableHead>
-                            <TableHead>Village</TableHead>
-                            <TableHead>Population</TableHead>
-                            <TableHead>Current LPCD</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead className="w-[120px]">Actions</TableHead>
+                          <TableRow className="bg-blue-50 hover:bg-blue-100">
+                            <TableHead className="w-[50px] border-b border-blue-200">#</TableHead>
+                            <TableHead className="border-b border-blue-200">Region</TableHead>
+                            <TableHead className="border-b border-blue-200">Scheme Name</TableHead>
+                            <TableHead className="border-b border-blue-200">Village</TableHead>
+                            <TableHead className="border-b border-blue-200">Population</TableHead>
+                            <TableHead className="border-b border-blue-200">Current LPCD</TableHead>
+                            <TableHead className="border-b border-blue-200">Status</TableHead>
+                            <TableHead className="w-[120px] border-b border-blue-200">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {paginatedSchemes.map((scheme, index) => {
                             const lpcdValue = getLatestLpcdValue(scheme);
+                            const isEven = index % 2 === 0;
                             return (
                               <TableRow
                                 key={`${scheme.scheme_id}-${scheme.village_name}`}
+                                className={`${isEven ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100 transition-colors`}
                               >
-                                <TableCell className="font-medium">
+                                <TableCell className="font-medium border-b border-blue-200">
                                   {(page - 1) * itemsPerPage + index + 1}
                                 </TableCell>
-                                <TableCell>{scheme.region}</TableCell>
-                                <TableCell>{scheme.scheme_name}</TableCell>
-                                <TableCell>{scheme.village_name}</TableCell>
-                                <TableCell>
+                                <TableCell className="border-b border-blue-200">{scheme.region}</TableCell>
+                                <TableCell className="border-b border-blue-200">{scheme.scheme_name}</TableCell>
+                                <TableCell className="border-b border-blue-200">{scheme.village_name}</TableCell>
+                                <TableCell className="border-b border-blue-200">
                                   {scheme.population?.toLocaleString() || "N/A"}
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="border-b border-blue-200">
                                   <LpcdBadge value={lpcdValue} />
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="border-b border-blue-200">
                                   <Badge
                                     variant="outline"
                                     className={`${getLpcdStatusColor(lpcdValue)} border-0`}
@@ -1340,13 +1342,14 @@ const EnhancedLpcdDashboard = () => {
                                     {getLpcdStatusText(lpcdValue)}
                                   </Badge>
                                 </TableCell>
-                                <TableCell>
+                                <TableCell className="border-b border-blue-200">
                                   <div className="flex space-x-1">
                                     <Button
                                       variant="ghost"
                                       size="sm"
                                       onClick={() => handleViewVillage(scheme)}
                                       title="View Details"
+                                      className="rounded-full"
                                     >
                                       <Eye className="h-4 w-4" />
                                     </Button>
@@ -1356,6 +1359,7 @@ const EnhancedLpcdDashboard = () => {
                                         size="sm"
                                         onClick={() => window.open(scheme.dashboard_url, '_blank')}
                                         title="Open PI Vision Dashboard"
+                                        className="rounded-full"
                                       >
                                         <BarChart className="h-4 w-4" />
                                       </Button>

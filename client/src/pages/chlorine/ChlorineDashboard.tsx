@@ -791,32 +791,31 @@ const ChlorineDashboard: React.FC = () => {
           ) : (
             <>
               <div className="overflow-hidden rounded-md">
-                <Table>
-                  <TableHeader className="bg-blue-50/50">
-                    <TableRow className="hover:bg-blue-50/80">
-                      <TableHead className="font-semibold text-blue-800">
+                <Table className="border-collapse">
+                  <TableHeader className="bg-blue-50">
+                    <TableRow className="hover:bg-blue-100">
+                      <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                         Region
                       </TableHead>
-                      <TableHead className="font-semibold text-blue-800">
+                      <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                         Scheme ID
                       </TableHead>
-                      <TableHead className="font-semibold text-blue-800">
+                      <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                         Scheme Name
                       </TableHead>
-                      <TableHead className="font-semibold text-blue-800">
+                      <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                         Village
                       </TableHead>
-                      <TableHead className="font-semibold text-blue-800">
+                      <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                         ESR Name
                       </TableHead>
-                      <TableHead className="font-semibold text-blue-800">
+                      <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                         Latest Chlorine (mg/l)
                       </TableHead>
-
-                      <TableHead className="font-semibold text-blue-800">
+                      <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                         Status
                       </TableHead>
-                      <TableHead className="font-semibold text-blue-800">
+                      <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                         Action
                       </TableHead>
                     </TableRow>
@@ -852,21 +851,25 @@ const ChlorineDashboard: React.FC = () => {
                             "bg-orange-50/40 hover:bg-orange-50";
                       }
 
+                      // Add alternating row colors
+                      const isEven = index % 2 === 0;
+                      const baseRowClass = isEven ? "bg-white" : "bg-blue-50";
+                      
                       return (
                         <TableRow
                           key={`${item.scheme_id}-${item.village_name}-${item.esr_name}-${index}`}
-                          className={`${rowVariantClass} transition-colors`}
+                          className={`${baseRowClass} hover:bg-blue-100 transition-colors`}
                         >
-                          <TableCell className="font-medium">
+                          <TableCell className="font-medium border-b border-blue-200">
                             {item.region}
                           </TableCell>
-                          <TableCell className="font-mono text-sm">
+                          <TableCell className="font-mono text-sm border-b border-blue-200">
                             {item.scheme_id}
                           </TableCell>
-                          <TableCell>{item.scheme_name}</TableCell>
-                          <TableCell>{item.village_name}</TableCell>
-                          <TableCell>{item.esr_name}</TableCell>
-                          <TableCell className="font-medium">
+                          <TableCell className="border-b border-blue-200">{item.scheme_name}</TableCell>
+                          <TableCell className="border-b border-blue-200">{item.village_name}</TableCell>
+                          <TableCell className="border-b border-blue-200">{item.esr_name}</TableCell>
+                          <TableCell className="font-medium border-b border-blue-200">
                             {latestValue !== null ? (
                               <span
                                 className={
@@ -884,20 +887,20 @@ const ChlorineDashboard: React.FC = () => {
                             )}
                           </TableCell>
 
-                          <TableCell>
+                          <TableCell className="border-b border-blue-200">
                             <Badge
                               className={`${className} ${textColor} flex items-center gap-1 w-fit shadow-sm border`}
                             >
                               {icon} {statusText}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="border-b border-blue-200">
                             <Dialog>
                               <DialogTrigger asChild>
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  className="hover:bg-blue-50 hover:text-blue-700 transition-colors"
+                                  className="hover:bg-blue-50 hover:text-blue-700 transition-colors rounded-full"
                                   onClick={() => setSelectedESR(item)}
                                 >
                                   View
