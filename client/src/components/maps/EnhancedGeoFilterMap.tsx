@@ -1,12 +1,26 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { MapContainer, TileLayer, GeoJSON, useMap, ZoomControl } from 'react-leaflet';
+import React, { useState, useRef, useEffect } from 'react';
+import { MapContainer, TileLayer, GeoJSON, useMap } from 'react-leaflet';
+import { FeatureCollection, Feature, Geometry } from 'geojson';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Feature, FeatureCollection, Geometry } from 'geojson';
-import { useGeoFilter, GeoFilterLevel } from '@/contexts/GeoFilterContext';
-
-// Import custom map tooltip styles
 import './map-tooltip.css';
+import { useGeoFilter } from '@/contexts/GeoFilterContext';
+
+// Make sure Leaflet's default icon images are properly handled
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+let DefaultIcon = L.icon({
+  iconUrl: icon,
+  shadowUrl: iconShadow,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
+
+// Define the zoom level to geographic filter level mapping
+export type GeoFilterLevel = 'region' | 'division' | 'subdivision' | 'circle' | 'block' | 'village' | 'none';
 
 interface EnhancedGeoFilterMapProps {
   geoJsonData: FeatureCollection;
@@ -18,225 +32,155 @@ interface EnhancedGeoFilterMapProps {
   initialZoom?: number;
 }
 
-// Map zoom level to geographic level mapping
-const zoomToGeoLevel: Record<number, GeoFilterLevel> = {
-  7: 'region',
-  8: 'division',
-  9: 'subdivision',
-  10: 'circle',
-  11: 'block',
-  12: 'village'
-};
-
-// Helper component to handle map events
-const MapEvents: React.FC = () => {
+// Component to dynamically update filters based on map zoom level
+const MapZoomHandler: React.FC = () => {
   const map = useMap();
-  const { setFilter } = useGeoFilter();
+  const { filter, setFilter } = useGeoFilter();
   const [currentZoom, setCurrentZoom] = useState(map.getZoom());
-
-  // Function to determine geographic level based on zoom level
+  
+  // Helper function to determine the appropriate filter level based on zoom
   const getGeoLevelFromZoom = (zoom: number): GeoFilterLevel => {
     if (zoom <= 7) return 'region';
+    if (zoom === 8) return 'division';
+    if (zoom === 9) return 'subdivision';
+    if (zoom === 10) return 'circle';
+    if (zoom === 11) return 'block';
     if (zoom >= 12) return 'village';
-    return zoomToGeoLevel[zoom] || 'none';
+    return 'none';
   };
-
+  
   useEffect(() => {
     const handleZoomEnd = () => {
       const newZoom = map.getZoom();
       setCurrentZoom(newZoom);
       
+      // Update the geographic filter level based on zoom
       const geoLevel = getGeoLevelFromZoom(newZoom);
-      console.log(`Zoom level changed to ${newZoom}, geographic level: ${geoLevel}`);
       
-      // Update the filter with the new geographic level
-      setFilter(prev => ({
-        ...prev,
-        level: geoLevel
-      }));
+      // Only update if level has changed
+      if (geoLevel !== filter.level) {
+        setFilter(prev => ({ ...prev, level: geoLevel }));
+      }
     };
-
+    
     map.on('zoomend', handleZoomEnd);
-
+    
     return () => {
       map.off('zoomend', handleZoomEnd);
     };
-  }, [map, setFilter]);
-
+  }, [map, filter.level, setFilter]);
+  
   return null;
 };
 
-// Main map component
 const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
   geoJsonData,
   width = '100%',
   height = '400px',
   onFeatureClick,
-  showLabels = true,
   showTooltips = true,
-  initialZoom = 7,
+  showLabels = true,
+  initialZoom = 7
 }) => {
-  const geojsonRef = useRef<L.GeoJSON>(null);
+  const geoJsonRef = useRef<L.GeoJSON>(null);
   const { filter, setFilter } = useGeoFilter();
+  const [hoveredFeature, setHoveredFeature] = useState<string | null>(null);
   
-  // Style function for GeoJSON features
-  const featureStyle = (feature: Feature<Geometry, any>) => {
-    // Default style
-    const defaultStyle = {
-      fillColor: '#3388ff',
-      weight: 2,
+  // Define style based on feature properties
+  const getFeatureStyle = (feature: Feature<Geometry, any>) => {
+    const isHovered = hoveredFeature === feature.properties.name;
+    const isSelected = feature.properties.name === filter.region 
+      || feature.properties.name === filter.division
+      || feature.properties.name === filter.subdivision
+      || feature.properties.name === filter.circle
+      || feature.properties.name === filter.block;
+    
+    // Determine the color based on the feature's completion status if available
+    const defaultColor = '#3182CE'; // Blue color by default
+    
+    return {
+      fillColor: isSelected ? '#38A169' : isHovered ? '#4299E1' : defaultColor,
+      weight: isSelected || isHovered ? 2 : 1,
       opacity: 1,
-      color: '#3388ff',
-      fillOpacity: 0.2,
+      color: isSelected ? '#38A169' : '#2B6CB0',
+      fillOpacity: isSelected ? 0.7 : isHovered ? 0.5 : 0.3
     };
-
-    // Check if this feature matches our current geographic filter
-    let isHighlighted = false;
-
-    if (filter.level !== 'none') {
-      switch (filter.level) {
-        case 'region':
-          isHighlighted = feature.properties?.region === filter.region;
-          break;
-        case 'division':
-          isHighlighted = feature.properties?.division === filter.division;
-          break;
-        case 'subdivision':
-          isHighlighted = feature.properties?.subdivision === filter.subdivision;
-          break;
-        case 'circle':
-          isHighlighted = feature.properties?.circle === filter.circle;
-          break;
-        case 'block':
-          isHighlighted = feature.properties?.block === filter.block;
-          break;
-        case 'village':
-          isHighlighted = feature.properties?.village === filter.village;
-          break;
-      }
-    }
-
-    // Return highlighted style if this feature matches current filter
-    if (isHighlighted) {
-      return {
-        ...defaultStyle,
-        fillColor: '#ff7800',
-        color: '#ff7800',
-        fillOpacity: 0.5,
-        weight: 3,
-      };
-    }
-
-    return defaultStyle;
   };
-
-  // Event handlers for GeoJSON features
-  const onEachFeature = (feature: Feature<Geometry, any>, layer: L.Layer) => {
+  
+  const onEachFeature = (feature: Feature, layer: L.Layer) => {
     if (showTooltips && feature.properties) {
-      // Determine the name to show based on the geographic level
-      let displayName = '';
-      if (feature.properties.village) {
-        displayName = `Village: ${feature.properties.village}`;
-      } else if (feature.properties.block) {
-        displayName = `Block: ${feature.properties.block}`;
-      } else if (feature.properties.circle) {
-        displayName = `Circle: ${feature.properties.circle}`;
-      } else if (feature.properties.subdivision) {
-        displayName = `Sub-Division: ${feature.properties.subdivision}`;
-      } else if (feature.properties.division) {
-        displayName = `Division: ${feature.properties.division}`;
-      } else if (feature.properties.region) {
-        displayName = `Region: ${feature.properties.region}`;
-      }
-
-      if (displayName) {
-        layer.bindTooltip(displayName, {
-          permanent: false,
-          direction: 'auto',
-          className: 'custom-map-tooltip',
-        });
-      }
+      layer.bindTooltip(`<div class="custom-tooltip">
+        <div class="tooltip-title">${feature.properties.name}</div>
+      </div>`, { 
+        permanent: false, 
+        direction: 'top',
+        className: 'custom-leaflet-tooltip'
+      });
     }
-
-    // Add click handler
+    
+    // Add hover effect
     layer.on({
-      click: (e) => {
-        // Prevent the click from propagating to the map
-        L.DomEvent.stopPropagation(e);
-        
-        if (feature.properties) {
-          // Determine the geographic level based on available properties
-          let geoLevel: GeoFilterLevel = 'none';
-          const clickedFeature = { ...filter }; // Start with current filter
-          
-          if (feature.properties.village) {
-            geoLevel = 'village';
-            clickedFeature.village = feature.properties.village;
-            clickedFeature.block = feature.properties.block;
-            clickedFeature.circle = feature.properties.circle;
-            clickedFeature.subdivision = feature.properties.subdivision;
-            clickedFeature.division = feature.properties.division;
-            clickedFeature.region = feature.properties.region;
-          } else if (feature.properties.block) {
-            geoLevel = 'block';
-            clickedFeature.block = feature.properties.block;
-            clickedFeature.circle = feature.properties.circle;
-            clickedFeature.subdivision = feature.properties.subdivision;
-            clickedFeature.division = feature.properties.division;
-            clickedFeature.region = feature.properties.region;
-          } else if (feature.properties.circle) {
-            geoLevel = 'circle';
-            clickedFeature.circle = feature.properties.circle;
-            clickedFeature.subdivision = feature.properties.subdivision;
-            clickedFeature.division = feature.properties.division;
-            clickedFeature.region = feature.properties.region;
-          } else if (feature.properties.subdivision) {
-            geoLevel = 'subdivision';
-            clickedFeature.subdivision = feature.properties.subdivision;
-            clickedFeature.division = feature.properties.division;
-            clickedFeature.region = feature.properties.region;
-          } else if (feature.properties.division) {
-            geoLevel = 'division';
-            clickedFeature.division = feature.properties.division;
-            clickedFeature.region = feature.properties.region;
-          } else if (feature.properties.region) {
-            geoLevel = 'region';
-            clickedFeature.region = feature.properties.region;
-          }
-          
-          // Update the filter with the clicked feature's geographic info
-          clickedFeature.level = geoLevel;
-          setFilter(clickedFeature);
-          
-          // Call the optional click handler
-          if (onFeatureClick) {
-            onFeatureClick(feature.properties);
-          }
+      mouseover: (e) => {
+        setHoveredFeature(feature.properties?.name || null);
+        if (geoJsonRef.current) {
+          geoJsonRef.current.setStyle(getFeatureStyle);
         }
       },
+      mouseout: (e) => {
+        setHoveredFeature(null);
+        if (geoJsonRef.current) {
+          geoJsonRef.current.setStyle(getFeatureStyle);
+        }
+      },
+      click: (e) => {
+        // Update filter based on the clicked feature and current filter level
+        const props = feature.properties;
+        const level = filter.level;
+        
+        if (!props) return;
+        
+        // Update the appropriate filter level property based on current zoom/level
+        if (level === 'region') {
+          setFilter(prev => ({ ...prev, region: props.name }));
+        } else if (level === 'division') {
+          setFilter(prev => ({ ...prev, division: props.name }));
+        } else if (level === 'subdivision') {
+          setFilter(prev => ({ ...prev, subdivision: props.name }));
+        } else if (level === 'circle') {
+          setFilter(prev => ({ ...prev, circle: props.name }));
+        } else if (level === 'block') {
+          setFilter(prev => ({ ...prev, block: props.name }));
+        } else if (level === 'village') {
+          setFilter(prev => ({ ...prev, village: props.name }));
+        }
+        
+        // Call the optional click handler with feature properties
+        if (onFeatureClick) {
+          onFeatureClick(props);
+        }
+      }
     });
   };
-
+  
   return (
     <div style={{ width, height }}>
       <MapContainer
         center={[19.7515, 75.7139]} // Center of Maharashtra
         zoom={initialZoom}
         style={{ width: '100%', height: '100%' }}
-        zoomControl={false} // Disable default zoom control
+        zoomControl={true}
       >
-        <ZoomControl position="bottomright" />
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <GeoJSON
-          ref={geojsonRef}
           data={geoJsonData}
-          style={featureStyle}
+          style={getFeatureStyle}
           onEachFeature={onEachFeature}
+          ref={geoJsonRef}
         />
-        <MapEvents />
+        <MapZoomHandler />
       </MapContainer>
     </div>
   );

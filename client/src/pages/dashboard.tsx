@@ -443,8 +443,8 @@ export default function Dashboard() {
         <div className="w-full overflow-x-auto bg-gradient-to-r from-blue-50/30 via-white to-blue-50/30 rounded-lg p-2">
           <div className="min-w-[650px]">
             <SchemeTable
-              schemes={schemes || []}
-              isLoading={isSchemesLoading}
+              schemes={isFiltering ? geoFilteredSchemes : schemes || []}
+              isLoading={isFiltering ? isGeoFilteredSchemesLoading : isSchemesLoading}
               onViewDetails={handleViewSchemeDetails}
               statusFilter={statusFilter}
               onStatusFilterChange={handleStatusFilterChange}
