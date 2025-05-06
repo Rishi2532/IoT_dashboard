@@ -107,6 +107,21 @@ export default function Header() {
               <LanguageSelectorMinimal />
             </div>
             
+            {/* Theme toggle button */}
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleTheme}
+              className="text-blue-100 hover:text-white hover:bg-blue-700/50 backdrop-blur-sm px-2"
+              title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+            >
+              {theme === 'light' ? (
+                <Moon className="h-4 w-4 transition-all duration-300 animate-pulse" />
+              ) : (
+                <Sun className="h-4 w-4 transition-all duration-300 animate-spin-slow" />
+              )}
+            </Button>
+            
             {/* Only show Admin button if user is admin */}
             {authData?.isAdmin && (
               <Link href="/admin">

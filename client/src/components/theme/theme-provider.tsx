@@ -27,14 +27,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const root = window.document.documentElement;
     
-    // Remove the previous theme class
-    root.classList.remove("light-theme", "dark-theme");
-    
-    // Add the current theme class
-    root.classList.add(`${theme}-theme`);
-    
-    // Also set data-theme attribute for tailwind
-    root.setAttribute("data-theme", theme);
+    if (theme === "dark") {
+      root.classList.add("dark");
+    } else {
+      root.classList.remove("dark");
+    }
     
     // Store in localStorage
     localStorage.setItem("theme", theme);

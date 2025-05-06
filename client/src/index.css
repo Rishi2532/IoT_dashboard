@@ -26,21 +26,21 @@
   }
 
   table thead tr {
-    background-color: #e6f0fd !important;
+    background-color: var(--table-header-bg) !important;
   }
   
   table thead th {
-    color: #1e40af !important;
+    color: var(--text-primary) !important;
     font-weight: 600 !important;
   }
   
   /* Alternating row colors */
   table tbody tr:nth-child(odd) {
-    background-color: #f8fafc;
+    background-color: var(--table-row-odd);
   }
   
   table tbody tr:nth-child(even) {
-    background-color: #f0f7ff;
+    background-color: var(--table-row-even);
   }
   
   /* Enhanced hover effect for tables */
@@ -50,15 +50,15 @@
   }
   
   table tbody tr:hover {
-    background-color: #dbeafe !important;
+    background-color: var(--table-row-hover) !important;
     transform: translateY(-1px);
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 4px 6px -1px var(--shadow), 0 2px 4px -1px var(--shadow);
     z-index: 10;
   }
   
   /* Highlight cell content on hover */
   table tbody tr:hover td {
-    color: #1e40af !important;
+    color: var(--text-primary) !important;
     font-weight: 500 !important;
   }
 }
@@ -394,7 +394,42 @@ input, select, textarea {
 
 @layer base {
   :root {
-    --background: #f9fafb; /* Lighter background color */
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
+    --primary-foreground: 210 40% 98%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
+    --radius: 0.75rem;
+    --chart-1: 221.2 83.2% 53.3%;
+    --chart-2: 271.2 81.3% 55.9%;
+    --chart-3: 180 77.8% 47.1%;
+    --chart-4: 41.7 89.3% 67.5%;
+    --chart-5: 0 84.2% 60.2%;
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222.2 84% 4.9%;
+    --sidebar-primary: 221.2 83.2% 53.3%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222.2 47.4% 11.2%;
+    --sidebar-border: 214.3 31.8% 91.4%;
+    --sidebar-ring: 221.2 83.2% 53.3%;
+    
+    /* Custom theming variables */
+    --background-custom: #f9fafb; 
     --card-bg: #ffffff;
     --text-primary: #1f2937;
     --text-secondary: #4b5563;
@@ -405,6 +440,10 @@ input, select, textarea {
     --button-bg: #1e40af;
     --button-text: #ffffff;
     --shadow: rgba(0, 0, 0, 0.05);
+    --table-header-bg: #e6f0fd;
+    --table-row-odd: #f8fafc;
+    --table-row-even: #f0f7ff;
+    --table-row-hover: #dbeafe;
     
     /* Animation variables */
     --transition-fast: 150ms;
@@ -412,8 +451,42 @@ input, select, textarea {
     --transition-slow: 350ms;
   }
 
-  .dark-theme {
-    --background: #111827;
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.3% 48%;
+    --chart-1: 217.2 91.2% 59.8%;
+    --chart-2: 271.2 91.3% 65.9%;
+    --chart-3: 180 87.8% 57.1%;
+    --chart-4: 41.7 89.3% 67.5%;
+    --chart-5: 0 84.2% 60.2%;
+    --sidebar-background: 222.2 84% 4.9%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 217.2 91.2% 59.8%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 224.3 76.3% 48%;
+    
+    /* Custom theming variables - dark mode */
+    --background-custom: #111827;
     --card-bg: #1f2937;
     --text-primary: #f9fafb;
     --text-secondary: #e5e7eb; 
@@ -424,6 +497,10 @@ input, select, textarea {
     --button-bg: #3b82f6;
     --button-text: #ffffff;
     --shadow: rgba(0, 0, 0, 0.2);
+    --table-header-bg: #1e3a8a;
+    --table-row-odd: #111827;
+    --table-row-even: #1f2937;
+    --table-row-hover: #2563eb;
   }
 
   * {
