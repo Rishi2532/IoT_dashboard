@@ -47,6 +47,51 @@ export default function Dashboard() {
     data: geoFilteredSchemes = [],
     isLoading: isGeoFilteredSchemesLoading,
   } = useGeographicFilteredSchemes();
+  
+  // Sample locations for demonstration (these would come from the database in production)
+  const [sampleLocations, setSampleLocations] = useState<MapLocation[]>([
+    {
+      name: "Ozar Sakore Scheme",
+      latitude: 20.09,
+      longitude: 73.92,
+      type: "scheme",
+      details: {
+        "ESRs": "3",
+        "Villages": "5",
+        "Status": "Operational"
+      }
+    },
+    {
+      name: "Wagholi Village",
+      latitude: 18.58,
+      longitude: 73.95,
+      type: "village",
+      details: {
+        "LPCD": "72L",
+        "Status": "Good"
+      }
+    },
+    {
+      name: "Chandur Bazar ESR",
+      latitude: 20.81,
+      longitude: 77.98,
+      type: "esr",
+      details: {
+        "Capacity": "8ML",
+        "Status": "Operational"
+      }
+    },
+    {
+      name: "Nilphad WTP",
+      latitude: 20.01,
+      longitude: 74.75,
+      type: "wtp",
+      details: {
+        "Capacity": "12 MLD",
+        "Online": "Yes"
+      }
+    }
+  ]);
 
   // Fetch regions data
   const {
@@ -346,6 +391,7 @@ export default function Dashboard() {
                 <EnhancedGeoFilterMap 
                   mapHeight="300px"
                   className="h-full w-full"
+                  locations={sampleLocations}
                   onRegionClick={(regionName) => {
                     handleRegionChange(regionName);
                   }}

@@ -6,7 +6,8 @@ import {
   useMapEvents,
   ZoomControl,
   Marker,
-  Tooltip
+  Tooltip,
+  Rectangle
 } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import './map-tooltip.css';
@@ -14,16 +15,49 @@ import L from 'leaflet';
 import { useGeoFilter } from '@/contexts/GeoFilterContext';
 import { getMaharashtraGeoJson } from '@/lib/maharashtra-geojson';
 
-// Define custom icon for markers using SVG
-const customIcon = L.divIcon({
-  className: 'custom-marker-icon',
+// Define custom icon for different types of infrastructure
+const schemeIcon = L.divIcon({
+  className: 'scheme-marker-icon',
   html: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-           <circle cx="12" cy="10" r="4" fill="#2563eb" />
            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" 
-             fill="#2563eb" fill-opacity="0.7" stroke="#fff" stroke-width="1" />
+             fill="#2563eb" fill-opacity="0.7" stroke="#fff" stroke-width="1.5" />
+           <circle cx="12" cy="9" r="3" fill="#2563eb" stroke="#fff" />
          </svg>`,
   iconSize: [32, 32],
   iconAnchor: [16, 32],
+});
+
+const esrIcon = L.divIcon({
+  className: 'esr-marker-icon',
+  html: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" 
+             fill="#16a34a" fill-opacity="0.7" stroke="#fff" stroke-width="1.5" />
+           <circle cx="12" cy="9" r="3" fill="#16a34a" stroke="#fff" />
+         </svg>`,
+  iconSize: [28, 28],
+  iconAnchor: [14, 28],
+});
+
+const villageIcon = L.divIcon({
+  className: 'village-marker-icon',
+  html: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" 
+             fill="#f59e0b" fill-opacity="0.7" stroke="#fff" stroke-width="1.5" />
+           <circle cx="12" cy="9" r="3" fill="#f59e0b" stroke="#fff" />
+         </svg>`,
+  iconSize: [24, 24],
+  iconAnchor: [12, 24],
+});
+
+const wtpIcon = L.divIcon({
+  className: 'wtp-marker-icon',
+  html: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+           <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" 
+             fill="#8b5cf6" fill-opacity="0.7" stroke="#fff" stroke-width="1.5" />
+           <circle cx="12" cy="9" r="3" fill="#8b5cf6" stroke="#fff" />
+         </svg>`,
+  iconSize: [26, 26],
+  iconAnchor: [13, 26],
 });
 
 // Type for locations that can be marked on the map
@@ -202,6 +236,10 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
         zoomControl={false}
         scrollWheelZoom={true}
         className="z-0"
+        maxBounds={[[15.6, 72.6], [22.0, 80.9]]} // Restrict pan to Maharashtra region
+        maxBoundsViscosity={1.0} // Make the bounds completely solid
+        minZoom={6} // Prevent zooming out too far
+        maxZoom={13} // Prevent zooming in too much
       >
         <ZoomControl position="bottomright" />
         <TileLayer
@@ -221,28 +259,63 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
           />
         )}
         
-        {/* Location markers */}
-        {locations.map((location, index) => (
-          <Marker
-            key={`${location.name}-${index}`}
-            position={[location.latitude, location.longitude]}
-            icon={customIcon}
-          >
-            <Tooltip direction="top" offset={[0, -32]} opacity={1} permanent>
-              <div className="text-sm font-medium">{location.name}</div>
-              {location.details && (
-                <div className="text-xs mt-1">
-                  {Object.entries(location.details).map(([key, value]) => (
-                    <div key={key}>
-                      <span className="font-semibold">{key}: </span>
-                      <span>{value}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </Tooltip>
-          </Marker>
-        ))}
+        {/* Location markers with type-based icons */}
+        {locations.map((location, index) => {
+          // Select the appropriate icon based on location type
+          let markerIcon;
+          let tooltipOffset: [number, number] = [0, -32]; // Default offset
+          
+          switch(location.type) {
+            case 'scheme':
+              markerIcon = schemeIcon;
+              tooltipOffset = [0, -32];
+              break;
+            case 'village':
+              markerIcon = villageIcon;
+              tooltipOffset = [0, -24];
+              break;
+            case 'esr':
+              markerIcon = esrIcon;
+              tooltipOffset = [0, -28];
+              break;
+            case 'wtp':
+              markerIcon = wtpIcon;
+              tooltipOffset = [0, -26];
+              break;
+            case 'location':
+              markerIcon = schemeIcon;
+              break;
+            default:
+              markerIcon = schemeIcon;
+          }
+          
+          return (
+            <Marker
+              key={`${location.name}-${index}`}
+              position={[location.latitude, location.longitude]}
+              icon={markerIcon}
+            >
+              <Tooltip 
+                direction="top" 
+                offset={tooltipOffset} 
+                opacity={1} 
+                className={`${location.type}-tooltip`}
+              >
+                <div className="text-sm font-medium">{location.name}</div>
+                {location.details && (
+                  <div className="text-xs mt-1">
+                    {Object.entries(location.details).map(([key, value]) => (
+                      <div key={key}>
+                        <span className="font-semibold">{key}: </span>
+                        <span>{value}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </Tooltip>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );

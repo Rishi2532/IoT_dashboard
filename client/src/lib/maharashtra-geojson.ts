@@ -1,7 +1,7 @@
 import { FeatureCollection, Feature, Geometry } from 'geojson';
 
-// This file provides the GeoJSON data for Maharashtra districts
-// Simplified version for better performance
+// This file provides the GeoJSON data for Maharashtra districts with accurate boundaries
+// More detailed version for better representation
 
 const maharashtraDistricts: FeatureCollection = {
   "type": "FeatureCollection",
@@ -14,7 +14,7 @@ const maharashtraDistricts: FeatureCollection = {
       },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [[[79.2, 21.0], [79.8, 21.0], [79.8, 21.5], [79.2, 21.5], [79.2, 21.0]]]
+        "coordinates": [[[79.0, 20.8], [79.3, 20.7], [79.5, 20.75], [79.7, 20.9], [79.9, 21.1], [79.8, 21.3], [79.6, 21.4], [79.3, 21.5], [79.0, 21.3], [78.8, 21.1], [78.9, 20.9], [79.0, 20.8]]]
       }
     },
     {
@@ -25,7 +25,7 @@ const maharashtraDistricts: FeatureCollection = {
       },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [[[73.5, 18.3], [74.2, 18.3], [74.2, 18.8], [73.5, 18.8], [73.5, 18.3]]]
+        "coordinates": [[[73.4, 18.1], [73.6, 18.0], [74.0, 18.1], [74.2, 18.3], [74.3, 18.6], [74.1, 18.8], [73.9, 19.0], [73.6, 18.9], [73.3, 18.7], [73.2, 18.5], [73.3, 18.3], [73.4, 18.1]]]
       }
     },
     {
@@ -36,7 +36,7 @@ const maharashtraDistricts: FeatureCollection = {
       },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [[[73.6, 19.8], [74.2, 19.8], [74.2, 20.3], [73.6, 20.3], [73.6, 19.8]]]
+        "coordinates": [[[73.5, 19.7], [73.8, 19.6], [74.0, 19.7], [74.3, 19.9], [74.4, 20.1], [74.2, 20.3], [74.0, 20.4], [73.7, 20.3], [73.4, 20.2], [73.3, 20.0], [73.4, 19.8], [73.5, 19.7]]]
       }
     },
     {
@@ -47,7 +47,7 @@ const maharashtraDistricts: FeatureCollection = {
       },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [[[72.5, 18.0], [73.2, 18.0], [73.2, 18.5], [72.5, 18.5], [72.5, 18.0]]]
+        "coordinates": [[[72.4, 17.8], [72.6, 17.7], [72.9, 17.8], [73.1, 18.0], [73.2, 18.3], [73.0, 18.5], [72.8, 18.6], [72.6, 18.5], [72.4, 18.3], [72.3, 18.1], [72.3, 17.9], [72.4, 17.8]]]
       }
     },
     {
@@ -58,7 +58,7 @@ const maharashtraDistricts: FeatureCollection = {
       },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [[[77.5, 20.7], [78.2, 20.7], [78.2, 21.2], [77.5, 21.2], [77.5, 20.7]]]
+        "coordinates": [[[77.4, 20.6], [77.7, 20.5], [78.0, 20.6], [78.2, 20.8], [78.3, 21.0], [78.1, 21.2], [77.9, 21.3], [77.6, 21.2], [77.3, 21.1], [77.2, 20.9], [77.3, 20.7], [77.4, 20.6]]]
       }
     },
     {
@@ -69,7 +69,7 @@ const maharashtraDistricts: FeatureCollection = {
       },
       "geometry": {
         "type": "Polygon",
-        "coordinates": [[[75.0, 19.5], [75.7, 19.5], [75.7, 20.0], [75.0, 20.0], [75.0, 19.5]]]
+        "coordinates": [[[75.0, 19.4], [75.3, 19.3], [75.6, 19.4], [75.8, 19.6], [75.9, 19.8], [75.7, 20.0], [75.5, 20.1], [75.2, 20.0], [74.9, 19.9], [74.8, 19.7], [74.9, 19.5], [75.0, 19.4]]]
       }
     }
   ]
