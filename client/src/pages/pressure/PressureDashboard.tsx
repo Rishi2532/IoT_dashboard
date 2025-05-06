@@ -610,15 +610,15 @@ const PressureDashboard: React.FC = () => {
         <div className="overflow-x-auto">
           <Table>
             <TableHeader className="bg-blue-50">
-              <TableRow>
-                <TableHead className="font-bold text-blue-900">Region</TableHead>
-                <TableHead className="font-bold text-blue-900">Scheme ID</TableHead>
-                <TableHead className="font-bold text-blue-900">Scheme Name</TableHead>
-                <TableHead className="font-bold text-blue-900">Village</TableHead>
-                <TableHead className="font-bold text-blue-900">ESR</TableHead>
-                <TableHead className="font-bold text-blue-900">Latest Pressure (bar)</TableHead>
-                <TableHead className="font-bold text-blue-900">Status</TableHead>
-                <TableHead className="font-bold text-blue-900 text-right">Actions</TableHead>
+              <TableRow className="pressure-item">
+                <TableHead className="font-semibold text-blue-800 border-b border-blue-200">Region</TableHead>
+                <TableHead className="font-semibold text-blue-800 border-b border-blue-200">Scheme ID</TableHead>
+                <TableHead className="font-semibold text-blue-800 border-b border-blue-200">Scheme Name</TableHead>
+                <TableHead className="font-semibold text-blue-800 border-b border-blue-200">Village</TableHead>
+                <TableHead className="font-semibold text-blue-800 border-b border-blue-200">ESR</TableHead>
+                <TableHead className="font-semibold text-blue-800 border-b border-blue-200">Latest Pressure (bar)</TableHead>
+                <TableHead className="font-semibold text-blue-800 border-b border-blue-200">Status</TableHead>
+                <TableHead className="font-semibold text-blue-800 border-b border-blue-200 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -630,21 +630,21 @@ const PressureDashboard: React.FC = () => {
                   return (
                     <TableRow 
                       key={`${item.scheme_id}-${item.village_name}-${item.esr_name}-${idx}`}
-                      className={`${statusInfo.className} hover:bg-gray-50 border-b border-gray-100`}
+                      className={`pressure-item ${statusInfo.className} hover:bg-blue-100 border-b border-blue-200 transition-all`}
                     >
-                      <TableCell className="font-medium">{item.region}</TableCell>
-                      <TableCell className="font-mono text-sm">{item.scheme_id}</TableCell>
-                      <TableCell>{item.scheme_name}</TableCell>
-                      <TableCell>{item.village_name}</TableCell>
-                      <TableCell>{item.esr_name}</TableCell>
-                      <TableCell>
+                      <TableCell className="font-medium border-b border-blue-200">{item.region}</TableCell>
+                      <TableCell className="font-mono text-sm border-b border-blue-200">{item.scheme_id}</TableCell>
+                      <TableCell className="border-b border-blue-200">{item.scheme_name}</TableCell>
+                      <TableCell className="border-b border-blue-200">{item.village_name}</TableCell>
+                      <TableCell className="border-b border-blue-200">{item.esr_name}</TableCell>
+                      <TableCell className="border-b border-blue-200">
                         {latestPressure !== null ? (
                           <span className="font-semibold">{typeof latestPressure === 'number' ? latestPressure.toFixed(2) : latestPressure} bar</span>
                         ) : (
                           <span className="text-gray-400">No data</span>
                         )}
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="border-b border-blue-200">
                         <div className="flex items-center">
                           {statusInfo.icon && statusInfo.icon}
                           <span className={`ml-1 ${statusInfo.textColor || 'text-gray-500'}`}>
@@ -652,7 +652,7 @@ const PressureDashboard: React.FC = () => {
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right border-b border-blue-200">
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button 
