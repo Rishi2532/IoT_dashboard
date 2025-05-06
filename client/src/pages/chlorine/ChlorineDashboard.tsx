@@ -488,11 +488,15 @@ const ChlorineDashboard: React.FC = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-white"></div>
           <div className="absolute bottom-0 right-0 opacity-10">
-            <Droplet className="h-24 w-24 text-teal-500" />
+            <div className="h-24 w-24 text-teal-500 flex items-center justify-center">
+              <span className="text-5xl font-bold">Cl</span>
+            </div>
           </div>
           <CardHeader className="pb-2 relative">
             <CardTitle className="text-lg font-bold text-teal-800 flex items-center">
-              <Droplet className="h-5 w-5 text-teal-600 mr-2" />
+              <div className="h-5 w-8 text-teal-600 mr-2 flex items-center justify-center bg-teal-50 rounded">
+                <span className="text-xs font-bold">Cl</span>
+              </div>
               Total Connected ESRs
             </CardTitle>
           </CardHeader>
@@ -625,7 +629,9 @@ const ChlorineDashboard: React.FC = () => {
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-gray-700 flex items-center">
-              <Activity className="h-4 w-4 text-gray-500 mr-2" />
+              <div className="h-5 w-7 text-gray-600 mr-2 flex items-center justify-center bg-gray-50 rounded">
+                <span className="text-xs font-bold">Cl</span>
+              </div>
               Consistent Zero Chlorine
             </CardTitle>
           </CardHeader>
@@ -658,7 +664,9 @@ const ChlorineDashboard: React.FC = () => {
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-red-700 flex items-center">
-              <AlertTriangle className="h-4 w-4 text-red-500 mr-2" />
+              <div className="h-5 w-7 text-red-600 mr-2 flex items-center justify-center bg-red-50 rounded">
+                <span className="text-xs font-bold">Cl</span>
+              </div>
               Consistent Below Range
             </CardTitle>
           </CardHeader>
@@ -691,7 +699,9 @@ const ChlorineDashboard: React.FC = () => {
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-green-700 flex items-center">
-              <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
+              <div className="h-5 w-7 text-green-600 mr-2 flex items-center justify-center bg-green-50 rounded">
+                <span className="text-xs font-bold">Cl</span>
+              </div>
               Consistent Optimal
             </CardTitle>
           </CardHeader>
@@ -724,7 +734,9 @@ const ChlorineDashboard: React.FC = () => {
         >
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-bold text-orange-700 flex items-center">
-              <AlertCircle className="h-4 w-4 text-orange-500 mr-2" />
+              <div className="h-5 w-7 text-orange-600 mr-2 flex items-center justify-center bg-orange-50 rounded">
+                <span className="text-xs font-bold">Cl</span>
+              </div>
               Consistent Above Range
             </CardTitle>
           </CardHeader>
@@ -915,8 +927,8 @@ const ChlorineDashboard: React.FC = () => {
                                   <>
                                     <DialogHeader>
                                       <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
-                                          <Droplet className="h-5 w-5 text-blue-600" />
+                                        <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
+                                          <span className="font-bold text-teal-600">Cl</span>
                                         </div>
                                         {selectedESR.esr_name} -{" "}
                                         {selectedESR.village_name}
@@ -929,14 +941,14 @@ const ChlorineDashboard: React.FC = () => {
 
                                     <div className="py-4">
                                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                                        <div className="bg-blue-50/50 rounded-lg p-4 border border-blue-100">
-                                          <h3 className="text-sm font-medium text-blue-800 mb-3">
+                                        <div className="bg-teal-50/50 rounded-lg p-4 border border-teal-100">
+                                          <h3 className="text-sm font-medium text-teal-800 mb-3">
                                             ESR Information
                                           </h3>
 
                                           <div className="space-y-3">
-                                            <div className="flex justify-between items-center border-b border-blue-100 pb-2">
-                                              <span className="text-sm text-blue-700">
+                                            <div className="flex justify-between items-center border-b border-teal-100 pb-2">
+                                              <span className="text-sm text-teal-700">
                                                 Region
                                               </span>
                                               <span className="font-medium">
@@ -944,8 +956,8 @@ const ChlorineDashboard: React.FC = () => {
                                               </span>
                                             </div>
 
-                                            <div className="flex justify-between items-center border-b border-blue-100 pb-2">
-                                              <span className="text-sm text-blue-700">
+                                            <div className="flex justify-between items-center border-b border-teal-100 pb-2">
+                                              <span className="text-sm text-teal-700">
                                                 Scheme ID
                                               </span>
                                               <span className="font-medium font-mono">
@@ -953,8 +965,8 @@ const ChlorineDashboard: React.FC = () => {
                                               </span>
                                             </div>
 
-                                            <div className="flex justify-between items-center border-b border-blue-100 pb-2">
-                                              <span className="text-sm text-blue-700">
+                                            <div className="flex justify-between items-center border-b border-teal-100 pb-2">
+                                              <span className="text-sm text-teal-700">
                                                 Scheme
                                               </span>
                                               <span className="font-medium">
