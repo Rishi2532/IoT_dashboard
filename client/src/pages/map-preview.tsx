@@ -1,79 +1,147 @@
-import React, { useState } from 'react';
-import { GitHubStyleMapPreview } from '@/components/maps';
-import DashboardLayout from "@/components/dashboard/dashboard-layout";
+import React, { useEffect } from 'react';
+import { EnhancedGeoFilterMap } from '@/components/maps';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, RefreshCw } from 'lucide-react';
-import { useToast } from "@/hooks/use-toast";
+import { useGeoFilter } from '@/contexts/GeoFilterContext';
+import Header from '@/components/dashboard/header';
+import Sidebar from '@/components/dashboard/sidebar';
 
 export default function MapPreviewPage() {
-  const [selectedRegion, setSelectedRegion] = useState<string>("all");
-  const { toast } = useToast();
-  
-  const handleRegionClick = (region: string) => {
-    setSelectedRegion(region);
-    toast({
-      title: "Region Selected",
-      description: `You selected ${region} region. In a full implementation, this would filter the dashboard data.`,
-    });
-  };
-  
-  const handleResetSelection = () => {
-    setSelectedRegion("all");
-    toast({
-      title: "Selection Reset",
-      description: "Region selection has been reset to All Regions",
-    });
-  };
-  
+  const { 
+    filter, 
+    setRegion, 
+    setDivision, 
+    setSubDivision, 
+    setCircle, 
+    setBlock, 
+    setVillage,
+    clearFilters,
+    currentFilterLevel
+  } = useGeoFilter();
+
+  // Log filter changes for debugging
+  useEffect(() => {
+    console.log('Current geographic filters:', filter);
+    console.log('Current filter level:', currentFilterLevel);
+  }, [filter, currentFilterLevel]);
+
   return (
-    <DashboardLayout>
-      <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-600/20 via-blue-400/15 to-blue-700/10 rounded-lg mb-4 sm:mb-6 shadow-md border border-blue-200">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-blue-800 bg-clip-text text-transparent bg-gradient-to-r from-blue-800 via-blue-600 to-blue-500">
-              Maharashtra Map Preview
-            </h1>
-            <p className="mt-1 sm:mt-2 text-sm text-blue-700/80 font-medium flex items-center">
-              <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-              GitHub-style map visualization 
-              <span className="ml-3 py-0.5 px-2 text-xs bg-blue-100 text-blue-700 rounded-full">Interactive</span>
-            </p>
-          </div>
-          <div className="mt-4 sm:mt-0 flex items-center space-x-2">
-            <div className="text-sm bg-white px-3 py-1 rounded-md border shadow-sm">
-              Selected: <span className="font-medium text-blue-700">{selectedRegion === "all" ? "All Regions" : selectedRegion}</span>
+    <div className="flex h-screen">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 dark:bg-gray-900">
+          <div className="container mx-auto px-4 py-8">
+            <h1 className="text-2xl font-bold mb-6">Geographic Filter Map Preview</h1>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Interactive Maharashtra Map</CardTitle>
+                    <CardDescription>
+                      Zoom or click on regions to filter data. The map automatically detects the appropriate geographic level based on zoom.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="min-h-[500px]">
+                    <EnhancedGeoFilterMap 
+                      containerClassName="h-[500px] w-full rounded-lg overflow-hidden shadow-md"
+                      onRegionChange={setRegion}
+                      onDivisionChange={setDivision}
+                      onSubDivisionChange={setSubDivision}
+                      onCircleChange={setCircle}
+                      onBlockChange={setBlock}
+                      onVillageChange={setVillage}
+                      selectedRegion={filter.region}
+                      mapTitle="Maharashtra Water Infrastructure Filter Map"
+                    />
+                  </CardContent>
+                  <CardFooter>
+                    <p className="text-sm text-muted-foreground">
+                      Zoom levels: Region (≤7), Division (8), Sub-Division (9), Circle (10), Block (11), Village (≥12)
+                    </p>
+                  </CardFooter>
+                </Card>
+              </div>
+              
+              <div>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Current Geographic Filters</CardTitle>
+                    <CardDescription>
+                      This panel shows the active geographic filters based on map interaction.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-2">
+                      <div className="font-medium">Region:</div>
+                      <div className={filter.region !== 'all' ? 'font-bold text-blue-600' : ''}>
+                        {filter.region !== 'all' ? filter.region : 'All Regions'}
+                      </div>
+                      
+                      <div className="font-medium">Division:</div>
+                      <div className={filter.division !== 'all' ? 'font-bold text-blue-600' : ''}>
+                        {filter.division !== 'all' ? filter.division : 'All Divisions'}
+                      </div>
+                      
+                      <div className="font-medium">Sub-Division:</div>
+                      <div className={filter.subDivision !== 'all' ? 'font-bold text-blue-600' : ''}>
+                        {filter.subDivision !== 'all' ? filter.subDivision : 'All Sub-Divisions'}
+                      </div>
+                      
+                      <div className="font-medium">Circle:</div>
+                      <div className={filter.circle !== 'all' ? 'font-bold text-blue-600' : ''}>
+                        {filter.circle !== 'all' ? filter.circle : 'All Circles'}
+                      </div>
+                      
+                      <div className="font-medium">Block:</div>
+                      <div className={filter.block !== 'all' ? 'font-bold text-blue-600' : ''}>
+                        {filter.block !== 'all' ? filter.block : 'All Blocks'}
+                      </div>
+                      
+                      <div className="font-medium">Village:</div>
+                      <div className={filter.village !== 'all' ? 'font-bold text-blue-600' : ''}>
+                        {filter.village !== 'all' ? filter.village : 'All Villages'}
+                      </div>
+                    </div>
+                    
+                    <div className="pt-4 border-t">
+                      <p className="text-sm mb-2">Current Filter Level: <span className="font-semibold">{currentFilterLevel.charAt(0).toUpperCase() + currentFilterLevel.slice(1)}</span></p>
+                      <Button 
+                        variant="outline" 
+                        onClick={clearFilters}
+                        className="w-full"
+                      >
+                        Clear All Filters
+                      </Button>
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <p className="text-xs text-muted-foreground">
+                      Use this panel to see which geographic filters are currently applied. Active filters are shown in blue.
+                    </p>
+                  </CardFooter>
+                </Card>
+                
+                <Card className="mt-6">
+                  <CardHeader>
+                    <CardTitle>How to Use</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ul className="list-disc pl-5 space-y-2 text-sm">
+                      <li>Click directly on a region to select it</li>
+                      <li>Zoom in to see more detailed geographic levels</li>
+                      <li>The map will automatically adjust filters based on your zoom level</li>
+                      <li>More detailed locations will appear as you zoom in</li>
+                      <li>Use the clear button to reset all geographic filters</li>
+                    </ul>
+                  </CardContent>
+                </Card>
+              </div>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleResetSelection}
-              disabled={selectedRegion === "all"}
-            >
-              <RefreshCw className="mr-1 h-3 w-3" />
-              Reset
-            </Button>
           </div>
-        </div>
+        </main>
       </div>
-      
-      <div className="mx-auto max-w-4xl">
-        <div className="mb-4 p-4 bg-blue-50 rounded-lg border border-blue-100">
-          <div className="flex items-start">
-            <MapPin className="h-5 w-5 mr-2 text-blue-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-blue-700">
-              <span className="font-medium">Interactive Map:</span> Click on any of the colored region markers 
-              to filter dashboard data. The map includes markers for Nagpur, Amravati, Chhatrapati Sambhajinagar, 
-              Nashik, Pune, and Konkan regions. Each marker will filter the data in a real implementation.
-            </p>
-          </div>
-        </div>
-        
-        <GitHubStyleMapPreview 
-          title="maharashtra.topo.json"
-          description="Add division maps for states"
-          onRegionClick={handleRegionClick}
-        />
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }
