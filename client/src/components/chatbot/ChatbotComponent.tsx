@@ -1028,13 +1028,23 @@ const ChatbotComponent: React.FC = () => {
   // If chatbot is showing but minimized, show just the header
   if (minimized) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div 
+        ref={dragRef}
+        className="fixed z-50 cursor-move"
+        style={{ 
+          bottom: position.y === 0 ? '1rem' : 'auto',
+          right: position.x === 0 ? '1rem' : 'auto',
+          top: position.y !== 0 ? `${position.y}px` : 'auto',
+          left: position.x !== 0 ? `${position.x}px` : 'auto'
+        }}
+        onMouseDown={handleMouseDown}
+      >
         <div className="bg-white rounded-lg shadow-lg h-14 w-80 flex flex-col border border-gray-200">
           <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-blue-50 h-full">
             <div className="flex items-center">
               <MessageSquare className="w-5 h-5 text-blue-600 mr-2" />
               <h3 className="text-sm font-medium text-blue-700">
-                Water Infrastructure Assistant
+                JJM Assistant
               </h3>
               {modelLoading && (
                 <div className="ml-2 w-4 h-4 rounded-full border-2 border-blue-500 border-t-transparent animate-spin"></div>
@@ -1062,9 +1072,21 @@ const ChatbotComponent: React.FC = () => {
 
   // Full chatbot view - using simplified custom chatbot for now
   return (
-    <div className="fixed bottom-4 right-4 z-50">
+    <div 
+      ref={dragRef}
+      className="fixed z-50"
+      style={{ 
+        bottom: position.y === 0 ? '1rem' : 'auto',
+        right: position.x === 0 ? '1rem' : 'auto',
+        top: position.y !== 0 ? `${position.y}px` : 'auto',
+        left: position.x !== 0 ? `${position.x}px` : 'auto'
+      }}
+    >
       <div className="bg-white rounded-lg shadow-lg h-[500px] w-[350px] sm:w-[380px] flex flex-col border border-gray-200">
-        <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-blue-50">
+        <div 
+          className="flex items-center justify-between p-3 border-b border-gray-200 bg-blue-50 cursor-move"
+          onMouseDown={handleMouseDown}
+        >
           <div className="flex items-center">
             <MessageSquare className="w-5 h-5 text-blue-600 mr-2" />
             <h3 className="text-sm font-medium text-blue-700">JJM Assistant</h3>
