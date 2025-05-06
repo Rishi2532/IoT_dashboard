@@ -148,17 +148,19 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
     }));
   };
 
-  // Style function for GeoJSON regions - with no fill, only boundaries
+  // Style function for GeoJSON regions - completely invisible except on hover
   const regionStyle = (feature: any) => {
     const regionName = feature.properties.name;
     const isSelected = regionName === filter.region;
     
     return {
-      fillColor: 'transparent',
-      weight: isSelected ? 2 : 1,
-      opacity: 1,
+      fillColor: 'none',
+      weight: isSelected ? 1.5 : 0.5,
+      opacity: 0.2,
       color: isSelected ? '#1d4ed8' : '#94a3b8',
       fillOpacity: 0,
+      stroke: true,
+      dashArray: isSelected ? '' : '2',
     };
   };
 
@@ -189,8 +191,9 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
       mouseover: (e: any) => {
         const layer = e.target;
         layer.setStyle({
-          fillOpacity: 0.1,
-          weight: 2.5,
+          fillOpacity: 0,
+          weight: 1,
+          opacity: 0.4,
           color: '#2563eb'
         });
       },
