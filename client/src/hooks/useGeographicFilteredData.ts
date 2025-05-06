@@ -28,7 +28,7 @@ export const useGeographicFilteredSchemes = () => {
       params.append('level', filter.level);
       
       // Make the API request with the constructed parameters
-      const response = await fetch(`/api/schemes/filtered?${params.toString()}`);
+      const response = await fetch(`/api/schemes/geographic?${params.toString()}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch filtered schemes');
@@ -62,7 +62,7 @@ export const useGeographicFilteredWaterData = () => {
       
       params.append('level', filter.level);
       
-      const response = await fetch(`/api/water-data/filtered?${params.toString()}`);
+      const response = await fetch(`/api/water-scheme-data?${params.toString()}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch filtered water data');
@@ -96,7 +96,7 @@ export const useGeographicFilteredChlorineData = () => {
       
       params.append('level', filter.level);
       
-      const response = await fetch(`/api/chlorine-data/filtered?${params.toString()}`);
+      const response = await fetch(`/api/chlorine?${params.toString()}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch filtered chlorine data');
