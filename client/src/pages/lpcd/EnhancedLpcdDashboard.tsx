@@ -461,23 +461,20 @@ const EnhancedLpcdDashboard = () => {
   // Get LPCD status badge color
   const getLpcdStatusColor = (lpcdValue: number | null): string => {
     if (lpcdValue === null) return "bg-gray-200 text-gray-700";
-    if (lpcdValue >= 70) return "bg-green-700 text-white";
-    if (lpcdValue >= 65) return "bg-green-600 text-white";
-    if (lpcdValue >= 60) return "bg-green-500 text-white";
-    if (lpcdValue >= 55) return "bg-green-400 text-white";
-    if (lpcdValue >= 45) return "bg-yellow-400 text-black";
-    if (lpcdValue >= 35) return "bg-yellow-500 text-black";
-    if (lpcdValue >= 25) return "bg-orange-400 text-white";
-    if (lpcdValue >= 15) return "bg-orange-500 text-white";
-    if (lpcdValue > 0) return "bg-red-500 text-white";
-    return "bg-gray-800 text-white";
+    if (lpcdValue > 70) return "bg-green-600 text-white"; // High status (> 70L)
+    if (lpcdValue >= 55) return "bg-green-500 text-white"; // Good status (55-70L)
+    if (lpcdValue >= 40) return "bg-yellow-500 text-black"; // Low but not critical
+    if (lpcdValue >= 25) return "bg-orange-500 text-white"; // Very low
+    if (lpcdValue > 0) return "bg-red-500 text-white"; // Critically low
+    return "bg-gray-800 text-white"; // No water
   };
 
-  // Simplified status text (only High or Low)
+  // LPCD status text with High, Good, and Low categories
   const getLpcdStatusText = (lpcdValue: number | null): string => {
     if (lpcdValue === null) return "No Data";
     if (lpcdValue === 0) return "No Water";
-    if (lpcdValue >= 55) return "High";
+    if (lpcdValue > 70) return "High";
+    if (lpcdValue >= 55) return "Good";
     return "Low";
   };
 
