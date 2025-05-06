@@ -974,8 +974,8 @@ const ChlorineDashboard: React.FC = () => {
                                               </span>
                                             </div>
 
-                                            <div className="flex justify-between items-center border-b border-blue-100 pb-2">
-                                              <span className="text-sm text-blue-700">
+                                            <div className="flex justify-between items-center border-b border-teal-100 pb-2">
+                                              <span className="text-sm text-teal-700">
                                                 Village
                                               </span>
                                               <span className="font-medium">
@@ -983,8 +983,8 @@ const ChlorineDashboard: React.FC = () => {
                                               </span>
                                             </div>
 
-                                            <div className="flex justify-between items-center border-b border-blue-100 pb-2">
-                                              <span className="text-sm text-blue-700">
+                                            <div className="flex justify-between items-center border-b border-teal-100 pb-2">
+                                              <span className="text-sm text-teal-700">
                                                 Sensor ID
                                               </span>
                                               <span className="font-medium">
@@ -994,8 +994,8 @@ const ChlorineDashboard: React.FC = () => {
                                           </div>
                                         </div>
 
-                                        <div className="bg-gradient-to-br from-blue-50 to-white rounded-lg p-4 border border-blue-100 flex flex-col">
-                                          <h3 className="text-sm font-medium text-blue-800 mb-3">
+                                        <div className="bg-gradient-to-br from-teal-50 to-white rounded-lg p-4 border border-teal-100 flex flex-col">
+                                          <h3 className="text-sm font-medium text-teal-800 mb-3">
                                             Current Status
                                           </h3>
 
@@ -1080,9 +1080,9 @@ const ChlorineDashboard: React.FC = () => {
                                       </div>
 
                                       <div className="border-t border-gray-200 pt-6">
-                                        <h3 className="font-medium text-lg mb-4 text-blue-800 flex items-center gap-2">
-                                          <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center">
-                                            <AlertCircle className="h-3 w-3 text-blue-600" />
+                                        <h3 className="font-medium text-lg mb-4 text-teal-800 flex items-center gap-2">
+                                          <div className="w-6 h-6 rounded-full bg-teal-100 flex items-center justify-center">
+                                            <div className="h-3 w-3 text-teal-600 text-[10px] font-bold">Cl</div>
                                           </div>
                                           7-Day Chlorine History
                                         </h3>
