@@ -172,19 +172,19 @@ area {
 /* Enhanced styles for LPCD, Chlorine, and Pressure data displays */
 .data-display-card {
   border-radius: 10px !important;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: 0 4px 12px var(--shadow) !important;
   transition: transform 0.15s ease-in-out, box-shadow 0.15s ease-in-out, border-color 0.15s ease !important;
   padding: 1.25rem !important;
-  border: 1px solid rgba(0, 0, 0, 0.08) !important;
-  background: white !important;
+  border: 1px solid var(--border-color) !important;
+  background: var(--card-bg) !important;
   position: relative;
   overflow: hidden;
 }
 
 .data-display-card:hover {
   transform: translateY(-2px) !important;
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08) !important;
-  border-color: #60a5fa !important;
+  box-shadow: 0 6px 16px var(--shadow) !important;
+  border-color: var(--highlight) !important;
 }
 
 /* Enhanced hover for scheme and village items */
@@ -194,19 +194,19 @@ area {
 }
 
 .scheme-item:hover, .village-item:hover, .water-scheme-item:hover, .chlorine-item:hover, .pressure-item:hover {
-  background-color: rgba(239, 246, 255, 0.7) !important;
+  background-color: var(--hover-bg) !important;
 }
 
 /* Highlight important data on hover */
 .scheme-item:hover .scheme-name, .village-item:hover .village-name,
 .water-scheme-item:hover .scheme-name, .chlorine-item:hover .village-name, .pressure-item:hover .village-name {
-  color: #1e40af !important;
+  color: var(--primary) !important;
   font-weight: 600 !important;
 }
 
 .scheme-item:hover .metric-value, .village-item:hover .metric-value,
 .water-scheme-item:hover .metric-value, .chlorine-item:hover .metric-value, .pressure-item:hover .metric-value {
-  color: #2563eb !important;
+  color: var(--highlight) !important;
 }
 
 /* Card titles for scheme, LPCD, chlorine and pressure sections */
@@ -214,7 +214,7 @@ area {
   font-size: 1.35rem !important;
   font-weight: 600 !important;
   margin-bottom: 1rem !important;
-  color: hsl(212, 85%, 45%) !important;
+  color: var(--primary) !important;
   font-family: 'Inter', sans-serif !important;
 }
 
@@ -224,11 +224,12 @@ area {
   font-weight: 700 !important;
   line-height: 1.2 !important;
   font-family: 'Inter', sans-serif !important;
+  color: var(--text-primary) !important;
 }
 
 .metric-label {
   font-size: 0.9rem !important;
-  color: #6b7280 !important;
+  color: var(--text-secondary) !important;
   font-family: 'Inter', sans-serif !important;
 }
 
@@ -544,8 +545,8 @@ input, select, textarea {
 
 /* Navigation styles */
 .app-navbar {
-  background-color: white !important;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08) !important;
+  background-color: var(--card-bg) !important;
+  box-shadow: 0 1px 3px var(--shadow) !important;
   padding: 0.75rem 1.5rem !important;
 }
 
@@ -556,14 +557,15 @@ input, select, textarea {
   padding: 0.5rem 0.75rem !important;
   border-radius: 6px !important;
   font-family: 'Inter', sans-serif !important;
+  color: var(--text-primary) !important;
 }
 
 .nav-link:hover {
-  background-color: #f3f4f6 !important;
+  background-color: var(--hover-bg) !important;
 }
 
 .nav-link.active {
-  color: hsl(212, 85%, 45%) !important;
+  color: var(--primary) !important;
   font-weight: 600 !important;
 }
 
@@ -577,7 +579,7 @@ input, select, textarea {
 .page-title {
   font-size: 2rem !important;
   font-weight: 700 !important;
-  color: #1f2937 !important;
+  color: var(--text-primary) !important;
   margin-bottom: 1.5rem !important;
   font-family: 'Inter', sans-serif !important;
 }
@@ -590,7 +592,7 @@ input, select, textarea {
 .section-title {
   font-size: 1.5rem !important;
   font-weight: 600 !important;
-  color: #1f2937 !important;
+  color: var(--text-primary) !important;
   margin-bottom: 1.25rem !important;
   font-family: 'Inter', sans-serif !important;
 }
