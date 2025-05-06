@@ -19,7 +19,7 @@ import * as XLSX from "xlsx";
 // Import our map components
 import { GitHubStyleMapPreview } from "@/components/maps";
 // Import Enhanced GeoFilter Map
-import EnhancedGeoFilterMap from "@/components/maps/EnhancedGeoFilterMap";
+import EnhancedGeoFilterMap, { MapLocation } from "@/components/maps/EnhancedGeoFilterMap";
 // Import GeoFilter context
 import { useGeoFilter } from "@/contexts/GeoFilterContext";
 // Import data hooks for geographic filtering

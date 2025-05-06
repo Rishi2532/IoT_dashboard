@@ -81,11 +81,4 @@ export interface SchemeStatus {
   updated_at: string;
 }
 
-// Map location type
-export interface MapLocation {
-  name: string;
-  latitude: number;
-  longitude: number;
-  type: 'scheme' | 'village' | 'esr' | 'wtp' | 'location';
-  details?: Record<string, any>;
-}
+// Map location type is now imported directly from EnhancedGeoFilterMap.tsx
