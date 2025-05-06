@@ -630,7 +630,7 @@ const PressureDashboard: React.FC = () => {
                   return (
                     <TableRow 
                       key={`${item.scheme_id}-${item.village_name}-${item.esr_name}-${idx}`}
-                      className={`pressure-item ${statusInfo.className} hover:bg-blue-100 border-b border-blue-200 transition-all`}
+                      className={`pressure-item ${statusInfo.className} hover:bg-blue-100 border-b border-blue-200`}
                     >
                       <TableCell className="font-medium border-b border-blue-200">{item.region}</TableCell>
                       <TableCell className="font-mono text-sm border-b border-blue-200">{item.scheme_id}</TableCell>

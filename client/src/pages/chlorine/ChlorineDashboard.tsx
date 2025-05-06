@@ -858,7 +858,7 @@ const ChlorineDashboard: React.FC = () => {
                       return (
                         <TableRow
                           key={`${item.scheme_id}-${item.village_name}-${item.esr_name}-${index}`}
-                          className={`chlorine-item ${baseRowClass} hover:bg-blue-100 transition-all`}
+                          className={`chlorine-item ${baseRowClass} hover:bg-blue-100`}
                         >
                           <TableCell className="font-medium border-b border-blue-200">
                             {item.region}
