@@ -40,7 +40,11 @@ import {
   RefreshCw,
   X,
   BarChart,
+  BarChart2 as BarChart3,
+  BarChartHorizontal as ChartBarOff,
   ExternalLink,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import {
   Dialog,
@@ -1126,26 +1130,28 @@ const EnhancedLpcdDashboard = () => {
               </Card>
 
               {/* Villages with LPCD < 55L */}
-              <Card className="border-red-200">
-                <CardHeader className="bg-red-50 pb-2">
-                  <CardTitle className="text-center text-xl text-red-800">
+              <Card className="border-red-200 dashboard-card card-shadow bg-gradient-to-b from-white to-red-50">
+                <CardHeader className="bg-gradient-to-r from-red-100 to-red-50 border-b border-red-200 pb-2">
+                  <CardTitle className="text-center text-xl font-semibold text-red-800">
                     Villages with LPCD &lt; 55L
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 pb-4">
-                  <p className="text-5xl font-bold text-center text-red-600">
+                  <p className="text-5xl font-bold text-center text-red-600 drop-shadow-sm">
                     {filterCounts.below55}
                   </p>
-                  <p className="text-sm text-center text-gray-600 mt-2">
-                    Population:{" "}
-                    {filterCounts.below55Population.toLocaleString()}
-                  </p>
+                  <div className="flex justify-center mt-4">
+                    <div className="bg-red-100 text-red-800 px-4 py-2 rounded-lg shadow-sm border border-red-200">
+                      <span className="font-medium">Population:</span>{" "}
+                      <span className="font-bold">{filterCounts.below55Population.toLocaleString()}</span>
+                    </div>
+                  </div>
                   <Button
-                    variant="ghost"
-                    className="w-full mt-4 text-red-700 hover:text-red-800 hover:bg-red-100"
+                    variant="outline"
+                    className="w-full mt-6 text-red-700 hover:text-red-800 hover:bg-red-100 border border-red-300 shadow-sm"
                     onClick={() => handleFilterChange("below55")}
                   >
-                    View Villages
+                    <Eye className="h-4 w-4 mr-2" /> View Villages
                   </Button>
                 </CardContent>
 
@@ -1246,31 +1252,43 @@ const EnhancedLpcdDashboard = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Consistently Above 55L LPCD */}
                 <Card
-                  className="border-blue-200"
+                  className="border-blue-200 dashboard-card card-shadow bg-gradient-to-b from-white to-blue-50"
                   onClick={() => handleFilterChange("consistentlyAbove55")}
                 >
-                  <CardContent className="p-4 flex justify-between items-center cursor-pointer hover:bg-blue-50">
-                    <span className="text-blue-700">
-                      Villages consistently above 55L LPCD for the week
-                    </span>
-                    <span className="text-xl font-bold text-blue-700">
+                  <CardContent className="p-5 flex items-center cursor-pointer hover:bg-blue-50 transition-all">
+                    <div className="bg-blue-100 p-3 rounded-full mr-4">
+                      <BarChart3 className="h-6 w-6 text-blue-700" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-blue-800 mb-1">Consistent High Performance</h3>
+                      <p className="text-blue-700 text-sm">
+                        Villages consistently above 55L LPCD for the week
+                      </p>
+                    </div>
+                    <div className="text-2xl font-bold text-blue-700 bg-blue-100 px-4 py-2 rounded-lg">
                       {filterCounts.consistentlyAbove55}
-                    </span>
+                    </div>
                   </CardContent>
                 </Card>
 
                 {/* Consistently Below 55L LPCD */}
                 <Card
-                  className="border-orange-200"
+                  className="border-orange-200 dashboard-card card-shadow bg-gradient-to-b from-white to-orange-50"
                   onClick={() => handleFilterChange("consistentlyBelow55")}
                 >
-                  <CardContent className="p-4 flex justify-between items-center cursor-pointer hover:bg-orange-50">
-                    <span className="text-orange-700">
-                      Villages consistently below 55L LPCD for the week
-                    </span>
-                    <span className="text-xl font-bold text-orange-700">
+                  <CardContent className="p-5 flex items-center cursor-pointer hover:bg-orange-50 transition-all">
+                    <div className="bg-orange-100 p-3 rounded-full mr-4">
+                      <ChartBarOff className="h-6 w-6 text-orange-700" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-orange-800 mb-1">Needs Improvement</h3>
+                      <p className="text-orange-700 text-sm">
+                        Villages consistently below 55L LPCD for the week
+                      </p>
+                    </div>
+                    <div className="text-2xl font-bold text-orange-700 bg-orange-100 px-4 py-2 rounded-lg">
                       {filterCounts.consistentlyBelow55}
-                    </span>
+                    </div>
                   </CardContent>
                 </Card>
               </div>
@@ -1311,18 +1329,18 @@ const EnhancedLpcdDashboard = () => {
               <CardContent>
                 {filteredSchemes.length > 0 ? (
                   <>
-                    <div className="rounded-md border">
+                    <div className="rounded-md border border-blue-200 overflow-hidden shadow-sm">
                       <Table className="border-collapse">
                         <TableHeader>
-                          <TableRow className="bg-blue-50 hover:bg-blue-100">
-                            <TableHead className="w-[50px] border-b border-blue-200">#</TableHead>
-                            <TableHead className="border-b border-blue-200">Region</TableHead>
-                            <TableHead className="border-b border-blue-200">Scheme Name</TableHead>
-                            <TableHead className="border-b border-blue-200">Village</TableHead>
-                            <TableHead className="border-b border-blue-200">Population</TableHead>
-                            <TableHead className="border-b border-blue-200">Current LPCD</TableHead>
-                            <TableHead className="border-b border-blue-200">Status</TableHead>
-                            <TableHead className="w-[120px] border-b border-blue-200">Actions</TableHead>
+                          <TableRow className="bg-blue-600 hover:bg-blue-700">
+                            <TableHead className="w-[50px] text-white font-semibold">#</TableHead>
+                            <TableHead className="text-white font-semibold">Region</TableHead>
+                            <TableHead className="text-white font-semibold">Scheme Name</TableHead>
+                            <TableHead className="text-white font-semibold">Village</TableHead>
+                            <TableHead className="text-white font-semibold">Population</TableHead>
+                            <TableHead className="text-white font-semibold">Current LPCD</TableHead>
+                            <TableHead className="text-white font-semibold">Status</TableHead>
+                            <TableHead className="w-[120px] text-white font-semibold">Actions</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1337,10 +1355,13 @@ const EnhancedLpcdDashboard = () => {
                                 <TableCell className="font-medium border-b border-blue-200">
                                   {(page - 1) * itemsPerPage + index + 1}
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200">{scheme.region}</TableCell>
-                                <TableCell className="border-b border-blue-200">{scheme.scheme_name}</TableCell>
-                                <TableCell className="border-b border-blue-200">{scheme.village_name}</TableCell>
+                                <TableCell className="border-b border-blue-200 font-medium">{scheme.region}</TableCell>
                                 <TableCell className="border-b border-blue-200">
+                                  <div className="font-medium text-blue-800">{scheme.scheme_name}</div>
+                                  <div className="text-xs text-gray-500">ID: {scheme.scheme_id}</div>
+                                </TableCell>
+                                <TableCell className="border-b border-blue-200 font-medium text-gray-800">{scheme.village_name}</TableCell>
+                                <TableCell className="border-b border-blue-200 text-right font-mono font-medium">
                                   {scheme.population?.toLocaleString() || "N/A"}
                                 </TableCell>
                                 <TableCell className="border-b border-blue-200">
@@ -1355,25 +1376,25 @@ const EnhancedLpcdDashboard = () => {
                                   </Badge>
                                 </TableCell>
                                 <TableCell className="border-b border-blue-200">
-                                  <div className="flex space-x-1">
+                                  <div className="flex space-x-2">
                                     <Button
-                                      variant="ghost"
+                                      variant="outline"
                                       size="sm"
                                       onClick={() => handleViewVillage(scheme)}
                                       title="View Details"
-                                      className="rounded-full"
+                                      className="rounded-md bg-blue-50 hover:bg-blue-100 border-blue-200"
                                     >
-                                      <Eye className="h-4 w-4" />
+                                      <Eye className="h-4 w-4 mr-1" /> View
                                     </Button>
                                     {scheme.dashboard_url && (
                                       <Button
-                                        variant="ghost"
-                                        size="sm"
+                                        variant="outline"
+                                        size="icon"
                                         onClick={() => window.open(scheme.dashboard_url, '_blank')}
                                         title="Open PI Vision Dashboard"
-                                        className="rounded-full"
+                                        className="rounded-md bg-blue-50 hover:bg-blue-100 border-blue-200"
                                       >
-                                        <BarChart className="h-4 w-4" />
+                                        <ExternalLink className="h-4 w-4" />
                                       </Button>
                                     )}
                                   </div>
@@ -1387,23 +1408,26 @@ const EnhancedLpcdDashboard = () => {
 
                     {/* Pagination */}
                     {totalPages > 1 && (
-                      <div className="flex items-center justify-between mt-4">
-                        <div className="text-sm text-gray-500">
-                          Showing {(page - 1) * itemsPerPage + 1} to{" "}
-                          {Math.min(
-                            page * itemsPerPage,
-                            filteredSchemes.length,
-                          )}{" "}
-                          of {filteredSchemes.length} entries
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-6 gap-4">
+                        <div className="text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-md border border-blue-100 shadow-sm">
+                          Showing <span className="font-semibold text-blue-700">{(page - 1) * itemsPerPage + 1}</span> to{" "}
+                          <span className="font-semibold text-blue-700">
+                            {Math.min(
+                              page * itemsPerPage,
+                              filteredSchemes.length,
+                            )}
+                          </span>{" "}
+                          of <span className="font-semibold text-blue-700">{filteredSchemes.length}</span> entries
                         </div>
-                        <div className="flex items-center space-x-2">
+                        <div className="flex items-center space-x-2 bg-white p-2 rounded-md border border-blue-100 shadow-sm">
                           <Button
                             variant="outline"
                             size="sm"
                             onClick={() => setPage(page - 1)}
                             disabled={page === 1}
+                            className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
                           >
-                            Previous
+                            <ChevronLeft className="h-4 w-4 mr-1" /> Previous
                           </Button>
                           {Array.from(
                             { length: Math.min(5, totalPages) },
@@ -1428,6 +1452,9 @@ const EnhancedLpcdDashboard = () => {
                                   }
                                   size="sm"
                                   onClick={() => setPage(pageNum)}
+                                  className={page === pageNum 
+                                    ? "bg-blue-600 hover:bg-blue-700" 
+                                    : "border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"}
                                 >
                                   {pageNum}
                                 </Button>
@@ -1439,8 +1466,9 @@ const EnhancedLpcdDashboard = () => {
                             size="sm"
                             onClick={() => setPage(page + 1)}
                             disabled={page === totalPages}
+                            className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
                           >
-                            Next
+                            Next <ChevronRight className="h-4 w-4 ml-1" />
                           </Button>
                         </div>
                       </div>

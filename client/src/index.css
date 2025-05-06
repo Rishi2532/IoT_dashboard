@@ -5,6 +5,50 @@
 @tailwind components;
 @tailwind utilities;
 
+@layer components {
+  .dashboard-card {
+    transform: translateY(0);
+    transition: all 0.3s ease;
+  }
+  
+  .dashboard-card:hover {
+    transform: translateY(-2px);
+  }
+  
+  .card-shadow {
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 1px 2px 0px, 
+                rgba(0, 0, 0, 0.05) 0px 2px 8px 0px;
+  }
+  
+  .card-shadow:hover {
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 12px 0px, 
+                rgba(0, 0, 0, 0.05) 0px 2px 8px 0px;
+  }
+
+  table thead tr {
+    background-color: #e6f0fd !important;
+  }
+  
+  table thead th {
+    color: #1e40af !important;
+    font-weight: 600 !important;
+  }
+  
+  /* Alternating row colors */
+  table tbody tr:nth-child(odd) {
+    background-color: #f8fafc;
+  }
+  
+  table tbody tr:nth-child(even) {
+    background-color: #f0f7ff;
+  }
+  
+  /* Hover effect */
+  table tbody tr:hover {
+    background-color: #e6f0fd !important;
+  }
+}
+
 /* Base styles for improved UI */
 @layer base {
   html {
