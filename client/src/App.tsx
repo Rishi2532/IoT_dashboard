@@ -22,6 +22,7 @@ import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
 import ChatbotComponent from "./components/chatbot/ChatbotComponent";
 import { TranslationProvider } from "./contexts/TranslationContext";
 import { ThemeProvider } from "./components/theme/theme-provider";
+import { GeoFilterProvider } from "./contexts/GeoFilterContext";
 
 function App() {
   const [location] = useLocation();
@@ -46,7 +47,8 @@ function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <TranslationProvider>
+        <GeoFilterProvider>
+          <TranslationProvider>
           {/* Global styles to fix z-index issues */}
           <style dangerouslySetInnerHTML={{
             __html: `
@@ -170,6 +172,7 @@ function App() {
             </FilterContextProvider>
           )}
         </TranslationProvider>
+        </GeoFilterProvider>
       </AuthProvider>
     </ThemeProvider>
   );
