@@ -48,89 +48,83 @@ export default function Dashboard() {
     isLoading: isGeoFilteredSchemesLoading,
   } = useGeographicFilteredSchemes();
   
-  // Maharashtra major 6 regions with proper coordinates
+  // Maharashtra major 6 regions with proper coordinates - names exactly match database
   const [sampleLocations, setSampleLocations] = useState<MapLocation[]>([
     // Pune Region
     {
-      name: "Pune Region",
+      name: "Pune",
       latitude: 18.52,
       longitude: 73.85,
       type: "scheme",
       details: {
         "Schemes": "36",
         "Villages": "426",
-        "ESRs": "156",
-        "Status": "Operational"
+        "ESRs": "156"
       }
     },
     
     // Nashik Region
     {
-      name: "Nashik Region",
+      name: "Nashik",
       latitude: 20.00,
       longitude: 73.78,
       type: "scheme",
       details: {
         "Schemes": "29",
         "Villages": "342",
-        "ESRs": "124",
-        "Status": "Operational"
+        "ESRs": "124"
       }
     },
     
     // Amravati Region
     {
-      name: "Amravati Region",
+      name: "Amravati",
       latitude: 20.93,
       longitude: 77.75,
       type: "scheme",
       details: {
         "Schemes": "21",
         "Villages": "197",
-        "ESRs": "86",
-        "Status": "Operational"
+        "ESRs": "86"
       }
     },
     
     // Chhatrapati Sambhajinagar Region
     {
-      name: "Chhatrapati Sambhajinagar Region",
+      name: "Chhatrapati Sambhajinagar",
       latitude: 19.87,
       longitude: 75.34,
       type: "scheme",
       details: {
         "Schemes": "26",
         "Villages": "280",
-        "ESRs": "102",
-        "Status": "Operational"
+        "ESRs": "102"
       }
     },
     
     // Nagpur Region
     {
-      name: "Nagpur Region",
+      name: "Nagpur",
       latitude: 21.15,
       longitude: 79.09,
       type: "scheme",
       details: {
         "Schemes": "30",
         "Villages": "364",
-        "ESRs": "146",
-        "Status": "Operational"
+        "ESRs": "146"
       }
     },
     
     // Konkan Region
     {
-      name: "Konkan Region",
+      name: "Konkan",
       latitude: 17.50,
       longitude: 73.20,
       type: "scheme",
       details: {
         "Schemes": "18",
         "Villages": "163",
-        "ESRs": "76",
-        "Status": "Operational"
+        "ESRs": "76"
       }
     }
   ]);

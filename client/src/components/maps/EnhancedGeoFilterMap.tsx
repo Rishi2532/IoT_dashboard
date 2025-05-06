@@ -298,6 +298,13 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
               key={`${location.name}-${index}`}
               position={[location.latitude, location.longitude]}
               icon={markerIcon}
+              eventHandlers={{
+                click: () => {
+                  console.log(`Marker clicked: ${location.name}`);
+                  // Call the region click handler if provided
+                  onRegionClick?.(location.name);
+                }
+              }}
             >
               <Tooltip 
                 direction="top" 
