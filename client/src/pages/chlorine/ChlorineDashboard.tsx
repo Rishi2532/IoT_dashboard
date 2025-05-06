@@ -793,7 +793,7 @@ const ChlorineDashboard: React.FC = () => {
               <div className="overflow-hidden rounded-md">
                 <Table className="border-collapse">
                   <TableHeader className="bg-blue-50">
-                    <TableRow className="hover:bg-blue-100">
+                    <TableRow className="chlorine-item hover:bg-blue-100">
                       <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                         Region
                       </TableHead>
@@ -858,7 +858,7 @@ const ChlorineDashboard: React.FC = () => {
                       return (
                         <TableRow
                           key={`${item.scheme_id}-${item.village_name}-${item.esr_name}-${index}`}
-                          className={`${baseRowClass} hover:bg-blue-100 transition-colors`}
+                          className={`chlorine-item ${baseRowClass} hover:bg-blue-100 transition-all`}
                         >
                           <TableCell className="font-medium border-b border-blue-200">
                             {item.region}

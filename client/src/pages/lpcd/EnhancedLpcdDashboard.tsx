@@ -1350,7 +1350,7 @@ const EnhancedLpcdDashboard = () => {
                             return (
                               <TableRow
                                 key={`${scheme.scheme_id}-${scheme.village_name}`}
-                                className={`${isEven ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100 transition-colors`}
+                                className={`village-item ${isEven ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100 transition-all`}
                               >
                                 <TableCell className="font-medium border-b border-blue-200">
                                   {(page - 1) * itemsPerPage + index + 1}
