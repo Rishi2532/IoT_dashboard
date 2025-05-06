@@ -482,21 +482,25 @@ const ChlorineDashboard: React.FC = () => {
         {/* Total Sensors Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "all" ? "ring-2 ring-blue-500 ring-offset-2" : ""
+            currentFilter === "all" ? "ring-2 ring-teal-500 ring-offset-2" : ""
           } transform hover:scale-[1.02]`}
           onClick={() => handleCardClick("all")}
         >
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-teal-50 to-white"></div>
+          <div className="absolute bottom-0 right-0 opacity-10">
+            <Droplet className="h-24 w-24 text-teal-500" />
+          </div>
           <CardHeader className="pb-2 relative">
-            <CardTitle className="text-lg font-bold text-blue-800">
+            <CardTitle className="text-lg font-bold text-teal-800 flex items-center">
+              <Droplet className="h-5 w-5 text-teal-600 mr-2" />
               Total Connected ESRs
             </CardTitle>
           </CardHeader>
           <CardContent className="relative">
-            <p className="text-5xl font-bold text-blue-700">
+            <p className="text-5xl font-bold text-teal-600">
               {dashboardStats?.totalSensors || 0}
             </p>
-            <p className="text-sm text-blue-600/80 mt-2 font-medium">
+            <p className="text-sm text-teal-600/80 mt-2 font-medium">
               Total chlorine sensors connected
             </p>
           </CardContent>

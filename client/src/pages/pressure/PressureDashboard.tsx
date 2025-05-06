@@ -426,12 +426,13 @@ const PressureDashboard: React.FC = () => {
         >
           <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-white"></div>
           <div className="absolute bottom-0 right-0 opacity-10">
-            <svg width="100" height="100" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-blue-600">
-              <path d="M19 5L5 19M5 5L19 19" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
+            <Gauge className="h-24 w-24 text-blue-500" />
           </div>
           <CardHeader className="pb-2 relative">
-            <CardTitle className="text-lg font-bold text-blue-800">Total Connected ESRs</CardTitle>
+            <CardTitle className="text-lg font-bold text-blue-800 flex items-center">
+              <Gauge className="h-5 w-5 text-blue-600 mr-2" />
+              Total Connected ESRs
+            </CardTitle>
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-blue-700">{dashboardStats?.totalSensors || 0}</p>
