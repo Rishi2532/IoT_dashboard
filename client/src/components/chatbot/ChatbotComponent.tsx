@@ -931,33 +931,55 @@ const ChatbotComponent: React.FC = () => {
     setMinimized(!minimized);
   };
 
-  // Handle mouse down for dragging
+  // Enhanced mouse down handler for smoother dragging
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
-    setIsDragging(true);
-    if (dragRef.current) {
-      // Store the initial position
-      startPositionRef.current = {
-        x: e.clientX - position.x,
-        y: e.clientY - position.y
-      };
+    e.preventDefault(); // Prevent text selection during drag
+    
+    // Only start dragging when clicking the header or button, not the content
+    if (e.currentTarget.classList.contains('drag-handle')) {
+      setIsDragging(true);
+      
+      // Calculate offset from the element's top-left corner
+      const rect = dragRef.current?.getBoundingClientRect();
+      if (rect) {
+        startPositionRef.current = {
+          x: e.clientX - rect.left,
+          y: e.clientY - rect.top
+        };
+      }
     }
   };
 
-  // Handle mouse move for dragging
+  // Enhanced mouse move handler for smoother dragging
   const handleMouseMove = (e: MouseEvent) => {
-    if (isDragging && dragRef.current) {
-      const newX = e.clientX - startPositionRef.current.x;
-      const newY = e.clientY - startPositionRef.current.y;
-      
-      // Apply boundaries to keep the icon on screen
-      const maxX = window.innerWidth - 70; // width of the button with some padding
-      const maxY = window.innerHeight - 70; // height of the button with some padding
-      
-      const boundedX = Math.min(Math.max(0, newX), maxX);
-      const boundedY = Math.min(Math.max(0, newY), maxY);
-      
-      setPosition({ x: boundedX, y: boundedY });
-    }
+    if (!isDragging) return;
+    
+    // Calculate new position based on mouse position and initial offset
+    const newX = e.clientX - startPositionRef.current.x;
+    const newY = e.clientY - startPositionRef.current.y;
+    
+    // Apply boundaries to keep the chatbot on screen
+    const width = dragRef.current?.offsetWidth || 70;
+    const height = dragRef.current?.offsetHeight || 70;
+    
+    const maxX = window.innerWidth - width;
+    const maxY = window.innerHeight - height;
+    
+    const boundedX = Math.min(Math.max(0, newX), maxX);
+    const boundedY = Math.min(Math.max(0, newY), maxY);
+    
+    // Update position with requestAnimationFrame for smoother animation
+    requestAnimationFrame(() => {
+      if (dragRef.current) {
+        dragRef.current.style.left = `${boundedX}px`;
+        dragRef.current.style.top = `${boundedY}px`;
+        dragRef.current.style.bottom = 'auto';
+        dragRef.current.style.right = 'auto';
+        
+        // Update state after animation frame
+        setPosition({ x: boundedX, y: boundedY });
+      }
+    });
   };
 
   // Handle mouse up to stop dragging
@@ -982,38 +1004,46 @@ const ChatbotComponent: React.FC = () => {
     return (
       <div 
         ref={dragRef}
-        className="fixed z-50 cursor-move"
+        className="fixed z-50"
         style={{ 
           bottom: position.y === 0 ? '1rem' : 'auto',
           right: position.x === 0 ? '1rem' : 'auto',
           top: position.y !== 0 ? `${position.y}px` : 'auto',
           left: position.x !== 0 ? `${position.x}px` : 'auto'
         }}
-        onMouseDown={handleMouseDown}
       >
-        <Button
-          onClick={toggleChatbot}
-          className="rounded-full w-14 h-14 bg-blue-600 hover:bg-blue-700 shadow-lg flex items-center justify-center"
+        <div
+          className="drag-handle cursor-move"
+          onMouseDown={handleMouseDown}
         >
-          <MessageSquare className="w-6 h-6" />
-        </Button>
+          <Button
+            onClick={toggleChatbot}
+            className="rounded-full w-14 h-14 bg-blue-600 hover:bg-blue-700 shadow-lg flex items-center justify-center"
+          >
+            <MessageSquare className="w-6 h-6" />
+          </Button>
+        </div>
         
-        {/* Welcome popup message */}
+        {/* Enhanced welcome popup message with animation */}
         {showWelcome && (
-          <div className="absolute bottom-16 right-0 bg-white p-3 rounded-lg shadow-lg border border-blue-200 w-64 animate-fadeIn">
+          <div 
+            className="absolute bottom-16 right-0 bg-gradient-to-br from-white to-blue-50 p-4 rounded-xl shadow-xl border border-blue-300 w-72 animate-in fade-in slide-in-from-bottom-5 duration-300"
+            style={{ transformOrigin: 'bottom right' }}
+          >
             <div className="flex items-start">
-              <div className="mr-2 mt-0.5">
+              <div className="mr-3 mt-0.5 bg-blue-100 p-2 rounded-full">
                 <MessageSquare className="h-5 w-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-sm font-medium text-gray-900">How may I help you?</p>
-                <p className="text-xs text-gray-500 mt-1">
-                  Click this icon to ask questions about water infrastructure data
+                <p className="text-sm font-semibold text-blue-900">How may I help you?</p>
+                <p className="text-xs text-blue-700 mt-1.5 leading-relaxed">
+                  Click this icon to ask questions about water infrastructure data, schemes, and regions
                 </p>
               </div>
             </div>
+            <div className="absolute w-4 h-4 bg-blue-300 rotate-45 bottom-[-8px] right-6"></div>
             <div className="absolute top-0 right-0 transform -translate-y-1/2 translate-x-1/2">
-              <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse"></div>
+              <div className="h-3 w-3 rounded-full bg-red-500 animate-ping"></div>
             </div>
           </div>
         )}
@@ -1026,17 +1056,19 @@ const ChatbotComponent: React.FC = () => {
     return (
       <div 
         ref={dragRef}
-        className="fixed z-50 cursor-move"
+        className="fixed z-50"
         style={{ 
           bottom: position.y === 0 ? '1rem' : 'auto',
           right: position.x === 0 ? '1rem' : 'auto',
           top: position.y !== 0 ? `${position.y}px` : 'auto',
           left: position.x !== 0 ? `${position.x}px` : 'auto'
         }}
-        onMouseDown={handleMouseDown}
       >
         <div className="bg-white rounded-lg shadow-lg h-14 w-80 flex flex-col border border-gray-200">
-          <div className="flex items-center justify-between p-3 border-b border-gray-200 bg-blue-50 h-full">
+          <div 
+            className="flex items-center justify-between p-3 border-b border-gray-200 bg-blue-50 h-full drag-handle cursor-move"
+            onMouseDown={handleMouseDown}
+          >
             <div className="flex items-center">
               <MessageSquare className="w-5 h-5 text-blue-600 mr-2" />
               <h3 className="text-sm font-medium text-blue-700">
@@ -1080,7 +1112,7 @@ const ChatbotComponent: React.FC = () => {
     >
       <div className="bg-white rounded-lg shadow-lg h-[500px] w-[350px] sm:w-[380px] flex flex-col border border-gray-200">
         <div 
-          className="flex items-center justify-between p-3 border-b border-gray-200 bg-blue-50 cursor-move"
+          className="flex items-center justify-between p-3 border-b border-gray-200 bg-blue-50 cursor-move drag-handle"
           onMouseDown={handleMouseDown}
         >
           <div className="flex items-center">
