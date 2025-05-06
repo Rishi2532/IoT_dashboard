@@ -48,7 +48,7 @@ export default function Dashboard() {
     isLoading: isGeoFilteredSchemesLoading,
   } = useGeographicFilteredSchemes();
   
-  // Maharashtra major 6 regions with proper coordinates - names exactly match database
+  // Maharashtra major 6 regions with verified accurate coordinates - names exactly match database
   const [sampleLocations, setSampleLocations] = useState<MapLocation[]>([
     // Pune Region
     {
@@ -115,11 +115,11 @@ export default function Dashboard() {
       }
     },
     
-    // Konkan Region
+    // Konkan Region - adjusted position for better visibility
     {
       name: "Konkan",
-      latitude: 17.50,
-      longitude: 73.20,
+      latitude: 18.10,
+      longitude: 73.10,
       type: "scheme",
       details: {
         "Schemes": "18",

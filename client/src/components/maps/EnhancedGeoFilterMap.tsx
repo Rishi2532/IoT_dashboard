@@ -18,13 +18,13 @@ import { getMaharashtraGeoJson } from '@/lib/maharashtra-geojson';
 // Define custom icon for different types of infrastructure
 const schemeIcon = L.divIcon({
   className: 'scheme-marker-icon',
-  html: `<svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+  html: `<svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
            <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7z" 
-             fill="#2563eb" fill-opacity="0.7" stroke="#fff" stroke-width="1.5" />
+             fill="#2563eb" fill-opacity="0.9" stroke="#fff" stroke-width="1.5" />
            <circle cx="12" cy="9" r="3" fill="#2563eb" stroke="#fff" />
          </svg>`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
+  iconSize: [40, 40],
+  iconAnchor: [20, 40],
 });
 
 const esrIcon = L.divIcon({
@@ -254,14 +254,7 @@ const EnhancedGeoFilterMap: React.FC<EnhancedGeoFilterMapProps> = ({
         {/* Map zoom event handler */}
         <MapEvents onZoomChange={handleZoomChange} />
         
-        {/* Maharashtra GeoJSON */}
-        {geoJsonData && (
-          <GeoJSON
-            data={geoJsonData}
-            style={regionStyle}
-            onEachFeature={onEachFeature}
-          />
-        )}
+        {/* No GeoJSON layer - removed as requested */}
         
         {/* Location markers with type-based icons */}
         {locations.map((location, index) => {
