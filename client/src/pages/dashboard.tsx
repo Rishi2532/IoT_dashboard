@@ -48,212 +48,88 @@ export default function Dashboard() {
     isLoading: isGeoFilteredSchemesLoading,
   } = useGeographicFilteredSchemes();
   
-  // Maharashtra region main locations with proper coordinates
+  // Maharashtra major 6 regions with proper coordinates
   const [sampleLocations, setSampleLocations] = useState<MapLocation[]>([
     // Pune Region
     {
-      name: "Pune MJP Scheme",
+      name: "Pune Region",
       latitude: 18.52,
       longitude: 73.85,
       type: "scheme",
       details: {
-        "ESRs": "12",
-        "Villages": "32",
+        "Schemes": "36",
+        "Villages": "426",
+        "ESRs": "156",
         "Status": "Operational"
-      }
-    },
-    {
-      name: "Wagholi Village",
-      latitude: 18.58,
-      longitude: 73.95,
-      type: "village",
-      details: {
-        "LPCD": "72L",
-        "Status": "Good"
-      }
-    },
-    {
-      name: "Khadakwasla ESR",
-      latitude: 18.44,
-      longitude: 73.77,
-      type: "esr",
-      details: {
-        "Capacity": "15ML",
-        "Status": "Operational"
-      }
-    },
-    {
-      name: "Yerwada WTP",
-      latitude: 18.55,
-      longitude: 73.89,
-      type: "wtp",
-      details: {
-        "Capacity": "18 MLD",
-        "Online": "Yes"
       }
     },
     
     // Nashik Region
     {
-      name: "Ozar Sakore Scheme",
-      latitude: 20.09,
-      longitude: 73.92,
+      name: "Nashik Region",
+      latitude: 20.00,
+      longitude: 73.78,
       type: "scheme",
       details: {
-        "ESRs": "3",
-        "Villages": "5",
-        "Status": "Operational"
-      }
-    },
-    {
-      name: "Trimbakeshwar Village",
-      latitude: 19.93,
-      longitude: 73.53,
-      type: "village",
-      details: {
-        "LPCD": "65L",
-        "Status": "Good"
-      }
-    },
-    {
-      name: "Nashik ESR",
-      latitude: 19.99,
-      longitude: 73.78,
-      type: "esr",
-      details: {
-        "Capacity": "10ML",
+        "Schemes": "29",
+        "Villages": "342",
+        "ESRs": "124",
         "Status": "Operational"
       }
     },
     
     // Amravati Region
     {
-      name: "Chandur Bazar Scheme",
-      latitude: 20.81,
-      longitude: 77.98,
-      type: "scheme",
-      details: {
-        "ESRs": "4",
-        "Villages": "8",
-        "Status": "Operational"
-      }
-    },
-    {
-      name: "Daryapur Village",
-      latitude: 20.92,
-      longitude: 77.82,
-      type: "village",
-      details: {
-        "LPCD": "58L",
-        "Status": "Good"
-      }
-    },
-    {
-      name: "Amravati ESR",
+      name: "Amravati Region",
       latitude: 20.93,
       longitude: 77.75,
-      type: "esr",
+      type: "scheme",
       details: {
-        "Capacity": "8ML",
+        "Schemes": "21",
+        "Villages": "197",
+        "ESRs": "86",
         "Status": "Operational"
       }
     },
     
     // Chhatrapati Sambhajinagar Region
     {
-      name: "Paithan Scheme",
-      latitude: 19.48,
-      longitude: 75.38,
-      type: "scheme",
-      details: {
-        "ESRs": "5",
-        "Villages": "12",
-        "Status": "Operational"
-      }
-    },
-    {
-      name: "Vaijapur Village",
-      latitude: 19.92,
-      longitude: 74.73,
-      type: "village",
-      details: {
-        "LPCD": "62L",
-        "Status": "Good"
-      }
-    },
-    {
-      name: "Sambhajinagar ESR",
+      name: "Chhatrapati Sambhajinagar Region",
       latitude: 19.87,
       longitude: 75.34,
-      type: "esr",
+      type: "scheme",
       details: {
-        "Capacity": "12ML",
+        "Schemes": "26",
+        "Villages": "280",
+        "ESRs": "102",
         "Status": "Operational"
       }
     },
     
     // Nagpur Region
     {
-      name: "Nagpur Rural Scheme",
+      name: "Nagpur Region",
       latitude: 21.15,
       longitude: 79.09,
       type: "scheme",
       details: {
-        "ESRs": "7",
-        "Villages": "15",
+        "Schemes": "30",
+        "Villages": "364",
+        "ESRs": "146",
         "Status": "Operational"
-      }
-    },
-    {
-      name: "Ramtek Village",
-      latitude: 21.40,
-      longitude: 79.33,
-      type: "village",
-      details: {
-        "LPCD": "68L",
-        "Status": "Good"
-      }
-    },
-    {
-      name: "Nagpur WTP",
-      latitude: 21.17,
-      longitude: 79.04,
-      type: "wtp",
-      details: {
-        "Capacity": "25 MLD",
-        "Online": "Yes"
       }
     },
     
     // Konkan Region
     {
-      name: "Ratnagiri Scheme",
-      latitude: 16.99,
-      longitude: 73.30,
+      name: "Konkan Region",
+      latitude: 17.50,
+      longitude: 73.20,
       type: "scheme",
       details: {
-        "ESRs": "4",
-        "Villages": "9",
-        "Status": "Operational"
-      }
-    },
-    {
-      name: "Sindhudurg Village",
-      latitude: 16.04,
-      longitude: 73.46,
-      type: "village",
-      details: {
-        "LPCD": "70L",
-        "Status": "Good"
-      }
-    },
-    {
-      name: "Alibag ESR",
-      latitude: 18.64,
-      longitude: 72.87,
-      type: "esr",
-      details: {
-        "Capacity": "6ML",
+        "Schemes": "18",
+        "Villages": "163",
+        "ESRs": "76",
         "Status": "Operational"
       }
     }
