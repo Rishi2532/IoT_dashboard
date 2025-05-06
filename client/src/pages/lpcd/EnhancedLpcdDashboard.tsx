@@ -926,14 +926,14 @@ const EnhancedLpcdDashboard = () => {
 
   return (
     <div className="w-full py-6 container mx-auto px-4">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">LPCD Dashboard</h1>
-          <p className="text-gray-600">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+        <div className="bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border-l-4 border-blue-600 shadow-sm">
+          <h1 className="text-3xl font-bold text-blue-900">LPCD Dashboard</h1>
+          <p className="text-blue-700 font-medium mt-1">
             Monitor water supply across villages (Litres Per Capita per Day)
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-3">
           <div className="relative w-64">
             <Input
               type="search"
@@ -943,22 +943,22 @@ const EnhancedLpcdDashboard = () => {
                 setSearchQuery(e.target.value);
                 setPage(1); // Reset page on search
               }}
-              className="pr-8"
+              className="pr-8 border-blue-200 shadow-sm"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700"
               >
                 <X className="h-4 w-4" />
               </button>
             )}
           </div>
           <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-            <SelectTrigger className="w-[180px] bg-white border-2 border-gray-300 shadow-sm">
+            <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
               <SelectValue placeholder="All Regions" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="border border-blue-100">
               <SelectItem value="all">All Regions</SelectItem>
               {regionsData.map((region) => (
                 <SelectItem key={region.region_id} value={region.region_name}>
@@ -972,6 +972,7 @@ const EnhancedLpcdDashboard = () => {
             size="icon"
             onClick={() => refetch()}
             title="Refresh data"
+            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
@@ -980,11 +981,20 @@ const EnhancedLpcdDashboard = () => {
             size="icon"
             onClick={exportToExcel}
             title="Export to Excel"
+            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
           >
             <FileSpreadsheet className="h-4 w-4" />
           </Button>
-          <Button variant="outline" onClick={() => setShowCharts(!showCharts)}>
-            {showCharts ? "Hide Charts" : "Show Charts"}
+          <Button 
+            variant="outline" 
+            onClick={() => setShowCharts(!showCharts)}
+            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
+          >
+            {showCharts ? (
+              <><ChartBarOff className="h-4 w-4 mr-2" /> Hide Charts</>
+            ) : (
+              <><BarChart3 className="h-4 w-4 mr-2" /> Show Charts</>
+            )}
           </Button>
         </div>
       </div>
@@ -1002,26 +1012,26 @@ const EnhancedLpcdDashboard = () => {
           <div className="space-y-6">
             {/* Top Card - Total Villages */}
             <Card
-              className="w-full max-w-md mx-auto cursor-pointer hover:shadow-md transition-shadow duration-300"
+              className="w-full max-w-md mx-auto cursor-pointer transition-all duration-300 dashboard-card card-shadow bg-gradient-to-b from-white to-blue-50 border border-blue-200"
               onClick={() => {
                 setCurrentFilter("all");
                 setSearchQuery("");
               }}
             >
-              <CardHeader className="bg-primary/10 pb-2">
-                <CardTitle className="text-center text-xl">
-                  Total Villages Covered Under LPCD till date
+              <CardHeader className="bg-gradient-to-r from-blue-100 to-blue-50 border-b border-blue-200 pb-2">
+                <CardTitle className="text-center text-xl font-semibold text-blue-800">
+                  Total Villages Covered Under LPCD
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6 pb-4">
-                <p className="text-5xl font-bold text-center text-primary">
+                <p className="text-6xl font-bold text-center text-blue-700 drop-shadow-sm">
                   {filterCounts.total}
                 </p>
-                <div className="flex justify-center mt-2">
-                  <p className="text-lg font-semibold text-blue-700 bg-blue-100 px-3 py-1 rounded-md">
-                    Total Population:{" "}
-                    {filterCounts.totalPopulation.toLocaleString()}
-                  </p>
+                <div className="flex justify-center mt-4">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2 rounded-lg shadow-sm">
+                    <span className="font-medium">Total Population:</span>{" "}
+                    <span className="font-bold">{filterCounts.totalPopulation.toLocaleString()}</span>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -1029,26 +1039,28 @@ const EnhancedLpcdDashboard = () => {
             {/* Main Cards Row - Above/Below 55L */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Villages with LPCD > 55L */}
-              <Card className="border-green-200">
-                <CardHeader className="bg-green-50 pb-2">
-                  <CardTitle className="text-center text-xl text-green-800">
+              <Card className="border-green-200 dashboard-card card-shadow bg-gradient-to-b from-white to-green-50">
+                <CardHeader className="bg-gradient-to-r from-green-100 to-green-50 border-b border-green-200 pb-2">
+                  <CardTitle className="text-center text-xl font-semibold text-green-800">
                     Villages with LPCD &gt; 55L
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 pb-4">
-                  <p className="text-5xl font-bold text-center text-green-600">
+                  <p className="text-5xl font-bold text-center text-green-600 drop-shadow-sm">
                     {filterCounts.above55}
                   </p>
-                  <p className="text-sm text-center text-gray-600 mt-2">
-                    Population:{" "}
-                    {filterCounts.above55Population.toLocaleString()}
-                  </p>
+                  <div className="flex justify-center mt-4">
+                    <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg shadow-sm border border-green-200">
+                      <span className="font-medium">Population:</span>{" "}
+                      <span className="font-bold">{filterCounts.above55Population.toLocaleString()}</span>
+                    </div>
+                  </div>
                   <Button
-                    variant="ghost"
-                    className="w-full mt-4 text-green-700 hover:text-green-800 hover:bg-green-100"
+                    variant="outline"
+                    className="w-full mt-6 text-green-700 hover:text-green-800 hover:bg-green-100 border border-green-300 shadow-sm"
                     onClick={() => handleFilterChange("above55")}
                   >
-                    View Villages
+                    <Eye className="h-4 w-4 mr-2" /> View Villages
                   </Button>
                 </CardContent>
 
