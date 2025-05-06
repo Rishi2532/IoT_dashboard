@@ -1,0 +1,25 @@
+.custom-map-tooltip {
+  background-color: rgba(0, 0, 0, 0.8);
+  border: none;
+  border-radius: 4px;
+  color: white;
+  font-size: 14px;
+  padding: 6px 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.custom-map-tooltip::before {
+  border-top-color: rgba(0, 0, 0, 0.8);
+}
+
+/* Style for highlighted features */
+.highlighted-feature {
+  fill-opacity: 0.6 !important;
+  stroke-width: 3px !important;
+}
+
+/* Style for hover effect */
+.geo-feature:hover {
+  fill-opacity: 0.3;
+  cursor: pointer;
+}

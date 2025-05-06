@@ -1,167 +1,57 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 
-// Define the shape of our geographic filter state
-interface GeoFilterState {
-  region: string;
-  division: string;
-  subDivision: string;
-  circle: string;
-  block: string;
-  village: string;
+// Define the geographic filter types
+export type GeoFilterLevel = 'region' | 'division' | 'subdivision' | 'circle' | 'block' | 'village' | 'none';
+
+export interface GeoFilter {
+  level: GeoFilterLevel;
+  region?: string;
+  division?: string;
+  subdivision?: string;
+  circle?: string;
+  block?: string;
+  village?: string;
 }
 
-// Define the context value shape
-interface GeoFilterContextValue {
-  filter: GeoFilterState;
-  setRegion: (region: string) => void;
-  setDivision: (division: string) => void;
-  setSubDivision: (subDivision: string) => void;
-  setCircle: (circle: string) => void;
-  setBlock: (block: string) => void;
-  setVillage: (village: string) => void;
-  clearFilters: () => void;
-  // For UI components that need to know what level we're filtering at
-  currentFilterLevel: 'region' | 'division' | 'subdivision' | 'circle' | 'block' | 'village'; 
+interface GeoFilterContextType {
+  filter: GeoFilter;
+  setFilter: React.Dispatch<React.SetStateAction<GeoFilter>>;
+  resetFilter: () => void;
+  isFiltering: boolean;
 }
 
-const defaultFilterState: GeoFilterState = {
-  region: 'all',
-  division: 'all',
-  subDivision: 'all',
-  circle: 'all',
-  block: 'all',
-  village: 'all',
-};
-
-// Create the context with a default value
-const GeoFilterContext = createContext<GeoFilterContextValue>({
-  filter: defaultFilterState,
-  setRegion: () => {},
-  setDivision: () => {},
-  setSubDivision: () => {},
-  setCircle: () => {},
-  setBlock: () => {},
-  setVillage: () => {},
-  clearFilters: () => {},
-  currentFilterLevel: 'region',
+// Create the context with default values
+const GeoFilterContext = createContext<GeoFilterContextType>({
+  filter: { level: 'none' },
+  setFilter: () => {},
+  resetFilter: () => {},
+  isFiltering: false
 });
 
-// Custom hook to use the geo filter context
+// Custom hook to use the context
 export const useGeoFilter = () => useContext(GeoFilterContext);
 
 interface GeoFilterProviderProps {
   children: ReactNode;
 }
 
-// The provider component
+// Provider component
 export const GeoFilterProvider: React.FC<GeoFilterProviderProps> = ({ children }) => {
-  const [filter, setFilter] = useState<GeoFilterState>(defaultFilterState);
-  const [currentFilterLevel, setCurrentFilterLevel] = useState<'region' | 'division' | 'subdivision' | 'circle' | 'block' | 'village'>('region');
-  
-  // Determine the most specific level that has a filter applied
+  const [filter, setFilter] = useState<GeoFilter>({ level: 'none' });
+  const [isFiltering, setIsFiltering] = useState(false);
+
+  // Reset filter to default state
+  const resetFilter = () => {
+    setFilter({ level: 'none' });
+  };
+
+  // Update isFiltering based on filter state
   useEffect(() => {
-    if (filter.village !== 'all') {
-      setCurrentFilterLevel('village');
-    } else if (filter.block !== 'all') {
-      setCurrentFilterLevel('block');
-    } else if (filter.circle !== 'all') {
-      setCurrentFilterLevel('circle');
-    } else if (filter.subDivision !== 'all') {
-      setCurrentFilterLevel('subdivision');
-    } else if (filter.division !== 'all') {
-      setCurrentFilterLevel('division');
-    } else {
-      setCurrentFilterLevel('region');
-    }
+    setIsFiltering(filter.level !== 'none');
   }, [filter]);
-  
-  // Set region and clear more specific filters
-  const setRegion = (region: string) => {
-    setFilter({
-      ...filter,
-      region,
-      // Clear more specific filters when changing region
-      division: 'all',
-      subDivision: 'all',
-      circle: 'all',
-      block: 'all',
-      village: 'all',
-    });
-  };
-  
-  // Set division and clear more specific filters
-  const setDivision = (division: string) => {
-    setFilter({
-      ...filter,
-      division,
-      // Clear more specific filters
-      subDivision: 'all',
-      circle: 'all',
-      block: 'all',
-      village: 'all',
-    });
-  };
-  
-  // Set subdivision and clear more specific filters
-  const setSubDivision = (subDivision: string) => {
-    setFilter({
-      ...filter,
-      subDivision,
-      // Clear more specific filters
-      circle: 'all',
-      block: 'all',
-      village: 'all',
-    });
-  };
-  
-  // Set circle and clear more specific filters
-  const setCircle = (circle: string) => {
-    setFilter({
-      ...filter,
-      circle,
-      // Clear more specific filters
-      block: 'all',
-      village: 'all',
-    });
-  };
-  
-  // Set block and clear village filter
-  const setBlock = (block: string) => {
-    setFilter({
-      ...filter,
-      block,
-      // Clear more specific filter
-      village: 'all',
-    });
-  };
-  
-  // Set village (most specific level)
-  const setVillage = (village: string) => {
-    setFilter({
-      ...filter,
-      village,
-    });
-  };
-  
-  // Clear all filters
-  const clearFilters = () => {
-    setFilter(defaultFilterState);
-  };
-  
-  const value = {
-    filter,
-    setRegion,
-    setDivision,
-    setSubDivision,
-    setCircle,
-    setBlock,
-    setVillage,
-    clearFilters,
-    currentFilterLevel,
-  };
-  
+
   return (
-    <GeoFilterContext.Provider value={value}>
+    <GeoFilterContext.Provider value={{ filter, setFilter, resetFilter, isFiltering }}>
       {children}
     </GeoFilterContext.Provider>
   );

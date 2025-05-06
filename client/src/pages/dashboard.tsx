@@ -12,12 +12,18 @@ import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";
 import ChatbotComponent, { FilterContextProvider } from "@/components/chatbot/ChatbotComponent";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, Map } from "lucide-react";
+import { Download, RefreshCw, Map, Filter } from "lucide-react";
 import { Region, RegionSummary, SchemeStatus } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import * as XLSX from "xlsx";
 // Import our map components
 import { GitHubStyleMapPreview } from "@/components/maps";
+// Import Enhanced GeoFilter Map
+import EnhancedGeoFilterMap from "@/components/maps/EnhancedGeoFilterMap";
+// Import GeoFilter context
+import { useGeoFilter } from "@/contexts/GeoFilterContext";
+// Import data hooks for geographic filtering
+import { useGeographicFilteredSchemes } from "@/hooks/useGeographicFilteredData";
 
 export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState("all");
@@ -29,6 +35,15 @@ export default function Dashboard() {
   
   // Map configuration
   const mapRef = useRef(null);
+  
+  // Get geographic filter context
+  const { filter, isFiltering } = useGeoFilter();
+  
+  // Use our geographic filtered schemes
+  const {
+    data: geoFilteredSchemes = [],
+    isLoading: isGeoFilteredSchemesLoading,
+  } = useGeographicFilteredSchemes();
 
   // Fetch regions data
   const {
@@ -397,22 +412,32 @@ export default function Dashboard() {
             <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center">
               <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
               Water Scheme Details
-              {selectedRegion !== "all" && (
+              {selectedRegion !== "all" && !isFiltering && (
                 <span className="ml-2 text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full region-selected">
                   {selectedRegion} Region
                 </span>
               )}
+              {isFiltering && (
+                <span className="ml-2 text-sm bg-green-100 text-green-700 px-2 py-0.5 rounded-full geo-filter-badge flex items-center">
+                  <Filter className="h-3 w-3 mr-1" />
+                  Geographic Filter: {filter.level}
+                  {filter.block && <span className="ml-1">- {filter.block}</span>}
+                </span>
+              )}
             </h2>
             <p className="text-xs sm:text-sm text-neutral-500 mt-1 sm:mt-2">
-              {selectedRegion === "all" 
-                ? "Click on any scheme to view detailed integration status and progress information"
-                : `Showing water schemes in ${selectedRegion} region. Use the chatbot to filter other regions.`
+              {isFiltering 
+                ? `Showing schemes filtered by ${filter.level} level geographic filter`
+                : (selectedRegion === "all" 
+                  ? "Click on any scheme to view detailed integration status and progress information"
+                  : `Showing water schemes in ${selectedRegion} region. Use the chatbot to filter other regions.`
+                )
               }
             </p>
           </div>
           <span className="hidden sm:flex items-center text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-            <span className="font-medium">{schemes.length}</span>
-            <span className="ml-1">scheme{schemes.length !== 1 ? 's' : ''} found</span>
+            <span className="font-medium">{isFiltering ? geoFilteredSchemes.length : schemes.length}</span>
+            <span className="ml-1">scheme{(isFiltering ? geoFilteredSchemes.length : schemes.length) !== 1 ? 's' : ''} found</span>
           </span>
         </div>
         <div className="w-full overflow-x-auto bg-gradient-to-r from-blue-50/30 via-white to-blue-50/30 rounded-lg p-2">
