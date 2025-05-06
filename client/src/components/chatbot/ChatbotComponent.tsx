@@ -875,6 +875,35 @@ const ChatbotComponent: React.FC = () => {
   const [showChatbot, setShowChatbot] = useState(false);
   const [minimized, setMinimized] = useState(false);
   const [modelLoading, setModelLoading] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeShown, setWelcomeShown] = useState(false);
+  
+  // Reference to track the draggable element
+  const dragRef = React.useRef<HTMLDivElement>(null);
+  const startPositionRef = React.useRef({ x: 0, y: 0 });
+
+  // Show welcome popup a few seconds after component mounts (simulating after login)
+  useEffect(() => {
+    // Check if we've already shown the welcome popup in this session
+    const hasShownWelcome = sessionStorage.getItem('welcomeShown');
+    
+    if (!hasShownWelcome && !welcomeShown) {
+      const timer = setTimeout(() => {
+        setShowWelcome(true);
+        setWelcomeShown(true);
+        sessionStorage.setItem('welcomeShown', 'true');
+        
+        // Auto-hide the welcome popup after 8 seconds
+        setTimeout(() => {
+          setShowWelcome(false);
+        }, 8000);
+      }, 3000); // Show popup 3 seconds after component mounts
+      
+      return () => clearTimeout(timer);
+    }
+  }, [welcomeShown]);
 
   // Load TensorFlow model on component mount but don't block rendering
   useEffect(() => {
@@ -906,16 +935,92 @@ const ChatbotComponent: React.FC = () => {
     setMinimized(!minimized);
   };
 
-  // If chatbot is not showing, just show the button
+  // Handle mouse down for dragging
+  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
+    setIsDragging(true);
+    if (dragRef.current) {
+      // Store the initial position
+      startPositionRef.current = {
+        x: e.clientX - position.x,
+        y: e.clientY - position.y
+      };
+    }
+  };
+
+  // Handle mouse move for dragging
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging && dragRef.current) {
+      const newX = e.clientX - startPositionRef.current.x;
+      const newY = e.clientY - startPositionRef.current.y;
+      
+      // Apply boundaries to keep the icon on screen
+      const maxX = window.innerWidth - 70; // width of the button with some padding
+      const maxY = window.innerHeight - 70; // height of the button with some padding
+      
+      const boundedX = Math.min(Math.max(0, newX), maxX);
+      const boundedY = Math.min(Math.max(0, newY), maxY);
+      
+      setPosition({ x: boundedX, y: boundedY });
+    }
+  };
+
+  // Handle mouse up to stop dragging
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  // Set up the global mouse event listeners for dragging
+  useEffect(() => {
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  // If chatbot is not showing, just show the draggable button
   if (!showChatbot) {
     return (
-      <div className="fixed bottom-4 right-4 z-50">
+      <div 
+        ref={dragRef}
+        className="fixed z-50 cursor-move"
+        style={{ 
+          bottom: position.y === 0 ? '1rem' : 'auto',
+          right: position.x === 0 ? '1rem' : 'auto',
+          top: position.y !== 0 ? `${position.y}px` : 'auto',
+          left: position.x !== 0 ? `${position.x}px` : 'auto'
+        }}
+        onMouseDown={handleMouseDown}
+      >
         <Button
           onClick={toggleChatbot}
           className="rounded-full w-14 h-14 bg-blue-600 hover:bg-blue-700 shadow-lg flex items-center justify-center"
         >
           <MessageSquare className="w-6 h-6" />
         </Button>
+        
+        {/* Welcome popup message */}
+        {showWelcome && (
+          <div className="absolute bottom-16 right-0 bg-white p-3 rounded-lg shadow-lg border border-blue-200 w-64 animate-fadeIn">
+            <div className="flex items-start">
+              <div className="mr-2 mt-0.5">
+                <MessageSquare className="h-5 w-5 text-blue-600" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">How may I help you?</p>
+                <p className="text-xs text-gray-500 mt-1">
+                  Click this icon to ask questions about water infrastructure data
+                </p>
+              </div>
+            </div>
+            <div className="absolute top-0 right-0 transform -translate-y-1/2 translate-x-1/2">
+              <div className="h-3 w-3 rounded-full bg-red-500 animate-pulse"></div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }

@@ -146,24 +146,24 @@ const EnhancedLpcdDashboard = () => {
     queryKey: ["/api/water-scheme-data", selectedRegion],
     queryFn: async () => {
       const params = new URLSearchParams();
-      
-      if (selectedRegion && selectedRegion !== 'all') {
-        params.append('region', selectedRegion);
+
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
       }
-      
+
       const queryString = params.toString();
-      const url = `/api/water-scheme-data${queryString ? `?${queryString}` : ''}`;
-      
-      console.log('Fetching LPCD data with URL:', url);
+      const url = `/api/water-scheme-data${queryString ? `?${queryString}` : ""}`;
+
+      console.log("Fetching LPCD data with URL:", url);
       const response = await fetch(url);
       if (!response.ok) {
-        throw new Error('Failed to fetch LPCD data');
+        throw new Error("Failed to fetch LPCD data");
       }
-      
+
       const data = await response.json();
       console.log(`Received ${data.length} LPCD records`);
       return data;
-    }
+    },
   });
 
   // Fetch region data
@@ -191,7 +191,9 @@ const EnhancedLpcdDashboard = () => {
   };
 
   // Get latest water supply value
-  const getLatestWaterSupplyValue = (scheme: WaterSchemeData): number | null => {
+  const getLatestWaterSupplyValue = (
+    scheme: WaterSchemeData,
+  ): number | null => {
     // Try to get the latest non-null water supply value
     for (const day of [6, 5, 4, 3, 2, 1]) {
       const value = scheme[`water_value_day${day}` as keyof WaterSchemeData];
@@ -206,12 +208,12 @@ const EnhancedLpcdDashboard = () => {
     }
     return null;
   };
-  
+
   // Check if a scheme has zero water supply for the current day
   const hasNoCurrentWaterSupply = (scheme: WaterSchemeData): boolean => {
     // Get the most recent water supply value
     const currentWaterSupply = getLatestWaterSupplyValue(scheme);
-    
+
     // Return true if it's explicitly 0
     return currentWaterSupply !== null && currentWaterSupply === 0;
   };
@@ -767,8 +769,10 @@ const EnhancedLpcdDashboard = () => {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="ml-2 text-xs" 
-                    onClick={() => window.open(selectedVillage.dashboard_url, '_blank')}
+                    className="ml-2 text-xs"
+                    onClick={() =>
+                      window.open(selectedVillage.dashboard_url, "_blank")
+                    }
                   >
                     <BarChart className="h-4 w-4 mr-1" /> PI Vision Dashboard
                   </Button>
@@ -838,7 +842,7 @@ const EnhancedLpcdDashboard = () => {
               {/* Water Consumption Values */}
               <div>
                 <h3 className="text-lg font-semibold mb-3 bg-white p-2 rounded shadow-sm border border-blue-100">
-                  Water Consumption (MLD)
+                  Water Consumption (LL)
                 </h3>
                 <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
                   {[1, 2, 3, 4, 5, 6].map((day) => {
@@ -986,15 +990,19 @@ const EnhancedLpcdDashboard = () => {
           >
             <FileSpreadsheet className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             onClick={() => setShowCharts(!showCharts)}
             className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
           >
             {showCharts ? (
-              <><ChartBarOff className="h-4 w-4 mr-2" /> Hide Charts</>
+              <>
+                <ChartBarOff className="h-4 w-4 mr-2" /> Hide Charts
+              </>
             ) : (
-              <><BarChart3 className="h-4 w-4 mr-2" /> Show Charts</>
+              <>
+                <BarChart3 className="h-4 w-4 mr-2" /> Show Charts
+              </>
             )}
           </Button>
         </div>
@@ -1031,7 +1039,9 @@ const EnhancedLpcdDashboard = () => {
                 <div className="flex justify-center mt-4">
                   <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2 rounded-lg shadow-sm">
                     <span className="font-medium">Total Population:</span>{" "}
-                    <span className="font-bold">{filterCounts.totalPopulation.toLocaleString()}</span>
+                    <span className="font-bold">
+                      {filterCounts.totalPopulation.toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -1053,7 +1063,9 @@ const EnhancedLpcdDashboard = () => {
                   <div className="flex justify-center mt-4">
                     <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg shadow-sm border border-green-200">
                       <span className="font-medium">Population:</span>{" "}
-                      <span className="font-bold">{filterCounts.above55Population.toLocaleString()}</span>
+                      <span className="font-bold">
+                        {filterCounts.above55Population.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                   <Button
@@ -1140,7 +1152,9 @@ const EnhancedLpcdDashboard = () => {
                   <div className="flex justify-center mt-4">
                     <div className="bg-red-100 text-red-800 px-4 py-2 rounded-lg shadow-sm border border-red-200">
                       <span className="font-medium">Population:</span>{" "}
-                      <span className="font-bold">{filterCounts.below55Population.toLocaleString()}</span>
+                      <span className="font-bold">
+                        {filterCounts.below55Population.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                   <Button
@@ -1167,7 +1181,9 @@ const EnhancedLpcdDashboard = () => {
 
                           <span className="font-medium text-red-900">
                             {
-                              allWaterSchemeData.filter(scheme => hasNoCurrentWaterSupply(scheme)).length
+                              allWaterSchemeData.filter((scheme) =>
+                                hasNoCurrentWaterSupply(scheme),
+                              ).length
                             }
                           </span>
                         </CardContent>
@@ -1257,7 +1273,9 @@ const EnhancedLpcdDashboard = () => {
                       <BarChart3 className="h-6 w-6 text-blue-700" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-blue-800 mb-1">Consistent High Performance</h3>
+                      <h3 className="font-semibold text-blue-800 mb-1">
+                        Consistent High Performance
+                      </h3>
                       <p className="text-blue-700 text-sm">
                         Villages consistently above 55L LPCD for the week
                       </p>
@@ -1278,7 +1296,9 @@ const EnhancedLpcdDashboard = () => {
                       <ChartBarOff className="h-6 w-6 text-orange-700" />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-semibold text-orange-800 mb-1">Needs Improvement</h3>
+                      <h3 className="font-semibold text-orange-800 mb-1">
+                        Needs Improvement
+                      </h3>
                       <p className="text-orange-700 text-sm">
                         Villages consistently below 55L LPCD for the week
                       </p>
@@ -1330,14 +1350,30 @@ const EnhancedLpcdDashboard = () => {
                       <Table className="border-collapse">
                         <TableHeader>
                           <TableRow className="bg-blue-600 hover:bg-blue-700">
-                            <TableHead className="w-[50px] text-white font-semibold">#</TableHead>
-                            <TableHead className="text-white font-semibold">Region</TableHead>
-                            <TableHead className="text-white font-semibold">Scheme Name</TableHead>
-                            <TableHead className="text-white font-semibold">Village</TableHead>
-                            <TableHead className="text-white font-semibold">Population</TableHead>
-                            <TableHead className="text-white font-semibold">Current LPCD</TableHead>
-                            <TableHead className="text-white font-semibold">Status</TableHead>
-                            <TableHead className="w-[120px] text-white font-semibold">Actions</TableHead>
+                            <TableHead className="w-[50px] text-white font-semibold">
+                              #
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Region
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Scheme Name
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Village
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Population
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Current LPCD
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Status
+                            </TableHead>
+                            <TableHead className="w-[120px] text-white font-semibold">
+                              Actions
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1347,17 +1383,25 @@ const EnhancedLpcdDashboard = () => {
                             return (
                               <TableRow
                                 key={`${scheme.scheme_id}-${scheme.village_name}`}
-                                className={`village-item ${isEven ? 'bg-blue-50' : 'bg-white'} hover:bg-blue-100 transition-all`}
+                                className={`village-item ${isEven ? "bg-blue-50" : "bg-white"} hover:bg-blue-100 transition-all`}
                               >
                                 <TableCell className="font-medium border-b border-blue-200">
                                   {(page - 1) * itemsPerPage + index + 1}
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200 font-medium">{scheme.region}</TableCell>
-                                <TableCell className="border-b border-blue-200">
-                                  <div className="font-medium text-blue-800">{scheme.scheme_name}</div>
-                                  <div className="text-xs text-gray-500">ID: {scheme.scheme_id}</div>
+                                <TableCell className="border-b border-blue-200 font-medium">
+                                  {scheme.region}
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200 font-medium text-gray-800">{scheme.village_name}</TableCell>
+                                <TableCell className="border-b border-blue-200">
+                                  <div className="font-medium text-blue-800">
+                                    {scheme.scheme_name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    ID: {scheme.scheme_id}
+                                  </div>
+                                </TableCell>
+                                <TableCell className="border-b border-blue-200 font-medium text-gray-800">
+                                  {scheme.village_name}
+                                </TableCell>
                                 <TableCell className="border-b border-blue-200 text-right font-mono font-medium">
                                   {scheme.population?.toLocaleString() || "N/A"}
                                 </TableCell>
@@ -1387,7 +1431,12 @@ const EnhancedLpcdDashboard = () => {
                                       <Button
                                         variant="outline"
                                         size="icon"
-                                        onClick={() => window.open(scheme.dashboard_url, '_blank')}
+                                        onClick={() =>
+                                          window.open(
+                                            scheme.dashboard_url,
+                                            "_blank",
+                                          )
+                                        }
                                         title="Open PI Vision Dashboard"
                                         className="rounded-md bg-blue-50 hover:bg-blue-100 border-blue-200"
                                       >
@@ -1407,14 +1456,22 @@ const EnhancedLpcdDashboard = () => {
                     {totalPages > 1 && (
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between mt-6 gap-4">
                         <div className="text-sm text-gray-600 bg-blue-50 px-4 py-2 rounded-md border border-blue-100 shadow-sm">
-                          Showing <span className="font-semibold text-blue-700">{(page - 1) * itemsPerPage + 1}</span> to{" "}
+                          Showing{" "}
+                          <span className="font-semibold text-blue-700">
+                            {(page - 1) * itemsPerPage + 1}
+                          </span>{" "}
+                          to{" "}
                           <span className="font-semibold text-blue-700">
                             {Math.min(
                               page * itemsPerPage,
                               filteredSchemes.length,
                             )}
                           </span>{" "}
-                          of <span className="font-semibold text-blue-700">{filteredSchemes.length}</span> entries
+                          of{" "}
+                          <span className="font-semibold text-blue-700">
+                            {filteredSchemes.length}
+                          </span>{" "}
+                          entries
                         </div>
                         <div className="flex items-center space-x-2 bg-white p-2 rounded-md border border-blue-100 shadow-sm">
                           <Button
@@ -1449,9 +1506,11 @@ const EnhancedLpcdDashboard = () => {
                                   }
                                   size="sm"
                                   onClick={() => setPage(pageNum)}
-                                  className={page === pageNum 
-                                    ? "bg-blue-600 hover:bg-blue-700" 
-                                    : "border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"}
+                                  className={
+                                    page === pageNum
+                                      ? "bg-blue-600 hover:bg-blue-700"
+                                      : "border-blue-200 text-blue-700 hover:bg-blue-50 hover:text-blue-800"
+                                  }
                                 >
                                   {pageNum}
                                 </Button>
