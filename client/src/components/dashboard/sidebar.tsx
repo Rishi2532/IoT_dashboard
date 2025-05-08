@@ -7,13 +7,20 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useQuery } from "@tanstack/react-query";
 
+// Custom icon component for Chlorine (CL)
+const ChlorineIcon = () => (
+  <div className="flex items-center justify-center w-5 h-5 font-semibold text-xs">
+    CL
+  </div>
+);
+
 const navigationItems = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Schemes", href: "/schemes", icon: GitBranchPlus },
   { name: "Regions", href: "/regions", icon: MapPin },
   { name: "Reports", href: "/reports", icon: BarChart2 },
   { name: "Water Supply (LPCD)", href: "/lpcd", icon: Droplet },
-  { name: "Chlorine Monitoring", href: "/chlorine", icon: Droplet },
+  { name: "Chlorine Monitoring", href: "/chlorine", icon: ChlorineIcon },
   { name: "Pressure Monitoring", href: "/pressure", icon: Gauge },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
