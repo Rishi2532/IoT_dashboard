@@ -1673,6 +1673,18 @@ export class PostgresStorage implements IStorage {
       
       allKeys.forEach(key => {
         const record = recordsMap.get(key)!;
+        
+        // Generate dashboard URL for this ESR
+        if (!record.dashboard_url && record.region && record.circle && record.division && 
+            record.sub_division && record.block && record.scheme_id && 
+            record.scheme_name && record.village_name && record.esr_name) {
+          // Generate dashboard URL
+          record.dashboard_url = this.generateEsrDashboardUrl(record as ChlorineData);
+          if (record.dashboard_url) {
+            console.log(`Generated dashboard URL for ESR: ${record.esr_name} in village: ${record.village_name}`);
+          }
+        }
+        
         if (existingRecordsMap.has(key)) {
           recordsToUpdate.push(record);
         } else {
@@ -4094,6 +4106,80 @@ export class PostgresStorage implements IStorage {
     }
     
     return null; // Not a special case
+  }
+  
+  /**
+   * Check if this is an ESR in the special case Bargaonpimpri scheme
+   * @param esr The ESR data to check
+   * @returns A special case URL or null if not a special case
+   */
+  private generateSpecialCaseEsrUrl(esr: ChlorineData | PressureData): string | null {
+    // Special case for Bargaonpimpri scheme in Nashik region
+    if (esr.scheme_id === '20019176' && esr.scheme_name && esr.scheme_name.includes('Bargaonpimpri')) {
+      // Base URL parameters for ESR dashboard
+      const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10086/CEREBULB_JJM_MAHARASHTRA_ESR_LEVEL_DASHBOARD';
+      const STANDARD_PARAMS = 'mode=kiosk&hidetoolbar&hidesidebar';
+      
+      // Special scheme path with non-breaking space
+      const schemePath = '\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-Nashik\\\\Circle-Nashik\\\\Division-Nashik\\\\Sub Division-Sinnar\\\\Block-Sinnar\\\\Scheme-20019176 - Retro. Bargaonpimpri & 6 VRWSS' + String.fromCharCode(160) + ' Tal Sinnar';
+      
+      // Append village and ESR name to path
+      const path = `${schemePath}\\\\\\\\${esr.village_name}\\\\\\\\${esr.esr_name}`;
+      
+      // URL encode the path
+      const encodedPath = encodeURIComponent(path);
+      
+      // Return the complete URL (note: using asset parameter for ESR instead of rootpath)
+      return `${BASE_URL}?${STANDARD_PARAMS}&asset=${encodedPath}`;
+    }
+    
+    return null; // Not a special case
+  }
+  
+  /**
+   * Generates a dashboard URL for an ESR 
+   * @param esr The ESR information
+   * @returns The complete dashboard URL for the ESR
+   */
+  private generateEsrDashboardUrl(esr: ChlorineData | PressureData): string | null {
+    // Skip if missing required hierarchical information
+    if (!esr.region || !esr.circle || !esr.division || 
+        !esr.sub_division || !esr.block || !esr.scheme_id || 
+        !esr.scheme_name || !esr.village_name || !esr.esr_name) {
+      console.warn(`Cannot generate URL for ESR ${esr.esr_name} in village ${esr.village_name} - missing hierarchical information.`);
+      return null;
+    }
+    
+    // Check for special case URLs first
+    const specialCaseUrl = this.generateSpecialCaseEsrUrl(esr);
+    if (specialCaseUrl) {
+      return specialCaseUrl;
+    }
+    
+    // Base URL and parameters for the ESR dashboard URLs
+    const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10086/CEREBULB_JJM_MAHARASHTRA_ESR_LEVEL_DASHBOARD';
+    const STANDARD_PARAMS = 'mode=kiosk&hidetoolbar&hidesidebar';
+    
+    // Handle the special case for Amravati region (change to Amaravati in the URL)
+    const regionDisplay = esr.region === 'Amravati' ? 'Amaravati' : esr.region;
+    
+    // Create the path based on region format
+    let path;
+    
+    // Different format for Pune region
+    if (esr.region === 'Pune') {
+      // Format for Pune region (no space between scheme_id and hyphen)
+      path = `\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-${regionDisplay}\\\\Circle-${esr.circle}\\\\Division-${esr.division}\\\\Sub Division-${esr.sub_division}\\\\Block-${esr.block}\\\\Scheme-${esr.scheme_id}-${esr.scheme_name}\\\\${esr.village_name}\\\\${esr.esr_name}`;
+    } else {
+      // Standard format for other regions (space between scheme_id and hyphen)
+      path = `\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-${regionDisplay}\\\\Circle-${esr.circle}\\\\Division-${esr.division}\\\\Sub Division-${esr.sub_division}\\\\Block-${esr.block}\\\\Scheme-${esr.scheme_id} - ${esr.scheme_name}\\\\${esr.village_name}\\\\${esr.esr_name}`;
+    }
+    
+    // Encode the path for use in URL
+    const encodedPath = encodeURIComponent(path);
+    
+    // Return the complete URL (note: using asset parameter for ESR instead of rootpath)
+    return `${BASE_URL}?${STANDARD_PARAMS}&asset=${encodedPath}`;
   }
 
   private generateVillageDashboardUrl(village: WaterSchemeData): string | null {
