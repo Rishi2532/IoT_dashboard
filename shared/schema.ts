@@ -238,6 +238,9 @@ export const chlorineData = pgTable("chlorine_data", {
   chlorine_less_than_02_mgl: decimal("chlorine_less_than_02_mgl"), // Removed precision/scale constraints
   chlorine_between_02_05_mgl: decimal("chlorine_between_02_05_mgl"), // Removed precision/scale constraints
   chlorine_greater_than_05_mgl: decimal("chlorine_greater_than_05_mgl"), // Removed precision/scale constraints
+  
+  // Dashboard URL field for link to PI Vision ESR dashboard
+  dashboard_url: text("dashboard_url")
 }, (table) => {
   return {
     // Composite primary key to uniquely identify each ESR
@@ -294,6 +297,9 @@ export const pressureData = pgTable("pressure_data", {
   pressure_less_than_02_bar: decimal("pressure_less_than_02_bar", { precision: 12, scale: 2 }),
   pressure_between_02_07_bar: decimal("pressure_between_02_07_bar", { precision: 12, scale: 2 }),
   pressure_greater_than_07_bar: decimal("pressure_greater_than_07_bar", { precision: 12, scale: 2 }),
+  
+  // Dashboard URL field for link to PI Vision ESR dashboard
+  dashboard_url: text("dashboard_url"),
 }, (table) => {
   return {
     // Composite primary key to uniquely identify each ESR

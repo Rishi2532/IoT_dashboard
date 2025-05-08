@@ -2639,6 +2639,17 @@ export class PostgresStorage implements IStorage {
           // Calculate pressure analysis fields
           this.calculatePressureAnalysisFields(pressureRecord);
           
+          // Generate dashboard URL for ESR if missing but have all required info
+          if (!pressureRecord.dashboard_url && pressureRecord.region && pressureRecord.circle && 
+              pressureRecord.division && pressureRecord.sub_division && pressureRecord.block && 
+              pressureRecord.scheme_id && pressureRecord.scheme_name && 
+              pressureRecord.village_name && pressureRecord.esr_name) {
+            pressureRecord.dashboard_url = this.generateEsrDashboardUrl(pressureRecord as PressureData);
+            if (pressureRecord.dashboard_url) {
+              console.log(`Generated dashboard URL for ESR: ${pressureRecord.esr_name} in village: ${pressureRecord.village_name}`);
+            }
+          }
+          
           // Check if record exists using our lookup map
           const key = `${pressureRecord.scheme_id}|${pressureRecord.village_name}|${pressureRecord.esr_name}`;
           
