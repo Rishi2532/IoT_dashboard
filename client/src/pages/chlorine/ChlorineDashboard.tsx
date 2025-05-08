@@ -47,6 +47,8 @@ import {
   Droplet,
   Activity,
   Download,
+  BarChart,
+  ExternalLink,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -77,6 +79,8 @@ interface ChlorineData {
   chlorine_less_than_02_mgl?: number | null;
   chlorine_between_02_05_mgl?: number | null;
   chlorine_greater_than_05_mgl?: number | null;
+  // Dashboard URL for PI Vision integration
+  dashboard_url?: string;
 }
 
 interface RegionData {
@@ -832,6 +836,9 @@ const ChlorineDashboard: React.FC = () => {
                         Status
                       </TableHead>
                       <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
+                        PI Vision
+                      </TableHead>
+                      <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                         Action
                       </TableHead>
                     </TableRow>
@@ -926,12 +933,27 @@ const ChlorineDashboard: React.FC = () => {
                                 {selectedESR && (
                                   <>
                                     <DialogHeader>
-                                      <DialogTitle className="text-xl font-bold flex items-center gap-2">
-                                        <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
-                                          <span className="font-bold text-teal-600">Cl</span>
+                                      <DialogTitle className="text-xl font-bold flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
+                                            <span className="font-bold text-teal-600">Cl</span>
+                                          </div>
+                                          <span>
+                                            {selectedESR.esr_name} - {selectedESR.village_name}
+                                          </span>
+                                          {selectedESR.dashboard_url && (
+                                            <Button
+                                              variant="outline"
+                                              size="sm"
+                                              className="ml-2 text-xs"
+                                              onClick={() =>
+                                                window.open(selectedESR.dashboard_url, "_blank")
+                                              }
+                                            >
+                                              <BarChart className="h-4 w-4 mr-1" /> PI Vision Dashboard
+                                            </Button>
+                                          )}
                                         </div>
-                                        {selectedESR.esr_name} -{" "}
-                                        {selectedESR.village_name}
                                       </DialogTitle>
                                       <DialogDescription>
                                         Detailed chlorine monitoring data for
