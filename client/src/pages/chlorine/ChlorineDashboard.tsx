@@ -918,6 +918,20 @@ const ChlorineDashboard: React.FC = () => {
                             </Badge>
                           </TableCell>
                           <TableCell className="border-b border-blue-200">
+                            {item.dashboard_url ? (
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="py-1 px-2 h-8 text-xs"
+                                onClick={() => window.open(item.dashboard_url, "_blank")}
+                              >
+                                <BarChart className="h-3.5 w-3.5 mr-1" /> View
+                              </Button>
+                            ) : (
+                              <span className="text-xs text-gray-400">Not available</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="border-b border-blue-200">
                             <Dialog>
                               <DialogTrigger asChild>
                                 <Button

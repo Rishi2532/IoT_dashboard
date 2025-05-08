@@ -46,6 +46,8 @@ import {
   RefreshCw,
   Gauge,
   Download,
+  BarChart,
+  ExternalLink,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -76,6 +78,8 @@ interface PressureData {
   pressure_less_than_02_bar?: number | null;
   pressure_between_02_07_bar?: number | null;
   pressure_greater_than_07_bar?: number | null;
+  // Dashboard URL for PI Vision integration
+  dashboard_url?: string;
 }
 
 interface RegionData {
@@ -753,6 +757,9 @@ const PressureDashboard: React.FC = () => {
                 <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
                   Status
                 </TableHead>
+                <TableHead className="font-semibold text-blue-800 border-b border-blue-200">
+                  PI Vision
+                </TableHead>
                 <TableHead className="font-semibold text-blue-800 border-b border-blue-200 text-right">
                   Actions
                 </TableHead>
@@ -805,6 +812,20 @@ const PressureDashboard: React.FC = () => {
                             {statusInfo.statusText}
                           </span>
                         </div>
+                      </TableCell>
+                      <TableCell className="border-b border-blue-200">
+                        {item.dashboard_url ? (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="py-1 px-2 h-8 text-xs"
+                            onClick={() => window.open(item.dashboard_url, "_blank")}
+                          >
+                            <BarChart className="h-3.5 w-3.5 mr-1" /> View
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-gray-400">Not available</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-right border-b border-blue-200">
                         <Dialog>
