@@ -89,12 +89,12 @@ export default function Sidebar() {
                 >
                   {item.icon ? (
                     // Render the icon if present
-                    item.icon({
-                      className: cn(
+                    <item.icon
+                      className={cn(
                         "mr-3 h-5 w-5",
                         isActive ? "text-blue-600" : "text-blue-500"
-                      )
-                    })
+                      )}
+                    />
                   ) : item.prefix ? (
                     // Render the prefix if present
                     <span className={cn(
