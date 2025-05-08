@@ -821,7 +821,7 @@ const PressureDashboard: React.FC = () => {
                             className="py-1 px-2 h-8 text-xs"
                             onClick={() => window.open(item.dashboard_url, "_blank")}
                           >
-                            <BarChart className="h-3.5 w-3.5 mr-1" /> View
+                            <Gauge className="h-3.5 w-3.5 mr-1" /> View
                           </Button>
                         ) : (
                           <span className="text-xs text-gray-400">Not available</span>
@@ -1110,11 +1110,11 @@ const PressureDashboard: React.FC = () => {
                                           className="border-blue-200 text-blue-600 hover:bg-blue-50"
                                           onClick={() => window.open(selectedESR.dashboard_url, "_blank")}
                                         >
-                                          <BarChart className="h-4 w-4 mr-2" /> Open Dashboard
+                                          <Gauge className="h-4 w-4 mr-2" /> Open Dashboard
                                         </Button>
                                       ) : (
                                         <Button variant="outline" disabled className="opacity-50">
-                                          <BarChart className="h-4 w-4 mr-2" /> Dashboard Not Available
+                                          <Gauge className="h-4 w-4 mr-2" /> Dashboard Not Available
                                         </Button>
                                       )}
                                     </div>
