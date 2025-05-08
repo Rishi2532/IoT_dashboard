@@ -7,20 +7,21 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useQuery } from "@tanstack/react-query";
 
-// Custom icon component for Chlorine (CL)
-const ChlorineIcon = () => (
-  <div className="flex items-center justify-center w-5 h-5 font-semibold text-xs">
-    CL
-  </div>
-);
+// Define the type for navigation items
+type NavigationItem = {
+  name: string;
+  href: string;
+  icon?: React.ComponentType<{ className?: string }>;
+  prefix?: string;
+};
 
-const navigationItems = [
+const navigationItems: NavigationItem[] = [
   { name: "Dashboard", href: "/dashboard", icon: Home },
   { name: "Schemes", href: "/schemes", icon: GitBranchPlus },
   { name: "Regions", href: "/regions", icon: MapPin },
   { name: "Reports", href: "/reports", icon: BarChart2 },
   { name: "Water Supply (LPCD)", href: "/lpcd", icon: Droplet },
-  { name: "Chlorine Monitoring", href: "/chlorine", icon: ChlorineIcon },
+  { name: "Chlorine Monitoring", href: "/chlorine", prefix: "CL" },
   { name: "Pressure Monitoring", href: "/pressure", icon: Gauge },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
@@ -73,7 +74,6 @@ export default function Sidebar() {
           <nav className="flex-1 px-2 space-y-1 py-4">
             {navigationItems.map((item) => {
               const isActive = location === item.href;
-              const Icon = item.icon;
               
               return (
                 <Link 
@@ -87,12 +87,23 @@ export default function Sidebar() {
                     "group flex items-center px-3 py-3 text-base font-medium rounded-md"
                   )}
                 >
-                  <Icon
-                    className={cn(
-                      "mr-3 h-5 w-5",
+                  {item.icon ? (
+                    // Render the icon if present
+                    item.icon({
+                      className: cn(
+                        "mr-3 h-5 w-5",
+                        isActive ? "text-blue-600" : "text-blue-500"
+                      )
+                    })
+                  ) : item.prefix ? (
+                    // Render the prefix if present
+                    <span className={cn(
+                      "mr-3 inline-flex items-center justify-center",
                       isActive ? "text-blue-600" : "text-blue-500"
-                    )}
-                  />
+                    )}>
+                      {item.prefix}
+                    </span>
+                  ) : null}
                   {item.name}
                 </Link>
               );
