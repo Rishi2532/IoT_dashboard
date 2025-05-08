@@ -1092,6 +1092,33 @@ const PressureDashboard: React.FC = () => {
                                       </div>
                                     </div>
                                   </div>
+                                  
+                                  {/* PI Vision Dashboard Link */}
+                                  <div className="mt-6 pt-6 border-t border-gray-200">
+                                    <div className="flex justify-between items-center">
+                                      <div>
+                                        <h3 className="font-medium text-blue-800">
+                                          PI Vision Dashboard
+                                        </h3>
+                                        <p className="text-sm text-gray-500">
+                                          View detailed historical pressure data in PI Vision
+                                        </p>
+                                      </div>
+                                      {selectedESR.dashboard_url ? (
+                                        <Button
+                                          variant="outline"
+                                          className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                                          onClick={() => window.open(selectedESR.dashboard_url, "_blank")}
+                                        >
+                                          <BarChart className="h-4 w-4 mr-2" /> Open Dashboard
+                                        </Button>
+                                      ) : (
+                                        <Button variant="outline" disabled className="opacity-50">
+                                          <BarChart className="h-4 w-4 mr-2" /> Dashboard Not Available
+                                        </Button>
+                                      )}
+                                    </div>
+                                  </div>
                                 </div>
                               </>
                             )}
