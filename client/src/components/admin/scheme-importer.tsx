@@ -68,6 +68,8 @@ const schemeFields = [
     label: "Residual Chlorine Analyzers",
   },
   { value: "fully_completion_scheme_status", label: "Scheme Status" },
+  { value: "mjp_commissioned", label: "MJP Commissioned" },
+  { value: "mjp_fully_completed", label: "MJP Fully Completed" },
 ];
 
 // Regions for the dropdown with agency mapping
@@ -130,11 +132,13 @@ export default function SchemeImporter() {
     pressure_transmitter_connected: 20, // Column 21
     residual_chlorine_analyzer_connected: 21, // Column 22
     fully_completion_scheme_status: 22, // Column 23
+    mjp_commissioned: 23, // Column 24
+    mjp_fully_completed: 24, // Column 25
   };
 
   // CSV import state
   const [csvFile, setCsvFile] = useState<File | null>(null);
-  const [columnCount, setColumnCount] = useState(23); // Fixed to 23 columns for scheme
+  const [columnCount, setColumnCount] = useState(25); // Fixed to 25 columns for scheme (including MJP columns)
   const [columnMappings] =
     useState<Record<string, number | string>>(fixedSchemeMappings); // Fixed mappings
   const [isUploading, setIsUploading] = useState(false);
