@@ -128,7 +128,8 @@ export default function SchemeTable({
             Details of water schemes and their current status
           </CardDescription>
         </div>
-        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
+        <div className="flex flex-col space-y-2 w-full sm:w-auto">
+          {/* Search row */}
           <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full">
             <div className="relative w-full sm:w-64 xl:w-60">
               <Search className="absolute left-2.5 top-2.5 h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-400" />
@@ -151,26 +152,80 @@ export default function SchemeTable({
               />
             </div>
           </div>
-
-          <Select
-            value={localStatusFilter}
-            onValueChange={(value) => {
-              setLocalStatusFilter(value);
-              if (onStatusFilterChange) {
-                onStatusFilterChange(value);
-              }
-            }}
-          >
-            <SelectTrigger className="w-full sm:w-44 xl:w-52 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
-              <SelectValue placeholder="All Status" />
-            </SelectTrigger>
-            <SelectContent className="text-xs sm:text-sm lg:text-base">
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Fully Completed">Fully Completed</SelectItem>
-              <SelectItem value="In Progress">In Progress</SelectItem>
-              <SelectItem value="Not-Connected">Not Connected</SelectItem>
-            </SelectContent>
-          </Select>
+          
+          {/* Filters row */}
+          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full">
+            <Select
+              value={localStatusFilter}
+              onValueChange={(value) => {
+                setLocalStatusFilter(value);
+                // Reset page when filter changes
+                setCurrentPage(1);
+                if (onStatusFilterChange) {
+                  onStatusFilterChange(value);
+                }
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-40 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent className="text-xs sm:text-sm lg:text-base">
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Not-Connected">Not Connected</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              value={mjpCommissionedFilter}
+              onValueChange={(value) => {
+                setMjpCommissionedFilter(value);
+                // Reset page when filter changes
+                setCurrentPage(1);
+                
+                // Sync MJP Fully Completed filter when Yes is selected
+                if (value === "Yes" && mjpFullyCompletedFilter === "all") {
+                  setMjpFullyCompletedFilter("all");
+                } else if (value === "No") {
+                  // If No is selected, reset MJP Fully Completed to match
+                  setMjpFullyCompletedFilter("In Progress");
+                }
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-40 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
+                <SelectValue placeholder="MJP Commissioned" />
+              </SelectTrigger>
+              <SelectContent className="text-xs sm:text-sm lg:text-base">
+                <SelectItem value="all">All Commissioned</SelectItem>
+                <SelectItem value="Yes">Yes</SelectItem>
+                <SelectItem value="No">No</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              value={mjpFullyCompletedFilter}
+              onValueChange={(value) => {
+                setMjpFullyCompletedFilter(value);
+                // Reset page when filter changes
+                setCurrentPage(1);
+                
+                // Sync MJP Commissioned filter when Fully Completed is selected
+                if (value === "Fully Completed" && mjpCommissionedFilter !== "Yes") {
+                  setMjpCommissionedFilter("Yes");
+                }
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-44 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
+                <SelectValue placeholder="MJP Fully Completed" />
+              </SelectTrigger>
+              <SelectContent className="text-xs sm:text-sm lg:text-base">
+                <SelectItem value="all">All Completion</SelectItem>
+                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="px-0 py-0">
