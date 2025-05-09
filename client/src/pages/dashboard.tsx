@@ -267,9 +267,9 @@ export default function Dashboard() {
         })),
       );
       
-      // Format the headers with blue background and white text
+      // Format the headers with blue background and white text to match the image
       const headerStyle = {
-        fill: { fgColor: { rgb: "4F81BD" } }, // Blue background
+        fill: { fgColor: { rgb: "0000FF" } }, // Bright blue background
         font: { color: { rgb: "FFFFFF" }, bold: true }, // White bold text
         alignment: { horizontal: "center" },
         border: {
@@ -290,18 +290,20 @@ export default function Dashboard() {
         ws[cellAddress].s = headerStyle;
       }
       
-      // Apply conditional formatting for MJP status cells
-      const greenStyle = { fill: { fgColor: { rgb: "C6EFCE" } }, font: { color: { rgb: "006100" }, bold: true } }; // Light green with dark green text
-      const yellowStyle = { fill: { fgColor: { rgb: "FFEB9C" } }, font: { color: { rgb: "9C5700" }, bold: true } }; // Light yellow with amber text
+      // Apply conditional formatting for MJP status cells with bright colors to match the image
+      const greenStyle = { fill: { fgColor: { rgb: "00FF00" } }, font: { color: { rgb: "000000" }, bold: true } }; // Bright green
+      const yellowStyle = { fill: { fgColor: { rgb: "FFFF00" } }, font: { color: { rgb: "000000" }, bold: true } }; // Bright yellow
       
-      // Find the indexes of the MJP columns
+      // Find the indexes of the MJP columns and Status column
       let mjpCommissionedCol = -1;
       let mjpFullyCompletedCol = -1;
+      let statusCol = -1;
       
       // Get the first row keys to find column indexes
       const firstRow = Object.keys(XLSX.utils.sheet_to_json(ws)[0] || {});
       mjpCommissionedCol = firstRow.findIndex(key => key === "MJP Commissioned");
       mjpFullyCompletedCol = firstRow.findIndex(key => key === "MJP Fully Completed");
+      statusCol = firstRow.findIndex(key => key === "Status");
       
       // Apply styles to MJP cells based on their values
       for (let row = 1; row <= headerRange.e.r; row++) { // Start from row 1 (skip header)
@@ -318,6 +320,16 @@ export default function Dashboard() {
         // Style MJP Fully Completed column
         if (mjpFullyCompletedCol !== -1) {
           const cellAddress = XLSX.utils.encode_cell({ r: row, c: mjpFullyCompletedCol });
+          if (ws[cellAddress] && ws[cellAddress].v === "Fully Completed") {
+            ws[cellAddress].s = greenStyle;
+          } else if (ws[cellAddress]) {
+            ws[cellAddress].s = yellowStyle;
+          }
+        }
+        
+        // Style Status column
+        if (statusCol !== -1) {
+          const cellAddress = XLSX.utils.encode_cell({ r: row, c: statusCol });
           if (ws[cellAddress] && ws[cellAddress].v === "Fully Completed") {
             ws[cellAddress].s = greenStyle;
           } else if (ws[cellAddress]) {
