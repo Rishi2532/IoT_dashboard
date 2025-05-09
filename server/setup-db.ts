@@ -253,9 +253,27 @@ export async function initializeTables(db: any) {
         "chlorine_less_than_02_mgl" NUMERIC(12,2),
         "chlorine_between_02_05_mgl" NUMERIC(12,2),
         "chlorine_greater_than_05_mgl" NUMERIC(12,2),
+        "dashboard_url" TEXT,
         PRIMARY KEY ("scheme_id", "village_name", "esr_name")
       );
     `);
+    
+    // Check if dashboard_url column exists in chlorine_data, add if missing
+    try {
+      const result = await db.execute(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'chlorine_data' AND column_name = 'dashboard_url';
+      `);
+      
+      if (result.rows.length === 0) {
+        console.log('Adding missing dashboard_url column to chlorine_data table...');
+        await db.execute(`ALTER TABLE "chlorine_data" ADD COLUMN "dashboard_url" TEXT;`);
+        console.log('Successfully added dashboard_url column to chlorine_data table');
+      }
+    } catch (error) {
+      console.error('Error checking for dashboard_url column in chlorine_data:', error);
+    }
     
     // Create pressure_data table
     await db.execute(`
@@ -287,9 +305,27 @@ export async function initializeTables(db: any) {
         "pressure_less_than_02_bar" DECIMAL(12,2),
         "pressure_between_02_07_bar" DECIMAL(12,2),
         "pressure_greater_than_07_bar" DECIMAL(12,2),
+        "dashboard_url" TEXT,
         PRIMARY KEY ("scheme_id", "village_name", "esr_name")
       );
     `);
+    
+    // Check if dashboard_url column exists in pressure_data, add if missing
+    try {
+      const result = await db.execute(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'pressure_data' AND column_name = 'dashboard_url';
+      `);
+      
+      if (result.rows.length === 0) {
+        console.log('Adding missing dashboard_url column to pressure_data table...');
+        await db.execute(`ALTER TABLE "pressure_data" ADD COLUMN "dashboard_url" TEXT;`);
+        console.log('Successfully added dashboard_url column to pressure_data table');
+      }
+    } catch (error) {
+      console.error('Error checking for dashboard_url column in pressure_data:', error);
+    }
     
     // Check if the users table has any records using raw SQL to avoid Drizzle ORM issues
     try {
