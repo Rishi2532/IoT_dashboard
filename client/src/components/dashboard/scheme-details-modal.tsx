@@ -478,12 +478,12 @@ export default function SchemeDetailsModal({
                     className={`px-2 py-1 inline-flex items-center justify-center text-xs font-medium rounded-md ${
                       currentScheme.scheme_functional_status === "Functional"
                         ? "bg-green-100 text-green-800"
-                        : "bg-orange-100 text-orange-800"
+                        : currentScheme.scheme_functional_status === "Non-Functional"
+                          ? "bg-red-100 text-red-800"
+                          : "bg-orange-100 text-orange-800"
                     }`}
                   >
-                    {currentScheme.scheme_functional_status === "Functional"
-                      ? "Functional"
-                      : "Partial"}
+                    {currentScheme.scheme_functional_status || "Partial"}
                   </span>
                 </p>
               </div>
