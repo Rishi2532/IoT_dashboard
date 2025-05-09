@@ -29,9 +29,9 @@ const PressureImport: React.FC = () => {
   const [clearExisting, setClearExisting] = useState(false);
   const [uploadResult, setUploadResult] = useState<{
     success: boolean;
-    inserted: number;
-    updated: number;
-    errors: string[];
+    message: string;
+    records?: number;
+    errors?: string[];
   } | null>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -41,94 +41,78 @@ const PressureImport: React.FC = () => {
     }
   };
 
-  const simulateProgress = () => {
-    setUploadProgress(0);
-    const interval = setInterval(() => {
-      setUploadProgress((prev) => {
-        const newProgress = prev + 5;
-        if (newProgress >= 90) {
-          clearInterval(interval);
-          return 90;
-        }
-        return newProgress;
-      });
-    }, 100);
-
-    return interval;
-  };
-
   const handleUpload = async () => {
     if (!file) {
       toast({
         title: "No file selected",
-        description: "Please select a CSV file to upload",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check file extension
-    const fileExt = file.name.split('.').pop()?.toLowerCase();
-    if (fileExt !== 'csv') {
-      toast({
-        title: "Invalid file type",
-        description: "Please select a CSV file",
+        description: "Please select a file to upload",
         variant: "destructive",
       });
       return;
     }
 
     setIsUploading(true);
-    setUploadResult(null);
-    const progressInterval = simulateProgress();
+    setUploadProgress(0);
 
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('clearExisting', clearExisting.toString());
+    // Simulate progress (in a real implementation, you would use XHR or fetch with progress)
+    const progressInterval = setInterval(() => {
+      setUploadProgress((prev) => {
+        if (prev >= 90) {
+          clearInterval(progressInterval);
+          return prev;
+        }
+        return prev + 10;
+      });
+    }, 300);
 
     try {
-      const response = await fetch('/api/pressure/import/csv', {
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('clearExisting', clearExisting.toString());
+
+      const response = await fetch('/api/pressure/import', {
         method: 'POST',
         body: formData,
       });
 
       clearInterval(progressInterval);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to upload file');
-      }
-
-      const result = await response.json();
       setUploadProgress(100);
 
-      setUploadResult({
-        success: true,
-        inserted: result.inserted || 0,
-        updated: result.updated || 0,
-        errors: result.errors || [],
-      });
+      const data = await response.json();
 
-      toast({
-        title: "Upload successful",
-        description: clearExisting 
-          ? `Existing data cleared. Processed ${result.inserted + result.updated} new records.`
-          : `Processed ${result.inserted + result.updated} records (${result.inserted} inserted, ${result.updated} updated).`,
-      });
-    } catch (error: any) {
+      if (response.ok) {
+        setUploadResult({
+          success: true,
+          message: data.message || 'Import successful',
+          records: data.count || 0,
+          errors: data.errors || [],
+        });
+        toast({
+          title: "Import successful",
+          description: `Successfully imported pressure data. ${data.count} records processed.`,
+        });
+      } else {
+        setUploadResult({
+          success: false,
+          message: data.message || 'Import failed',
+          errors: data.errors || [],
+        });
+        toast({
+          title: "Import failed",
+          description: data.message || 'Failed to import pressure data',
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
       clearInterval(progressInterval);
       setUploadProgress(0);
-      
       setUploadResult({
         success: false,
-        inserted: 0,
-        updated: 0,
-        errors: [error.message || 'An unknown error occurred'],
+        message: error instanceof Error ? error.message : 'Failed to import data',
       });
-      
       toast({
-        title: "Upload failed",
-        description: error.message || 'Failed to upload file',
+        title: "Import failed",
+        description: "An error occurred during import",
         variant: "destructive",
       });
     } finally {
@@ -136,82 +120,91 @@ const PressureImport: React.FC = () => {
     }
   };
 
+  const downloadTemplate = () => {
+    // Create sample CSV data
+    const sampleData = "Region,Circle,Division,Sub Division,Block,Scheme ID,Scheme Name,Village Name,ESR Name,Pressure (bar),Date\n" +
+      "Nagpur,Circle1,Division1,SubDivision1,Block1,20001234,Sample Scheme,Sample Village 1,ESR 1,2.5,2023-10-01\n" +
+      "Nagpur,Circle1,Division1,SubDivision1,Block1,20001234,Sample Scheme,Sample Village 1,ESR 2,3.1,2023-10-01\n" +
+      "Nagpur,Circle1,Division1,SubDivision1,Block1,20001234,Sample Scheme,Sample Village 2,ESR 1,2.8,2023-10-01";
+
+    // Create and download the file
+    const blob = new Blob([sampleData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'pressure_data_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <ImportLayout>
       <div className="w-full">
-        <h1 className="text-2xl font-bold mb-6">Import Pressure Data</h1>
-        
-        <Card className="mb-8">
+        <h1 className="text-2xl font-bold mb-2">Import Pressure Data</h1>
+        <p className="mb-6 text-gray-600">
+          Upload Excel or CSV files with pressure measurements (in bar) for Elevated Storage Reservoirs (ESRs).
+        </p>
+
+        <Card>
           <CardHeader>
-            <CardTitle>Upload Pressure Data CSV</CardTitle>
+            <CardTitle>Upload Pressure Data</CardTitle>
             <CardDescription>
-              Upload a CSV file containing pressure data for ESRs. The file should include scheme_id, village_name, 
-              esr_name, and pressure values for each day. The file should NOT have a header row - please upload data rows only.
+              Import pressure data from Excel (.xlsx) or CSV (.csv) files
             </CardDescription>
           </CardHeader>
-          
           <CardContent>
             <div className="space-y-6">
               <div className="space-y-2">
-                <Label htmlFor="csvFile">Select CSV file</Label>
-                <div className="flex items-center gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center mb-3">
-                      <Checkbox 
-                        id="clearExisting" 
-                        checked={clearExisting}
-                        onCheckedChange={(checked) => setClearExisting(checked === true)}
-                      />
-                      <Label htmlFor="clearExisting" className="ml-2 cursor-pointer">
-                        Clear existing pressure data before import
-                      </Label>
-                      <span className="ml-1 text-xs text-orange-500">(Use with caution)</span>
-                    </div>
-                    <div 
-                      className={`border-2 border-dashed rounded-lg p-6 text-center hover:bg-gray-50 transition-colors
-                        ${file ? 'border-blue-300 bg-blue-50' : 'border-gray-300'}`}
-                    >
-                      <Input
-                        id="csvFile"
-                        type="file"
-                        accept=".csv"
-                        onChange={handleFileChange}
-                        className="hidden"
-                      />
-                      <label htmlFor="csvFile" className="cursor-pointer">
-                        <div className="flex flex-col items-center">
-                          {file ? (
-                            <>
-                              <FilePlus className="h-10 w-10 text-blue-500 mb-2" />
-                              <p className="text-sm font-medium text-blue-700">{file.name}</p>
-                              <p className="text-xs text-gray-500">
-                                {(file.size / 1024).toFixed(2)} KB
-                              </p>
-                            </>
-                          ) : (
-                            <>
-                              <UploadCloud className="h-10 w-10 text-gray-400 mb-2" />
-                              <p className="text-sm font-medium">Click to select a CSV file</p>
-                              <p className="text-xs text-gray-500">
-                                or drag and drop here
-                              </p>
-                            </>
-                          )}
+                <Label htmlFor="file-upload" className="text-sm font-medium">
+                  Select File
+                </Label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 hover:bg-gray-50 transition-colors">
+                  <Input
+                    id="file-upload"
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <label htmlFor="file-upload" className="cursor-pointer block text-center">
+                    <UploadCloud className="h-12 w-12 mx-auto text-gray-400" />
+                    <p className="mt-2 text-sm font-medium">
+                      Click to select a file or drag and drop
+                    </p>
+                    <p className="text-xs text-gray-500">
+                      Support for Excel (.xlsx, .xls) and CSV (.csv)
+                    </p>
+                    {file && (
+                      <div className="mt-2 p-2 bg-blue-50 rounded text-left max-w-md mx-auto">
+                        <div className="flex items-center">
+                          <FilePlus className="h-5 w-5 text-blue-500 mr-2" />
+                          <div>
+                            <p className="text-sm font-medium text-blue-700">{file.name}</p>
+                            <p className="text-xs text-gray-500">
+                              {(file.size / 1024).toFixed(2)} KB
+                            </p>
+                          </div>
                         </div>
-                      </label>
-                    </div>
-                  </div>
-                  
-                  <Button 
-                    disabled={!file || isUploading} 
-                    onClick={handleUpload}
-                    className="min-w-[120px]"
-                  >
-                    {isUploading ? 'Uploading...' : 'Upload'}
-                  </Button>
+                      </div>
+                    )}
+                  </label>
                 </div>
               </div>
-              
+
+              <div className="flex items-center space-x-2">
+                <Checkbox 
+                  id="clear-existing" 
+                  checked={clearExisting}
+                  onCheckedChange={(checked) => setClearExisting(checked as boolean)}
+                />
+                <Label 
+                  htmlFor="clear-existing" 
+                  className="text-sm font-medium cursor-pointer"
+                >
+                  Clear existing data before import
+                </Label>
+              </div>
+
               {isUploading && (
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
@@ -221,55 +214,32 @@ const PressureImport: React.FC = () => {
                   <Progress value={uploadProgress} className="h-2" />
                 </div>
               )}
-              
+
               {uploadResult && (
-                <Alert 
-                  variant={uploadResult.success ? "default" : "destructive"}
-                  className={uploadResult.success ? "border-green-300 bg-green-50" : ""}
-                >
+                <Alert className={uploadResult.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}>
                   {uploadResult.success ? (
-                    <CheckCircle className="h-4 w-4 text-green-600" />
+                    <CheckCircle className="h-4 w-4 text-green-500" />
                   ) : (
-                    <AlertCircle className="h-4 w-4" />
+                    <AlertCircle className="h-4 w-4 text-red-500" />
                   )}
                   <AlertTitle>
-                    {uploadResult.success ? "Upload Successful" : "Upload Failed"}
+                    {uploadResult.success ? "Import successful" : "Import failed"}
                   </AlertTitle>
                   <AlertDescription>
-                    {uploadResult.success ? (
-                      <div className="space-y-2">
-                        <p>
-                          Successfully processed the CSV file.
-                        </p>
-                        <ul className="list-disc list-inside text-sm">
-                          <li>Inserted records: {uploadResult.inserted}</li>
-                          <li>Updated records: {uploadResult.updated}</li>
-                          <li>Total processed: {uploadResult.inserted + uploadResult.updated}</li>
-                        </ul>
-                        
-                        {uploadResult.errors.length > 0 && (
-                          <div className="mt-2">
-                            <p className="font-medium">Some records had errors:</p>
-                            <div className="max-h-40 overflow-y-auto mt-1 p-2 bg-red-50 rounded border border-red-200 text-sm">
-                              {uploadResult.errors.map((error, idx) => (
-                                <p key={idx} className="text-red-800">{error}</p>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="space-y-2">
-                        <p>
-                          Failed to process the CSV file. Please check the format and try again.
-                        </p>
-                        {uploadResult.errors.length > 0 && (
-                          <div className="max-h-40 overflow-y-auto mt-1 p-2 bg-red-50 rounded border border-red-200 text-sm">
-                            {uploadResult.errors.map((error, idx) => (
-                              <p key={idx}>{error}</p>
-                            ))}
-                          </div>
-                        )}
+                    <p>{uploadResult.message}</p>
+                    {uploadResult.success && uploadResult.records !== undefined && (
+                      <p className="mt-1 text-sm">
+                        Processed {uploadResult.records} records
+                      </p>
+                    )}
+                    {uploadResult.errors && uploadResult.errors.length > 0 && (
+                      <div className="mt-2">
+                        <p className="font-medium text-sm">Errors:</p>
+                        <div className="max-h-32 overflow-y-auto mt-1 p-2 bg-white bg-opacity-50 rounded text-sm">
+                          {uploadResult.errors.map((error, idx) => (
+                            <p key={idx} className="text-red-700">{error}</p>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </AlertDescription>
@@ -277,127 +247,29 @@ const PressureImport: React.FC = () => {
               )}
             </div>
           </CardContent>
-          
-          <CardFooter className="flex justify-between border-t p-4 bg-gray-50">
-            <div className="text-sm text-gray-500">
-              <p>Supported format: CSV</p>
-              <p>Maximum file size: 10MB</p>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  // Generate sample CSV content without headers (as per government format)
-                  const sampleData = [
-                    "Amravati,Circle1,Division1,SubDiv1,Block1,AMR2001,Sample Scheme,Village1,ESR1,0.3,0.4,0.5,0.3,0.4,0.2,0.5,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,0,0,1,0",
-                    "Nagpur,Circle2,Division2,SubDiv2,Block2,NAG2002,Sample Scheme 2,Village2,ESR2,0.1,0.2,0.1,0.3,0.1,0.1,0.2,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,0,1,0,0"
-                  ].join('\n');
-                  
-                  // Create blob and download
-                  const blob = new Blob([sampleData], { type: 'text/csv' });
-                  const url = URL.createObjectURL(blob);
-                  const link = document.createElement('a');
-                  link.href = url;
-                  link.download = 'pressure_data_template.csv';
-                  document.body.appendChild(link);
-                  link.click();
-                  document.body.removeChild(link);
-                  URL.revokeObjectURL(url);
-                }}
-              >
-                <Download className="h-4 w-4 mr-1" />
-                Download Template
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setFile(null);
-                  setUploadResult(null);
-                }}
-                disabled={isUploading}
-              >
-                Clear
-              </Button>
-            </div>
+          <CardFooter className="flex justify-between">
+            <Button 
+              variant="outline" 
+              onClick={downloadTemplate}
+              disabled={isUploading}
+            >
+              <Download className="h-4 w-4 mr-2" />
+              Download Template
+            </Button>
+            <Button 
+              onClick={handleUpload} 
+              disabled={!file || isUploading}
+            >
+              {isUploading ? (
+                <>Uploading...</>
+              ) : (
+                <>
+                  <UploadCloud className="h-4 w-4 mr-2" />
+                  Upload
+                </>
+              )}
+            </Button>
           </CardFooter>
-        </Card>
-        
-        <Card>
-          <CardHeader>
-            <CardTitle>CSV Format Instructions</CardTitle>
-            <CardDescription>
-              Your CSV file must follow this column order (NO HEADER ROW):
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <div className="space-y-4">
-              <div className="overflow-x-auto">
-                <table className="min-w-full border-collapse border border-gray-200 text-sm">
-                  <thead>
-                    <tr className="bg-gray-50">
-                      <th className="border border-gray-200 px-4 py-2 text-left">CSV Column Index</th>
-                      <th className="border border-gray-200 px-4 py-2 text-left">Field Name</th>
-                      <th className="border border-gray-200 px-4 py-2 text-left">Description</th>
-                      <th className="border border-gray-200 px-4 py-2 text-left">Required</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr>
-                      <td className="border border-gray-200 px-4 py-2">0</td>
-                      <td className="border border-gray-200 px-4 py-2">region</td>
-                      <td className="border border-gray-200 px-4 py-2">Region name</td>
-                      <td className="border border-gray-200 px-4 py-2">Yes</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-200 px-4 py-2">1</td>
-                      <td className="border border-gray-200 px-4 py-2">circle</td>
-                      <td className="border border-gray-200 px-4 py-2">Circle name</td>
-                      <td className="border border-gray-200 px-4 py-2">Yes</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-200 px-4 py-2">2-8</td>
-                      <td className="border border-gray-200 px-4 py-2">Other scheme identifiers</td>
-                      <td className="border border-gray-200 px-4 py-2">Division, sub-division, etc.</td>
-                      <td className="border border-gray-200 px-4 py-2">Yes</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-200 px-4 py-2">9-15</td>
-                      <td className="border border-gray-200 px-4 py-2">pressure_value_1 to pressure_value_7</td>
-                      <td className="border border-gray-200 px-4 py-2">Pressure values (in bar) for days 1-7</td>
-                      <td className="border border-gray-200 px-4 py-2">Yes</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-200 px-4 py-2">16-22</td>
-                      <td className="border border-gray-200 px-4 py-2">pressure_date_day_1 to pressure_date_day_7</td>
-                      <td className="border border-gray-200 px-4 py-2">Dates for pressure readings (YYYY-MM-DD)</td>
-                      <td className="border border-gray-200 px-4 py-2">Yes</td>
-                    </tr>
-                    <tr>
-                      <td className="border border-gray-200 px-4 py-2">23-26</td>
-                      <td className="border border-gray-200 px-4 py-2">Calculated fields</td>
-                      <td className="border border-gray-200 px-4 py-2">Analysis values (automatically calculated)</td>
-                      <td className="border border-gray-200 px-4 py-2">No</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-              
-              <div className="bg-blue-50 p-4 rounded-md border border-blue-200">
-                <h4 className="font-medium text-blue-800 mb-2">Important Notes:</h4>
-                <ul className="list-disc list-inside text-sm text-blue-700 space-y-1">
-                  <li>Do not include a header row in your CSV file</li>
-                  <li>All pressure values should be in bar (e.g., 0.5 for 0.5 bar)</li>
-                  <li>All dates should be in YYYY-MM-DD format (e.g., 2025-04-17)</li>
-                  <li>The system will automatically calculate metrics like pressure consistency</li>
-                  <li>ESR name must be unique within each village</li>
-                </ul>
-              </div>
-            </div>
-          </CardContent>
         </Card>
       </div>
     </ImportLayout>

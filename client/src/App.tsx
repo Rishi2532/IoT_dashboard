@@ -16,6 +16,7 @@ import LpcdPage from "./pages/LpcdPage";
 import MapPreviewPage from "./pages/map-preview";
 import { ChlorineDashboard, ChlorineImport, ChlorinePage } from "./pages/chlorine";
 import { PressureDashboard, PressurePage, PressureImport } from "./pages/pressure";
+import { LpcdDashboard, LpcdImport } from "./pages/lpcd";
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
@@ -112,6 +113,13 @@ function App() {
               <Route path="/lpcd">
                 <ProtectedRoute>
                   <LpcdPage />
+                </ProtectedRoute>
+              </Route>
+              
+              {/* Note: LPCD import is available in admin dashboard */}
+              <Route path="/lpcd/import">
+                <ProtectedRoute>
+                  <LpcdImport />
                 </ProtectedRoute>
               </Route>
               
