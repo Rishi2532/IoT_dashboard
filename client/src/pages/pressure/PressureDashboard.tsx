@@ -87,6 +87,14 @@ interface RegionData {
   region_name: string;
 }
 
+interface ImportStats {
+  inserted: number;
+  updated: number;
+  totalProcessed: number;
+  timestamp: string;
+  errors: number;
+}
+
 interface PressureDashboardStats {
   totalSensors: number;
   belowRangeSensors: number;
@@ -96,6 +104,7 @@ interface PressureDashboardStats {
   consistentBelowRangeSensors: number;
   consistentOptimalSensors: number;
   consistentAboveRangeSensors: number;
+  lastImport?: ImportStats;
 }
 
 type PressureRange =

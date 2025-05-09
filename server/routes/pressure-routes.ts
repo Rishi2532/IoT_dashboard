@@ -2,7 +2,9 @@ import express from "express";
 import multer from "multer";
 import { storage } from "../storage";
 import { ZodError } from "zod";
-import { insertPressureDataSchema, updatePressureDataSchema } from "@shared/schema";
+import { insertPressureDataSchema, updatePressureDataSchema, appState } from "@shared/schema";
+import { getDB } from "../db";
+import { eq } from "drizzle-orm";
 
 const router = express.Router();
 
@@ -69,7 +71,37 @@ router.get("/dashboard-stats", async (req, res) => {
   try {
     const { region } = req.query;
     const stats = await storage.getPressureDashboardStats(region as string | undefined);
-    res.json(stats);
+    
+    // Get last import statistics from app_state
+    try {
+      const db = await getDB();
+      const lastImportResult = await db
+        .select()
+        .from(appState)
+        .where(eq(appState.key, "last_pressure_import"));
+      
+      if (lastImportResult.length > 0) {
+        const lastImport = lastImportResult[0].value as any;
+        // Add last import statistics to the response
+        res.json({
+          ...stats,
+          lastImport: {
+            inserted: lastImport.inserted || 0,
+            updated: lastImport.updated || 0,
+            totalProcessed: lastImport.totalProcessed || 0,
+            timestamp: lastImport.timestamp,
+            errors: lastImport.errors || 0
+          }
+        });
+      } else {
+        // No import statistics found, return just the dashboard stats
+        res.json(stats);
+      }
+    } catch (appStateError) {
+      console.error("Error fetching last import stats:", appStateError);
+      // Still return the main stats even if we couldn't get the import stats
+      res.json(stats);
+    }
   } catch (error) {
     console.error("Error getting pressure dashboard stats:", error);
     res.status(500).json({ error: "Failed to get pressure dashboard statistics" });
