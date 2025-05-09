@@ -3341,6 +3341,30 @@ export class PostgresStorage implements IStorage {
     return result;
   }
 
+  // Helper function to get the agency based on the region
+  private getAgencyByRegion(regionName: string): string {
+    const regionAgencyMap: Record<string, string> = {
+      'Nagpur': 'M/s Rite Water',
+      'Amravati': 'M/s Ceinsys',
+      'Nashik': 'M/s Ceinsys',
+      'Pune': 'M/s Indo/Chetas',
+      'Konkan': 'M/s Indo/Chetas',
+      'Chhatrapati Sambhajinagar': 'M/s Rite Water'
+    };
+    
+    return regionAgencyMap[regionName] || 'Not Specified';
+  }
+  
+  // Helper function to ensure scheme agency is set correctly
+  private ensureSchemeAgency(scheme: SchemeStatus): SchemeStatus {
+    if (!scheme.agency || scheme.agency === 'N/A' || scheme.agency === 'Not Specified') {
+      if (scheme.region) {
+        scheme.agency = this.getAgencyByRegion(scheme.region);
+      }
+    }
+    return scheme;
+  }
+  
   async getSchemeById(schemeId: string): Promise<SchemeStatus | undefined> {
     const db = await this.ensureInitialized();
     const query = db
@@ -3349,7 +3373,10 @@ export class PostgresStorage implements IStorage {
       .where(eq(schemeStatuses.scheme_id, schemeId));
       
     const result = await query;
-    return result.length > 0 ? result[0] : undefined;
+    if (result.length > 0) {
+      return this.ensureSchemeAgency(result[0]);
+    }
+    return undefined;
   }
   
   async getSchemeByIdAndBlock(schemeId: string, block: string | null): Promise<SchemeStatus | undefined> {
@@ -3360,7 +3387,10 @@ export class PostgresStorage implements IStorage {
       .where(sql`${schemeStatuses.scheme_id} = ${schemeId} AND ${schemeStatuses.block} IS NOT DISTINCT FROM ${block}`);
     
     const result = await query;
-    return result.length > 0 ? result[0] : undefined;
+    if (result.length > 0) {
+      return this.ensureSchemeAgency(result[0]);
+    }
+    return undefined;
   }
 
   async getSchemesByName(schemeName: string): Promise<SchemeStatus[]> {
@@ -3371,7 +3401,9 @@ export class PostgresStorage implements IStorage {
       .where(eq(schemeStatuses.scheme_name, schemeName));
     
     const result = await query.orderBy(schemeStatuses.block);
-    return result;
+    
+    // Ensure agency is set correctly for all schemes
+    return result.map(scheme => this.ensureSchemeAgency(scheme));
   }
   
   // New function to get scheme data from the water_scheme_data table based on CSV imports
