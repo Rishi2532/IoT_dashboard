@@ -3104,7 +3104,7 @@ export class PostgresStorage implements IStorage {
       query = query.where(eq(schemeStatuses.scheme_id, schemeId));
     }
 
-    // Apply status filter if provided
+        // Apply status filter if provided
     if (statusFilter && statusFilter !== "all") {
       // Handle "Connected" status which includes both Fully Completed and In Progress but not Not-Connected
       if (statusFilter === "Connected") {
@@ -3113,7 +3113,7 @@ export class PostgresStorage implements IStorage {
         );
       }
       // Handle both "Partial" and "In Progress" as the same filter
-      if (statusFilter === "In Progress") {
+      else if (statusFilter === "In Progress") {
         query = query.where(
           sql`${schemeStatuses.fully_completion_scheme_status} IN ('Partial', 'In Progress')`,
         );
@@ -3240,7 +3240,7 @@ export class PostgresStorage implements IStorage {
       query = query.where(eq(schemeStatuses.scheme_id, schemeId));
     }
 
-    // Apply status filter if provided
+        // Apply status filter if provided
     if (statusFilter && statusFilter !== "all") {
       // Handle "Connected" status which includes both Fully Completed and In Progress but not Not-Connected
       if (statusFilter === "Connected") {
@@ -3249,7 +3249,7 @@ export class PostgresStorage implements IStorage {
         );
       }
       // Handle both "Partial" and "In Progress" as the same filter
-      if (statusFilter === "In Progress") {
+      else if (statusFilter === "In Progress") {
         query = query.where(
           sql`${schemeStatuses.fully_completion_scheme_status} IN ('Partial', 'In Progress')`,
         );
