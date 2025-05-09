@@ -229,6 +229,19 @@ export default function Dashboard() {
       // Import XLSX dynamically
       const XLSX = await import("xlsx");
 
+      // Helper function to get appropriate agency based on region
+      const getAgencyByRegion = (regionName: string): string => {
+        const regionAgencyMap: Record<string, string> = {
+          'Nagpur': 'M/s Rite Water',
+          'Amravati': 'M/s Ceinsys',
+          'Nashik': 'M/s Ceinsys',
+          'Pune': 'M/s Indo/Chetas',
+          'Konkan': 'M/s Indo/Chetas',
+          'Chhatrapati Sambhajinagar': 'M/s Rite Water'
+        };
+        return regionAgencyMap[regionName] || 'Not Specified';
+      };
+      
       // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(
@@ -236,7 +249,8 @@ export default function Dashboard() {
           "Scheme ID": scheme.scheme_id,
           "Scheme Name": scheme.scheme_name,
           "Region": scheme.region,
-          "Agency": scheme.agency,
+          // Use agency from scheme data if available, otherwise determine from region
+          "Agency": scheme.agency || (scheme.region ? getAgencyByRegion(scheme.region) : 'Not Specified'),
           "Total Villages": scheme.number_of_village,
           "Villages Integrated": scheme.total_villages_integrated,
           "Villages Completed": scheme.fully_completed_villages,
@@ -246,6 +260,9 @@ export default function Dashboard() {
           "Flow Meters": scheme.flow_meters_connected,
           "Pressure Transmitters": scheme.pressure_transmitter_connected,
           "Residual Chlorine Analyzers": scheme.residual_chlorine_analyzer_connected,
+          // Add MJP columns
+          "MJP Commissioned": scheme.mjp_commissioned || 'No',
+          "MJP Fully Completed": scheme.mjp_fully_completed || 'In Progress',
           "Status": scheme.fully_completion_scheme_status || scheme.scheme_functional_status || 'Not-Connected',
         })),
       );
