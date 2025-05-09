@@ -85,7 +85,9 @@ export default function SchemeTable({
     
     const matchesStatusFilter =
       localStatusFilter === "all" ||
-      scheme.fully_completion_scheme_status === localStatusFilter;
+      (localStatusFilter === "Connected" 
+        ? scheme.fully_completion_scheme_status !== "Not-Connected"
+        : scheme.fully_completion_scheme_status === localStatusFilter);
       
     const matchesMjpCommissionedFilter =
       mjpCommissionedFilter === "all" ||
