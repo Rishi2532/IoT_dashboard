@@ -54,6 +54,8 @@ export interface SchemeStatus {
   gps_longitude?: number | null;
   scheme_functional_status?: string;
   fully_completion_scheme_status?: string;
+  mjp_commissioned?: string; // Yes/No values
+  mjp_fully_completed?: string; // Fully Completed/In Progress values
   flow_meters_connected?: boolean;
   flow_meter_working?: boolean;
   flow_meter_data_on_cloud?: boolean;

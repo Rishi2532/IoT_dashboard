@@ -59,6 +59,8 @@ export default function SchemeTable({
   const [schemeIdSearch, setSchemeIdSearch] = useState("");
   const [localStatusFilter, setLocalStatusFilter] =
     useState<string>(statusFilter);
+  const [mjpCommissionedFilter, setMjpCommissionedFilter] = useState<string>("all");
+  const [mjpFullyCompletedFilter, setMjpFullyCompletedFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -70,7 +72,7 @@ export default function SchemeTable({
   // Ensure schemes is an array before filtering
   const schemesArray = Array.isArray(schemes) ? schemes : [];
 
-  // Filter schemes by scheme name and scheme ID
+  // Filter schemes by scheme name, scheme ID, and all filter options
   const filteredSchemes = schemesArray.filter((scheme) => {
     const matchesNameSearch =
       searchTerm === "" ||
@@ -80,8 +82,21 @@ export default function SchemeTable({
       schemeIdSearch === "" ||
       (scheme.scheme_id &&
         scheme.scheme_id.toLowerCase().includes(schemeIdSearch.toLowerCase()));
+    
+    const matchesStatusFilter =
+      localStatusFilter === "all" ||
+      scheme.fully_completion_scheme_status === localStatusFilter;
+      
+    const matchesMjpCommissionedFilter =
+      mjpCommissionedFilter === "all" ||
+      scheme.mjp_commissioned === mjpCommissionedFilter;
+      
+    const matchesMjpFullyCompletedFilter =
+      mjpFullyCompletedFilter === "all" ||
+      scheme.mjp_fully_completed === mjpFullyCompletedFilter;
 
-    return matchesNameSearch && matchesIdSearch;
+    return matchesNameSearch && matchesIdSearch && matchesStatusFilter && 
+           matchesMjpCommissionedFilter && matchesMjpFullyCompletedFilter;
   });
 
   const totalPages = Math.ceil(filteredSchemes.length / itemsPerPage);
@@ -177,9 +192,6 @@ export default function SchemeTable({
                     Block
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    Circle/Division
-                  </TableHead>
-                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
                     Fully Completed Villages
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
@@ -187,6 +199,12 @@ export default function SchemeTable({
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
                     Status
+                  </TableHead>
+                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
+                    MJP Commissioned
+                  </TableHead>
+                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
+                    MJP Fully Completed
                   </TableHead>
                   <TableHead className="text-center text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200">
                     Action
@@ -197,7 +215,7 @@ export default function SchemeTable({
                 {isLoading ? (
                   [...Array(5)].map((_, index) => (
                     <TableRow key={index}>
-                      <TableCell colSpan={9}>
+                      <TableCell colSpan={10}>
                         <div className="animate-pulse h-4 sm:h-6 lg:h-8 bg-gray-200 rounded"></div>
                       </TableCell>
                     </TableRow>
@@ -205,7 +223,7 @@ export default function SchemeTable({
                 ) : currentItems.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={9}
+                      colSpan={10}
                       className="text-center py-4 sm:py-6 lg:py-8 text-xs sm:text-sm lg:text-base text-neutral-500"
                     >
                       No schemes found matching your criteria
@@ -235,25 +253,7 @@ export default function SchemeTable({
                           {scheme.block || <span className="text-gray-400 italic">No block</span>}
                         </span>
                       </TableCell>
-                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
-                        <span className="px-2 py-1 bg-gray-50 text-gray-700 rounded-md">
-                          {!scheme.circle ||
-                          scheme.circle === "Circle" ||
-                          scheme.circle === "N/A" ? (
-                            <span className="text-gray-400">-</span>
-                          ) : (
-                            scheme.circle
-                          )}
-                          {" / "}
-                          {!scheme.division ||
-                          scheme.division === "Division" ||
-                          scheme.division === "N/A" ? (
-                            <span className="text-gray-400">-</span>
-                          ) : (
-                            scheme.division
-                          )}
-                        </span>
-                      </TableCell>
+
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
                         <div className="flex items-center justify-center">
                           <span className="font-medium">
@@ -298,6 +298,28 @@ export default function SchemeTable({
                             (scheme.fully_completion_scheme_status ||
                               "Not-Connected") as SchemeCompletionStatus,
                           )}
+                        </span>
+                      </TableCell>
+                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
+                        <span
+                          className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${
+                            scheme.mjp_commissioned === "Yes" 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-yellow-100 text-yellow-800"
+                          }`}
+                        >
+                          {scheme.mjp_commissioned || "No"}
+                        </span>
+                      </TableCell>
+                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
+                        <span
+                          className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${
+                            scheme.mjp_fully_completed === "Fully Completed" 
+                              ? "bg-green-100 text-green-800" 
+                              : "bg-amber-100 text-amber-800"
+                          }`}
+                        >
+                          {scheme.mjp_fully_completed || "In Progress"}
                         </span>
                       </TableCell>
                       <TableCell className="text-center p-1 sm:p-3 lg:p-4 xl:p-5 border-b border-gray-100">
