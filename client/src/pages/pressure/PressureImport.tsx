@@ -72,7 +72,7 @@ const PressureImport: React.FC = () => {
       formData.append("file", file);
       formData.append("clearExisting", clearExisting.toString());
 
-      const response = await fetch("/api/pressure/import", {
+      const response = await fetch("/api/pressure/import/csv", {
         method: "POST",
         body: formData,
       });
@@ -144,10 +144,10 @@ const PressureImport: React.FC = () => {
   return (
     <ImportLayout>
       <div className="w-full">
-        {/* <h1 className="text-2xl font-bold mb-2">Import Pressure Data</h1>
+        <h1 className="text-2xl font-bold mb-2">Import Pressure Data</h1>
         <p className="mb-6 text-gray-600">
           Upload Excel or CSV files with pressure measurements (in bar) for Elevated Storage Reservoirs (ESRs).
-        </p> */}
+        </p>
 
         <Card>
           <CardHeader>
