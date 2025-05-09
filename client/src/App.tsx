@@ -15,7 +15,7 @@ import ForgotPasswordPage from "./pages/forgot-password";
 import LpcdPage from "./pages/LpcdPage";
 import MapPreviewPage from "./pages/map-preview";
 import { ChlorineDashboard, ChlorineImport, ChlorinePage } from "./pages/chlorine";
-import { PressureDashboard, PressurePage } from "./pages/pressure";
+import { PressureDashboard, PressurePage, PressureImport } from "./pages/pressure";
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
@@ -121,6 +121,7 @@ function App() {
                 </ProtectedRoute>
               </Route>
               
+              {/* Note: Chlorine import is available in admin dashboard */}
               <Route path="/chlorine/import">
                 <ProtectedRoute>
                   <ChlorineImport />
@@ -130,6 +131,13 @@ function App() {
               <Route path="/pressure">
                 <ProtectedRoute>
                   <PressurePage />
+                </ProtectedRoute>
+              </Route>
+              
+              {/* Note: Pressure import is available in admin dashboard */}
+              <Route path="/pressure/import">
+                <ProtectedRoute>
+                  <PressureImport />
                 </ProtectedRoute>
               </Route>
               
@@ -152,11 +160,7 @@ function App() {
                 </ProtectedRoute>
               </Route>
               
-              <Route path="/admin/chlorine-import">
-                <ProtectedRoute>
-                  <ChlorineImport />
-                </ProtectedRoute>
-              </Route>
+              {/* Remove duplicate route - chlorine import is already in admin dashboard */}
               
               {/* Fallback route */}
               <Route component={NotFound} />
