@@ -491,6 +491,41 @@ const PressureDashboard: React.FC = () => {
         </div>
       </div>
 
+      {/* Import Statistics Card */}
+      {dashboardStats?.lastImport && (
+        <div className="bg-white rounded-xl shadow-md mb-6 p-4 border border-blue-100">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div>
+              <h3 className="text-lg font-semibold text-blue-900">Last Import Statistics</h3>
+              <div className="mt-2 grid grid-cols-2 gap-x-8 gap-y-2">
+                <div>
+                  <span className="text-sm text-gray-500">Total ESRs in Database:</span>
+                  <p className="text-lg font-medium text-blue-800">{dashboardStats.totalSensors}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Records Processed:</span>
+                  <p className="text-lg font-medium text-blue-800">{dashboardStats.lastImport.totalProcessed}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">New Records:</span>
+                  <p className="text-lg font-medium text-green-700">{dashboardStats.lastImport.inserted}</p>
+                </div>
+                <div>
+                  <span className="text-sm text-gray-500">Updated Records:</span>
+                  <p className="text-lg font-medium text-orange-600">{dashboardStats.lastImport.updated}</p>
+                </div>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-gray-500">Last Import:</p>
+              <p className="text-sm font-medium text-gray-800">
+                {new Date(dashboardStats.lastImport.timestamp).toLocaleString()}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Dashboard Cards */}
       <div className="grid gap-6 md:grid-cols-4 mb-8">
         {/* Total Sensors Card */}
