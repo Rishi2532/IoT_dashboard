@@ -86,7 +86,7 @@ const ChlorineImport = () => {
       const formData = new FormData();
       formData.append("file", csvFile);
 
-      const response = await fetch("/api/chlorine/import/csv", {
+      const response = await fetch("/api/chlorine/import", {
         method: "POST",
         body: formData,
       });

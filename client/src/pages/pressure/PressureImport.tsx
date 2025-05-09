@@ -86,12 +86,12 @@ const PressureImport: React.FC = () => {
         setUploadResult({
           success: true,
           message: data.message || "Import successful",
-          records: data.count || 0,
+          records: data.totalProcessed || (data.inserted + data.updated) || 0,
           errors: data.errors || [],
         });
         toast({
           title: "Import successful",
-          description: `Successfully imported pressure data. ${data.count} records processed.`,
+          description: `Successfully imported pressure data. ${data.totalProcessed || (data.inserted + data.updated) || 0} records processed.`,
         });
       } else {
         setUploadResult({

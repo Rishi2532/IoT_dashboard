@@ -49,7 +49,7 @@ const LpcdImport = () => {
       const formData = new FormData();
       formData.append("file", excelFile);
 
-      const response = await fetch("/api/lpcd/import/excel", {
+      const response = await fetch("/api/admin/import-lpcd", {
         method: "POST",
         body: formData,
       });
@@ -87,7 +87,7 @@ const LpcdImport = () => {
       const formData = new FormData();
       formData.append("file", csvFile);
 
-      const response = await fetch("/api/lpcd/import/csv", {
+      const response = await fetch("/api/admin/import-lpcd", {
         method: "POST",
         body: formData,
       });
@@ -125,7 +125,7 @@ const LpcdImport = () => {
       const formData = new FormData();
       formData.append("file", amravatiFile);
 
-      const response = await fetch("/api/lpcd/import/amravati", {
+      const response = await fetch("/api/admin/import-amravati", {
         method: "POST",
         body: formData,
       });
@@ -207,10 +207,10 @@ const LpcdImport = () => {
   return (
     <ImportLayout>
       <div className="w-full">
-        {/* <h1 className="text-2xl font-bold mb-6">Import LPCD Data</h1>
+        <h1 className="text-2xl font-bold mb-6">Import LPCD Data</h1>
         <p className="mb-6 text-gray-600">
           Upload Excel or CSV files containing LPCD (Liters Per Capita per Day) data for water schemes.
-        </p> */}
+        </p>
 
         <Tabs defaultValue="excel">
           <TabsList className="mb-4">
