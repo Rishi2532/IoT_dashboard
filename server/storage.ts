@@ -3106,6 +3106,12 @@ export class PostgresStorage implements IStorage {
 
     // Apply status filter if provided
     if (statusFilter && statusFilter !== "all") {
+      // Handle "Connected" status which includes both Fully Completed and In Progress but not Not-Connected
+      if (statusFilter === "Connected") {
+        query = query.where(
+          sql`${schemeStatuses.fully_completion_scheme_status} != 'Not-Connected'`,
+        );
+      }
       // Handle both "Partial" and "In Progress" as the same filter
       if (statusFilter === "In Progress") {
         query = query.where(
