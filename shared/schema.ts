@@ -103,6 +103,8 @@ export const schemeStatuses = pgTable("scheme_status", {
   ), // Residual Chlorine Analyzer Connected
 
   fully_completion_scheme_status: text("fully_completion_scheme_status"), // Scheme Status (Fully Completion Scheme Status)
+  mjp_commissioned: text("mjp_commissioned"), // Whether the scheme was commissioned by MJP (Yes/No)
+  mjp_fully_completed: text("mjp_fully_completed"), // MJP fully completed status (Fully Completed/In Progress)
   dashboard_url: text("dashboard_url"), // URL to access the PI Vision dashboard for this scheme
   // No primary key - allows multiple entries with the same scheme_id and block
 });
