@@ -1,29 +1,14 @@
-import { useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { useToast } from "@/hooks/use-toast";
-import {
-  Loader2,
-  UploadCloud,
-  FileCheck,
-  AlertCircle,
-  XCircle,
-  CheckCircle,
-  Download,
-  FileSpreadsheet,
-} from "lucide-react";
-import ImportLayout from "@/components/dashboard/import-layout";
+import { useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { apiRequest } from '@/lib/queryClient';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useToast } from '@/hooks/use-toast';
+import { Loader2, UploadCloud, FileCheck, AlertCircle, XCircle, CheckCircle, Download, FileSpreadsheet } from 'lucide-react';
+import ImportLayout from '@/components/dashboard/import-layout';
 
 interface ImportResult {
   message?: string;
@@ -37,31 +22,31 @@ const ChlorineImport = () => {
   const queryClient = useQueryClient();
   const [excelFile, setExcelFile] = useState<File | null>(null);
   const [csvFile, setCsvFile] = useState<File | null>(null);
-
+  
   // Import Excel mutation
   const excelMutation = useMutation({
     mutationFn: async () => {
       if (!excelFile) {
-        throw new Error("No Excel file selected");
+        throw new Error('No Excel file selected');
       }
-
+      
       const formData = new FormData();
-      formData.append("file", excelFile);
-
-      const response = await fetch("/api/chlorine/import", {
-        method: "POST",
+      formData.append('file', excelFile);
+      
+      const response = await fetch('/api/chlorine/import/excel', {
+        method: 'POST',
         body: formData,
       });
-
+      
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to import Excel file");
+        throw new Error(error.message || 'Failed to import Excel file');
       }
-
+      
       return response.json() as Promise<ImportResult>;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chlorine"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/chlorine'] });
       toast({
         title: "Import successful",
         description: `Processed ${data.inserted + data.updated} records (${data.inserted} inserted, ${data.updated} updated).`,
@@ -75,31 +60,31 @@ const ChlorineImport = () => {
       });
     },
   });
-
+  
   // Import CSV mutation
   const csvMutation = useMutation({
     mutationFn: async () => {
       if (!csvFile) {
-        throw new Error("No CSV file selected");
+        throw new Error('No CSV file selected');
       }
-
+      
       const formData = new FormData();
-      formData.append("file", csvFile);
-
-      const response = await fetch("/api/chlorine/import", {
-        method: "POST",
+      formData.append('file', csvFile);
+      
+      const response = await fetch('/api/chlorine/import/csv', {
+        method: 'POST',
         body: formData,
       });
-
+      
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.message || "Failed to import CSV file");
+        throw new Error(error.message || 'Failed to import CSV file');
       }
-
+      
       return response.json() as Promise<ImportResult>;
     },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/chlorine"] });
+      queryClient.invalidateQueries({ queryKey: ['/api/chlorine'] });
       toast({
         title: "Import successful",
         description: `Processed ${data.inserted + data.updated} records (${data.inserted} inserted, ${data.updated} updated).`,
@@ -113,45 +98,44 @@ const ChlorineImport = () => {
       });
     },
   });
-
+  
   const handleExcelFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setExcelFile(e.target.files[0]);
     }
   };
-
+  
   const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setCsvFile(e.target.files[0]);
     }
   };
-
+  
   const isExcelMutating = excelMutation.isPending;
   const isCsvMutating = csvMutation.isPending;
-
+  
   const handleExcelSubmit = () => {
     excelMutation.mutate();
   };
-
+  
   const handleCsvSubmit = () => {
     csvMutation.mutate();
   };
-
+  
   const downloadTemplate = () => {
     // Create a sample template for download
-    const sampleData =
-      "Region,Scheme ID,Scheme Name,Village Name,ESR Name,Chlorine Value Day 1,Chlorine Value Day 2,Chlorine Value Day 3,Chlorine Value Day 4,Chlorine Value Day 5,Chlorine Value Day 6,Chlorine Value Day 7,Chlorine Date Day 1,Chlorine Date Day 2,Chlorine Date Day 3,Chlorine Date Day 4,Chlorine Date Day 5,Chlorine Date Day 6,Chlorine Date Day 7,Sensor ID\n" +
-      "Amravati,20001234,Sample Scheme Name,Village Sample,ESR Sample,0.5,0.6,0.4,0.5,0.3,0.6,0.5,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,SEN001";
-
-    const blob = new Blob([sampleData], { type: "text/csv" });
+    const sampleData = "Region,Scheme ID,Scheme Name,Village Name,ESR Name,Chlorine Value Day 1,Chlorine Value Day 2,Chlorine Value Day 3,Chlorine Value Day 4,Chlorine Value Day 5,Chlorine Value Day 6,Chlorine Value Day 7,Chlorine Date Day 1,Chlorine Date Day 2,Chlorine Date Day 3,Chlorine Date Day 4,Chlorine Date Day 5,Chlorine Date Day 6,Chlorine Date Day 7,Sensor ID\n" +
+    "Amravati,20001234,Sample Scheme Name,Village Sample,ESR Sample,0.5,0.6,0.4,0.5,0.3,0.6,0.5,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,SEN001";
+    
+    const blob = new Blob([sampleData], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = "chlorine_data_template.csv";
+    a.download = 'chlorine_data_template.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
-
+  
   return (
     <ImportLayout>
       <div className="w-full">
@@ -159,7 +143,7 @@ const ChlorineImport = () => {
         <p className="mb-6 text-gray-600">
           Upload Excel or CSV files to update chlorine measurements for ESRs (Elevated Storage Reservoirs).
         </p>
-
+        
         <Tabs defaultValue="excel">
           <TabsList className="mb-4">
             <TabsTrigger value="excel" className="flex items-center gap-2">
@@ -171,7 +155,7 @@ const ChlorineImport = () => {
               CSV (Without Headers)
             </TabsTrigger>
           </TabsList>
-
+          
           <TabsContent value="excel">
             <Card>
               <CardHeader>
@@ -188,24 +172,17 @@ const ChlorineImport = () => {
                       Excel File Requirements
                     </h3>
                     <div className="text-sm text-gray-600 mb-4 pl-5">
-                      <p>
-                        Excel file must include headers with the following
-                        expected column names:
-                      </p>
+                      <p>Excel file must include headers with the following expected column names:</p>
                       <ul className="list-disc ml-5 mt-1 space-y-1">
-                        <li>
-                          Region, Scheme ID, Scheme Name, Village Name, ESR Name
-                        </li>
+                        <li>Region, Scheme ID, Scheme Name, Village Name, ESR Name</li>
                         <li>Chlorine Value Day 1-7, Chlorine Date Day 1-7</li>
                         <li>Sensor ID (optional)</li>
                       </ul>
                       <p className="mt-1 text-blue-600 italic">
-                        The most recent chlorine measurement should be in
-                        "Chlorine Value Day 7" with date in "Chlorine Date Day
-                        7".
+                        The most recent chlorine measurement should be in "Chlorine Value Day 7" with date in "Chlorine Date Day 7".
                       </p>
                     </div>
-
+                    
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors">
                       <Input
                         id="excelFile"
@@ -217,17 +194,13 @@ const ChlorineImport = () => {
                       <label htmlFor="excelFile" className="cursor-pointer">
                         <div className="flex flex-col items-center">
                           <UploadCloud className="h-10 w-10 text-gray-400 mb-2" />
-                          <p className="text-sm font-medium">
-                            Click to select an Excel file
-                          </p>
+                          <p className="text-sm font-medium">Click to select an Excel file</p>
                           <p className="text-xs text-gray-500">
                             or drag and drop it here
                           </p>
                           {excelFile && (
                             <div className="mt-2 p-2 bg-blue-50 rounded-md text-left w-full">
-                              <p className="text-sm font-medium text-blue-700">
-                                {excelFile.name}
-                              </p>
+                              <p className="text-sm font-medium text-blue-700">{excelFile.name}</p>
                               <p className="text-xs text-gray-500">
                                 {(excelFile.size / 1024).toFixed(2)} KB
                               </p>
@@ -237,32 +210,28 @@ const ChlorineImport = () => {
                       </label>
                     </div>
                   </div>
-
+                  
                   <div className="flex justify-between items-center">
-                    <Button
-                      onClick={downloadTemplate}
-                      variant="outline"
-                      className="text-sm"
-                    >
+                    <Button onClick={downloadTemplate} variant="outline" className="text-sm">
                       <Download className="h-4 w-4 mr-1" />
                       Download Template
                     </Button>
-
-                    <Button
-                      onClick={handleExcelSubmit}
+                    
+                    <Button 
+                      onClick={handleExcelSubmit} 
                       disabled={!excelFile || isExcelMutating}
                     >
                       {isExcelMutating ? (
                         <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
                           Importing...
                         </>
                       ) : (
-                        "Import Excel"
+                        'Import Excel'
                       )}
                     </Button>
                   </div>
-
+                  
                   {excelMutation.isSuccess && (
                     <Alert className="mt-4 bg-green-50 border-green-200">
                       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -270,47 +239,31 @@ const ChlorineImport = () => {
                       <AlertDescription>
                         <p>Successfully processed the file.</p>
                         <ul className="list-disc list-inside mt-1 text-sm">
-                          <li>
-                            Inserted records:{" "}
-                            {excelMutation.data?.inserted || 0}
-                          </li>
-                          <li>
-                            Updated records: {excelMutation.data?.updated || 0}
-                          </li>
-                          <li>
-                            Total processed:{" "}
-                            {(excelMutation.data?.inserted || 0) +
-                              (excelMutation.data?.updated || 0)}
-                          </li>
+                          <li>Inserted records: {excelMutation.data?.inserted || 0}</li>
+                          <li>Updated records: {excelMutation.data?.updated || 0}</li>
+                          <li>Total processed: {(excelMutation.data?.inserted || 0) + (excelMutation.data?.updated || 0)}</li>
                         </ul>
-
-                        {excelMutation.data?.errors &&
-                          excelMutation.data.errors.length > 0 && (
-                            <div className="mt-2">
-                              <p className="font-medium">
-                                Some records had errors:
-                              </p>
-                              <div className="max-h-40 overflow-y-auto mt-1 p-2 bg-red-50 rounded text-sm">
-                                {excelMutation.data.errors.map((error, idx) => (
-                                  <p key={idx} className="text-red-700">
-                                    {error}
-                                  </p>
-                                ))}
-                              </div>
+                        
+                        {excelMutation.data?.errors && excelMutation.data.errors.length > 0 && (
+                          <div className="mt-2">
+                            <p className="font-medium">Some records had errors:</p>
+                            <div className="max-h-40 overflow-y-auto mt-1 p-2 bg-red-50 rounded text-sm">
+                              {excelMutation.data.errors.map((error, idx) => (
+                                <p key={idx} className="text-red-700">{error}</p>
+                              ))}
                             </div>
-                          )}
+                          </div>
+                        )}
                       </AlertDescription>
                     </Alert>
                   )}
-
+                  
                   {excelMutation.isError && (
                     <Alert variant="destructive" className="mt-4">
                       <XCircle className="h-4 w-4" />
                       <AlertTitle>Import failed</AlertTitle>
                       <AlertDescription>
-                        {excelMutation.error instanceof Error
-                          ? excelMutation.error.message
-                          : "Failed to import file"}
+                        {excelMutation.error instanceof Error ? excelMutation.error.message : 'Failed to import file'}
                       </AlertDescription>
                     </Alert>
                   )}
@@ -318,7 +271,7 @@ const ChlorineImport = () => {
               </CardContent>
             </Card>
           </TabsContent>
-
+          
           <TabsContent value="csv">
             <Card>
               <CardHeader>
@@ -335,10 +288,7 @@ const ChlorineImport = () => {
                       CSV File Requirements
                     </h3>
                     <div className="text-sm text-gray-600 mb-4 pl-5">
-                      <p>
-                        CSV file should NOT have a header row and follow this
-                        exact column order:
-                      </p>
+                      <p>CSV file should NOT have a header row and follow this exact column order:</p>
                       <ol className="list-decimal ml-5 mt-1 space-y-1">
                         <li>Region name</li>
                         <li>Scheme ID</li>
@@ -350,7 +300,7 @@ const ChlorineImport = () => {
                         <li>Sensor ID (optional)</li>
                       </ol>
                     </div>
-
+                    
                     <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors">
                       <Input
                         id="csvFile"
@@ -362,17 +312,13 @@ const ChlorineImport = () => {
                       <label htmlFor="csvFile" className="cursor-pointer">
                         <div className="flex flex-col items-center">
                           <UploadCloud className="h-10 w-10 text-gray-400 mb-2" />
-                          <p className="text-sm font-medium">
-                            Click to select a CSV file
-                          </p>
+                          <p className="text-sm font-medium">Click to select a CSV file</p>
                           <p className="text-xs text-gray-500">
                             or drag and drop it here
                           </p>
                           {csvFile && (
                             <div className="mt-2 p-2 bg-blue-50 rounded-md text-left w-full">
-                              <p className="text-sm font-medium text-blue-700">
-                                {csvFile.name}
-                              </p>
+                              <p className="text-sm font-medium text-blue-700">{csvFile.name}</p>
                               <p className="text-xs text-gray-500">
                                 {(csvFile.size / 1024).toFixed(2)} KB
                               </p>
@@ -382,32 +328,28 @@ const ChlorineImport = () => {
                       </label>
                     </div>
                   </div>
-
+                  
                   <div className="flex justify-between items-center">
-                    <Button
-                      onClick={downloadTemplate}
-                      variant="outline"
-                      className="text-sm"
-                    >
+                    <Button onClick={downloadTemplate} variant="outline" className="text-sm">
                       <Download className="h-4 w-4 mr-1" />
                       Download Template
                     </Button>
-
-                    <Button
-                      onClick={handleCsvSubmit}
+                    
+                    <Button 
+                      onClick={handleCsvSubmit} 
                       disabled={!csvFile || isCsvMutating}
                     >
                       {isCsvMutating ? (
                         <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
                           Importing...
                         </>
                       ) : (
-                        "Import CSV"
+                        'Import CSV'
                       )}
                     </Button>
                   </div>
-
+                  
                   {csvMutation.isSuccess && (
                     <Alert className="mt-4 bg-green-50 border-green-200">
                       <CheckCircle className="h-4 w-4 text-green-500" />
@@ -415,46 +357,31 @@ const ChlorineImport = () => {
                       <AlertDescription>
                         <p>Successfully processed the file.</p>
                         <ul className="list-disc list-inside mt-1 text-sm">
-                          <li>
-                            Inserted records: {csvMutation.data?.inserted || 0}
-                          </li>
-                          <li>
-                            Updated records: {csvMutation.data?.updated || 0}
-                          </li>
-                          <li>
-                            Total processed:{" "}
-                            {(csvMutation.data?.inserted || 0) +
-                              (csvMutation.data?.updated || 0)}
-                          </li>
+                          <li>Inserted records: {csvMutation.data?.inserted || 0}</li>
+                          <li>Updated records: {csvMutation.data?.updated || 0}</li>
+                          <li>Total processed: {(csvMutation.data?.inserted || 0) + (csvMutation.data?.updated || 0)}</li>
                         </ul>
-
-                        {csvMutation.data?.errors &&
-                          csvMutation.data.errors.length > 0 && (
-                            <div className="mt-2">
-                              <p className="font-medium">
-                                Some records had errors:
-                              </p>
-                              <div className="max-h-40 overflow-y-auto mt-1 p-2 bg-red-50 rounded text-sm">
-                                {csvMutation.data.errors.map((error, idx) => (
-                                  <p key={idx} className="text-red-700">
-                                    {error}
-                                  </p>
-                                ))}
-                              </div>
+                        
+                        {csvMutation.data?.errors && csvMutation.data.errors.length > 0 && (
+                          <div className="mt-2">
+                            <p className="font-medium">Some records had errors:</p>
+                            <div className="max-h-40 overflow-y-auto mt-1 p-2 bg-red-50 rounded text-sm">
+                              {csvMutation.data.errors.map((error, idx) => (
+                                <p key={idx} className="text-red-700">{error}</p>
+                              ))}
                             </div>
-                          )}
+                          </div>
+                        )}
                       </AlertDescription>
                     </Alert>
                   )}
-
+                  
                   {csvMutation.isError && (
                     <Alert variant="destructive" className="mt-4">
                       <XCircle className="h-4 w-4" />
                       <AlertTitle>Import failed</AlertTitle>
                       <AlertDescription>
-                        {csvMutation.error instanceof Error
-                          ? csvMutation.error.message
-                          : "Failed to import file"}
+                        {csvMutation.error instanceof Error ? csvMutation.error.message : 'Failed to import file'}
                       </AlertDescription>
                     </Alert>
                   )}

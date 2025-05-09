@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
+import React, { useState } from 'react';
+import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
@@ -7,21 +7,19 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Progress } from "@/components/ui/progress";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+} from '@/components/ui/card';
 import {
-  AlertCircle,
-  CheckCircle,
-  FilePlus,
-  UploadCloud,
-  Download,
-} from "lucide-react";
-import ImportLayout from "@/components/dashboard/import-layout";
+  Alert,
+  AlertDescription,
+  AlertTitle,
+} from '@/components/ui/alert';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
+import { Checkbox } from '@/components/ui/checkbox';
+import { useToast } from '@/hooks/use-toast';
+import { AlertCircle, CheckCircle, FilePlus, UploadCloud, Download } from 'lucide-react';
+import ImportLayout from '@/components/dashboard/import-layout';
 
 const PressureImport: React.FC = () => {
   const { toast } = useToast();
@@ -69,11 +67,11 @@ const PressureImport: React.FC = () => {
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
-      formData.append("clearExisting", clearExisting.toString());
+      formData.append('file', file);
+      formData.append('clearExisting', clearExisting.toString());
 
-      const response = await fetch("/api/pressure/import", {
-        method: "POST",
+      const response = await fetch('/api/pressure/import', {
+        method: 'POST',
         body: formData,
       });
 
@@ -85,23 +83,23 @@ const PressureImport: React.FC = () => {
       if (response.ok) {
         setUploadResult({
           success: true,
-          message: data.message || "Import successful",
-          records: data.totalProcessed || (data.inserted + data.updated) || 0,
+          message: data.message || 'Import successful',
+          records: data.count || 0,
           errors: data.errors || [],
         });
         toast({
           title: "Import successful",
-          description: `Successfully imported pressure data. ${data.totalProcessed || (data.inserted + data.updated) || 0} records processed.`,
+          description: `Successfully imported pressure data. ${data.count} records processed.`,
         });
       } else {
         setUploadResult({
           success: false,
-          message: data.message || "Import failed",
+          message: data.message || 'Import failed',
           errors: data.errors || [],
         });
         toast({
           title: "Import failed",
-          description: data.message || "Failed to import pressure data",
+          description: data.message || 'Failed to import pressure data',
           variant: "destructive",
         });
       }
@@ -110,8 +108,7 @@ const PressureImport: React.FC = () => {
       setUploadProgress(0);
       setUploadResult({
         success: false,
-        message:
-          error instanceof Error ? error.message : "Failed to import data",
+        message: error instanceof Error ? error.message : 'Failed to import data',
       });
       toast({
         title: "Import failed",
@@ -125,18 +122,17 @@ const PressureImport: React.FC = () => {
 
   const downloadTemplate = () => {
     // Create sample CSV data
-    const sampleData =
-      "Region,Circle,Division,Sub Division,Block,Scheme ID,Scheme Name,Village Name,ESR Name,Pressure (bar),Date\n" +
+    const sampleData = "Region,Circle,Division,Sub Division,Block,Scheme ID,Scheme Name,Village Name,ESR Name,Pressure (bar),Date\n" +
       "Nagpur,Circle1,Division1,SubDivision1,Block1,20001234,Sample Scheme,Sample Village 1,ESR 1,2.5,2023-10-01\n" +
       "Nagpur,Circle1,Division1,SubDivision1,Block1,20001234,Sample Scheme,Sample Village 1,ESR 2,3.1,2023-10-01\n" +
       "Nagpur,Circle1,Division1,SubDivision1,Block1,20001234,Sample Scheme,Sample Village 2,ESR 1,2.8,2023-10-01";
 
     // Create and download the file
-    const blob = new Blob([sampleData], { type: "text/csv" });
+    const blob = new Blob([sampleData], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = "pressure_data_template.csv";
+    a.download = 'pressure_data_template.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -170,10 +166,7 @@ const PressureImport: React.FC = () => {
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                  <label
-                    htmlFor="file-upload"
-                    className="cursor-pointer block text-center"
-                  >
+                  <label htmlFor="file-upload" className="cursor-pointer block text-center">
                     <UploadCloud className="h-12 w-12 mx-auto text-gray-400" />
                     <p className="mt-2 text-sm font-medium">
                       Click to select a file or drag and drop
@@ -186,9 +179,7 @@ const PressureImport: React.FC = () => {
                         <div className="flex items-center">
                           <FilePlus className="h-5 w-5 text-blue-500 mr-2" />
                           <div>
-                            <p className="text-sm font-medium text-blue-700">
-                              {file.name}
-                            </p>
+                            <p className="text-sm font-medium text-blue-700">{file.name}</p>
                             <p className="text-xs text-gray-500">
                               {(file.size / 1024).toFixed(2)} KB
                             </p>
@@ -201,15 +192,13 @@ const PressureImport: React.FC = () => {
               </div>
 
               <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="clear-existing"
+                <Checkbox 
+                  id="clear-existing" 
                   checked={clearExisting}
-                  onCheckedChange={(checked) =>
-                    setClearExisting(checked as boolean)
-                  }
+                  onCheckedChange={(checked) => setClearExisting(checked as boolean)}
                 />
-                <Label
-                  htmlFor="clear-existing"
+                <Label 
+                  htmlFor="clear-existing" 
                   className="text-sm font-medium cursor-pointer"
                 >
                   Clear existing data before import
@@ -227,39 +216,28 @@ const PressureImport: React.FC = () => {
               )}
 
               {uploadResult && (
-                <Alert
-                  className={
-                    uploadResult.success
-                      ? "bg-green-50 border-green-200"
-                      : "bg-red-50 border-red-200"
-                  }
-                >
+                <Alert className={uploadResult.success ? "bg-green-50 border-green-200" : "bg-red-50 border-red-200"}>
                   {uploadResult.success ? (
                     <CheckCircle className="h-4 w-4 text-green-500" />
                   ) : (
                     <AlertCircle className="h-4 w-4 text-red-500" />
                   )}
                   <AlertTitle>
-                    {uploadResult.success
-                      ? "Import successful"
-                      : "Import failed"}
+                    {uploadResult.success ? "Import successful" : "Import failed"}
                   </AlertTitle>
                   <AlertDescription>
                     <p>{uploadResult.message}</p>
-                    {uploadResult.success &&
-                      uploadResult.records !== undefined && (
-                        <p className="mt-1 text-sm">
-                          Processed {uploadResult.records} records
-                        </p>
-                      )}
+                    {uploadResult.success && uploadResult.records !== undefined && (
+                      <p className="mt-1 text-sm">
+                        Processed {uploadResult.records} records
+                      </p>
+                    )}
                     {uploadResult.errors && uploadResult.errors.length > 0 && (
                       <div className="mt-2">
                         <p className="font-medium text-sm">Errors:</p>
                         <div className="max-h-32 overflow-y-auto mt-1 p-2 bg-white bg-opacity-50 rounded text-sm">
                           {uploadResult.errors.map((error, idx) => (
-                            <p key={idx} className="text-red-700">
-                              {error}
-                            </p>
+                            <p key={idx} className="text-red-700">{error}</p>
                           ))}
                         </div>
                       </div>
@@ -270,15 +248,18 @@ const PressureImport: React.FC = () => {
             </div>
           </CardContent>
           <CardFooter className="flex justify-between">
-            <Button
-              variant="outline"
+            <Button 
+              variant="outline" 
               onClick={downloadTemplate}
               disabled={isUploading}
             >
               <Download className="h-4 w-4 mr-2" />
               Download Template
             </Button>
-            <Button onClick={handleUpload} disabled={!file || isUploading}>
+            <Button 
+              onClick={handleUpload} 
+              disabled={!file || isUploading}
+            >
               {isUploading ? (
                 <>Uploading...</>
               ) : (
