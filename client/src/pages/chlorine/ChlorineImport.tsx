@@ -48,7 +48,7 @@ const ChlorineImport = () => {
       const formData = new FormData();
       formData.append("file", excelFile);
 
-      const response = await fetch("/api/chlorine/import/excel", {
+      const response = await fetch("/api/chlorine/import", {
         method: "POST",
         body: formData,
       });
@@ -155,10 +155,10 @@ const ChlorineImport = () => {
   return (
     <ImportLayout>
       <div className="w-full">
-        {/* <h1 className="text-2xl font-bold mb-6">Import Chlorine Data</h1>
+        <h1 className="text-2xl font-bold mb-6">Import Chlorine Data</h1>
         <p className="mb-6 text-gray-600">
           Upload Excel or CSV files to update chlorine measurements for ESRs (Elevated Storage Reservoirs).
-        </p> */}
+        </p>
 
         <Tabs defaultValue="excel">
           <TabsList className="mb-4">

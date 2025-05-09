@@ -72,7 +72,7 @@ const PressureImport: React.FC = () => {
       formData.append("file", file);
       formData.append("clearExisting", clearExisting.toString());
 
-      const response = await fetch("/api/pressure/import/csv", {
+      const response = await fetch("/api/pressure/import", {
         method: "POST",
         body: formData,
       });
