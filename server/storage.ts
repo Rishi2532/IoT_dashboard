@@ -3125,7 +3125,10 @@ export class PostgresStorage implements IStorage {
       }
     }
 
-    return query.orderBy(schemeStatuses.region, schemeStatuses.scheme_name);
+    const result = await query.orderBy(schemeStatuses.region, schemeStatuses.scheme_name);
+    
+    // Apply agency mapping to all schemes
+    return result.map(scheme => this.ensureSchemeAgency(scheme));
   }
   
   /**
@@ -3252,7 +3255,10 @@ export class PostgresStorage implements IStorage {
       }
     }
 
-    return query.orderBy(schemeStatuses.scheme_name);
+    const result = await query.orderBy(schemeStatuses.scheme_name);
+    
+    // Apply agency mapping to all schemes by region
+    return result.map(scheme => this.ensureSchemeAgency(scheme));
   }
   
   /**
