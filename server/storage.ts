@@ -2861,6 +2861,38 @@ export class PostgresStorage implements IStorage {
       
       console.log(`Synchronized ${schemeStatusUpdated} new block entries in scheme_status table from pressure import`);
       
+      // Store import results in app state
+      try {
+        const importStats = {
+          inserted,
+          updated,
+          removed: 0,
+          totalProcessed: inserted + updated,
+          timestamp: new Date().toISOString(),
+          errors: errors.length
+        };
+        
+        // Store in app_state table under key "last_pressure_import"
+        await db
+          .insert(appState)
+          .values({
+            key: "last_pressure_import",
+            value: importStats as any,
+            updated_at: new Date()
+          })
+          .onConflictDoUpdate({
+            target: appState.key,
+            set: { 
+              value: importStats as any,
+              updated_at: new Date()
+            }
+          });
+        
+        console.log("Saved pressure import stats to app_state:", importStats);
+      } catch (storeError) {
+        console.error("Error storing import stats:", storeError);
+      }
+      
       return {
         inserted,
         updated,
