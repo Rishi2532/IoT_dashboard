@@ -242,28 +242,30 @@ export default function Dashboard() {
         return regionAgencyMap[regionName] || 'Not Specified';
       };
       
-      // Create workbook and worksheet with the exact format as shown in the image
+      // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
-      
-      // Create worksheet data with the exact same column order as in the screenshot
-      const data = allFilteredSchemes.map((scheme: SchemeStatus) => ({
-        "Agency": scheme.agency || (scheme.region ? getAgencyByRegion(scheme.region) : 'Not Specified'),
-        "Total Villages": scheme.number_of_village,
-        "Villages Integrated": scheme.total_villages_integrated,
-        "Villages Completed": scheme.fully_completed_villages,
-        "Total ESR": scheme.total_number_of_esr,
-        "ESR Integrated": scheme.total_esr_integrated,
-        "ESR Completed": scheme.no_fully_completed_esr,
-        "Flow Meters": scheme.flow_meters_connected,
-        "Pressure Transmitters": scheme.pressure_transmitter_connected,
-        "Residual Chlorine Analyzers": scheme.residual_chlorine_analyzer_connected,
-        "MJP Commissioned": scheme.mjp_commissioned || 'No',
-        "MJP Fully Completed": scheme.mjp_fully_completed || 'In Progress',
-        "Status": scheme.fully_completion_scheme_status || scheme.scheme_functional_status || 'Not-Connected',
-      }));
-      
-      // Create worksheet
-      const ws = XLSX.utils.json_to_sheet(data);
+      const ws = XLSX.utils.json_to_sheet(
+        allFilteredSchemes.map((scheme: SchemeStatus) => ({
+          "Scheme ID": scheme.scheme_id,
+          "Scheme Name": scheme.scheme_name,
+          "Region": scheme.region,
+          // Use agency from scheme data if available, otherwise determine from region
+          "Agency": scheme.agency || (scheme.region ? getAgencyByRegion(scheme.region) : 'Not Specified'),
+          "Total Villages": scheme.number_of_village,
+          "Villages Integrated": scheme.total_villages_integrated,
+          "Villages Completed": scheme.fully_completed_villages,
+          "Total ESR": scheme.total_number_of_esr,
+          "ESR Integrated": scheme.total_esr_integrated,
+          "ESR Completed": scheme.no_fully_completed_esr,
+          "Flow Meters": scheme.flow_meters_connected,
+          "Pressure Transmitters": scheme.pressure_transmitter_connected,
+          "Residual Chlorine Analyzers": scheme.residual_chlorine_analyzer_connected,
+          // Add MJP columns
+          "MJP Commissioned": scheme.mjp_commissioned || 'No',
+          "MJP Fully Completed": scheme.mjp_fully_completed || 'In Progress',
+          "Status": scheme.fully_completion_scheme_status || scheme.scheme_functional_status || 'Not-Connected',
+        })),
+      );
       
       // Format the headers with blue background and white text to match the image
       const headerStyle = {
@@ -303,7 +305,7 @@ export default function Dashboard() {
       mjpFullyCompletedCol = firstRow.findIndex(key => key === "MJP Fully Completed");
       statusCol = firstRow.findIndex(key => key === "Status");
       
-      // Apply styles to cells - EXACTLY matching the screenshot
+      // Apply styles to MJP cells based on their values
       for (let row = 1; row <= headerRange.e.r; row++) { // Start from row 1 (skip header)
         // Style MJP Commissioned column
         if (mjpCommissionedCol !== -1) {
@@ -331,34 +333,6 @@ export default function Dashboard() {
           if (ws[cellAddress] && ws[cellAddress].v === "Fully Completed") {
             ws[cellAddress].s = greenStyle;
           } else if (ws[cellAddress]) {
-            ws[cellAddress].s = yellowStyle;
-          }
-        }
-      }
-      
-      // Force every cell in MJP columns and Status column to be colored
-      // This ensures even empty cells get the appropriate background color
-      for (let row = 1; row <= headerRange.e.r; row++) {
-        if (mjpCommissionedCol !== -1) {
-          const cellAddress = XLSX.utils.encode_cell({ r: row, c: mjpCommissionedCol });
-          if (!ws[cellAddress]) {
-            ws[cellAddress] = { t: 's', v: 'No' };
-            ws[cellAddress].s = yellowStyle;
-          }
-        }
-        
-        if (mjpFullyCompletedCol !== -1) {
-          const cellAddress = XLSX.utils.encode_cell({ r: row, c: mjpFullyCompletedCol });
-          if (!ws[cellAddress]) {
-            ws[cellAddress] = { t: 's', v: 'In Progress' };
-            ws[cellAddress].s = yellowStyle;
-          }
-        }
-        
-        if (statusCol !== -1) {
-          const cellAddress = XLSX.utils.encode_cell({ r: row, c: statusCol });
-          if (!ws[cellAddress]) {
-            ws[cellAddress] = { t: 's', v: 'In Progress' };
             ws[cellAddress].s = yellowStyle;
           }
         }
