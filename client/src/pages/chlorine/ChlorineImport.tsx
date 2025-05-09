@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, UploadCloud, FileCheck, AlertCircle, XCircle, CheckCircle, Download, FileSpreadsheet } from 'lucide-react';
+import ImportLayout from '@/components/dashboard/import-layout';
 
 interface ImportResult {
   message?: string;
@@ -32,33 +33,30 @@ const ChlorineImport = () => {
       const formData = new FormData();
       formData.append('file', excelFile);
       
-      return apiRequest('/api/chlorine/import/excel', {
+      const response = await fetch('/api/chlorine/import/excel', {
         method: 'POST',
         body: formData,
-        headers: {
-          // Don't set Content-Type here, it will be automatically set with the boundary
-        },
-      });
-    },
-    onSuccess: (data: ImportResult) => {
-      toast({
-        title: 'Excel Import Successful',
-        description: `Imported ${data.inserted} records, updated ${data.updated} records`,
-        variant: 'default',
       });
       
-      // Invalidate queries to refresh data
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to import Excel file');
+      }
+      
+      return response.json() as Promise<ImportResult>;
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chlorine'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/chlorine/dashboard-stats'] });
-      
-      // Reset file input
-      setExcelFile(null);
-    },
-    onError: (error) => {
       toast({
-        title: 'Excel Import Failed',
-        description: (error as Error)?.message || 'An unknown error occurred',
-        variant: 'destructive',
+        title: "Import successful",
+        description: `Processed ${data.inserted + data.updated} records (${data.inserted} inserted, ${data.updated} updated).`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Import failed",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });
@@ -73,321 +71,327 @@ const ChlorineImport = () => {
       const formData = new FormData();
       formData.append('file', csvFile);
       
-      return apiRequest('/api/chlorine/import/csv', {
+      const response = await fetch('/api/chlorine/import/csv', {
         method: 'POST',
         body: formData,
-        headers: {
-          // Don't set Content-Type here, it will be automatically set with the boundary
-        },
-      });
-    },
-    onSuccess: (data: ImportResult) => {
-      toast({
-        title: 'CSV Import Successful',
-        description: `Imported ${data.inserted} records, updated ${data.updated} records`,
-        variant: 'default',
       });
       
-      // Invalidate queries to refresh data
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to import CSV file');
+      }
+      
+      return response.json() as Promise<ImportResult>;
+    },
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['/api/chlorine'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/chlorine/dashboard-stats'] });
-      
-      // Reset file input
-      setCsvFile(null);
-    },
-    onError: (error) => {
       toast({
-        title: 'CSV Import Failed',
-        description: (error as Error)?.message || 'An unknown error occurred',
-        variant: 'destructive',
+        title: "Import successful",
+        description: `Processed ${data.inserted + data.updated} records (${data.inserted} inserted, ${data.updated} updated).`,
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Import failed",
+        description: error.message,
+        variant: "destructive",
       });
     },
   });
   
-  // Handle file change for Excel
   const handleExcelFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setExcelFile(e.target.files[0]);
     }
   };
   
-  // Handle file change for CSV
   const handleCsvFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
       setCsvFile(e.target.files[0]);
     }
   };
   
-  // Handle Excel import
-  const handleExcelImport = () => {
+  const isExcelMutating = excelMutation.isPending;
+  const isCsvMutating = csvMutation.isPending;
+  
+  const handleExcelSubmit = () => {
     excelMutation.mutate();
   };
   
-  // Handle CSV import
-  const handleCsvImport = () => {
+  const handleCsvSubmit = () => {
     csvMutation.mutate();
   };
-
+  
+  const downloadTemplate = () => {
+    // Create a sample template for download
+    const sampleData = "Region,Scheme ID,Scheme Name,Village Name,ESR Name,Chlorine Value Day 1,Chlorine Value Day 2,Chlorine Value Day 3,Chlorine Value Day 4,Chlorine Value Day 5,Chlorine Value Day 6,Chlorine Value Day 7,Chlorine Date Day 1,Chlorine Date Day 2,Chlorine Date Day 3,Chlorine Date Day 4,Chlorine Date Day 5,Chlorine Date Day 6,Chlorine Date Day 7,Sensor ID\n" +
+    "Amravati,20001234,Sample Scheme Name,Village Sample,ESR Sample,0.5,0.6,0.4,0.5,0.3,0.6,0.5,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,SEN001";
+    
+    const blob = new Blob([sampleData], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'chlorine_data_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  
   return (
-    <div className="container mx-auto py-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Import Chlorine Data</CardTitle>
-            <CardDescription>Upload Excel or CSV files to update chlorine measurements for ESRs</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="excel">
-            <TabsList className="mb-6">
-              <TabsTrigger value="excel">Excel (With Headers)</TabsTrigger>
-              <TabsTrigger value="csv">CSV (Without Headers)</TabsTrigger>
-            </TabsList>
-            
-            <TabsContent value="excel">
-              <div className="space-y-6">
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Excel File Requirements</AlertTitle>
-                  <AlertDescription>
-                    <p>Excel file must include headers with the following expected column names:</p>
-                    <ul className="list-disc list-inside mt-2 space-y-1">
-                      <li>Region, Scheme ID, Scheme Name, Village Name, ESR Name</li>
-                      <li>Chlorine Value Day 1-7, Chlorine Date Day 1-7</li>
-                      <li>Sensor ID (optional)</li>
-                    </ul>
-                    <p className="mt-2 text-primary font-medium">
-                      The most recent chlorine measurement should be in "Chlorine Value Day 7" with date in "Chlorine Date Day 7".
-                    </p>
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="flex flex-col space-y-4">
+    <ImportLayout>
+      <div className="w-full">
+        <h1 className="text-2xl font-bold mb-6">Import Chlorine Data</h1>
+        <p className="mb-6 text-gray-600">
+          Upload Excel or CSV files to update chlorine measurements for ESRs (Elevated Storage Reservoirs).
+        </p>
+        
+        <Tabs defaultValue="excel">
+          <TabsList className="mb-4">
+            <TabsTrigger value="excel" className="flex items-center gap-2">
+              <FileSpreadsheet className="h-4 w-4" />
+              Excel (With Headers)
+            </TabsTrigger>
+            <TabsTrigger value="csv" className="flex items-center gap-2">
+              <FileCheck className="h-4 w-4" />
+              CSV (Without Headers)
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="excel">
+            <Card>
+              <CardHeader>
+                <CardTitle>Import Chlorine Data</CardTitle>
+                <CardDescription>
+                  Upload Excel files to update chlorine measurements for ESRs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
                   <div>
-                    <Input
-                      type="file"
-                      accept=".xlsx,.xls"
-                      onChange={handleExcelFileChange}
-                      disabled={excelMutation.isPending}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                    />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {excelFile ? `Selected: ${excelFile.name}` : 'No file selected'}
-                    </p>
+                    <h3 className="text-sm font-medium mb-2 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1 text-blue-500" />
+                      Excel File Requirements
+                    </h3>
+                    <div className="text-sm text-gray-600 mb-4 pl-5">
+                      <p>Excel file must include headers with the following expected column names:</p>
+                      <ul className="list-disc ml-5 mt-1 space-y-1">
+                        <li>Region, Scheme ID, Scheme Name, Village Name, ESR Name</li>
+                        <li>Chlorine Value Day 1-7, Chlorine Date Day 1-7</li>
+                        <li>Sensor ID (optional)</li>
+                      </ul>
+                      <p className="mt-1 text-blue-600 italic">
+                        The most recent chlorine measurement should be in "Chlorine Value Day 7" with date in "Chlorine Date Day 7".
+                      </p>
+                    </div>
+                    
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors">
+                      <Input
+                        id="excelFile"
+                        type="file"
+                        accept=".xlsx,.xls"
+                        onChange={handleExcelFileChange}
+                        className="hidden"
+                      />
+                      <label htmlFor="excelFile" className="cursor-pointer">
+                        <div className="flex flex-col items-center">
+                          <UploadCloud className="h-10 w-10 text-gray-400 mb-2" />
+                          <p className="text-sm font-medium">Click to select an Excel file</p>
+                          <p className="text-xs text-gray-500">
+                            or drag and drop it here
+                          </p>
+                          {excelFile && (
+                            <div className="mt-2 p-2 bg-blue-50 rounded-md text-left w-full">
+                              <p className="text-sm font-medium text-blue-700">{excelFile.name}</p>
+                              <p className="text-xs text-gray-500">
+                                {(excelFile.size / 1024).toFixed(2)} KB
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    </div>
                   </div>
                   
-                  <Button
-                    onClick={handleExcelImport}
-                    disabled={!excelFile || excelMutation.isPending}
-                    className="w-fit"
-                  >
-                    {excelMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Importing...
-                      </>
-                    ) : (
-                      <>
-                        <UploadCloud className="mr-2 h-4 w-4" />
-                        Import Excel
-                      </>
-                    )}
-                  </Button>
-                </div>
-                
-                {excelMutation.isSuccess && (
-                  <div className="mt-4">
-                    <Alert className="bg-green-50">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <AlertTitle className="text-green-600">Import Successful</AlertTitle>
-                      <AlertDescription className="text-green-800">
-                        <p>Chlorine data has been successfully imported.</p>
-                        <p className="mt-2">
-                          Created: {excelMutation.data.inserted} records | 
-                          Updated: {excelMutation.data.updated} records
-                        </p>
-                        
-                        {excelMutation.data.errors && excelMutation.data.errors.length > 0 && (
-                          <div className="mt-2">
-                            <p className="font-semibold">Errors ({excelMutation.data.errors.length}):</p>
-                            <ul className="list-disc list-inside mt-1">
-                              {excelMutation.data.errors.slice(0, 5).map((error, index) => (
-                                <li key={index} className="text-red-600">{error}</li>
-                              ))}
-                              {excelMutation.data.errors.length > 5 && (
-                                <li>...and {excelMutation.data.errors.length - 5} more errors</li>
-                              )}
-                            </ul>
-                          </div>
-                        )}
-                      </AlertDescription>
-                    </Alert>
-                  </div>
-                )}
-                
-                {excelMutation.isError && (
-                  <Alert variant="destructive">
-                    <XCircle className="h-4 w-4" />
-                    <AlertTitle>Import Failed</AlertTitle>
-                    <AlertDescription>
-                      {(excelMutation.error as Error)?.message || 'An unknown error occurred'}
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            </TabsContent>
-            
-            <TabsContent value="csv">
-              <div className="space-y-6">
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>CSV File Requirements</AlertTitle>
-                  <AlertDescription>
-                    <p>CSV file should <strong>NOT</strong> include headers. The column mapping is as follows:</p>
-                    <div className="mt-2 text-xs bg-gray-50 p-3 rounded border border-gray-200 overflow-x-auto">
-                      <table className="min-w-full">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left p-1">Column</th>
-                            <th className="text-left p-1">Field</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">0</td><td className="p-1">region</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">1</td><td className="p-1">circle</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">2</td><td className="p-1">division</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">3</td><td className="p-1">sub_division</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">4</td><td className="p-1">block</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">5</td><td className="p-1">scheme_id</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">6</td><td className="p-1">scheme_name</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">7</td><td className="p-1">village_name</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">8</td><td className="p-1">esr_name</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">9-15</td><td className="p-1">Chlorine_value_1 through 7</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">16-22</td><td className="p-1">Chlorine_date_day_1 through 7</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">23</td><td className="p-1">number_of_consistent_zero_value_in_Chlorine</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">24</td><td className="p-1">Chlorine_less_than_02_mgl</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">25</td><td className="p-1">Chlorine_between_02__05_mgl</td></tr>
-                          <tr className="border-b even:bg-gray-100"><td className="p-1">26</td><td className="p-1">Chlorine_greater_than_05_mgl</td></tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    <p className="mt-2 text-primary font-medium">
-                      The most recent chlorine measurement should be in Column 15 (Chlorine_value_7) with date in Column 22 (Chlorine_date_day_7).
-                    </p>
-                  </AlertDescription>
-                </Alert>
-                
-                <div className="flex flex-col space-y-4">
-                  <div className="bg-blue-50 p-3 rounded border border-blue-100 flex justify-between items-center">
-                    <div className="text-sm text-blue-800">
-                      <p className="font-medium">Need a template?</p>
-                      <p className="text-xs">Download a sample CSV template with the correct column structure</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="border-blue-200 text-blue-700 hover:bg-blue-100"
-                      size="sm"
-                      onClick={() => {
-                        // Generate sample CSV content
-                        const sampleData = [
-                          "Amravati,Circle1,Division1,SubDiv1,Block1,AMR2001,Sample Scheme,Village1,ESR1,0.3,0.4,0.5,0.3,0.4,0.2,0.5,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,0,0,1,0",
-                          "Nagpur,Circle2,Division2,SubDiv2,Block2,NAG2002,Sample Scheme 2,Village2,ESR2,0.1,0.2,0.1,0.3,0.1,0.1,0.2,2025-04-17,2025-04-18,2025-04-19,2025-04-20,2025-04-21,2025-04-22,2025-04-23,0,1,0,0"
-                        ].join('\n');
-                        
-                        // Create blob and download
-                        const blob = new Blob([sampleData], { type: 'text/csv' });
-                        const url = URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = 'chlorine_data_template.csv';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                        URL.revokeObjectURL(url);
-                      }}
-                    >
+                  <div className="flex justify-between items-center">
+                    <Button onClick={downloadTemplate} variant="outline" className="text-sm">
                       <Download className="h-4 w-4 mr-1" />
-                      Template
+                      Download Template
+                    </Button>
+                    
+                    <Button 
+                      onClick={handleExcelSubmit} 
+                      disabled={!excelFile || isExcelMutating}
+                    >
+                      {isExcelMutating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
+                          Importing...
+                        </>
+                      ) : (
+                        'Import Excel'
+                      )}
                     </Button>
                   </div>
                   
-                  <div>
-                    <Input
-                      type="file"
-                      accept=".csv"
-                      onChange={handleCsvFileChange}
-                      disabled={csvMutation.isPending}
-                      className="file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-primary file:text-primary-foreground hover:file:bg-primary/90"
-                    />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {csvFile ? `Selected: ${csvFile.name}` : 'No file selected'}
-                    </p>
-                  </div>
-                  
-                  <Button
-                    onClick={handleCsvImport}
-                    disabled={!csvFile || csvMutation.isPending}
-                    className="w-fit"
-                  >
-                    {csvMutation.isPending ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Importing...
-                      </>
-                    ) : (
-                      <>
-                        <UploadCloud className="mr-2 h-4 w-4" />
-                        Import CSV
-                      </>
-                    )}
-                  </Button>
-                </div>
-                
-                {csvMutation.isSuccess && (
-                  <div className="mt-4">
-                    <Alert className="bg-green-50">
-                      <CheckCircle className="h-4 w-4 text-green-600" />
-                      <AlertTitle className="text-green-600">Import Successful</AlertTitle>
-                      <AlertDescription className="text-green-800">
-                        <p>Chlorine data has been successfully imported.</p>
-                        <p className="mt-2">
-                          Created: {csvMutation.data.inserted} records | 
-                          Updated: {csvMutation.data.updated} records
-                        </p>
+                  {excelMutation.isSuccess && (
+                    <Alert className="mt-4 bg-green-50 border-green-200">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <AlertTitle>Import successful</AlertTitle>
+                      <AlertDescription>
+                        <p>Successfully processed the file.</p>
+                        <ul className="list-disc list-inside mt-1 text-sm">
+                          <li>Inserted records: {excelMutation.data?.inserted || 0}</li>
+                          <li>Updated records: {excelMutation.data?.updated || 0}</li>
+                          <li>Total processed: {(excelMutation.data?.inserted || 0) + (excelMutation.data?.updated || 0)}</li>
+                        </ul>
                         
-                        {csvMutation.data.errors && csvMutation.data.errors.length > 0 && (
+                        {excelMutation.data?.errors && excelMutation.data.errors.length > 0 && (
                           <div className="mt-2">
-                            <p className="font-semibold">Errors ({csvMutation.data.errors.length}):</p>
-                            <ul className="list-disc list-inside mt-1">
-                              {csvMutation.data.errors.slice(0, 5).map((error, index) => (
-                                <li key={index} className="text-red-600">{error}</li>
+                            <p className="font-medium">Some records had errors:</p>
+                            <div className="max-h-40 overflow-y-auto mt-1 p-2 bg-red-50 rounded text-sm">
+                              {excelMutation.data.errors.map((error, idx) => (
+                                <p key={idx} className="text-red-700">{error}</p>
                               ))}
-                              {csvMutation.data.errors.length > 5 && (
-                                <li>...and {csvMutation.data.errors.length - 5} more errors</li>
-                              )}
-                            </ul>
+                            </div>
                           </div>
                         )}
                       </AlertDescription>
                     </Alert>
+                  )}
+                  
+                  {excelMutation.isError && (
+                    <Alert variant="destructive" className="mt-4">
+                      <XCircle className="h-4 w-4" />
+                      <AlertTitle>Import failed</AlertTitle>
+                      <AlertDescription>
+                        {excelMutation.error instanceof Error ? excelMutation.error.message : 'Failed to import file'}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="csv">
+            <Card>
+              <CardHeader>
+                <CardTitle>Import Chlorine Data</CardTitle>
+                <CardDescription>
+                  Upload CSV files to update chlorine measurements for ESRs
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium mb-2 flex items-center">
+                      <AlertCircle className="h-4 w-4 mr-1 text-blue-500" />
+                      CSV File Requirements
+                    </h3>
+                    <div className="text-sm text-gray-600 mb-4 pl-5">
+                      <p>CSV file should NOT have a header row and follow this exact column order:</p>
+                      <ol className="list-decimal ml-5 mt-1 space-y-1">
+                        <li>Region name</li>
+                        <li>Scheme ID</li>
+                        <li>Scheme name</li>
+                        <li>Village name</li>
+                        <li>ESR name</li>
+                        <li>Chlorine value day 1-7</li>
+                        <li>Chlorine date day 1-7</li>
+                        <li>Sensor ID (optional)</li>
+                      </ol>
+                    </div>
+                    
+                    <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:bg-gray-50 transition-colors">
+                      <Input
+                        id="csvFile"
+                        type="file"
+                        accept=".csv"
+                        onChange={handleCsvFileChange}
+                        className="hidden"
+                      />
+                      <label htmlFor="csvFile" className="cursor-pointer">
+                        <div className="flex flex-col items-center">
+                          <UploadCloud className="h-10 w-10 text-gray-400 mb-2" />
+                          <p className="text-sm font-medium">Click to select a CSV file</p>
+                          <p className="text-xs text-gray-500">
+                            or drag and drop it here
+                          </p>
+                          {csvFile && (
+                            <div className="mt-2 p-2 bg-blue-50 rounded-md text-left w-full">
+                              <p className="text-sm font-medium text-blue-700">{csvFile.name}</p>
+                              <p className="text-xs text-gray-500">
+                                {(csvFile.size / 1024).toFixed(2)} KB
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </label>
+                    </div>
                   </div>
-                )}
-                
-                {csvMutation.isError && (
-                  <Alert variant="destructive">
-                    <XCircle className="h-4 w-4" />
-                    <AlertTitle>Import Failed</AlertTitle>
-                    <AlertDescription>
-                      {(csvMutation.error as Error)?.message || 'An unknown error occurred'}
-                    </AlertDescription>
-                  </Alert>
-                )}
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+                  
+                  <div className="flex justify-between items-center">
+                    <Button onClick={downloadTemplate} variant="outline" className="text-sm">
+                      <Download className="h-4 w-4 mr-1" />
+                      Download Template
+                    </Button>
+                    
+                    <Button 
+                      onClick={handleCsvSubmit} 
+                      disabled={!csvFile || isCsvMutating}
+                    >
+                      {isCsvMutating ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" /> 
+                          Importing...
+                        </>
+                      ) : (
+                        'Import CSV'
+                      )}
+                    </Button>
+                  </div>
+                  
+                  {csvMutation.isSuccess && (
+                    <Alert className="mt-4 bg-green-50 border-green-200">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <AlertTitle>Import successful</AlertTitle>
+                      <AlertDescription>
+                        <p>Successfully processed the file.</p>
+                        <ul className="list-disc list-inside mt-1 text-sm">
+                          <li>Inserted records: {csvMutation.data?.inserted || 0}</li>
+                          <li>Updated records: {csvMutation.data?.updated || 0}</li>
+                          <li>Total processed: {(csvMutation.data?.inserted || 0) + (csvMutation.data?.updated || 0)}</li>
+                        </ul>
+                        
+                        {csvMutation.data?.errors && csvMutation.data.errors.length > 0 && (
+                          <div className="mt-2">
+                            <p className="font-medium">Some records had errors:</p>
+                            <div className="max-h-40 overflow-y-auto mt-1 p-2 bg-red-50 rounded text-sm">
+                              {csvMutation.data.errors.map((error, idx) => (
+                                <p key={idx} className="text-red-700">{error}</p>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                  
+                  {csvMutation.isError && (
+                    <Alert variant="destructive" className="mt-4">
+                      <XCircle className="h-4 w-4" />
+                      <AlertTitle>Import failed</AlertTitle>
+                      <AlertDescription>
+                        {csvMutation.error instanceof Error ? csvMutation.error.message : 'Failed to import file'}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
+    </ImportLayout>
   );
 };
 
