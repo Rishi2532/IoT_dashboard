@@ -135,9 +135,36 @@ export async function initializeTables(db: any) {
         "pressure_transmitter_connected" INTEGER,
         "residual_chlorine_analyzer_connected" INTEGER,
         "fully_completion_scheme_status" TEXT,
+        "mjp_commissioned" TEXT DEFAULT 'No',
+        "mjp_fully_completed" TEXT DEFAULT 'In Progress',
         "dashboard_url" TEXT
       );
     `);
+    
+    // Check if mjp_commissioned and mjp_fully_completed columns exist, add if missing
+    try {
+      const result = await db.execute(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'scheme_status' AND column_name IN ('mjp_commissioned', 'mjp_fully_completed');
+      `);
+      
+      const existingColumns = result.rows.map(row => row.column_name);
+      
+      if (!existingColumns.includes('mjp_commissioned')) {
+        console.log('Adding missing mjp_commissioned column to scheme_status table...');
+        await db.execute(`ALTER TABLE "scheme_status" ADD COLUMN "mjp_commissioned" TEXT DEFAULT 'No';`);
+        console.log('Successfully added mjp_commissioned column to scheme_status table');
+      }
+      
+      if (!existingColumns.includes('mjp_fully_completed')) {
+        console.log('Adding missing mjp_fully_completed column to scheme_status table...');
+        await db.execute(`ALTER TABLE "scheme_status" ADD COLUMN "mjp_fully_completed" TEXT DEFAULT 'In Progress';`);
+        console.log('Successfully added mjp_fully_completed column to scheme_status table');
+      }
+    } catch (error) {
+      console.error('Error checking for MJP columns in scheme_status:', error);
+    }
     
     // Create users table
     await db.execute(`
