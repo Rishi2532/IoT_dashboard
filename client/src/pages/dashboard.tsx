@@ -266,6 +266,88 @@ export default function Dashboard() {
           "Status": scheme.fully_completion_scheme_status || scheme.scheme_functional_status || 'Not-Connected',
         })),
       );
+      
+      // Format the headers with blue background and white text
+      const headerStyle = {
+        fill: { fgColor: { rgb: "4F81BD" } }, // Blue background
+        font: { color: { rgb: "FFFFFF" }, bold: true }, // White bold text
+        alignment: { horizontal: "center" },
+        border: {
+          top: { style: "thin" },
+          bottom: { style: "thin" },
+          left: { style: "thin" },
+          right: { style: "thin" }
+        }
+      };
+      
+      // Get all header cells (first row)
+      const headerRange = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+      for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+        if (!ws[cellAddress]) continue;
+        
+        // Apply header styling
+        ws[cellAddress].s = headerStyle;
+      }
+      
+      // Apply conditional formatting for MJP status cells
+      const greenStyle = { fill: { fgColor: { rgb: "C6EFCE" } }, font: { color: { rgb: "006100" }, bold: true } }; // Light green with dark green text
+      const yellowStyle = { fill: { fgColor: { rgb: "FFEB9C" } }, font: { color: { rgb: "9C5700" }, bold: true } }; // Light yellow with amber text
+      
+      // Find the indexes of the MJP columns
+      let mjpCommissionedCol = -1;
+      let mjpFullyCompletedCol = -1;
+      
+      // Get the first row keys to find column indexes
+      const firstRow = Object.keys(XLSX.utils.sheet_to_json(ws)[0] || {});
+      mjpCommissionedCol = firstRow.findIndex(key => key === "MJP Commissioned");
+      mjpFullyCompletedCol = firstRow.findIndex(key => key === "MJP Fully Completed");
+      
+      // Apply styles to MJP cells based on their values
+      for (let row = 1; row <= headerRange.e.r; row++) { // Start from row 1 (skip header)
+        // Style MJP Commissioned column
+        if (mjpCommissionedCol !== -1) {
+          const cellAddress = XLSX.utils.encode_cell({ r: row, c: mjpCommissionedCol });
+          if (ws[cellAddress] && ws[cellAddress].v === "Yes") {
+            ws[cellAddress].s = greenStyle;
+          } else if (ws[cellAddress]) {
+            ws[cellAddress].s = yellowStyle;
+          }
+        }
+        
+        // Style MJP Fully Completed column
+        if (mjpFullyCompletedCol !== -1) {
+          const cellAddress = XLSX.utils.encode_cell({ r: row, c: mjpFullyCompletedCol });
+          if (ws[cellAddress] && ws[cellAddress].v === "Fully Completed") {
+            ws[cellAddress].s = greenStyle;
+          } else if (ws[cellAddress]) {
+            ws[cellAddress].s = yellowStyle;
+          }
+        }
+      }
+      
+      // Set column widths for better readability
+      const colWidths = [
+        { wch: 12 }, // Scheme ID
+        { wch: 30 }, // Scheme Name
+        { wch: 12 }, // Region
+        { wch: 15 }, // Agency
+        { wch: 12 }, // Total Villages
+        { wch: 12 }, // Villages Integrated
+        { wch: 12 }, // Villages Completed
+        { wch: 10 }, // Total ESR
+        { wch: 12 }, // ESR Integrated
+        { wch: 12 }, // ESR Completed
+        { wch: 12 }, // Flow Meters
+        { wch: 12 }, // Pressure Transmitters
+        { wch: 12 }, // Residual Chlorine Analyzers
+        { wch: 15 }, // MJP Commissioned
+        { wch: 15 }, // MJP Fully Completed
+        { wch: 18 }  // Status
+      ];
+      
+      // Apply column widths
+      ws['!cols'] = colWidths;
 
       // Add worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, "Schemes Data");
