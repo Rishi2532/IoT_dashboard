@@ -189,6 +189,33 @@ function parseFieldValue(fieldName: string, value: string): any {
 
     // Return mapped value if it exists, otherwise return the original value
     return statusMap[lowerValue] || trimmedValue;
+  } else if (fieldName === "mjp_commissioned") {
+    // Handle MJP Commissioned field (Yes/No values)
+    const trimmedValue = String(value).trim();
+    const lowerValue = trimmedValue.toLowerCase();
+    
+    // Map values to either "Yes" or "No"
+    const yesValues = ["yes", "y", "true", "1", "completed", "fully completed", "fully-completed", "complete"];
+    
+    if (yesValues.includes(lowerValue)) {
+      return "Yes";
+    } else {
+      return "No";
+    }
+  } else if (fieldName === "mjp_fully_completed") {
+    // Handle MJP Fully Completed field (Fully Completed/In Progress values)
+    const trimmedValue = String(value).trim();
+    const lowerValue = trimmedValue.toLowerCase();
+    
+    // Map values to either "Fully Completed" or "In Progress"
+    const completedValues = ["fully completed", "fully-completed", "complete", "completed", "yes", "y", "true", "1"];
+    
+    if (completedValues.includes(lowerValue)) {
+      return "Fully Completed";
+    } else {
+      return "In Progress";
+    }
+  
   } else if (fieldName.includes("date")) {
     // Try to parse as date if it looks like a date
     const dateValue = new Date(value);
@@ -320,6 +347,8 @@ async function updateDatabaseRecords(
             residual_chlorine_analyzer_connected: item.residual_chlorine_analyzer_connected !== undefined ? item.residual_chlorine_analyzer_connected : existingScheme.residual_chlorine_analyzer_connected,
             scheme_functional_status: item.scheme_functional_status || existingScheme.scheme_functional_status,
             fully_completion_scheme_status: item.fully_completion_scheme_status || existingScheme.fully_completion_scheme_status,
+            mjp_commissioned: item.mjp_commissioned || existingScheme.mjp_commissioned || "No",
+            mjp_fully_completed: item.mjp_fully_completed || existingScheme.mjp_fully_completed || "In Progress",
             dashboard_url: item.dashboard_url || (item.scheme_name !== existingScheme.scheme_name ? null : existingScheme.dashboard_url), // Force regeneration if scheme name changed
           };
 
@@ -356,6 +385,8 @@ async function updateDatabaseRecords(
               item.residual_chlorine_analyzer_connected || 0,
             fully_completion_scheme_status:
               item.fully_completion_scheme_status || "In Progress",
+            mjp_commissioned: item.mjp_commissioned || "No",
+            mjp_fully_completed: item.mjp_fully_completed || "In Progress",
             dashboard_url: item.dashboard_url || null, // Use dashboard_url from import if available
           };
 
