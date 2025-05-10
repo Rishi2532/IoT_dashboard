@@ -403,7 +403,7 @@ const SchemeLpcdDashboard = () => {
       if (lpcdValue !== null && lpcdValue > 55) {
         counts.above55++;
         counts.above55Population += population;
-      } else {
+      } else if (lpcdValue !== null) { // Only count defined values, not nulls
         counts.below55++;
         counts.below55Population += population;
       }
@@ -564,7 +564,10 @@ const SchemeLpcdDashboard = () => {
   const renderSummaryCards = () => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <Card className="bg-blue-50 border-blue-100 shadow-sm">
+        <Card 
+          className="bg-blue-50 border-blue-100 shadow-sm hover:shadow-md cursor-pointer transition-all"
+          onClick={() => handleFilterChange("all")}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-blue-900 text-lg">Schemes</CardTitle>
             <CardDescription className="text-blue-700">
@@ -583,7 +586,10 @@ const SchemeLpcdDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-green-50 border-green-100 shadow-sm">
+        <Card 
+          className="bg-green-50 border-green-100 shadow-sm hover:shadow-md cursor-pointer transition-all"
+          onClick={() => handleFilterChange("above55")}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-green-900 text-lg">
               Above 55 LPCD
@@ -604,7 +610,10 @@ const SchemeLpcdDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-red-50 border-red-100 shadow-sm">
+        <Card 
+          className="bg-red-50 border-red-100 shadow-sm hover:shadow-md cursor-pointer transition-all"
+          onClick={() => handleFilterChange("below55")}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-red-900 text-lg">Below 55 LPCD</CardTitle>
             <CardDescription className="text-red-700">
@@ -623,7 +632,10 @@ const SchemeLpcdDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card className="bg-purple-50 border-purple-100 shadow-sm">
+        <Card 
+          className="bg-purple-50 border-purple-100 shadow-sm hover:shadow-md cursor-pointer transition-all"
+          onClick={() => handleFilterChange("mjpYes")}
+        >
           <CardHeader className="pb-2">
             <CardTitle className="text-purple-900 text-lg">
               MJP Commissioned
@@ -987,7 +999,7 @@ const SchemeLpcdDashboard = () => {
                                               return (
                                                 <div key={`day-${day}`} className="flex justify-between items-center p-2 rounded bg-blue-50">
                                                   <span className="text-sm text-gray-600">
-                                                    {date ? new Date(date).toLocaleDateString() : `Day ${day}`}
+                                                    {date ? (date.includes("/") ? date : new Date().toLocaleDateString()) : `Day ${day}`}
                                                   </span>
                                                   <LpcdBadge value={value} />
                                                 </div>
