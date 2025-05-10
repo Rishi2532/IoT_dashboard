@@ -475,6 +475,58 @@ const SchemeLpcdDashboard = () => {
     if (lpcdValue >= 55) return "Good";
     return "Low";
   };
+  
+  // Format LPCD date values (handle old date formats)
+  const formatLpcdDate = (dateString: string): string => {
+    // If the date already has slashes (e.g., "5/10/2025"), return it as is
+    if (dateString.includes("/")) {
+      return dateString;
+    }
+    
+    // If the date is in a year format like "4/29/2001", replace with current date
+    if (dateString.includes("2001")) {
+      const today = new Date();
+      return today.toLocaleDateString();
+    }
+    
+    // For any other format, try to parse it or return the current date
+    try {
+      const parsedDate = new Date(dateString);
+      if (!isNaN(parsedDate.getTime())) {
+        return parsedDate.toLocaleDateString();
+      }
+      return new Date().toLocaleDateString();
+    } catch (e) {
+      return new Date().toLocaleDateString();
+    }
+  };
+  
+  // Get correct dashboard URL based on scheme details
+  const getDashboardUrlForScheme = (scheme: SchemeLpcdData) => {
+    // Check if it's the 105 Villages RRWSS scheme
+    if (scheme.scheme_name === "105 Villages RRWSS" && scheme.scheme_id === "20003791") {
+      // Base URL for PI Vision dashboard
+      const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10108/CEREBULB_JJM_MAHARASHTRA_SCHEME_LEVEL_DASHBOARD';
+      
+      // Standard parameters for the dashboard
+      const STANDARD_PARAMS = 'hidetoolbar=true&hidesidebar=true&mode=kiosk';
+      
+      // Handle the special case for Amravati region (change to Amaravati in the URL)
+      const regionDisplay = scheme.region === 'Amravati' ? 'Amaravati' : scheme.region;
+      
+      // Create the path without URL encoding
+      const path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${scheme.circle}\\Division-${scheme.division}\\Sub Division-${scheme.sub_division}\\Block-${scheme.block}\\Scheme-${scheme.scheme_id} - ${scheme.scheme_name}`;
+      
+      // URL encode the path
+      const encodedPath = encodeURIComponent(path);
+      
+      // Combine all parts to create the complete URL
+      return `${BASE_URL}?${STANDARD_PARAMS}&rootpath=${encodedPath}`;
+    }
+    
+    // Return the original dashboard URL for other schemes
+    return scheme.dashboard_url || '';
+  };
 
   // Create LPCD badge component
   const LpcdBadge = ({ value }: { value: number | null }) => {
@@ -999,7 +1051,7 @@ const SchemeLpcdDashboard = () => {
                                               return (
                                                 <div key={`day-${day}`} className="flex justify-between items-center p-2 rounded bg-blue-50">
                                                   <span className="text-sm text-gray-600">
-                                                    {date ? (date.includes("/") ? date : new Date().toLocaleDateString()) : `Day ${day}`}
+                                                    {date ? formatLpcdDate(date) : `Day ${day}`}
                                                   </span>
                                                   <LpcdBadge value={value} />
                                                 </div>
@@ -1012,7 +1064,7 @@ const SchemeLpcdDashboard = () => {
                                           <div className="mt-4">
                                             <h3 className="font-medium text-gray-700 mb-2">PI Vision Dashboard</h3>
                                             <a
-                                              href={scheme.dashboard_url}
+                                              href={getDashboardUrlForScheme(scheme)}
                                               target="_blank"
                                               rel="noopener noreferrer"
                                               className="inline-flex items-center px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition"
