@@ -116,6 +116,12 @@ function App() {
                 </ProtectedRoute>
               </Route>
               
+              <Route path="/scheme-lpcd">
+                <ProtectedRoute>
+                  <SchemeLpcdPage />
+                </ProtectedRoute>
+              </Route>
+              
               <Route path="/chlorine">
                 <ProtectedRoute>
                   <ChlorinePage />
