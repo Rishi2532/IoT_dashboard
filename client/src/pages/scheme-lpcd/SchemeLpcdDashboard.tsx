@@ -482,7 +482,7 @@ const SchemeLpcdDashboard = () => {
       <span
         className={`px-2 py-1 rounded-full text-xs font-medium ${getLpcdStatusColor(value)}`}
       >
-        {value !== null ? `${value.toFixed(2)}L` : "N/A"}
+        {value !== null ? `${Number(value).toFixed(2)}L` : "N/A"}
       </span>
     );
   };
@@ -509,7 +509,7 @@ const SchemeLpcdDashboard = () => {
             "Villages Below 55L": scheme.villages_below_55,
             "Total Population": scheme.total_population,
             "MJP Commissioned": scheme.mjp_commissioned || "Unknown",
-            "Current LPCD": lpcdValue !== null ? lpcdValue.toFixed(2) : "N/A",
+            "Current LPCD": lpcdValue !== null ? Number(lpcdValue).toFixed(2) : "N/A",
             Status: getLpcdStatusText(lpcdValue),
             "LPCD Day 1":
               scheme.lpcd_value_day1 !== null &&
@@ -971,7 +971,7 @@ const SchemeLpcdDashboard = () => {
                                         <div>
                                           <h3 className="font-medium text-gray-700 mb-1">Current Status</h3>
                                           <p><span className="font-medium">MJP Commissioned:</span> {scheme.mjp_commissioned || "Unknown"}</p>
-                                          <p><span className="font-medium">Current LPCD:</span> {lpcdValue !== null ? lpcdValue.toFixed(2) + "L" : "N/A"}</p>
+                                          <p><span className="font-medium">Current LPCD:</span> {lpcdValue !== null ? Number(lpcdValue).toFixed(2) + "L" : "N/A"}</p>
                                           <p><span className="font-medium">Water Supply Status:</span> {getLpcdStatusText(lpcdValue)}</p>
                                         </div>
                                       </div>
