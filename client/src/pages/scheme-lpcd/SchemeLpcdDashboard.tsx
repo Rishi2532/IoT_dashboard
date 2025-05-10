@@ -480,24 +480,49 @@ const SchemeLpcdDashboard = () => {
   const formatLpcdDate = (dateString: string): string => {
     // If the date already has slashes (e.g., "5/10/2025"), return it as is
     if (dateString.includes("/")) {
+      // Replace 2001 with 2025 if needed
+      if (dateString.includes("2001")) {
+        return dateString.replace("2001", "2025");
+      }
       return dateString;
     }
     
-    // If the date is in a year format like "4/29/2001", replace with current date
-    if (dateString.includes("2001")) {
-      const today = new Date();
-      return today.toLocaleDateString();
+    // Handle dates like "29-Apr", "30-Apr", etc.
+    if (dateString.includes("-")) {
+      const parts = dateString.split("-");
+      if (parts.length === 2) {
+        const day = parts[0];
+        const month = parts[1];
+        
+        // Map of month abbreviations to month numbers
+        const monthMap: {[key: string]: string} = {
+          "Jan": "1", "Feb": "2", "Mar": "3", "Apr": "4",
+          "May": "5", "Jun": "6", "Jul": "7", "Aug": "8",
+          "Sep": "9", "Oct": "10", "Nov": "11", "Dec": "12"
+        };
+        
+        if (monthMap[month]) {
+          return `${monthMap[month]}/${day}/2025`;
+        }
+      }
     }
     
-    // For any other format, try to parse it or return the current date
+    // For any other format, try to parse it or return with current year
     try {
       const parsedDate = new Date(dateString);
       if (!isNaN(parsedDate.getTime())) {
+        // Set the year to current year (2025)
+        parsedDate.setFullYear(2025);
         return parsedDate.toLocaleDateString();
       }
-      return new Date().toLocaleDateString();
+      
+      // If all else fails, return with current date
+      const currentDate = new Date();
+      return currentDate.toLocaleDateString();
     } catch (e) {
-      return new Date().toLocaleDateString();
+      // If parsing fails, return with current date
+      const currentDate = new Date();
+      return currentDate.toLocaleDateString();
     }
   };
   
