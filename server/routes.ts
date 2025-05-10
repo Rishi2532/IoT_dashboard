@@ -32,6 +32,7 @@ import lpcdImportRoutes from "./routes/admin/import-lpcd";
 import chlorineRoutes from "./routes/chlorine-routes";
 import pressureRoutes from "./routes/pressure-routes";
 import translationRoutes from "./routes/translation";
+import schemeLpcdRoutes from "./routes/scheme-lpcd-routes";
 
 const exec = promisify(cp.exec);
 
@@ -81,6 +82,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount water scheme routes
   app.use("/api/water-scheme-data", waterSchemeRoutes);
+  
+  // Mount scheme LPCD routes
+  app.use("/api/scheme-lpcd-data", schemeLpcdRoutes);
   
   // Mount LPCD import routes (admin-only)
   app.use("/api/admin", requireAdmin, lpcdImportRoutes);

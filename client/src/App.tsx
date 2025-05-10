@@ -13,6 +13,7 @@ import UserLoginPage from "./pages/user-login";
 import RegisterPage from "./pages/register";
 import ForgotPasswordPage from "./pages/forgot-password";
 import LpcdPage from "./pages/LpcdPage";
+import SchemeLpcdPage from "./pages/SchemeLpcdPage";
 import MapPreviewPage from "./pages/map-preview";
 import { ChlorineDashboard, ChlorineImport, ChlorinePage } from "./pages/chlorine";
 import { PressureDashboard, PressurePage } from "./pages/pressure";
