@@ -30,7 +30,7 @@ import RegionImporter from '@/components/admin/region-importer';
 import SchemeImporter from '@/components/admin/scheme-importer';
 import LpcdImport from '@/pages/lpcd/LpcdImport';
 import { ChlorineImport } from '@/pages/chlorine';
-import { PressureImport } from '@/pages/pressure';
+import { PressureImportContent } from '@/pages/pressure/PressureImport';
 import {
   Table,
   TableHeader,
@@ -691,7 +691,7 @@ export default function AdminDashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <PressureImport />
+                  <PressureImportContent />
                 </CardContent>
               </Card>
             </TabsContent>
