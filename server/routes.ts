@@ -3346,7 +3346,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NOTE: Do not call server.listen() here. It's called in server/index.ts
   console.log(`Creating HTTP server to run on port ${port} (will be bound to all interfaces)`);
   
-  // Path to SSL certificate files
+  // Path to SSL certificate files - place them in the /ssl directory at the project root
+  // You will need: 
+  // 1. /ssl/privatekey.pem - your private key file
+  // 2. /ssl/certificate.pem - your SSL certificate file
   const sslKeyPath = path.join(__dirname, '..', 'ssl', 'privatekey.pem');
   const sslCertPath = path.join(__dirname, '..', 'ssl', 'certificate.pem');
   
@@ -3361,12 +3364,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       const httpsServer = createHttpsServer(httpsOptions, app);
       
-      // Use port 8443 for HTTPS in Replit environment
+      // Use standard HTTPS port 443
       // Explicitly bind to all interfaces (0.0.0.0) for better compatibility
-      httpsServer.listen(8443, '0.0.0.0', () => {
-        console.log('HTTPS server running on port 8443');
+      const httpsPort = 443;
+      httpsServer.listen(httpsPort, '0.0.0.0', () => {
+        console.log(`HTTPS server running on port ${httpsPort}`);
       });
-      console.log('Running both HTTP and HTTPS servers (HTTP: port 5000, HTTPS: port 8443)');
+      console.log(`Running both HTTP and HTTPS servers (HTTP: port 5000, HTTPS: port ${httpsPort})`);
     } catch (err) {
       console.error('Error setting up HTTPS server:', err);
       console.log('Continuing with HTTP server only');
