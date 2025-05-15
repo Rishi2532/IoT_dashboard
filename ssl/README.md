@@ -2,7 +2,7 @@
 
 To enable HTTPS on port 443 for local development, place your SSL certificate files in this directory:
 
-1. `privatekey.pem` - Your private key file
+1. `private.pem` - Your private key file
 2. `certificate.pem` - Your SSL certificate file
 
 ## Generating Self-Signed Certificates for Development
