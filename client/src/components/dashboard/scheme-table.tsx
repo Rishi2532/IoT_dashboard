@@ -286,12 +286,18 @@ export default function SchemeTable({
                       className="scheme-item hover:bg-blue-50"
                     >
                       <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100 text-center">
-                        <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-mono">
-                          {scheme.scheme_id}
-                        </span>
+                        <div className="flex justify-center">
+                          <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-mono">
+                            {scheme.scheme_id}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100 text-center">
-                        {scheme.scheme_name}
+                        <div className="flex justify-center">
+                          <span className="inline-block text-center">
+                            {scheme.scheme_name}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
                         <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
@@ -351,14 +357,16 @@ export default function SchemeTable({
                         </span>
                       </TableCell>
                       <TableCell className="text-center p-1 sm:p-3 lg:p-4 xl:p-5 border-b border-gray-100">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="bg-white hover:bg-blue-50 text-blue-700 hover:text-blue-800 border-blue-200 hover:border-blue-300 transition-colors duration-150 text-xs sm:text-sm h-8 sm:h-9 font-medium"
-                          onClick={() => onViewDetails(scheme)}
-                        >
-                          View Details
-                        </Button>
+                        <div className="flex justify-center">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="bg-white hover:bg-blue-50 text-blue-700 hover:text-blue-800 border-blue-200 hover:border-blue-300 transition-colors duration-150 text-xs sm:text-sm h-8 sm:h-9 font-medium"
+                            onClick={() => onViewDetails(scheme)}
+                          >
+                            View Details
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))
