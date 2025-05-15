@@ -808,9 +808,18 @@ export class PostgresStorage implements IStorage {
   }
 
   constructor() {
-    this.initialized = this.initializeDb().catch((error) => {
-      console.error("Failed to initialize database in constructor:", error);
-      throw error;
+    // Initialize with a delay to ensure database connection is ready
+    this.initialized = new Promise(resolve => {
+      setTimeout(() => {
+        this.initializeDb()
+          .then(resolve)
+          .catch((error) => {
+            console.error("Failed to initialize database in constructor:", error);
+            // Don't throw error, just log it and continue
+            // This allows the application to start and retry db operations later
+            resolve();
+          });
+      }, 1000); // Give the database 1 second to be ready
     });
   }
   
@@ -2937,11 +2946,26 @@ export class PostgresStorage implements IStorage {
 
   private async initializeDb() {
     try {
-      // Initialize the PostgreSQL database
-      await initializeDatabase();
+      // Initialize the PostgreSQL database with retry logic
+      const maxRetries = 3;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        try {
+          await initializeDatabase();
+          console.log("Database initialized successfully in storage");
+          return;
+        } catch (error) {
+          if (attempt < maxRetries) {
+            const waitTime = 1000 * attempt; // Increasing backoff delay
+            console.warn(`Database initialization failed on attempt ${attempt}/${maxRetries}. Retrying in ${waitTime}ms...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          } else {
+            throw error; // Re-throw on final attempt
+          }
+        }
+      }
     } catch (error) {
       console.error("Error initializing database in storage:", error);
-      throw error;
+      // Continue without throwing to allow app to start and retry later
     }
   }
 
