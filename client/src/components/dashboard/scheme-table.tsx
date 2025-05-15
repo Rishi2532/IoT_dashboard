@@ -60,6 +60,7 @@ export default function SchemeTable({
   const [localStatusFilter, setLocalStatusFilter] =
     useState<string>(statusFilter);
   const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
+  const [fullyCompletedFilter, setFullyCompletedFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -91,8 +92,13 @@ export default function SchemeTable({
     const matchesCommissionedFilter =
       commissionedFilter === "all" ||
       scheme.mjp_commissioned === commissionedFilter;
+      
+    const matchesFullyCompletedFilter =
+      fullyCompletedFilter === "all" ||
+      scheme.mjp_fully_completed === fullyCompletedFilter;
 
-    return matchesNameSearch && matchesIdSearch && matchesStatusFilter && matchesCommissionedFilter;
+    return matchesNameSearch && matchesIdSearch && matchesStatusFilter && 
+           matchesCommissionedFilter && matchesFullyCompletedFilter;
   });
 
   const totalPages = Math.ceil(filteredSchemes.length / itemsPerPage);
@@ -180,6 +186,12 @@ export default function SchemeTable({
                 setCommissionedFilter(value);
                 // Reset page when filter changes
                 setCurrentPage(1);
+                
+                // Sync MJP Fully Completed filter when necessary
+                if (value === "No") {
+                  // If No is selected for commissioned, reset Fully Completed to match
+                  setFullyCompletedFilter("In Progress");
+                }
               }}
             >
               <SelectTrigger className="w-full sm:w-40 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
@@ -189,6 +201,29 @@ export default function SchemeTable({
                 <SelectItem value="all">All Schemes</SelectItem>
                 <SelectItem value="Yes">Commissioned</SelectItem>
                 <SelectItem value="No">Not Commissioned</SelectItem>
+              </SelectContent>
+            </Select>
+            
+            <Select
+              value={fullyCompletedFilter}
+              onValueChange={(value) => {
+                setFullyCompletedFilter(value);
+                // Reset page when filter changes
+                setCurrentPage(1);
+                
+                // Sync MJP Commissioned filter when Fully Completed is selected
+                if (value === "Fully Completed" && commissionedFilter !== "Yes") {
+                  setCommissionedFilter("Yes");
+                }
+              }}
+            >
+              <SelectTrigger className="w-full sm:w-44 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
+                <SelectValue placeholder="Fully Completed" />
+              </SelectTrigger>
+              <SelectContent className="text-xs sm:text-sm lg:text-base">
+                <SelectItem value="all">All Completion</SelectItem>
+                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
               </SelectContent>
             </Select>
           </div>
