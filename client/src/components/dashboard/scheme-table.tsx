@@ -59,8 +59,7 @@ export default function SchemeTable({
   const [schemeIdSearch, setSchemeIdSearch] = useState("");
   const [localStatusFilter, setLocalStatusFilter] =
     useState<string>(statusFilter);
-  const [mjpCommissionedFilter, setMjpCommissionedFilter] = useState<string>("all");
-  const [mjpFullyCompletedFilter, setMjpFullyCompletedFilter] = useState<string>("all");
+  const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -89,16 +88,11 @@ export default function SchemeTable({
         ? scheme.fully_completion_scheme_status !== "Not-Connected"
         : scheme.fully_completion_scheme_status === localStatusFilter);
       
-    const matchesMjpCommissionedFilter =
-      mjpCommissionedFilter === "all" ||
-      scheme.mjp_commissioned === mjpCommissionedFilter;
-      
-    const matchesMjpFullyCompletedFilter =
-      mjpFullyCompletedFilter === "all" ||
-      scheme.mjp_fully_completed === mjpFullyCompletedFilter;
+    const matchesCommissionedFilter =
+      commissionedFilter === "all" ||
+      scheme.mjp_commissioned === commissionedFilter;
 
-    return matchesNameSearch && matchesIdSearch && matchesStatusFilter && 
-           matchesMjpCommissionedFilter && matchesMjpFullyCompletedFilter;
+    return matchesNameSearch && matchesIdSearch && matchesStatusFilter && matchesCommissionedFilter;
   });
 
   const totalPages = Math.ceil(filteredSchemes.length / itemsPerPage);
@@ -181,51 +175,20 @@ export default function SchemeTable({
             </Select>
             
             <Select
-              value={mjpCommissionedFilter}
+              value={commissionedFilter}
               onValueChange={(value) => {
-                setMjpCommissionedFilter(value);
+                setCommissionedFilter(value);
                 // Reset page when filter changes
                 setCurrentPage(1);
-                
-                // Sync MJP Fully Completed filter when Yes is selected
-                if (value === "Yes" && mjpFullyCompletedFilter === "all") {
-                  setMjpFullyCompletedFilter("all");
-                } else if (value === "No") {
-                  // If No is selected, reset MJP Fully Completed to match
-                  setMjpFullyCompletedFilter("In Progress");
-                }
               }}
             >
               <SelectTrigger className="w-full sm:w-40 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
-                <SelectValue placeholder="MJP Commissioned" />
+                <SelectValue placeholder="Commissioned" />
               </SelectTrigger>
               <SelectContent className="text-xs sm:text-sm lg:text-base">
-                <SelectItem value="all">All Commissioned</SelectItem>
-                <SelectItem value="Yes">Yes</SelectItem>
-                <SelectItem value="No">No</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select
-              value={mjpFullyCompletedFilter}
-              onValueChange={(value) => {
-                setMjpFullyCompletedFilter(value);
-                // Reset page when filter changes
-                setCurrentPage(1);
-                
-                // Sync MJP Commissioned filter when Fully Completed is selected
-                if (value === "Fully Completed" && mjpCommissionedFilter !== "Yes") {
-                  setMjpCommissionedFilter("Yes");
-                }
-              }}
-            >
-              <SelectTrigger className="w-full sm:w-44 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
-                <SelectValue placeholder="MJP Fully Completed" />
-              </SelectTrigger>
-              <SelectContent className="text-xs sm:text-sm lg:text-base">
-                <SelectItem value="all">All Completion</SelectItem>
-                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="all">All Schemes</SelectItem>
+                <SelectItem value="Yes">Commissioned</SelectItem>
+                <SelectItem value="No">Not Commissioned</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -237,10 +200,10 @@ export default function SchemeTable({
             <Table>
               <TableHeader className="bg-blue-50">
                 <TableRow className="scheme-item">
-                  <TableHead className="w-[12%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200">
+                  <TableHead className="w-[12%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
                     Scheme ID
                   </TableHead>
-                  <TableHead className="w-[20%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200">
+                  <TableHead className="w-[20%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
                     Scheme Name
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
@@ -258,12 +221,6 @@ export default function SchemeTable({
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
                     Status
                   </TableHead>
-                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    MJP Commissioned
-                  </TableHead>
-                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    MJP Fully Completed
-                  </TableHead>
                   <TableHead className="text-center text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200">
                     Action
                   </TableHead>
@@ -273,7 +230,7 @@ export default function SchemeTable({
                 {isLoading ? (
                   [...Array(5)].map((_, index) => (
                     <TableRow key={index}>
-                      <TableCell colSpan={10}>
+                      <TableCell colSpan={8}>
                         <div className="animate-pulse h-4 sm:h-6 lg:h-8 bg-gray-200 rounded"></div>
                       </TableCell>
                     </TableRow>
@@ -281,7 +238,7 @@ export default function SchemeTable({
                 ) : currentItems.length === 0 ? (
                   <TableRow>
                     <TableCell
-                      colSpan={10}
+                      colSpan={8}
                       className="text-center py-4 sm:py-6 lg:py-8 text-xs sm:text-sm lg:text-base text-neutral-500"
                     >
                       No schemes found matching your criteria
