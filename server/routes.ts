@@ -3338,26 +3338,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  // Check if SSL certificates are available
-  let server: Server;
+  // Always create an HTTP server for Replit compatibility
+  let server: Server = createHttpServer(app);
+  console.log('Starting HTTP server on port 5000 for Replit compatibility');
   
   // Path to SSL certificate files
   const sslKeyPath = path.join(__dirname, '..', 'ssl', 'privatekey.pem');
   const sslCertPath = path.join(__dirname, '..', 'ssl', 'certificate.pem');
   
-  // Check if SSL certificates exist
+  // Check if SSL certificates exist and create HTTPS server on a different port if they do
+  // (This won't be used in Replit but keeps the HTTPS code in place for reference)
   if (fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath)) {
-    // SSL certificates are available, create HTTPS server
-    console.log('SSL certificates found, starting HTTPS server');
-    const httpsOptions = {
-      key: fs.readFileSync(sslKeyPath),
-      cert: fs.readFileSync(sslCertPath)
-    };
-    server = createHttpsServer(httpsOptions, app);
-  } else {
-    // No SSL certificates, fallback to HTTP
-    console.log('No SSL certificates found, starting HTTP server');
-    server = createHttpServer(app);
+    console.log('SSL certificates found, but using HTTP server for Replit compatibility');
+    // For reference - this would create an HTTPS server:
+    // const httpsOptions = {
+    //   key: fs.readFileSync(sslKeyPath),
+    //   cert: fs.readFileSync(sslCertPath)
+    // };
+    // const httpsServer = createHttpsServer(httpsOptions, app);
+    // httpsServer.listen(5443, () => {
+    //   console.log('HTTPS server running on port 5443');
+    // });
   }
   return server;
 }
