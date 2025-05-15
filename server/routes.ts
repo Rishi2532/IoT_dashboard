@@ -3359,20 +3359,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       const httpsServer = createHttpsServer(httpsOptions, app);
       
-      // In Replit, we might not have permission to bind to port 443
-      // So we'll try port 443 first, but fall back to 8443 if needed
-      try {
-        httpsServer.listen(443, () => {
-          console.log('HTTPS server running on standard port 443');
-        });
-        console.log('Running both HTTP and HTTPS servers (HTTP: port 5000, HTTPS: port 443)');
-      } catch (err) {
-        console.log('Could not bind to port 443, using port 8443 instead');
-        httpsServer.listen(8443, () => {
-          console.log('HTTPS server running on port 8443 (could not use standard port 443)');
-        });
-        console.log('Running both HTTP and HTTPS servers (HTTP: port 5000, HTTPS: port 8443)');
-      }
+      // Use port 8443 for HTTPS in Replit environment
+      httpsServer.listen(8443, () => {
+        console.log('HTTPS server running on port 8443');
+      });
+      console.log('Running both HTTP and HTTPS servers (HTTP: port 5000, HTTPS: port 8443)');
     } catch (err) {
       console.error('Error setting up HTTPS server:', err);
       console.log('Continuing with HTTP server only');
