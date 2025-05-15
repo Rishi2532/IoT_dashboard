@@ -513,13 +513,13 @@ export default function Dashboard() {
               Maharashtra Regional Status
             </h2>
           </div>
-          <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
+          <div className="w-full overflow-x-auto flex-1 min-h-[480px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
               {/* Enhanced Geographic Filter Map */}
-              <div className="map-container" id="maharashtra-map-preview" style={{ height: '300px' }}>
+              <div className="map-container" id="maharashtra-map-preview" style={{ height: '480px' }}>
                 {/* Add the enhanced map with GeoJSON data */}
                 <EnhancedGeoFilterMap 
-                  mapHeight="300px"
+                  mapHeight="480px"
                   className="h-full w-full"
                   locations={sampleLocations}
                   onRegionClick={(regionName) => {
