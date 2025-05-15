@@ -3338,27 +3338,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  // Always create an HTTP server for Replit compatibility
+  // For Replit, we need to listen on port 5000 
+  // as this is the port Replit expects
   let server: Server = createHttpServer(app);
-  console.log('Starting HTTP server on port 5000 for Replit compatibility');
+  const port = process.env.PORT || 5000;
+  console.log(`Starting HTTP server on port ${port} for Replit compatibility`);
   
   // Path to SSL certificate files
   const sslKeyPath = path.join(__dirname, '..', 'ssl', 'privatekey.pem');
   const sslCertPath = path.join(__dirname, '..', 'ssl', 'certificate.pem');
   
-  // Check if SSL certificates exist and create HTTPS server on a different port if they do
+  // Check if SSL certificates exist and create HTTPS server on port 443 if they do
   if (fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath)) {
     console.log('SSL certificates found, creating HTTPS server');
-    // Create HTTPS server with the user's certificate
-    const httpsOptions = {
-      key: fs.readFileSync(sslKeyPath),
-      cert: fs.readFileSync(sslCertPath)
-    };
-    const httpsServer = createHttpsServer(httpsOptions, app);
-    httpsServer.listen(5443, () => {
-      console.log('HTTPS server running on port 5443');
-    });
-    console.log('Running both HTTP (port 5000) and HTTPS (port 5443) servers');
+    try {
+      // Create HTTPS server with the user's certificate
+      const httpsOptions = {
+        key: fs.readFileSync(sslKeyPath),
+        cert: fs.readFileSync(sslCertPath)
+      };
+      const httpsServer = createHttpsServer(httpsOptions, app);
+      
+      // In Replit, we might not have permission to bind to port 443
+      // So we'll try port 443 first, but fall back to 8443 if needed
+      try {
+        httpsServer.listen(443, () => {
+          console.log('HTTPS server running on standard port 443');
+        });
+        console.log('Running both HTTP and HTTPS servers (HTTP: port 5000, HTTPS: port 443)');
+      } catch (err) {
+        console.log('Could not bind to port 443, using port 8443 instead');
+        httpsServer.listen(8443, () => {
+          console.log('HTTPS server running on port 8443 (could not use standard port 443)');
+        });
+        console.log('Running both HTTP and HTTPS servers (HTTP: port 5000, HTTPS: port 8443)');
+      }
+    } catch (err) {
+      console.error('Error setting up HTTPS server:', err);
+      console.log('Continuing with HTTP server only');
+    }
   } else {
     console.log('No SSL certificates found in ssl folder. Using HTTP server only.');
   }
