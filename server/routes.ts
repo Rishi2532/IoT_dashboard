@@ -3348,9 +3348,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Path to SSL certificate files - place them in the /ssl directory at the project root
   // You will need: 
-  // 1. /ssl/private.pem - your private key file
+  // 1. /ssl/privatekey.pem - your private key file
   // 2. /ssl/certificate.pem - your SSL certificate file
-  const sslKeyPath = path.join(__dirname, '..', 'ssl', 'private.pem');
+  const sslKeyPath = path.join(__dirname, '..', 'ssl', 'privatekey.pem');
   const sslCertPath = path.join(__dirname, '..', 'ssl', 'certificate.pem');
   
   // Check if SSL certificates exist and create HTTPS server on port 443 if they do
