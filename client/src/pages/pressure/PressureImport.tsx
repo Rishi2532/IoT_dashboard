@@ -24,7 +24,9 @@ import {
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
 import Sidebar from "@/components/dashboard/sidebar";
 
-const PressureImport: React.FC = () => {
+// Create the core import functionality as a separate component
+// This can be used inside other components without the header duplication
+export const PressureImportContent: React.FC = () => {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -140,14 +142,8 @@ const PressureImport: React.FC = () => {
   };
 
   return (
-    <DashboardLayout>
-      <div className="flex h-full">
-        <div className="hidden lg:block">
-          <Sidebar />
-        </div>
-        <div className="flex-1 px-4">
-          <div className="w-full">
-            <h1 className="text-2xl font-bold mb-6">Import Pressure Data</h1>
+    <div className="w-full">
+      <h1 className="text-2xl font-bold mb-6">Import Pressure Data</h1>
 
             <Card className="mb-8">
               <CardHeader>
