@@ -250,12 +250,12 @@ export default function SchemeTable({
                       key={`${scheme.scheme_id}-${scheme.block || 'default'}`}
                       className="scheme-item hover:bg-blue-50"
                     >
-                      <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100">
+                      <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100 text-center">
                         <span className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md font-mono">
                           {scheme.scheme_id}
                         </span>
                       </TableCell>
-                      <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100">
+                      <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100 text-center">
                         {scheme.scheme_name}
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
@@ -313,28 +313,6 @@ export default function SchemeTable({
                             (scheme.fully_completion_scheme_status ||
                               "Not-Connected") as SchemeCompletionStatus,
                           )}
-                        </span>
-                      </TableCell>
-                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
-                        <span
-                          className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${
-                            scheme.mjp_commissioned === "Yes" 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
-                        >
-                          {scheme.mjp_commissioned || "No"}
-                        </span>
-                      </TableCell>
-                      <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
-                        <span
-                          className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${
-                            scheme.mjp_fully_completed === "Fully Completed" 
-                              ? "bg-green-100 text-green-800" 
-                              : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {scheme.mjp_fully_completed || "In Progress"}
                         </span>
                       </TableCell>
                       <TableCell className="text-center p-1 sm:p-3 lg:p-4 xl:p-5 border-b border-gray-100">
