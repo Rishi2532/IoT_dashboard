@@ -512,23 +512,6 @@ export default function Dashboard() {
             <h2 className="text-sm sm:text-base font-medium text-blue-800">
               Maharashtra Regional Status
             </h2>
-            <div className="flex items-center space-x-2 text-xs">
-              <Button
-                variant="default"
-                size="sm"
-                className="h-7 px-2 text-xs"
-                onClick={() => window.location.href = '/map-preview'}
-              >
-                <Map className="mr-1 h-3 w-3" />
-                Interactive Map
-              </Button>
-            </div>
-          </div>
-          <div className="mb-2 sm:mb-3">
-            <MetricSelector
-              value={mapMetric}
-              onChange={(newMetric) => setMapMetric(newMetric)}
-            />
           </div>
           <div className="w-full overflow-x-auto flex-1 min-h-[300px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
