@@ -30,7 +30,7 @@ import RegionImporter from '@/components/admin/region-importer';
 import SchemeImporter from '@/components/admin/scheme-importer';
 import LpcdImport from '@/pages/lpcd/LpcdImport';
 import { ChlorineImport } from '@/pages/chlorine';
-import { PressureImportContent } from '@/pages/pressure/PressureImport';
+import { PressureImportContent } from '@/pages/pressure';
 import {
   Table,
   TableHeader,
