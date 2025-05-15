@@ -3342,7 +3342,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // as this is the port Replit expects
   let server: Server = createHttpServer(app);
   const port = process.env.PORT || 5000;
-  console.log(`Starting HTTP server on port ${port} for Replit compatibility`);
+  
+  // NOTE: Do not call server.listen() here. It's called in server/index.ts
+  console.log(`Creating HTTP server to run on port ${port} (will be bound to all interfaces)`);
   
   // Path to SSL certificate files
   const sslKeyPath = path.join(__dirname, '..', 'ssl', 'privatekey.pem');
@@ -3360,7 +3362,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const httpsServer = createHttpsServer(httpsOptions, app);
       
       // Use port 8443 for HTTPS in Replit environment
-      httpsServer.listen(8443, () => {
+      // Explicitly bind to all interfaces (0.0.0.0) for better compatibility
+      httpsServer.listen(8443, '0.0.0.0', () => {
         console.log('HTTPS server running on port 8443');
       });
       console.log('Running both HTTP and HTTPS servers (HTTP: port 5000, HTTPS: port 8443)');
