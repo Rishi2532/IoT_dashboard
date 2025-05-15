@@ -236,28 +236,28 @@ export default function SchemeTable({
               <TableHeader className="bg-blue-50">
                 <TableRow className="scheme-item">
                   <TableHead className="w-[12%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    Scheme ID
+                    <div className="flex justify-center">Scheme ID</div>
                   </TableHead>
                   <TableHead className="w-[20%] text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    Scheme Name
+                    <div className="flex justify-center">Scheme Name</div>
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    Region
+                    <div className="flex justify-center">Region</div>
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    Block
+                    <div className="flex justify-center">Block</div>
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    Fully Completed Villages
+                    <div className="flex justify-center">Fully Completed Villages</div>
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    ESR
+                    <div className="flex justify-center">ESR</div>
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    Status
+                    <div className="flex justify-center">Status</div>
                   </TableHead>
-                  <TableHead className="text-center text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200">
-                    Action
+                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
+                    <div className="flex justify-center">Action</div>
                   </TableHead>
                 </TableRow>
               </TableHeader>
@@ -300,14 +300,18 @@ export default function SchemeTable({
                         </div>
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
-                        <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
-                          {scheme.region}
-                        </span>
+                        <div className="flex justify-center">
+                          <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
+                            {scheme.region}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
-                        <span className="px-2 py-1 bg-green-50 text-green-700 rounded-md">
-                          {scheme.block || <span className="text-gray-400 italic">No block</span>}
-                        </span>
+                        <div className="flex justify-center">
+                          <span className="px-2 py-1 bg-green-50 text-green-700 rounded-md">
+                            {scheme.block || <span className="text-gray-400 italic">No block</span>}
+                          </span>
+                        </div>
                       </TableCell>
 
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
@@ -347,14 +351,16 @@ export default function SchemeTable({
                         </div>
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
-                        <span
-                          className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${getStatusColorClass((scheme.fully_completion_scheme_status || "Not-Connected") as SchemeCompletionStatus)}`}
-                        >
-                          {getStatusDisplayName(
-                            (scheme.fully_completion_scheme_status ||
-                              "Not-Connected") as SchemeCompletionStatus,
-                          )}
-                        </span>
+                        <div className="flex justify-center">
+                          <span
+                            className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${getStatusColorClass((scheme.fully_completion_scheme_status || "Not-Connected") as SchemeCompletionStatus)}`}
+                          >
+                            {getStatusDisplayName(
+                              (scheme.fully_completion_scheme_status ||
+                                "Not-Connected") as SchemeCompletionStatus,
+                            )}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell className="text-center p-1 sm:p-3 lg:p-4 xl:p-5 border-b border-gray-100">
                         <div className="flex justify-center">
