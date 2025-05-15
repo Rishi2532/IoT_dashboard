@@ -59,7 +59,24 @@ For the chatbot to function properly, you need to set up an OpenAI API key:
    - Use the Terminal > Run Task... menu and select "Start App"
    - Run `npm run dev` in the terminal
 
-The application will be available at http://localhost:5000
+The application will be available at http://localhost:5000 by default
+
+### SSL Support
+
+The application now supports SSL/HTTPS. To use SSL:
+
+1. Place your SSL certificate files in the `ssl` directory:
+   - `privatekey.pem` - Your private SSL key
+   - `certificate.pem` - Your SSL certificate
+
+2. For development, you can generate self-signed certificates using the provided script:
+   ```bash
+   cd ssl
+   ./generate-dev-certificates.sh
+   ```
+
+3. Restart the application after adding certificate files
+4. Access the application via https://localhost:5000
 
 ## Troubleshooting
 

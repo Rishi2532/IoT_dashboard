@@ -1,5 +1,6 @@
 import type { Express, Response, NextFunction } from "express";
-import { createServer, type Server } from "http";
+import { createServer as createHttpServer, type Server } from "http";
+import { createServer as createHttpsServer } from "https";
 import { storage } from "./storage";
 import {
   insertRegionSchema,
@@ -3337,6 +3338,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
-  const httpServer = createServer(app);
-  return httpServer;
+  // Check if SSL certificates are available
+  let server: Server;
+  
+  // Path to SSL certificate files
+  const sslKeyPath = path.join(__dirname, '..', 'ssl', 'privatekey.pem');
+  const sslCertPath = path.join(__dirname, '..', 'ssl', 'certificate.pem');
+  
+  // Check if SSL certificates exist
+  if (fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath)) {
+    // SSL certificates are available, create HTTPS server
+    console.log('SSL certificates found, starting HTTPS server');
+    const httpsOptions = {
+      key: fs.readFileSync(sslKeyPath),
+      cert: fs.readFileSync(sslCertPath)
+    };
+    server = createHttpsServer(httpsOptions, app);
+  } else {
+    // No SSL certificates, fallback to HTTP
+    console.log('No SSL certificates found, starting HTTP server');
+    server = createHttpServer(app);
+  }
+  return server;
 }
