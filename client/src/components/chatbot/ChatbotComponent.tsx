@@ -605,7 +605,7 @@ const CustomChatbot = () => {
           try {
             filterContext.applyFilters(filters);
             console.log('Successfully applied filters to dashboard');
-            
+
             // For status filter, ensure it's properly mapped to the actual status value used by the dashboard
             if (filters.status === "Fully Completed") {
               // Make sure this matches the exact string expected by the dashboard filter component
@@ -677,7 +677,7 @@ const CustomChatbot = () => {
               <div
                 className={`p-3 rounded-lg max-w-[80%] ${
                   msg.type === "user"
-                    ? "bg-blue-100 text-blue-900"
+                    ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-tr-none"
                     : "bg-blue-600 text-white"
                 }`}
               >
@@ -879,7 +879,7 @@ const ChatbotComponent: React.FC = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeShown, setWelcomeShown] = useState(false);
-  
+
   // Reference to track the draggable element
   const dragRef = React.useRef<HTMLDivElement>(null);
   const startPositionRef = React.useRef({ x: 0, y: 0 });
@@ -889,15 +889,15 @@ const ChatbotComponent: React.FC = () => {
     // Immediately show welcome popup
     const timer = setTimeout(() => {
       setShowWelcome(true);
-      
+
       // Auto-hide the welcome popup after 8 seconds
       const hideTimer = setTimeout(() => {
         setShowWelcome(false);
       }, 8000);
-      
+
       return () => clearTimeout(hideTimer);
     }, 1500); // Show popup 1.5 seconds after component mounts
-    
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -934,11 +934,11 @@ const ChatbotComponent: React.FC = () => {
   // Enhanced mouse down handler for smoother dragging
   const handleMouseDown = (e: React.MouseEvent<HTMLDivElement>) => {
     e.preventDefault(); // Prevent text selection during drag
-    
+
     // Only start dragging when clicking the header or button, not the content
     if (e.currentTarget.classList.contains('drag-handle')) {
       setIsDragging(true);
-      
+
       // Calculate offset from the element's top-left corner
       const rect = dragRef.current?.getBoundingClientRect();
       if (rect) {
@@ -953,21 +953,21 @@ const ChatbotComponent: React.FC = () => {
   // Enhanced mouse move handler for smoother dragging
   const handleMouseMove = (e: MouseEvent) => {
     if (!isDragging) return;
-    
+
     // Calculate new position based on mouse position and initial offset
     const newX = e.clientX - startPositionRef.current.x;
     const newY = e.clientY - startPositionRef.current.y;
-    
+
     // Apply boundaries to keep the chatbot on screen
     const width = dragRef.current?.offsetWidth || 70;
     const height = dragRef.current?.offsetHeight || 70;
-    
+
     const maxX = window.innerWidth - width;
     const maxY = window.innerHeight - height;
-    
+
     const boundedX = Math.min(Math.max(0, newX), maxX);
     const boundedY = Math.min(Math.max(0, newY), maxY);
-    
+
     // Update position with requestAnimationFrame for smoother animation
     requestAnimationFrame(() => {
       if (dragRef.current) {
@@ -975,7 +975,7 @@ const ChatbotComponent: React.FC = () => {
         dragRef.current.style.top = `${boundedY}px`;
         dragRef.current.style.bottom = 'auto';
         dragRef.current.style.right = 'auto';
-        
+
         // Update state after animation frame
         setPosition({ x: boundedX, y: boundedY });
       }
@@ -1023,7 +1023,7 @@ const ChatbotComponent: React.FC = () => {
             <MessageSquare className="w-6 h-6" />
           </Button>
         </div>
-        
+
         {/* Enhanced welcome popup message with animation */}
         {showWelcome && (
           <div 
