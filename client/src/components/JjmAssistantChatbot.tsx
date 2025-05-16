@@ -132,14 +132,14 @@ const JjmAssistantChatbot: React.FC = () => {
       
       {/* Chat Window */}
       {isOpen && (
-        <Card className={`shadow-lg w-80 ${isMinimized ? 'h-auto' : 'h-[500px] md:h-[600px]'} flex flex-col border-blue-200`}>
-          <CardHeader className="py-3 px-4 flex flex-row items-center justify-between bg-blue-600 text-white rounded-t-lg">
+        <Card className={`shadow-lg w-80 ${isMinimized ? 'h-auto' : 'h-[500px] md:h-[600px]'} flex flex-col border-purple-200`}>
+          <CardHeader className="py-3 px-4 flex flex-row items-center justify-between bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-t-lg">
             <CardTitle className="text-sm font-medium">JJM Assistant</CardTitle>
             <div className="flex items-center space-x-2">
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-6 w-6 text-white hover:bg-blue-700 p-0" 
+                className="h-6 w-6 text-white hover:bg-purple-700 p-0" 
                 onClick={toggleMinimized}
               >
                 {isMinimized ? <PlusCircle size={16} /> : <MinusCircle size={16} />}
@@ -147,7 +147,7 @@ const JjmAssistantChatbot: React.FC = () => {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="h-6 w-6 text-white hover:bg-blue-700 p-0" 
+                className="h-6 w-6 text-white hover:bg-purple-700 p-0" 
                 onClick={toggleChatbot}
               >
                 <X size={16} />
@@ -168,7 +168,7 @@ const JjmAssistantChatbot: React.FC = () => {
                         <div 
                           className={`max-w-[80%] px-3 py-2 rounded-lg ${
                             message.type === 'user' 
-                              ? 'bg-blue-600 text-white rounded-tr-none' 
+                              ? 'bg-gradient-to-r from-purple-600 to-pink-500 text-white rounded-tr-none' 
                               : 'bg-gray-100 text-gray-900 rounded-tl-none'
                           }`}
                         >
@@ -199,7 +199,7 @@ const JjmAssistantChatbot: React.FC = () => {
                     size="icon" 
                     onClick={handleSendMessage}
                     disabled={inputText.trim() === ''}
-                    className="bg-blue-600 hover:bg-blue-700"
+                    className="bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600"
                   >
                     <Send size={16} />
                   </Button>
