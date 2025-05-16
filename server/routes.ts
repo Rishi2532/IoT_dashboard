@@ -3340,9 +3340,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // For Replit, we need to listen on port 5000 
   // as this is the port Replit expects
-  // For local development, we'll use port 5001 if 5000 is taken
   let server: Server = createHttpServer(app);
-  const port = process.env.PORT || 5001;
+  const port = process.env.PORT || 5000;
   
   // NOTE: Do not call server.listen() here. It's called in server/index.ts
   console.log(`Creating HTTP server to run on port ${port} (will be bound to all interfaces)`);
@@ -3369,10 +3368,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       const httpsServer = createHttpsServer(httpsOptions, app);
       
-      // Use non-privileged port 8443 instead of standard port 443
-      // This avoids requiring administrator privileges
+      // Use standard HTTPS port 443
+      // Note: This requires administrator privileges when running locally
       // Explicitly bind to all interfaces (0.0.0.0) for better compatibility
-      const httpsPort = 8443;
+      const httpsPort = 443;
       httpsServer.listen(httpsPort, '0.0.0.0', () => {
         console.log(`HTTPS server running on port ${httpsPort}`);
       });
