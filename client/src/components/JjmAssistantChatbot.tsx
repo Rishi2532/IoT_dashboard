@@ -124,7 +124,7 @@ const JjmAssistantChatbot: React.FC = () => {
       {!isOpen && (
         <Button 
           onClick={toggleChatbot} 
-          className="rounded-full w-14 h-14 shadow-lg bg-blue-600 hover:bg-blue-700"
+          className="rounded-full w-14 h-14 shadow-lg bg-gradient-to-r from-purple-600 to-pink-500 hover:from-purple-700 hover:to-pink-600"
         >
           <MessageCircle size={24} />
         </Button>

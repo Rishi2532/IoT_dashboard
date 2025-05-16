@@ -14,10 +14,10 @@ const config = {
   botName: "Water Infrastructure Assistant",
   customStyles: {
     botMessageBox: {
-      backgroundColor: "#2563eb",
+      backgroundColor: "#9333ea", // Purple color
     },
     chatButton: {
-      backgroundColor: "#2563eb",
+      backgroundColor: "#d946ef", // Pink color
     },
   },
   widgets: [
