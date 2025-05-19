@@ -643,6 +643,10 @@ const PressureDashboard: React.FC = () => {
               <Select
                 value={commissionedFilter}
                 onValueChange={(value) => {
+                  // If "Not Commissioned", reset "Fully Completed" filter
+                  if (value === "No") {
+                    setFullyCompletedFilter("all");
+                  }
                   setCommissionedFilter(value);
                   setPage(1); // Reset to first page when filter changes
                 }}
@@ -665,12 +669,17 @@ const PressureDashboard: React.FC = () => {
               </label>
               <Select
                 value={fullyCompletedFilter}
+                disabled={commissionedFilter === "No"} 
                 onValueChange={(value) => {
+                  // If "Fully Completed Yes", ensure "Commissioned" is set to "Yes"
+                  if (value === "Yes") {
+                    setCommissionedFilter("Yes");
+                  }
                   setFullyCompletedFilter(value);
                   setPage(1); // Reset to first page when filter changes
                 }}
               >
-                <SelectTrigger className="w-full sm:w-40 bg-white border border-blue-200 shadow-sm">
+                <SelectTrigger className={`w-full sm:w-40 bg-white border border-blue-200 shadow-sm ${commissionedFilter === "No" ? "opacity-50" : ""}`}>
                   <SelectValue placeholder="All" />
                 </SelectTrigger>
                 <SelectContent>
