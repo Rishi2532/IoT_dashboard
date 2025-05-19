@@ -60,7 +60,8 @@ export default function SchemeTable({
   const [localStatusFilter, setLocalStatusFilter] =
     useState<string>(statusFilter);
   const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
-  const [fullyCompletedFilter, setFullyCompletedFilter] = useState<string>("all");
+  const [fullyCompletedFilter, setFullyCompletedFilter] =
+    useState<string>("all");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
@@ -82,23 +83,28 @@ export default function SchemeTable({
       schemeIdSearch === "" ||
       (scheme.scheme_id &&
         scheme.scheme_id.toLowerCase().includes(schemeIdSearch.toLowerCase()));
-    
+
     const matchesStatusFilter =
       localStatusFilter === "all" ||
-      (localStatusFilter === "Connected" 
+      (localStatusFilter === "Connected"
         ? scheme.fully_completion_scheme_status !== "Not-Connected"
         : scheme.fully_completion_scheme_status === localStatusFilter);
-      
+
     const matchesCommissionedFilter =
       commissionedFilter === "all" ||
       scheme.mjp_commissioned === commissionedFilter;
-      
+
     const matchesFullyCompletedFilter =
       fullyCompletedFilter === "all" ||
       scheme.mjp_fully_completed === fullyCompletedFilter;
 
-    return matchesNameSearch && matchesIdSearch && matchesStatusFilter && 
-           matchesCommissionedFilter && matchesFullyCompletedFilter;
+    return (
+      matchesNameSearch &&
+      matchesIdSearch &&
+      matchesStatusFilter &&
+      matchesCommissionedFilter &&
+      matchesFullyCompletedFilter
+    );
   });
 
   const totalPages = Math.ceil(filteredSchemes.length / itemsPerPage);
@@ -121,114 +127,149 @@ export default function SchemeTable({
 
   return (
     <Card className="bg-white shadow mb-8">
-      <CardHeader className="px-3 py-3 sm:px-4 sm:py-5 lg:px-6 lg:py-6 xl:px-8 xl:py-6 flex flex-col sm:flex-row justify-between items-start space-y-3 sm:space-y-0 sm:space-x-4">
-        <div>
-          <CardTitle className="text-base sm:text-lg lg:text-xl xl:text-2xl font-medium text-neutral-900">
-            Scheme Status
-          </CardTitle>
-          <CardDescription className="mt-1 max-w-2xl text-xs sm:text-sm lg:text-base text-neutral-500">
-            Details of water schemes and their current status
-          </CardDescription>
-        </div>
-        <div className="flex flex-col space-y-2 w-full sm:w-auto">
-          {/* Search row */}
-          <div className="flex flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-2 w-full">
+      <CardHeader className="px-3 py-3 sm:px-4 sm:py-5 lg:px-6 lg:py-6 xl:px-8 xl:py-6 flex flex-col sm:flex-row justify-between items-start space-y-4 sm:space-y-0">
+        {/* Left side: Title + Description + Search bars */}
+        <div className="flex flex-col space-y-3 sm:space-y-4 w-full sm:w-1/2">
+          <div>
+            <CardTitle className="text-base sm:text-lg lg:text-xl xl:text-2xl font-medium text-neutral-900">
+              Scheme Status
+            </CardTitle>
+            <CardDescription className="mt-1 max-w-2xl text-xs sm:text-sm lg:text-base text-neutral-500">
+              Details of water schemes and their current status
+            </CardDescription>
+          </div>
+
+          {/* Search bars */}
+          <div className="flex flex-col md:flex-row gap-3 w-full">
             <div className="relative w-full sm:w-64 xl:w-60">
-              <Search className="absolute left-2.5 top-2.5 h-3 w-3 sm:h-4 sm:w-4 lg:h-5 lg:w-5 text-gray-400" />
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-gray-400" />
               <Input
                 id="schemeSearch"
                 placeholder="Search scheme name..."
-                className="pl-7 sm:pl-8 lg:pl-10 w-full text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10 xl:h-11"
+                className="pl-9 w-full text-xs sm:text-sm lg:text-base h-9 sm:h-10 lg:h-11"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
 
-            <div className="relative w-full sm:w-36 xl:w-40">
+            <div className="relative w-full sm:w-40 xl:w-44">
               <Input
                 id="schemeIdSearch"
                 placeholder="Scheme ID..."
-                className="w-full text-xs sm:text-sm lg:text-base h-8 sm:h-9 lg:h-10 xl:h-11 font-mono"
+                className="w-full text-xs sm:text-sm lg:text-base h-9 sm:h-10 lg:h-11 font-mono"
                 value={schemeIdSearch}
                 onChange={(e) => setSchemeIdSearch(e.target.value)}
               />
             </div>
           </div>
-          
-          {/* Filters row */}
-          <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-3 w-full">
-            <Select
-              value={localStatusFilter}
-              onValueChange={(value) => {
-                setLocalStatusFilter(value);
-                // Reset page when filter changes
-                setCurrentPage(1);
-                if (onStatusFilterChange) {
-                  onStatusFilterChange(value);
-                }
-              }}
-            >
-              <SelectTrigger className="w-full sm:w-40 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
-                <SelectValue placeholder="All Status" />
-              </SelectTrigger>
-              <SelectContent className="text-xs sm:text-sm lg:text-base">
-                <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Connected">Connected</SelectItem>
-                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Not-Connected">Not Connected</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select
-              value={commissionedFilter}
-              onValueChange={(value) => {
-                setCommissionedFilter(value);
-                // Reset page when filter changes
-                setCurrentPage(1);
-                
-                // Sync MJP Fully Completed filter when necessary
-                if (value === "No") {
-                  // If No is selected for commissioned, reset Fully Completed to match
-                  setFullyCompletedFilter("In Progress");
-                }
-              }}
-            >
-              <SelectTrigger className="w-full sm:w-40 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
-                <SelectValue placeholder="Commissioned" />
-              </SelectTrigger>
-              <SelectContent className="text-xs sm:text-sm lg:text-base">
-                <SelectItem value="all">All Schemes</SelectItem>
-                <SelectItem value="Yes">Commissioned</SelectItem>
-                <SelectItem value="No">Not Commissioned</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Select
-              value={fullyCompletedFilter}
-              onValueChange={(value) => {
-                setFullyCompletedFilter(value);
-                // Reset page when filter changes
-                setCurrentPage(1);
-                
-                // Sync MJP Commissioned filter when Fully Completed is selected
-                if (value === "Fully Completed" && commissionedFilter !== "Yes") {
-                  setCommissionedFilter("Yes");
-                }
-              }}
-            >
-              <SelectTrigger className="w-full sm:w-44 h-8 sm:h-9 lg:h-10 xl:h-11 text-xs sm:text-sm lg:text-base">
-                <SelectValue placeholder="Fully Completed" />
-              </SelectTrigger>
-              <SelectContent className="text-xs sm:text-sm lg:text-base">
-                <SelectItem value="all">All Completion</SelectItem>
-                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-              </SelectContent>
-            </Select>
+        </div>
+
+        {/* Right side: Filters */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 w-full sm:w-auto">
+          {/* Centered Dashboard Integration container */}
+          <div className="flex justify-center w-full sm:w-auto">
+            <div className="border border-gray-200 bg-sky-50 rounded-2xl px-4 py-4 shadow-sm w-full sm:w-72">
+              <h2 className="text-center font-semibold text-sm sm:text-base mb-4">
+                Dashboard Integration
+              </h2>
+              <Select
+                value={localStatusFilter}
+                onValueChange={(value) => {
+                  setLocalStatusFilter(value);
+                  setCurrentPage(1);
+                  if (onStatusFilterChange) onStatusFilterChange(value);
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-full h-12 text-base">
+                  <SelectValue placeholder="IoT Integration Status" />
+                </SelectTrigger>
+                <SelectContent className="text-base">
+                  <SelectItem
+                    value="all"
+                    className="flex justify-center text-center w-full"
+                  >
+                    IoT Integration Status
+                  </SelectItem>
+
+                  <SelectItem value="Connected" className="text-center">
+                    Connected
+                  </SelectItem>
+                  <SelectItem value="Fully Completed" className="text-center">
+                    Fully Completed
+                  </SelectItem>
+                  <SelectItem value="In Progress" className="text-center">
+                    In Progress
+                  </SelectItem>
+                  <SelectItem value="Not-Connected" className="text-center">
+                    Not Connected
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* MJP Status box */}
+          {/* MJP Status box */}
+          <div className="border border-gray-200 bg-sky-50 rounded-2xl px-4 py-4 shadow-sm w-full sm:w-auto">
+            <h2 className="text-center font-semibold text-sm sm:text-base mb-4">
+              MJP Civil Status
+            </h2>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <Select
+                value={commissionedFilter}
+                onValueChange={(value) => {
+                  setCommissionedFilter(value);
+                  setCurrentPage(1);
+                  if (
+                    value === "No" &&
+                    fullyCompletedFilter === "Fully Completed"
+                  ) {
+                    setFullyCompletedFilter("In Progress");
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-52 h-9 sm:h-10 lg:h-11 text-xs sm:text-sm lg:text-base">
+                  <SelectValue placeholder="Commissioned" />
+                </SelectTrigger>
+                <SelectContent className="text-xs sm:text-sm lg:text-base">
+                  <SelectItem value="all">Scheme Readiness</SelectItem>
+                  <SelectItem value="Yes">Commissioned</SelectItem>
+                  <SelectItem value="No">Not Commissioned</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={fullyCompletedFilter}
+                onValueChange={(value) => {
+                  setFullyCompletedFilter(value);
+                  setCurrentPage(1);
+                  if (
+                    value === "Fully Completed" &&
+                    commissionedFilter !== "Yes"
+                  ) {
+                    setCommissionedFilter("Yes");
+                  }
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-52 h-9 sm:h-10 lg:h-11 text-xs sm:text-sm lg:text-base">
+                  <SelectValue placeholder="Fully Completed" />
+                </SelectTrigger>
+                <SelectContent className="text-xs sm:text-sm lg:text-base">
+                  <SelectItem value="all">Scheme Status</SelectItem>
+                  <SelectItem
+                    value="Fully Completed"
+                    disabled={commissionedFilter === "No"}
+                  >
+                    Fully Completed
+                  </SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
       </CardHeader>
+
       <CardContent className="px-0 py-0">
         <div className="border-t border-neutral-200">
           <div className="overflow-x-auto">
@@ -244,11 +285,14 @@ export default function SchemeTable({
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
                     <div className="flex justify-center">Region</div>
                   </TableHead>
-                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
+                  <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-black font-semibold border-b border-blue-200 text-center">
                     <div className="flex justify-center">Block</div>
                   </TableHead>
+
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    <div className="flex justify-center">Fully Completed Villages</div>
+                    <div className="flex justify-center">
+                      Fully Completed Villages
+                    </div>
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
                     <div className="flex justify-center">ESR</div>
@@ -282,7 +326,7 @@ export default function SchemeTable({
                 ) : (
                   currentItems.map((scheme) => (
                     <TableRow
-                      key={`${scheme.scheme_id}-${scheme.block || 'default'}`}
+                      key={`${scheme.scheme_id}-${scheme.block || "default"}`}
                       className="scheme-item hover:bg-blue-50"
                     >
                       <TableCell className="font-medium p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base border-b border-gray-100 text-center">
@@ -308,8 +352,12 @@ export default function SchemeTable({
                       </TableCell>
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
                         <div className="flex justify-center">
-                          <span className="px-2 py-1 bg-green-50 text-green-700 rounded-md">
-                            {scheme.block || <span className="text-gray-400 italic">No block</span>}
+                          <span className="px-2 py-1  text-black-700 rounded-md">
+                            {scheme.block || (
+                              <span className="text-gray-400 italic">
+                                No block
+                              </span>
+                            )}
                           </span>
                         </div>
                       </TableCell>
@@ -326,7 +374,10 @@ export default function SchemeTable({
                           <div
                             className="bg-blue-600 h-1.5 rounded-full"
                             style={{
-                              width: `${calcPercentage(scheme.fully_completed_villages, scheme.number_of_village)}%`,
+                              width: `${calcPercentage(
+                                scheme.fully_completed_villages,
+                                scheme.number_of_village,
+                              )}%`,
                             }}
                           ></div>
                         </div>
@@ -345,7 +396,10 @@ export default function SchemeTable({
                           <div
                             className="bg-purple-500 h-1.5 rounded-full"
                             style={{
-                              width: `${calcPercentage(scheme.no_fully_completed_esr, scheme.total_number_of_esr)}%`,
+                              width: `${calcPercentage(
+                                scheme.no_fully_completed_esr,
+                                scheme.total_number_of_esr,
+                              )}%`,
                             }}
                           ></div>
                         </div>
@@ -353,7 +407,10 @@ export default function SchemeTable({
                       <TableCell className="p-2 sm:p-3 lg:p-4 xl:p-5 text-xs sm:text-sm lg:text-base text-center border-b border-gray-100">
                         <div className="flex justify-center">
                           <span
-                            className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${getStatusColorClass((scheme.fully_completion_scheme_status || "Not-Connected") as SchemeCompletionStatus)}`}
+                            className={`px-3 py-1.5 inline-flex items-center justify-center text-xs lg:text-sm font-medium rounded-md ${getStatusColorClass(
+                              (scheme.fully_completion_scheme_status ||
+                                "Not-Connected") as SchemeCompletionStatus,
+                            )}`}
                           >
                             {getStatusDisplayName(
                               (scheme.fully_completion_scheme_status ||
@@ -407,7 +464,11 @@ export default function SchemeTable({
                         e.preventDefault();
                         if (currentPage > 1) handlePageChange(currentPage - 1);
                       }}
-                      className={`h-8 w-8 sm:h-9 sm:w-auto lg:h-10 xl:h-12 p-0 sm:p-2 lg:p-3 flex items-center justify-center text-xs sm:text-sm lg:text-base ${currentPage === 1 ? "pointer-events-none opacity-50" : ""}`}
+                      className={`h-8 w-8 sm:h-9 sm:w-auto lg:h-10 xl:h-12 p-0 sm:p-2 lg:p-3 flex items-center justify-center text-xs sm:text-sm lg:text-base ${
+                        currentPage === 1
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }`}
                     />
                   </PaginationItem>
 
@@ -460,7 +521,9 @@ export default function SchemeTable({
                                 handlePageChange(pageNumber);
                               }}
                               isActive={pageNumber === currentPage}
-                              className={`h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 xl:h-12 xl:w-12 flex items-center justify-center text-xs sm:text-sm lg:text-base ${isExtraLargeOnly ? "hidden 2xl:flex" : ""}`}
+                              className={`h-8 w-8 sm:h-9 sm:w-9 lg:h-10 lg:w-10 xl:h-12 xl:w-12 flex items-center justify-center text-xs sm:text-sm lg:text-base ${
+                                isExtraLargeOnly ? "hidden 2xl:flex" : ""
+                              }`}
                             >
                               {pageNumber}
                             </PaginationLink>
@@ -493,7 +556,11 @@ export default function SchemeTable({
                         if (currentPage < totalPages)
                           handlePageChange(currentPage + 1);
                       }}
-                      className={`h-8 w-8 sm:h-9 sm:w-auto lg:h-10 xl:h-12 p-0 sm:p-2 lg:p-3 flex items-center justify-center text-xs sm:text-sm lg:text-base ${currentPage === totalPages ? "pointer-events-none opacity-50" : ""}`}
+                      className={`h-8 w-8 sm:h-9 sm:w-auto lg:h-10 xl:h-12 p-0 sm:p-2 lg:p-3 flex items-center justify-center text-xs sm:text-sm lg:text-base ${
+                        currentPage === totalPages
+                          ? "pointer-events-none opacity-50"
+                          : ""
+                      }`}
                     />
                   </PaginationItem>
                 </PaginationContent>
