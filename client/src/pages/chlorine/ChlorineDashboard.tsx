@@ -399,32 +399,74 @@ const ChlorineDashboard: React.FC = () => {
   // Function to export data to Excel
   const exportToExcel = (data: ChlorineData[], filename: string) => {
     try {
+      // Helper function to format date for better readability in Excel
+      const formatDateForHeader = (dateStr: string | null | undefined) => {
+        if (!dateStr) return "N/A";
+        try {
+          const date = new Date(dateStr);
+          return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+        } catch {
+          return dateStr || "N/A";
+        }
+      };
+      
       // Format data for Excel
       const worksheetData = data.map((item) => {
         const latestChlorine = getLatestChlorineValue(item);
         const { statusText } = getChlorineStatusInfo(latestChlorine);
 
-        // Get the latest date
-        let latestDate = null;
-        for (const day of [7, 6, 5, 4, 3, 2, 1]) {
-          const dateValue =
-            item[`chlorine_date_day_${day}` as keyof ChlorineData];
-          if (dateValue) {
-            latestDate = dateValue;
-            break;
-          }
-        }
+        // Format dates for headers
+        const date1 = formatDateForHeader(item.chlorine_date_day_1);
+        const date2 = formatDateForHeader(item.chlorine_date_day_2);
+        const date3 = formatDateForHeader(item.chlorine_date_day_3);
+        const date4 = formatDateForHeader(item.chlorine_date_day_4);
+        const date5 = formatDateForHeader(item.chlorine_date_day_5);
+        const date6 = formatDateForHeader(item.chlorine_date_day_6);
+        const date7 = formatDateForHeader(item.chlorine_date_day_7);
 
         return {
           "Scheme ID": item.scheme_id,
           "Scheme Name": item.scheme_name || "N/A",
-          Region: item.region || "N/A",
+          "Region": item.region || "N/A",
           "Village Name": item.village_name || "N/A",
           "ESR Name": item.esr_name || "N/A",
-          // Removed "Sensor ID" as requested
+          
+          // Latest chlorine value
           "Latest Chlorine Value (mg/l)":
             latestChlorine !== null ? latestChlorine.toFixed(2) : "No data",
-          Status: statusText,
+          "Status": statusText,
+          
+          // Daily chlorine values with date headers
+          [`Chlorine (${date1}) mg/l`]: 
+            item.chlorine_value_1 !== null && item.chlorine_value_1 !== undefined
+              ? Number(item.chlorine_value_1).toFixed(2)
+              : "N/A",
+          [`Chlorine (${date2}) mg/l`]: 
+            item.chlorine_value_2 !== null && item.chlorine_value_2 !== undefined
+              ? Number(item.chlorine_value_2).toFixed(2)
+              : "N/A",
+          [`Chlorine (${date3}) mg/l`]: 
+            item.chlorine_value_3 !== null && item.chlorine_value_3 !== undefined
+              ? Number(item.chlorine_value_3).toFixed(2)
+              : "N/A",
+          [`Chlorine (${date4}) mg/l`]: 
+            item.chlorine_value_4 !== null && item.chlorine_value_4 !== undefined
+              ? Number(item.chlorine_value_4).toFixed(2)
+              : "N/A",
+          [`Chlorine (${date5}) mg/l`]: 
+            item.chlorine_value_5 !== null && item.chlorine_value_5 !== undefined
+              ? Number(item.chlorine_value_5).toFixed(2)
+              : "N/A",
+          [`Chlorine (${date6}) mg/l`]: 
+            item.chlorine_value_6 !== null && item.chlorine_value_6 !== undefined
+              ? Number(item.chlorine_value_6).toFixed(2)
+              : "N/A",
+          [`Chlorine (${date7}) mg/l`]: 
+            item.chlorine_value_7 !== null && item.chlorine_value_7 !== undefined
+              ? Number(item.chlorine_value_7).toFixed(2)
+              : "N/A",
+          
+          // Analysis data
           "Days Below Range (<0.2 mg/l)": item.chlorine_less_than_02_mgl || 0,
           "Days Optimal Range (0.2-0.5 mg/l)":
             item.chlorine_between_02_05_mgl || 0,
