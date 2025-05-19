@@ -603,66 +603,105 @@ const EnhancedLpcdDashboard = () => {
     // Create workbook
     import("xlsx")
       .then((XLSX) => {
+        // Helper function to format date for better readability in Excel
+        const formatDateForHeader = (dateStr: string | null | undefined) => {
+          if (!dateStr) return "N/A";
+          try {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+          } catch {
+            return dateStr || "N/A";
+          }
+        };
+
         // Filter data based on current filters
         const dataToExport = filteredSchemes.map((scheme, index) => {
           const lpcdValue = getLatestLpcdValue(scheme);
+          
+          // Format dates for headers
+          const date1 = formatDateForHeader(scheme.lpcd_date_day1);
+          const date2 = formatDateForHeader(scheme.lpcd_date_day2);
+          const date3 = formatDateForHeader(scheme.lpcd_date_day3);
+          const date4 = formatDateForHeader(scheme.lpcd_date_day4);
+          const date5 = formatDateForHeader(scheme.lpcd_date_day5);
+          const date6 = formatDateForHeader(scheme.lpcd_date_day6);
+          const date7 = formatDateForHeader(scheme.lpcd_date_day7);
+          
           return {
             "No.": index + 1,
-            Region: scheme.region,
-            Circle: scheme.circle,
-            Division: scheme.division,
+            "Region": scheme.region,
+            "Circle": scheme.circle,
+            "Division": scheme.division,
             "Sub Division": scheme.sub_division,
-            Block: scheme.block,
+            "Block": scheme.block,
             "Scheme ID": scheme.scheme_id,
             "Scheme Name": scheme.scheme_name,
             "Village Name": scheme.village_name,
-            Population: scheme.population,
+            "Population": scheme.population,
             "Current LPCD": lpcdValue !== null ? lpcdValue.toFixed(2) : "N/A",
-            Status: getLpcdStatusText(lpcdValue),
+            "Status": getLpcdStatusText(lpcdValue),
             "Days Above 55L": scheme.above_55_lpcd_count || 0,
             "Days Below 55L": scheme.below_55_lpcd_count || 0,
-            "LPCD Day 1":
-              scheme.lpcd_value_day1 !== null &&
-              scheme.lpcd_value_day1 !== undefined
+            
+            // Water consumption values with dates as headers
+            [`Water (${date1})`]: 
+              scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined
+                ? Number(scheme.water_value_day1).toFixed(4)
+                : "N/A",
+            [`Water (${date2})`]: 
+              scheme.water_value_day2 !== null && scheme.water_value_day2 !== undefined
+                ? Number(scheme.water_value_day2).toFixed(4)
+                : "N/A",
+            [`Water (${date3})`]: 
+              scheme.water_value_day3 !== null && scheme.water_value_day3 !== undefined
+                ? Number(scheme.water_value_day3).toFixed(4)
+                : "N/A",
+            [`Water (${date4})`]: 
+              scheme.water_value_day4 !== null && scheme.water_value_day4 !== undefined
+                ? Number(scheme.water_value_day4).toFixed(4)
+                : "N/A",
+            [`Water (${date5})`]: 
+              scheme.water_value_day5 !== null && scheme.water_value_day5 !== undefined
+                ? Number(scheme.water_value_day5).toFixed(4)
+                : "N/A",
+            [`Water (${date6})`]: 
+              scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined
+                ? Number(scheme.water_value_day6).toFixed(4)
+                : "N/A",
+            [`Water (${date7})`]: 
+              scheme.water_value_day7 !== null && scheme.water_value_day7 !== undefined
+                ? Number(scheme.water_value_day7).toFixed(4)
+                : "N/A",
+            
+            // LPCD values with dates as headers
+            [`LPCD (${date1})`]:
+              scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined
                 ? Number(scheme.lpcd_value_day1).toFixed(2)
                 : "N/A",
-            "LPCD Day 2":
-              scheme.lpcd_value_day2 !== null &&
-              scheme.lpcd_value_day2 !== undefined
+            [`LPCD (${date2})`]:
+              scheme.lpcd_value_day2 !== null && scheme.lpcd_value_day2 !== undefined
                 ? Number(scheme.lpcd_value_day2).toFixed(2)
                 : "N/A",
-            "LPCD Day 3":
-              scheme.lpcd_value_day3 !== null &&
-              scheme.lpcd_value_day3 !== undefined
+            [`LPCD (${date3})`]:
+              scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined
                 ? Number(scheme.lpcd_value_day3).toFixed(2)
                 : "N/A",
-            "LPCD Day 4":
-              scheme.lpcd_value_day4 !== null &&
-              scheme.lpcd_value_day4 !== undefined
+            [`LPCD (${date4})`]:
+              scheme.lpcd_value_day4 !== null && scheme.lpcd_value_day4 !== undefined
                 ? Number(scheme.lpcd_value_day4).toFixed(2)
                 : "N/A",
-            "LPCD Day 5":
-              scheme.lpcd_value_day5 !== null &&
-              scheme.lpcd_value_day5 !== undefined
+            [`LPCD (${date5})`]:
+              scheme.lpcd_value_day5 !== null && scheme.lpcd_value_day5 !== undefined
                 ? Number(scheme.lpcd_value_day5).toFixed(2)
                 : "N/A",
-            "LPCD Day 6":
-              scheme.lpcd_value_day6 !== null &&
-              scheme.lpcd_value_day6 !== undefined
+            [`LPCD (${date6})`]:
+              scheme.lpcd_value_day6 !== null && scheme.lpcd_value_day6 !== undefined
                 ? Number(scheme.lpcd_value_day6).toFixed(2)
                 : "N/A",
-            "LPCD Day 7":
-              scheme.lpcd_value_day7 !== null &&
-              scheme.lpcd_value_day7 !== undefined
+            [`LPCD (${date7})`]:
+              scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined
                 ? Number(scheme.lpcd_value_day7).toFixed(2)
                 : "N/A",
-            "Date Day 1": scheme.lpcd_date_day1 || "N/A",
-            "Date Day 2": scheme.lpcd_date_day2 || "N/A",
-            "Date Day 3": scheme.lpcd_date_day3 || "N/A",
-            "Date Day 4": scheme.lpcd_date_day4 || "N/A",
-            "Date Day 5": scheme.lpcd_date_day5 || "N/A",
-            "Date Day 6": scheme.lpcd_date_day6 || "N/A",
-            "Date Day 7": scheme.lpcd_date_day7 || "N/A",
           };
         });
 
