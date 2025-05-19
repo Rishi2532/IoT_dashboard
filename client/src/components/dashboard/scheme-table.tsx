@@ -215,57 +215,61 @@ export default function SchemeTable({
               MJP Civil Status
             </h2>
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
-              <Select
-                value={commissionedFilter}
-                onValueChange={(value) => {
-                  // No automatic changes to other filters
-                  setCommissionedFilter(value);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-52 h-9 sm:h-10 lg:h-11 text-xs sm:text-sm lg:text-base">
-                  <SelectValue placeholder="Commissioned" />
-                </SelectTrigger>
-                <SelectContent className="text-xs sm:text-sm lg:text-base">
-                  <SelectItem value="all">Scheme Readiness</SelectItem>
-                  <SelectItem value="Yes">Commissioned</SelectItem>
-                  <SelectItem value="No">Not Commissioned</SelectItem>
-                </SelectContent>
-              </Select>
-              {commissionedFilter !== "all" && (
-                <div className="mt-1 text-xs text-blue-600 font-medium absolute bottom-[-20px] right-[10px]">
-                  {filteredSchemes.filter(scheme => 
-                    scheme.mjp_commissioned === commissionedFilter
-                  ).length} schemes
-                </div>
-              )}
+              <div className="relative">
+                <Select
+                  value={commissionedFilter}
+                  onValueChange={(value) => {
+                    // No automatic changes to other filters
+                    setCommissionedFilter(value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-full sm:w-52 h-9 sm:h-10 lg:h-11 text-xs sm:text-sm lg:text-base">
+                    <SelectValue placeholder="Commissioned" />
+                  </SelectTrigger>
+                  <SelectContent className="text-xs sm:text-sm lg:text-base">
+                    <SelectItem value="all">Scheme Readiness</SelectItem>
+                    <SelectItem value="Yes">Commissioned</SelectItem>
+                    <SelectItem value="No">Not Commissioned</SelectItem>
+                  </SelectContent>
+                </Select>
+                {commissionedFilter !== "all" && (
+                  <div className="mt-1 text-xs text-blue-600 font-medium absolute top-full right-0">
+                    {filteredSchemes.filter(scheme => 
+                      scheme.mjp_commissioned === commissionedFilter
+                    ).length} schemes
+                  </div>
+                )}
+              </div>
 
-              <Select
-                value={fullyCompletedFilter}
-                onValueChange={(value) => {
-                  // No automatic changes to other filters
-                  setFullyCompletedFilter(value);
-                  setCurrentPage(1);
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-52 h-9 sm:h-10 lg:h-11 text-xs sm:text-sm lg:text-base">
-                  <SelectValue placeholder="Fully Completed" />
-                </SelectTrigger>
-                <SelectContent className="text-xs sm:text-sm lg:text-base">
-                  <SelectItem value="all">Scheme Status</SelectItem>
-                  <SelectItem value="Fully Completed">
-                    Fully Completed
-                  </SelectItem>
-                  <SelectItem value="In Progress">In Progress</SelectItem>
-                </SelectContent>
-              </Select>
-              {fullyCompletedFilter !== "all" && (
-                <div className="mt-1 text-xs text-blue-600 font-medium absolute bottom-[-20px] right-[10px]">
-                  {filteredSchemes.filter(scheme => 
-                    scheme.mjp_fully_completed === fullyCompletedFilter
-                  ).length} schemes
-                </div>
-              )}
+              <div className="relative">
+                <Select
+                  value={fullyCompletedFilter}
+                  onValueChange={(value) => {
+                    // No automatic changes to other filters
+                    setFullyCompletedFilter(value);
+                    setCurrentPage(1);
+                  }}
+                >
+                  <SelectTrigger className="w-full sm:w-52 h-9 sm:h-10 lg:h-11 text-xs sm:text-sm lg:text-base">
+                    <SelectValue placeholder="Fully Completed" />
+                  </SelectTrigger>
+                  <SelectContent className="text-xs sm:text-sm lg:text-base">
+                    <SelectItem value="all">Scheme Status</SelectItem>
+                    <SelectItem value="Fully Completed">
+                      Fully Completed
+                    </SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                  </SelectContent>
+                </Select>
+                {fullyCompletedFilter !== "all" && (
+                  <div className="mt-1 text-xs text-blue-600 font-medium absolute top-full right-0">
+                    {filteredSchemes.filter(scheme => 
+                      scheme.mjp_fully_completed === fullyCompletedFilter
+                    ).length} schemes
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
