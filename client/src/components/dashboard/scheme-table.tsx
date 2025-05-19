@@ -109,13 +109,8 @@ export default function SchemeTable({
     // For MJP fully completed filter
     let matchesFullyCompletedFilter = fullyCompletedFilter === "all";
     if (!matchesFullyCompletedFilter) {
-      if (isMultiBlock) {
-        // For multi-block schemes, show in results if ANY block matches the filter
-        matchesFullyCompletedFilter = true; // Assume match for multi-block schemes
-      } else {
-        // Normal single-block scheme
-        matchesFullyCompletedFilter = scheme.mjp_fully_completed === fullyCompletedFilter;
-      }
+      // Always apply the filter strictly for all schemes including multi-block ones
+      matchesFullyCompletedFilter = scheme.mjp_fully_completed === fullyCompletedFilter;
     }
 
     return (
