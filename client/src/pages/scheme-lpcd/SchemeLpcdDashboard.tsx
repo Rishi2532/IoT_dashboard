@@ -559,7 +559,9 @@ const SchemeLpcdDashboard = () => {
       <span
         className={`px-2 py-1 rounded-full text-xs font-medium ${getLpcdStatusColor(value)}`}
       >
-        {value !== null ? `${Number(value).toFixed(2)}L` : "N/A"}
+        {value === null ? "N/A" : 
+         value === 0 ? "0L" : 
+         `${Number(value).toFixed(2)}L`}
       </span>
     );
   };
@@ -998,7 +1000,7 @@ const SchemeLpcdDashboard = () => {
                                   <span className="text-green-600">↑{scheme.villages_above_55}</span>
                                   <span className="text-red-600">↓{scheme.villages_below_55}</span>
                                   {scheme.villages_zero_supply > 0 && 
-                                    <span className="text-gray-500">⚪{scheme.villages_zero_supply}</span>
+                                    <span className="text-gray-500">0:{scheme.villages_zero_supply}</span>
                                   }
                                 </div>
                               </div>
