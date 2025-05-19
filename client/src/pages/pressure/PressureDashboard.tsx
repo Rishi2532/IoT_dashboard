@@ -203,7 +203,27 @@ const PressureDashboard: React.FC = () => {
   
   // Fetch scheme status data for filtering
   const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } = useQuery<any[]>({
-    queryKey: ["/api/schemes/status"],
+    queryKey: ["/api/schemes", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/schemes${queryString ? `?${queryString}` : ""}`;
+
+      console.log("Fetching scheme status data with URL:", url);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch scheme status data");
+      }
+
+      const data = await response.json();
+      console.log(`Received ${data.length} scheme status records`);
+      return data;
+    },
   });
 
   // Get latest pressure value
@@ -388,6 +408,14 @@ const PressureDashboard: React.FC = () => {
   // Function to export data to Excel
   const exportToExcel = (data: PressureData[], filename: string) => {
     try {
+      // Get scheme status data for export
+      const schemeStatusMap = new Map();
+      if (schemeStatusData && schemeStatusData.length > 0) {
+        schemeStatusData.forEach(status => {
+          schemeStatusMap.set(status.scheme_id, status);
+        });
+      }
+
       // Format data for Excel
       const worksheetData = data.map((item) => {
         const latestPressure = getLatestPressureValue(item);
@@ -403,6 +431,12 @@ const PressureDashboard: React.FC = () => {
             break;
           }
         }
+
+        // Get scheme status info
+        const schemeStatus = schemeStatusMap.get(item.scheme_id);
+        const commissioned = schemeStatus ? schemeStatus.mjp_commissioned : "N/A";
+        const fullyCompleted = schemeStatus ? schemeStatus.mjp_fully_completed : "N/A";
+        const schemeStatusValue = schemeStatus ? schemeStatus.fully_completion_scheme_status : "N/A";
 
         return {
           "Scheme ID": item.scheme_id,
@@ -422,19 +456,75 @@ const PressureDashboard: React.FC = () => {
             item.number_of_consistent_zero_value_in_pressure === 7
               ? "Yes"
               : "No",
-          // Removed Sensor ID as requested
+          "Commissioned": commissioned,
+          "Fully Completed": fullyCompleted,
+          "Scheme Status": schemeStatusValue,
+          // Additional pressure values for historical data
+          "Pressure Day 1": item.pressure_value_1 !== null ? 
+            Number(item.pressure_value_1).toFixed(2) : "N/A",
+          "Pressure Day 2": item.pressure_value_2 !== null ? 
+            Number(item.pressure_value_2).toFixed(2) : "N/A",
+          "Pressure Day 3": item.pressure_value_3 !== null ? 
+            Number(item.pressure_value_3).toFixed(2) : "N/A",
+          "Pressure Day 4": item.pressure_value_4 !== null ? 
+            Number(item.pressure_value_4).toFixed(2) : "N/A",
+          "Pressure Day 5": item.pressure_value_5 !== null ? 
+            Number(item.pressure_value_5).toFixed(2) : "N/A",
+          "Pressure Day 6": item.pressure_value_6 !== null ? 
+            Number(item.pressure_value_6).toFixed(2) : "N/A",
+          "Pressure Day 7": item.pressure_value_7 !== null ? 
+            Number(item.pressure_value_7).toFixed(2) : "N/A",
         };
       });
 
       // Create worksheet
       const worksheet = XLSX.utils.json_to_sheet(worksheetData);
 
+      // Set column widths
+      const columns = [
+        { wch: 12 }, // Scheme ID
+        { wch: 25 }, // Scheme Name
+        { wch: 12 }, // Region
+        { wch: 20 }, // Village Name
+        { wch: 15 }, // ESR Name
+        { wch: 15 }, // Latest Pressure Value
+        { wch: 15 }, // Last Updated
+        { wch: 10 }, // Status
+        { wch: 15 }, // Days Below Range
+        { wch: 15 }, // Days Optimal Range
+        { wch: 15 }, // Days Above Range
+        { wch: 15 }, // Consistent Zero
+        { wch: 15 }, // Commissioned
+        { wch: 15 }, // Fully Completed
+        { wch: 15 }, // Scheme Status
+        { wch: 12 }, // Pressure Day 1
+        { wch: 12 }, // Pressure Day 2
+        { wch: 12 }, // Pressure Day 3
+        { wch: 12 }, // Pressure Day 4
+        { wch: 12 }, // Pressure Day 5
+        { wch: 12 }, // Pressure Day 6
+        { wch: 12 }, // Pressure Day 7
+      ];
+      worksheet["!cols"] = columns;
+
       // Create workbook and add the worksheet
       const workbook = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(workbook, worksheet, "Pressure Data");
 
+      // Add filter params to filename to make it more descriptive
+      let enhancedFilename = filename;
+      if (commissionedFilter !== "all") {
+        enhancedFilename += `_Commissioned-${commissionedFilter}`;
+      }
+      if (fullyCompletedFilter !== "all") {
+        enhancedFilename += `_FullyCompleted-${fullyCompletedFilter}`;
+      }
+      if (schemeStatusFilter !== "all") {
+        enhancedFilename += `_Status-${schemeStatusFilter}`;
+      }
+
       // Generate Excel file and trigger download
-      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      XLSX.writeFile(workbook, `${enhancedFilename}.xlsx`);
 
       toast({
         title: "Export Successful",
@@ -543,7 +633,81 @@ const PressureDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="ml-auto self-end flex gap-2">
+          {/* Additional Filter Controls */}
+          <div className="flex flex-wrap gap-4 mt-4">
+            {/* Commissioned Status Filter */}
+            <div className="w-full sm:w-auto">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Commissioned Status
+              </label>
+              <Select
+                value={commissionedFilter}
+                onValueChange={(value) => {
+                  setCommissionedFilter(value);
+                  setPage(1); // Reset to first page when filter changes
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-40 bg-white border border-blue-200 shadow-sm">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="Yes">Commissioned</SelectItem>
+                  <SelectItem value="No">Not Commissioned</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Fully Completed Filter */}
+            <div className="w-full sm:w-auto">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Fully Completed
+              </label>
+              <Select
+                value={fullyCompletedFilter}
+                onValueChange={(value) => {
+                  setFullyCompletedFilter(value);
+                  setPage(1); // Reset to first page when filter changes
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-40 bg-white border border-blue-200 shadow-sm">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="Yes">Fully Completed</SelectItem>
+                  <SelectItem value="No">Not Fully Completed</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Scheme Status Filter */}
+            <div className="w-full sm:w-auto">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Scheme Status
+              </label>
+              <Select
+                value={schemeStatusFilter}
+                onValueChange={(value) => {
+                  setSchemeStatusFilter(value);
+                  setPage(1); // Reset to first page when filter changes
+                }}
+              >
+                <SelectTrigger className="w-full sm:w-40 bg-white border border-blue-200 shadow-sm">
+                  <SelectValue placeholder="All" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="Connected">Connected</SelectItem>
+                  <SelectItem value="Fully-Connected">Fully Connected</SelectItem>
+                  <SelectItem value="Partially-Connected">Partially Connected</SelectItem>
+                  <SelectItem value="Not-Connected">Not Connected</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="ml-auto self-end flex gap-2 mt-4">
             <Button
               onClick={() =>
                 exportToExcel(
