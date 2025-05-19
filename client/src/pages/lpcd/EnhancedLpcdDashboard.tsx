@@ -530,6 +530,40 @@ const EnhancedLpcdDashboard = () => {
     setCurrentFilter(filter);
     setPage(1); // Reset to first page when filter changes
   };
+  
+  // Handler for commissioned filter changes
+  const handleCommissionedFilterChange = (value: string) => {
+    setCommissionedFilter(value);
+    
+    // If "Not Commissioned", reset and disable "Fully Completed" filter
+    if (value === "No") {
+      setFullyCompletedFilter("all");
+    }
+    
+    // Reset page to 1 when filter changes
+    setPage(1);
+  };
+  
+  // Handler for fully completed filter changes
+  const handleFullyCompletedFilterChange = (value: string) => {
+    setFullyCompletedFilter(value);
+    
+    // If "Fully Completed", set "Commissioned" to "Yes"
+    if (value === "Fully Completed") {
+      setCommissionedFilter("Yes");
+    }
+    
+    // Reset page to 1 when filter changes
+    setPage(1);
+  };
+  
+  // Handler for scheme status filter changes
+  const handleSchemeStatusFilterChange = (value: string) => {
+    setSchemeStatusFilter(value);
+    
+    // Reset page to 1 when filter changes
+    setPage(1);
+  };
 
   // Get LPCD status badge color
   const getLpcdStatusColor = (lpcdValue: number | null): string => {
@@ -1047,13 +1081,7 @@ const EnhancedLpcdDashboard = () => {
           {/* Commissioned Status Filter */}
           <Select
             value={commissionedFilter}
-            onValueChange={(value) => {
-              setCommissionedFilter(value);
-              setPage(1);
-              if (value === "No" && fullyCompletedFilter === "Fully Completed") {
-                setFullyCompletedFilter("In Progress");
-              }
-            }}
+            onValueChange={handleCommissionedFilterChange}
           >
             <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
               <SelectValue placeholder="Commissioned Status" />
@@ -1068,13 +1096,8 @@ const EnhancedLpcdDashboard = () => {
           {/* MJP Fully Completed Filter */}
           <Select
             value={fullyCompletedFilter}
-            onValueChange={(value) => {
-              setFullyCompletedFilter(value);
-              setPage(1);
-              if (value === "Fully Completed" && commissionedFilter !== "Yes") {
-                setCommissionedFilter("Yes");
-              }
-            }}
+            onValueChange={handleFullyCompletedFilterChange}
+            disabled={commissionedFilter === "No"}
           >
             <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
               <SelectValue placeholder="Completion Status" />
@@ -1091,10 +1114,7 @@ const EnhancedLpcdDashboard = () => {
           {/* Scheme Status Filter */}
           <Select
             value={schemeStatusFilter}
-            onValueChange={(value) => {
-              setSchemeStatusFilter(value);
-              setPage(1);
-            }}
+            onValueChange={handleSchemeStatusFilterChange}
           >
             <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
               <SelectValue placeholder="IoT Status" />
