@@ -135,7 +135,8 @@ const EnhancedLpcdDashboard = () => {
   const [currentFilter, setCurrentFilter] = useState<LpcdRange>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
-  const [fullyCompletedFilter, setFullyCompletedFilter] = useState<string>("all");
+  const [fullyCompletedFilter, setFullyCompletedFilter] =
+    useState<string>("all");
   const [schemeStatusFilter, setSchemeStatusFilter] = useState<string>("all");
 
   // Pagination state
@@ -178,31 +179,32 @@ const EnhancedLpcdDashboard = () => {
   >({
     queryKey: ["/api/regions"],
   });
-  
+
   // Fetch scheme status data for filtering
-  const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } = useQuery<any[]>({
-    queryKey: ["/api/schemes", selectedRegion],
-    queryFn: async () => {
-      const params = new URLSearchParams();
+  const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } =
+    useQuery<any[]>({
+      queryKey: ["/api/schemes", selectedRegion],
+      queryFn: async () => {
+        const params = new URLSearchParams();
 
-      if (selectedRegion && selectedRegion !== "all") {
-        params.append("region", selectedRegion);
-      }
+        if (selectedRegion && selectedRegion !== "all") {
+          params.append("region", selectedRegion);
+        }
 
-      const queryString = params.toString();
-      const url = `/api/schemes${queryString ? `?${queryString}` : ""}`;
+        const queryString = params.toString();
+        const url = `/api/schemes${queryString ? `?${queryString}` : ""}`;
 
-      console.log("Fetching scheme status data with URL:", url);
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Failed to fetch scheme status data");
-      }
+        console.log("Fetching scheme status data with URL:", url);
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error("Failed to fetch scheme status data");
+        }
 
-      const data = await response.json();
-      console.log(`Received ${data.length} scheme status records`);
-      return data;
-    },
-  });
+        const data = await response.json();
+        console.log(`Received ${data.length} scheme status records`);
+        return data;
+      },
+    });
 
   // Get latest LPCD value
   const getLatestLpcdValue = (scheme: WaterSchemeData): number | null => {
@@ -298,15 +300,15 @@ const EnhancedLpcdDashboard = () => {
           scheme.village_name?.toLowerCase().includes(query),
       );
     }
-    
+
     // Create a map of scheme IDs to their scheme status data for filtering
     const schemeStatusMap = new Map();
     if (schemeStatusData && schemeStatusData.length > 0) {
-      schemeStatusData.forEach(status => {
+      schemeStatusData.forEach((status) => {
         schemeStatusMap.set(status.scheme_id, status);
       });
     }
-    
+
     // Apply commissioned status filter
     if (commissionedFilter !== "all") {
       filtered = filtered.filter((scheme) => {
@@ -315,7 +317,7 @@ const EnhancedLpcdDashboard = () => {
         return status && status.mjp_commissioned === commissionedFilter;
       });
     }
-    
+
     // Apply fully completed filter
     if (fullyCompletedFilter !== "all") {
       filtered = filtered.filter((scheme) => {
@@ -324,14 +326,14 @@ const EnhancedLpcdDashboard = () => {
         return status && status.mjp_fully_completed === fullyCompletedFilter;
       });
     }
-    
+
     // Apply scheme status filter
     if (schemeStatusFilter !== "all") {
       filtered = filtered.filter((scheme) => {
         // Get scheme status from the map using scheme_id
         const status = schemeStatusMap.get(scheme.scheme_id);
         if (!status) return false;
-        
+
         if (schemeStatusFilter === "Connected") {
           return status.fully_completion_scheme_status !== "Not-Connected";
         }
@@ -530,37 +532,37 @@ const EnhancedLpcdDashboard = () => {
     setCurrentFilter(filter);
     setPage(1); // Reset to first page when filter changes
   };
-  
+
   // Handler for commissioned filter changes
   const handleCommissionedFilterChange = (value: string) => {
     setCommissionedFilter(value);
-    
+
     // If "Not Commissioned", reset and disable "Fully Completed" filter
     if (value === "No") {
       setFullyCompletedFilter("all");
     }
-    
+
     // Reset page to 1 when filter changes
     setPage(1);
   };
-  
+
   // Handler for fully completed filter changes
   const handleFullyCompletedFilterChange = (value: string) => {
     setFullyCompletedFilter(value);
-    
+
     // If "Fully Completed", set "Commissioned" to "Yes"
     if (value === "Fully Completed") {
       setCommissionedFilter("Yes");
     }
-    
+
     // Reset page to 1 when filter changes
     setPage(1);
   };
-  
+
   // Handler for scheme status filter changes
   const handleSchemeStatusFilterChange = (value: string) => {
     setSchemeStatusFilter(value);
-    
+
     // Reset page to 1 when filter changes
     setPage(1);
   };
@@ -1035,133 +1037,151 @@ const EnhancedLpcdDashboard = () => {
   };
 
   return (
-    <div className="w-full py-6 container mx-auto px-4">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
-        <div className="bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border-l-4 border-blue-600 shadow-sm">
-          <h1 className="text-3xl font-bold text-blue-900">LPCD Dashboard</h1>
-          <p className="text-blue-700 font-medium mt-1">
-            Monitor water supply across villages (Litres Per Capita per Day)
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <div className="relative w-64">
-            <Input
-              type="search"
-              placeholder="Search scheme or village name..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value);
-                setPage(1); // Reset page on search
-              }}
-              className="pr-8 border-blue-200 shadow-sm"
-            />
-            {searchQuery && (
-              <button
-                onClick={() => setSearchQuery("")}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            )}
+      <div className="w-full py-6 container mx-auto px-4">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+          {/* Header Card */}
+          <div className="bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border-l-4 border-blue-600 shadow-sm">
+            <h1 className="text-3xl font-bold text-blue-900">LPCD Dashboard</h1>
+            <p className="text-blue-700 font-medium mt-1">
+              Monitor water supply across villages (Litres Per Capita per Day)
+            </p>
           </div>
-          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-            <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
-              <SelectValue placeholder="All Regions" />
-            </SelectTrigger>
-            <SelectContent className="border border-blue-100">
-              <SelectItem value="all">All Regions</SelectItem>
-              {regionsData.map((region) => (
-                <SelectItem key={region.region_id} value={region.region_name}>
-                  {region.region_name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
 
-          {/* Commissioned Status Filter */}
-          <Select
-            value={commissionedFilter}
-            onValueChange={handleCommissionedFilterChange}
-          >
-            <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
-              <SelectValue placeholder="Commissioned Status" />
-            </SelectTrigger>
-            <SelectContent className="border border-blue-100">
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Yes">Commissioned</SelectItem>
-              <SelectItem value="No">Not Commissioned</SelectItem>
-            </SelectContent>
-          </Select>
+          {/* Filters and Actions */}
+          <div className="flex flex-wrap items-center gap-3">
 
-          {/* MJP Fully Completed Filter */}
-          <Select
-            value={fullyCompletedFilter}
-            onValueChange={handleFullyCompletedFilterChange}
-            disabled={commissionedFilter === "No"}
-          >
-            <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
-              <SelectValue placeholder="Completion Status" />
-            </SelectTrigger>
-            <SelectContent className="border border-blue-100">
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="Fully Completed" disabled={commissionedFilter === "No"}>
-                Fully Completed
-              </SelectItem>
-              <SelectItem value="In Progress">In Progress</SelectItem>
-            </SelectContent>
-          </Select>
+            {/* Search Input */}
+            <div className="relative w-64">
+              <Input
+                type="search"
+                placeholder="Search scheme or village name..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setPage(1);
+                }}
+                className="pr-8 border-blue-200 shadow-sm"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery("")}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
 
-          {/* Scheme Status Filter */}
-          <Select
-            value={schemeStatusFilter}
-            onValueChange={handleSchemeStatusFilterChange}
-          >
-            <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
-              <SelectValue placeholder="IoT Status" />
-            </SelectTrigger>
-            <SelectContent className="border border-blue-100">
-              <SelectItem value="all">All IoT Status</SelectItem>
-              <SelectItem value="Connected">Connected</SelectItem>
-              <SelectItem value="Fully Completed">Fully Completed</SelectItem>
-              <SelectItem value="In Progress">In Progress</SelectItem>
-              <SelectItem value="Not-Connected">Not Connected</SelectItem>
-            </SelectContent>
-          </Select>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => refetch()}
-            title="Refresh data"
-            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={exportToExcel}
-            title="Export to Excel"
-            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
-          >
-            <FileSpreadsheet className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowCharts(!showCharts)}
-            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
-          >
-            {showCharts ? (
-              <>
-                <ChartBarOff className="h-4 w-4 mr-2" /> Hide Charts
-              </>
-            ) : (
-              <>
-                <BarChart3 className="h-4 w-4 mr-2" /> Show Charts
-              </>
-            )}
-          </Button>
+            {/* Region Filter */}
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
+                <SelectValue placeholder="All Regions" />
+              </SelectTrigger>
+              <SelectContent className="border border-blue-100">
+                <SelectItem value="all">All Regions</SelectItem>
+                {regionsData.map((region) => (
+                  <SelectItem key={region.region_id} value={region.region_name}>
+                    {region.region_name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* MJP Civil Status Filter Box */}
+            <div className="border border-blue-200 p-3 rounded-lg shadow-sm bg-white flex flex-col items-center">
+              <span className="text-blue-700 font-semibold mb-2">MJP Civil Status</span>
+              <div className="flex gap-2">
+                {/* Commissioned Status Filter */}
+                <Select
+                  value={commissionedFilter}
+                  onValueChange={handleCommissionedFilterChange}
+                >
+                  <SelectTrigger className="w-[160px] bg-white border border-blue-200 shadow-sm">
+                    <SelectValue placeholder="Commissioned Status" />
+                  </SelectTrigger>
+                  <SelectContent className="border border-blue-100">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="Yes">Commissioned</SelectItem>
+                    <SelectItem value="No">Not Commissioned</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                {/* MJP Fully Completed Filter */}
+                <Select
+                  value={fullyCompletedFilter}
+                  onValueChange={handleFullyCompletedFilterChange}
+                  disabled={commissionedFilter === "No"}
+                >
+                  <SelectTrigger className="w-[160px] bg-white border border-blue-200 shadow-sm">
+                    <SelectValue placeholder="Completion Status" />
+                  </SelectTrigger>
+                  <SelectContent className="border border-blue-100">
+                    <SelectItem value="all">All Status</SelectItem>
+                    <SelectItem value="Fully Completed" disabled={commissionedFilter === "No"}>
+                      Fully Completed
+                    </SelectItem>
+                    <SelectItem value="In Progress">In Progress</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* IoT Status Filter */}
+            <Select
+              value={schemeStatusFilter}
+              onValueChange={handleSchemeStatusFilterChange}
+            >
+              <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
+                <SelectValue placeholder="IoT Status" />
+              </SelectTrigger>
+              <SelectContent className="border border-blue-100">
+                <SelectItem value="all">All IoT Status</SelectItem>
+                <SelectItem value="Connected">Connected</SelectItem>
+                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Not-Connected">Not Connected</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {/* Action Buttons */}
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => refetch()}
+              title="Refresh data"
+              className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={exportToExcel}
+              title="Export to Excel"
+              className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowCharts(!showCharts)}
+              className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
+            >
+              {showCharts ? (
+                <>
+                  <ChartBarOff className="h-4 w-4 mr-2" /> Hide Charts
+                </>
+              ) : (
+                <>
+                  <BarChart3 className="h-4 w-4 mr-2" /> Show Charts
+                </>
+              )}
+            </Button>
+          </div>
         </div>
-      </div>
+      
+
+
 
       {/* Village details dialog */}
       <VillageDetailsDialog />
