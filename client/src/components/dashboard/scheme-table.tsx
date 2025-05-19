@@ -218,14 +218,9 @@ export default function SchemeTable({
               <Select
                 value={commissionedFilter}
                 onValueChange={(value) => {
+                  // No automatic changes to other filters
                   setCommissionedFilter(value);
                   setCurrentPage(1);
-                  if (
-                    value === "No" &&
-                    fullyCompletedFilter === "Fully Completed"
-                  ) {
-                    setFullyCompletedFilter("In Progress");
-                  }
                 }}
               >
                 <SelectTrigger className="w-full sm:w-52 h-9 sm:h-10 lg:h-11 text-xs sm:text-sm lg:text-base">
@@ -237,18 +232,20 @@ export default function SchemeTable({
                   <SelectItem value="No">Not Commissioned</SelectItem>
                 </SelectContent>
               </Select>
+              {commissionedFilter !== "all" && (
+                <div className="mt-1 text-xs text-blue-600 font-medium absolute bottom-[-20px] right-[10px]">
+                  {filteredSchemes.filter(scheme => 
+                    scheme.mjp_commissioned === commissionedFilter
+                  ).length} schemes
+                </div>
+              )}
 
               <Select
                 value={fullyCompletedFilter}
                 onValueChange={(value) => {
+                  // No automatic changes to other filters
                   setFullyCompletedFilter(value);
                   setCurrentPage(1);
-                  if (
-                    value === "Fully Completed" &&
-                    commissionedFilter !== "Yes"
-                  ) {
-                    setCommissionedFilter("Yes");
-                  }
                 }}
               >
                 <SelectTrigger className="w-full sm:w-52 h-9 sm:h-10 lg:h-11 text-xs sm:text-sm lg:text-base">
@@ -256,15 +253,19 @@ export default function SchemeTable({
                 </SelectTrigger>
                 <SelectContent className="text-xs sm:text-sm lg:text-base">
                   <SelectItem value="all">Scheme Status</SelectItem>
-                  <SelectItem
-                    value="Fully Completed"
-                    disabled={commissionedFilter === "No"}
-                  >
+                  <SelectItem value="Fully Completed">
                     Fully Completed
                   </SelectItem>
                   <SelectItem value="In Progress">In Progress</SelectItem>
                 </SelectContent>
               </Select>
+              {fullyCompletedFilter !== "all" && (
+                <div className="mt-1 text-xs text-blue-600 font-medium absolute bottom-[-20px] right-[10px]">
+                  {filteredSchemes.filter(scheme => 
+                    scheme.mjp_fully_completed === fullyCompletedFilter
+                  ).length} schemes
+                </div>
+              )}
             </div>
           </div>
         </div>
