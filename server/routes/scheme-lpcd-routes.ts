@@ -53,9 +53,9 @@ router.get('/', async (req, res) => {
             MAX(wsd.lpcd_date_day6) as lpcd_date_day6,
             MAX(wsd.lpcd_date_day7) as lpcd_date_day7,
             
-            -- Count stats
-            SUM(CASE WHEN wsd.below_55_lpcd_count > 0 THEN 1 ELSE 0 END) as villages_below_55,
-            SUM(CASE WHEN wsd.above_55_lpcd_count > 0 THEN 1 ELSE 0 END) as villages_above_55,
+            -- Count stats based on latest LPCD value (day7) only
+            SUM(CASE WHEN wsd.lpcd_value_day7 < 55 AND wsd.lpcd_value_day7 > 0 THEN 1 ELSE 0 END) as villages_below_55,
+            SUM(CASE WHEN wsd.lpcd_value_day7 >= 55 THEN 1 ELSE 0 END) as villages_above_55,
             COUNT(wsd.village_name) as total_villages,
             SUM(CASE WHEN wsd.consistent_zero_lpcd_for_a_week = 1 THEN 1 ELSE 0 END) as villages_zero_supply,
             
