@@ -200,6 +200,11 @@ const PressureDashboard: React.FC = () => {
   >({
     queryKey: ["/api/regions"],
   });
+  
+  // Fetch scheme status data for filtering
+  const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } = useQuery<any[]>({
+    queryKey: ["/api/schemes/status"],
+  });
 
   // Get latest pressure value
   const getLatestPressureValue = (data: PressureData): number | null => {
@@ -247,6 +252,40 @@ const PressureDashboard: React.FC = () => {
     };
   };
 
+  // Handler for commissioned filter changes
+  const handleCommissionedFilterChange = (value: string) => {
+    setCommissionedFilter(value);
+    
+    // If "Not Commissioned", reset and disable "Fully Completed" filter
+    if (value === "No") {
+      setFullyCompletedFilter("all");
+    }
+    
+    // Reset page to 1 when filter changes
+    setPage(1);
+  };
+  
+  // Handler for fully completed filter changes
+  const handleFullyCompletedFilterChange = (value: string) => {
+    setFullyCompletedFilter(value);
+    
+    // If "Fully Completed", set "Commissioned" to "Yes"
+    if (value === "Fully Completed") {
+      setCommissionedFilter("Yes");
+    }
+    
+    // Reset page to 1 when filter changes
+    setPage(1);
+  };
+  
+  // Handler for scheme status filter changes
+  const handleSchemeStatusFilterChange = (value: string) => {
+    setSchemeStatusFilter(value);
+    
+    // Reset page to 1 when filter changes
+    setPage(1);
+  };
+
   // Filter and search data
   const filteredData = useMemo(() => {
     let filtered = [...allPressureData];
@@ -267,12 +306,49 @@ const PressureDashboard: React.FC = () => {
     if (selectedRegion && selectedRegion !== "all") {
       filtered = filtered.filter((item) => item.region === selectedRegion);
     }
-
-    // Note: The API should already apply most filtering, but we're adding an extra
-    // check here to ensure only data from the selected region is displayed
+    
+    // Create a map of scheme IDs to their scheme status data for filtering
+    const schemeStatusMap = new Map();
+    if (schemeStatusData && schemeStatusData.length > 0) {
+      schemeStatusData.forEach(status => {
+        schemeStatusMap.set(status.scheme_id, status);
+      });
+    }
+    
+    // Apply commissioned status filter
+    if (commissionedFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        // Get scheme status from the map using scheme_id
+        const status = schemeStatusMap.get(item.scheme_id);
+        return status && status.mjp_commissioned === commissionedFilter;
+      });
+    }
+    
+    // Apply fully completed filter
+    if (fullyCompletedFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        // Get scheme status from the map using scheme_id
+        const status = schemeStatusMap.get(item.scheme_id);
+        return status && status.mjp_fully_completed === fullyCompletedFilter;
+      });
+    }
+    
+    // Apply scheme status filter
+    if (schemeStatusFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        // Get scheme status from the map using scheme_id
+        const status = schemeStatusMap.get(item.scheme_id);
+        if (!status) return false;
+        
+        if (schemeStatusFilter === "Connected") {
+          return status.fully_completion_scheme_status !== "Not-Connected";
+        }
+        return status.fully_completion_scheme_status === schemeStatusFilter;
+      });
+    }
 
     return filtered;
-  }, [allPressureData, searchQuery, selectedRegion]);
+  }, [allPressureData, searchQuery, selectedRegion, commissionedFilter, fullyCompletedFilter, schemeStatusFilter, schemeStatusData]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
