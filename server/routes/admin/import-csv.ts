@@ -234,7 +234,17 @@ function parseBoolean(value: string): boolean {
  * Parse string to number
  */
 function parseNumber(value: string): number | null {
+  // Handle null, undefined, or empty values
+  if (value === null || value === undefined || value === '') {
+    return null;
+  }
+
   const trimmedValue = String(value).trim();
+  
+  // Skip values that clearly aren't numbers (contain letters other than 'e' for scientific notation)
+  if (/[a-df-zA-DF-Z]/.test(trimmedValue)) {
+    return null;
+  }
 
   // Remove any commas, spaces, or currency symbols
   const cleanValue = trimmedValue
@@ -245,7 +255,12 @@ function parseNumber(value: string): number | null {
 
   const parsedNumber = Number(cleanValue);
 
-  return isNaN(parsedNumber) ? null : parsedNumber;
+  // Additional validation to ensure we don't return NaN or Infinity
+  if (isNaN(parsedNumber) || !isFinite(parsedNumber)) {
+    return null;
+  }
+
+  return parsedNumber;
 }
 
 /**
@@ -312,19 +327,32 @@ async function updateDatabaseRecords(
             sub_division: item.sub_division || existingScheme.sub_division,
             block: item.block, // Keep the original block
             agency: item.agency || existingScheme.agency,
-            number_of_village: item.number_of_village !== undefined ? item.number_of_village : existingScheme.number_of_village,
-            total_villages_integrated: item.total_villages_integrated !== undefined ? item.total_villages_integrated : existingScheme.total_villages_integrated,
-            no_of_functional_village: item.no_of_functional_village !== undefined ? item.no_of_functional_village : existingScheme.no_of_functional_village,
-            no_of_partial_village: item.no_of_partial_village !== undefined ? item.no_of_partial_village : existingScheme.no_of_partial_village,
-            no_of_non_functional_village: item.no_of_non_functional_village !== undefined ? item.no_of_non_functional_village : existingScheme.no_of_non_functional_village,
-            fully_completed_villages: item.fully_completed_villages !== undefined ? item.fully_completed_villages : existingScheme.fully_completed_villages,
-            total_number_of_esr: item.total_number_of_esr !== undefined ? item.total_number_of_esr : existingScheme.total_number_of_esr,
-            total_esr_integrated: item.total_esr_integrated !== undefined ? item.total_esr_integrated : existingScheme.total_esr_integrated,
-            no_fully_completed_esr: item.no_fully_completed_esr !== undefined ? item.no_fully_completed_esr : existingScheme.no_fully_completed_esr,
-            balance_to_complete_esr: item.balance_to_complete_esr !== undefined ? item.balance_to_complete_esr : existingScheme.balance_to_complete_esr,
-            flow_meters_connected: item.flow_meters_connected !== undefined ? item.flow_meters_connected : existingScheme.flow_meters_connected,
-            pressure_transmitter_connected: item.pressure_transmitter_connected !== undefined ? item.pressure_transmitter_connected : existingScheme.pressure_transmitter_connected,
-            residual_chlorine_analyzer_connected: item.residual_chlorine_analyzer_connected !== undefined ? item.residual_chlorine_analyzer_connected : existingScheme.residual_chlorine_analyzer_connected,
+            number_of_village: item.number_of_village !== undefined && typeof item.number_of_village === 'number' 
+              ? item.number_of_village : existingScheme.number_of_village,
+            total_villages_integrated: item.total_villages_integrated !== undefined && typeof item.total_villages_integrated === 'number' 
+              ? item.total_villages_integrated : existingScheme.total_villages_integrated,
+            no_of_functional_village: item.no_of_functional_village !== undefined && typeof item.no_of_functional_village === 'number' 
+              ? item.no_of_functional_village : existingScheme.no_of_functional_village,
+            no_of_partial_village: item.no_of_partial_village !== undefined && typeof item.no_of_partial_village === 'number' 
+              ? item.no_of_partial_village : existingScheme.no_of_partial_village,
+            no_of_non_functional_village: item.no_of_non_functional_village !== undefined && typeof item.no_of_non_functional_village === 'number' 
+              ? item.no_of_non_functional_village : existingScheme.no_of_non_functional_village,
+            fully_completed_villages: item.fully_completed_villages !== undefined && typeof item.fully_completed_villages === 'number' 
+              ? item.fully_completed_villages : existingScheme.fully_completed_villages,
+            total_number_of_esr: item.total_number_of_esr !== undefined && typeof item.total_number_of_esr === 'number' 
+              ? item.total_number_of_esr : existingScheme.total_number_of_esr,
+            total_esr_integrated: item.total_esr_integrated !== undefined && typeof item.total_esr_integrated === 'number' 
+              ? item.total_esr_integrated : existingScheme.total_esr_integrated,
+            no_fully_completed_esr: item.no_fully_completed_esr !== undefined && typeof item.no_fully_completed_esr === 'number' 
+              ? item.no_fully_completed_esr : existingScheme.no_fully_completed_esr,
+            balance_to_complete_esr: item.balance_to_complete_esr !== undefined && typeof item.balance_to_complete_esr === 'number' 
+              ? item.balance_to_complete_esr : existingScheme.balance_to_complete_esr,
+            flow_meters_connected: item.flow_meters_connected !== undefined && typeof item.flow_meters_connected === 'number' 
+              ? item.flow_meters_connected : existingScheme.flow_meters_connected,
+            pressure_transmitter_connected: item.pressure_transmitter_connected !== undefined && typeof item.pressure_transmitter_connected === 'number' 
+              ? item.pressure_transmitter_connected : existingScheme.pressure_transmitter_connected,
+            residual_chlorine_analyzer_connected: item.residual_chlorine_analyzer_connected !== undefined && typeof item.residual_chlorine_analyzer_connected === 'number' 
+              ? item.residual_chlorine_analyzer_connected : existingScheme.residual_chlorine_analyzer_connected,
             scheme_functional_status: item.scheme_functional_status || existingScheme.scheme_functional_status,
             fully_completion_scheme_status: item.fully_completion_scheme_status || existingScheme.fully_completion_scheme_status,
             mjp_commissioned: item.mjp_commissioned || existingScheme.mjp_commissioned || "",
@@ -337,34 +365,30 @@ async function updateDatabaseRecords(
         } else {
           // Create new scheme (dashboard_url is automatically generated in the storage.createScheme method)
           const schemeData: InsertSchemeStatus = {
-            scheme_id: item.scheme_id,
+            scheme_id: String(item.scheme_id),
             scheme_name: item.scheme_name || `Scheme ${item.scheme_id}`,
             region: item.region,
-            sr_no: item.sr_no || null,
+            sr_no: typeof item.sr_no === 'number' ? item.sr_no : null,
             circle: item.circle || null,
             division: item.division || null,
             sub_division: item.sub_division || null,
             block: item.block || null,
             agency: item.agency || null,
-            number_of_village: item.number_of_village || 0,
-            total_villages_integrated: item.total_villages_integrated || 0,
-            no_of_functional_village: item.no_of_functional_village || 0,
-            no_of_partial_village: item.no_of_partial_village || 0,
-            no_of_non_functional_village:
-              item.no_of_non_functional_village || 0,
-            fully_completed_villages: item.fully_completed_villages || 0,
-            total_number_of_esr: item.total_number_of_esr || 0,
+            number_of_village: typeof item.number_of_village === 'number' ? item.number_of_village : 0,
+            total_villages_integrated: typeof item.total_villages_integrated === 'number' ? item.total_villages_integrated : 0,
+            no_of_functional_village: typeof item.no_of_functional_village === 'number' ? item.no_of_functional_village : 0,
+            no_of_partial_village: typeof item.no_of_partial_village === 'number' ? item.no_of_partial_village : 0,
+            no_of_non_functional_village: typeof item.no_of_non_functional_village === 'number' ? item.no_of_non_functional_village : 0,
+            fully_completed_villages: typeof item.fully_completed_villages === 'number' ? item.fully_completed_villages : 0,
+            total_number_of_esr: typeof item.total_number_of_esr === 'number' ? item.total_number_of_esr : 0,
             scheme_functional_status: item.scheme_functional_status || "Functional",
-            total_esr_integrated: item.total_esr_integrated || 0,
-            no_fully_completed_esr: item.no_fully_completed_esr || 0,
-            balance_to_complete_esr: item.balance_to_complete_esr || 0,
-            flow_meters_connected: item.flow_meters_connected || 0,
-            pressure_transmitter_connected:
-              item.pressure_transmitter_connected || 0,
-            residual_chlorine_analyzer_connected:
-              item.residual_chlorine_analyzer_connected || 0,
-            fully_completion_scheme_status:
-              item.fully_completion_scheme_status || "In Progress",
+            total_esr_integrated: typeof item.total_esr_integrated === 'number' ? item.total_esr_integrated : 0,
+            no_fully_completed_esr: typeof item.no_fully_completed_esr === 'number' ? item.no_fully_completed_esr : 0,
+            balance_to_complete_esr: typeof item.balance_to_complete_esr === 'number' ? item.balance_to_complete_esr : 0,
+            flow_meters_connected: typeof item.flow_meters_connected === 'number' ? item.flow_meters_connected : 0,
+            pressure_transmitter_connected: typeof item.pressure_transmitter_connected === 'number' ? item.pressure_transmitter_connected : 0,
+            residual_chlorine_analyzer_connected: typeof item.residual_chlorine_analyzer_connected === 'number' ? item.residual_chlorine_analyzer_connected : 0,
+            fully_completion_scheme_status: item.fully_completion_scheme_status || "In Progress",
             mjp_commissioned: item.mjp_commissioned || "",
             mjp_fully_completed: item.mjp_fully_completed || "",
             dashboard_url: item.dashboard_url || null, // Use dashboard_url from import if available
