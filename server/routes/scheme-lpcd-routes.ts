@@ -54,7 +54,33 @@ router.get('/', async (req, res) => {
           ORDER BY scheme_id, block, village_name, lpcd_value_day7 DESC NULLS LAST
         ),
         
-        -- Now aggregate the deduplicated data
+        -- First summarize by village to get single status per village
+        village_status AS (
+          SELECT
+            scheme_id,
+            block,
+            village_name,
+            MAX(is_above_55) as has_above_55,
+            MAX(is_below_55) as has_below_55,
+            MAX(is_zero_supply) as has_zero_supply
+          FROM village_counts
+          GROUP BY scheme_id, block, village_name
+        ),
+        
+        -- Then aggregate to scheme/block level
+        lpcd_aggregation AS (
+          SELECT
+            scheme_id,
+            block,
+            COUNT(DISTINCT village_name) as total_villages,
+            SUM(CASE WHEN has_above_55 > 0 THEN 1 ELSE 0 END) as villages_above_55,
+            SUM(CASE WHEN has_below_55 > 0 THEN 1 ELSE 0 END) as villages_below_55,
+            SUM(CASE WHEN has_above_55 = 0 AND has_below_55 = 0 THEN 1 ELSE 0 END) as villages_zero_supply
+          FROM village_status
+          GROUP BY scheme_id, block
+        ),
+
+        -- Now aggregate the deduplicated data with correct village counts
         scheme_aggregation AS (
           SELECT 
             wsd.scheme_id,
@@ -89,24 +115,19 @@ router.get('/', async (req, res) => {
             MAX(ws.lpcd_date_day6) as lpcd_date_day6,
             MAX(ws.lpcd_date_day7) as lpcd_date_day7,
             
-            -- Count stats based on the block-specific village counts
-            -- Use COUNT DISTINCT to avoid duplicates
-            COUNT(DISTINCT wsd.village_name) as total_villages,
-            
-            -- Below 55 LPCD but above 0
-            SUM(CASE WHEN wsd.lpcd_value_day7 < 55 AND wsd.lpcd_value_day7 > 0 THEN 1 ELSE 0 END) as villages_below_55,
-            
-            -- Above or equal to 55 LPCD
-            SUM(CASE WHEN wsd.lpcd_value_day7 >= 55 THEN 1 ELSE 0 END) as villages_above_55,
-            
-            -- Zero or NULL LPCD value
-            SUM(CASE WHEN wsd.lpcd_value_day7 = 0 OR wsd.lpcd_value_day7 IS NULL THEN 1 ELSE 0 END) as villages_zero_supply,
+            -- Use the pre-calculated village counts from lpcd_aggregation
+            la.total_villages,
+            la.villages_below_55,
+            la.villages_above_55,
+            la.villages_zero_supply,
             
             -- Additional scheme info from scheme_status
             MAX(ss.dashboard_url) as dashboard_url,
             MAX(ss.mjp_commissioned) as mjp_commissioned
           FROM 
             deduplicated_villages wsd
+          JOIN
+            lpcd_aggregation la ON wsd.scheme_id = la.scheme_id AND wsd.block = la.block
           LEFT JOIN
             water_scheme_data ws ON 
               wsd.scheme_id = ws.scheme_id AND 
@@ -115,7 +136,8 @@ router.get('/', async (req, res) => {
           LEFT JOIN
             scheme_status ss ON wsd.scheme_id = ss.scheme_id
           GROUP BY 
-            wsd.scheme_id, wsd.scheme_name, wsd.region, wsd.circle, wsd.division, wsd.sub_division, wsd.block
+            wsd.scheme_id, wsd.scheme_name, wsd.region, wsd.circle, wsd.division, wsd.sub_division, wsd.block,
+            la.total_villages, la.villages_below_55, la.villages_above_55, la.villages_zero_supply
         )
         
         -- Calculate the LPCD values for each scheme using the formula:
