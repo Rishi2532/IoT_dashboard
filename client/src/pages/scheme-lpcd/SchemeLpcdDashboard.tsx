@@ -299,6 +299,7 @@ const SchemeLpcdDashboard = () => {
       );
     }
     
+    // Apply scheme status filters using the scheme status data
     // Create a map of scheme IDs to their scheme status data for filtering
     const schemeStatusMap = new Map();
     if (schemeStatusData && schemeStatusData.length > 0) {
