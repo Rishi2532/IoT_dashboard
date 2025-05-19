@@ -671,8 +671,8 @@ const PressureDashboard: React.FC = () => {
                 value={fullyCompletedFilter}
                 disabled={commissionedFilter === "No"} 
                 onValueChange={(value) => {
-                  // If "Fully Completed Yes", ensure "Commissioned" is set to "Yes"
-                  if (value === "Yes") {
+                  // If "Fully Completed", ensure "Commissioned" is set to "Yes"
+                  if (value === "Fully Completed") {
                     setCommissionedFilter("Yes");
                   }
                   setFullyCompletedFilter(value);
@@ -684,8 +684,8 @@ const PressureDashboard: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="Yes">Fully Completed</SelectItem>
-                  <SelectItem value="No">Not Fully Completed</SelectItem>
+                  <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -707,9 +707,8 @@ const PressureDashboard: React.FC = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="Connected">Connected</SelectItem>
-                  <SelectItem value="Fully-Connected">Fully Connected</SelectItem>
-                  <SelectItem value="Partially-Connected">Partially Connected</SelectItem>
+                    <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
                   <SelectItem value="Not-Connected">Not Connected</SelectItem>
                 </SelectContent>
               </Select>
