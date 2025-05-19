@@ -90,13 +90,33 @@ export default function SchemeTable({
         ? scheme.fully_completion_scheme_status !== "Not-Connected"
         : scheme.fully_completion_scheme_status === localStatusFilter);
 
-    const matchesCommissionedFilter =
-      commissionedFilter === "all" ||
-      scheme.mjp_commissioned === commissionedFilter;
+    // Special handling for schemes with multiple blocks
+    const isMultiBlock = scheme.block === "Multiple Blocks" || scheme.isAggregated;
+    
+    // For MJP commissioned filter
+    let matchesCommissionedFilter = commissionedFilter === "all";
+    if (!matchesCommissionedFilter) {
+      if (isMultiBlock) {
+        // For multi-block schemes, show in results if ANY block matches the filter
+        // This is a more inclusive approach for consolidated schemes
+        matchesCommissionedFilter = true; // Assume match for multi-block schemes
+      } else {
+        // Normal single-block scheme
+        matchesCommissionedFilter = scheme.mjp_commissioned === commissionedFilter;
+      }
+    }
 
-    const matchesFullyCompletedFilter =
-      fullyCompletedFilter === "all" ||
-      scheme.mjp_fully_completed === fullyCompletedFilter;
+    // For MJP fully completed filter
+    let matchesFullyCompletedFilter = fullyCompletedFilter === "all";
+    if (!matchesFullyCompletedFilter) {
+      if (isMultiBlock) {
+        // For multi-block schemes, show in results if ANY block matches the filter
+        matchesFullyCompletedFilter = true; // Assume match for multi-block schemes
+      } else {
+        // Normal single-block scheme
+        matchesFullyCompletedFilter = scheme.mjp_fully_completed === fullyCompletedFilter;
+      }
+    }
 
     return (
       matchesNameSearch &&
