@@ -124,6 +124,9 @@ const PressureDashboard: React.FC = () => {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [currentFilter, setCurrentFilter] = useState<PressureRange>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
+  const [fullyCompletedFilter, setFullyCompletedFilter] = useState<string>("all");
+  const [schemeStatusFilter, setSchemeStatusFilter] = useState<string>("all");
 
   // Pagination state
   const [page, setPage] = useState(1);

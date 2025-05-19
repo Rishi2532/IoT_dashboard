@@ -262,6 +262,40 @@ const ChlorineDashboard: React.FC = () => {
     };
   };
 
+  // Handler for commissioned filter changes
+  const handleCommissionedFilterChange = (value: string) => {
+    setCommissionedFilter(value);
+    
+    // If "Not Commissioned", reset and disable "Fully Completed" filter
+    if (value === "No") {
+      setFullyCompletedFilter("all");
+    }
+    
+    // Reset page to 1 when filter changes
+    setPage(1);
+  };
+  
+  // Handler for fully completed filter changes
+  const handleFullyCompletedFilterChange = (value: string) => {
+    setFullyCompletedFilter(value);
+    
+    // If "Fully Completed", set "Commissioned" to "Yes"
+    if (value === "Fully Completed") {
+      setCommissionedFilter("Yes");
+    }
+    
+    // Reset page to 1 when filter changes
+    setPage(1);
+  };
+  
+  // Handler for scheme status filter changes
+  const handleSchemeStatusFilterChange = (value: string) => {
+    setSchemeStatusFilter(value);
+    
+    // Reset page to 1 when filter changes
+    setPage(1);
+  };
+
   // Filter and search data
   const filteredData = useMemo(() => {
     let filtered = [...allChlorineData];
@@ -283,12 +317,49 @@ const ChlorineDashboard: React.FC = () => {
     if (selectedRegion && selectedRegion !== 'all') {
       filtered = filtered.filter(item => item.region === selectedRegion);
     }
-
-    // Note: The API should already apply most filtering, but we're adding an extra
-    // check here to ensure only data from the selected region is displayed
+    
+    // Create a map of scheme IDs to their scheme status data for filtering
+    const schemeStatusMap = new Map();
+    if (schemeStatusData && schemeStatusData.length > 0) {
+      schemeStatusData.forEach(status => {
+        schemeStatusMap.set(status.scheme_id, status);
+      });
+    }
+    
+    // Apply commissioned status filter
+    if (commissionedFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        // Get scheme status from the map using scheme_id
+        const status = schemeStatusMap.get(item.scheme_id);
+        return status && status.mjp_commissioned === commissionedFilter;
+      });
+    }
+    
+    // Apply fully completed filter
+    if (fullyCompletedFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        // Get scheme status from the map using scheme_id
+        const status = schemeStatusMap.get(item.scheme_id);
+        return status && status.mjp_fully_completed === fullyCompletedFilter;
+      });
+    }
+    
+    // Apply scheme status filter
+    if (schemeStatusFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        // Get scheme status from the map using scheme_id
+        const status = schemeStatusMap.get(item.scheme_id);
+        if (!status) return false;
+        
+        if (schemeStatusFilter === "Connected") {
+          return status.fully_completion_scheme_status !== "Not-Connected";
+        }
+        return status.fully_completion_scheme_status === schemeStatusFilter;
+      });
+    }
 
     return filtered;
-  }, [allChlorineData, searchQuery, selectedRegion]);
+  }, [allChlorineData, searchQuery, selectedRegion, commissionedFilter, fullyCompletedFilter, schemeStatusFilter, schemeStatusData]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -453,6 +524,71 @@ const ChlorineDashboard: React.FC = () => {
                     {region.region_name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Commissioned Status Filter */}
+          <div className="w-full md:w-64">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Commissioned Status
+            </label>
+            <Select
+              value={commissionedFilter}
+              onValueChange={handleCommissionedFilterChange}
+            >
+              <SelectTrigger className="bg-white border border-blue-200 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Yes">Commissioned</SelectItem>
+                <SelectItem value="No">Not Commissioned</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Fully Completed Filter */}
+          <div className="w-full md:w-64">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Completion Status
+            </label>
+            <Select
+              value={fullyCompletedFilter}
+              onValueChange={handleFullyCompletedFilterChange}
+              disabled={commissionedFilter === "No"}
+            >
+              <SelectTrigger className="bg-white border border-blue-200 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <SelectValue placeholder="All Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="Fully Completed" disabled={commissionedFilter === "No"}>
+                  Fully Completed
+                </SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Scheme Status Filter */}
+          <div className="w-full md:w-64">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              IoT Status
+            </label>
+            <Select
+              value={schemeStatusFilter}
+              onValueChange={handleSchemeStatusFilterChange}
+            >
+              <SelectTrigger className="bg-white border border-blue-200 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <SelectValue placeholder="All IoT Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All IoT Status</SelectItem>
+                <SelectItem value="Connected">Connected</SelectItem>
+                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Not-Connected">Not Connected</SelectItem>
               </SelectContent>
             </Select>
           </div>
