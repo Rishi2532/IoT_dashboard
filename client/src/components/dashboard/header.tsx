@@ -1,5 +1,14 @@
 import { Button } from "../ui/button";
-import { UserCircle, Settings, Droplet, LogOut, DropletIcon, Globe, Moon, Sun } from "lucide-react";
+import {
+  UserCircle,
+  Settings,
+  Droplet,
+  LogOut,
+  DropletIcon,
+  Globe,
+  Moon,
+  Sun,
+} from "lucide-react";
 import { Link, useLocation } from "wouter";
 import Sidebar from "./sidebar";
 import { useQuery, useMutation } from "@tanstack/react-query";
@@ -16,7 +25,7 @@ interface AuthStatusResponse {
 export default function Header() {
   // Get theme context
   const { theme, toggleTheme } = useTheme();
-  
+
   // Check if user is admin
   const { data: authData } = useQuery<AuthStatusResponse>({
     queryKey: ["/api/auth/status"],
@@ -50,14 +59,14 @@ export default function Header() {
   return (
     <header className="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 shadow-2xl sticky top-0 z-[9999]">
       <div className="absolute inset-0 bg-[url('/images/water-pattern.svg')] opacity-10 bg-repeat"></div>
-      <div 
+      <div
         className="absolute inset-0 bg-gradient-to-b from-transparent to-blue-900/20"
-        style={{ 
-          backdropFilter: 'blur(1px)',
-          WebkitBackdropFilter: 'blur(1px)'
+        style={{
+          backdropFilter: "blur(1px)",
+          WebkitBackdropFilter: "blur(1px)",
         }}
       ></div>
-      
+
       <div className="mx-auto px-4 sm:px-6 lg:px-8 relative">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
@@ -75,22 +84,27 @@ export default function Header() {
                   className="h-10 bg-white/90 rounded-full p-0.5 relative"
                 />
               </div>
-              
+
               <div>
                 <h1 className="font-bold text-lg sm:text-xl text-white drop-shadow-md tracking-tight">
-                  <TranslatedText>STATE WATER AND SANITATION MISSION</TranslatedText>
-                  <span className="relative ml-1">
+                  <TranslatedText>
+                    STATE WATER AND SANITATION MISSION
+                  </TranslatedText>
+                  {/* <span className="relative ml-1">
                     <span className="absolute inset-0 bg-clip-text text-transparent bg-gradient-to-r from-blue-200 to-white blur-sm">
                       MAHARASHTRA
                     </span>
                     <span className="relative bg-clip-text text-transparent bg-gradient-to-r from-blue-100 to-white">
                       MAHARASHTRA
                     </span>
-                  </span>
+                  </span> */}
                 </h1>
                 <p className="text-xs text-blue-100 -mt-1 hidden sm:block font-medium">
                   <span className="text-white flex items-center gap-1">
-                    <DropletIcon className="h-3 w-3" /> <TranslatedText>JJM Integration Monitoring System</TranslatedText>
+                    <DropletIcon className="h-3 w-3" />{" "}
+                    <TranslatedText>
+                      Water Supply & Sanitation Dept.,Govt. of Maharashtra
+                    </TranslatedText>
                     <span className="ml-1 bg-blue-500/30 px-1.5 py-0.5 rounded text-[10px] border border-blue-400/30 font-bold">
                       POWERED BY CSTECH AI
                     </span>
@@ -99,29 +113,33 @@ export default function Header() {
               </div>
             </div>
           </div>
-          
+
           <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Language selector */}
             <div className="flex items-center mr-2 px-2 py-1 bg-blue-700/30 backdrop-blur-sm rounded-md border border-white/10">
               <Globe className="h-4 w-4 text-blue-100 mr-2" />
               <LanguageSelectorMinimal />
             </div>
-            
+
             {/* Theme toggle button */}
             <Button
               variant="ghost"
               size="sm"
               onClick={toggleTheme}
               className="text-blue-100 hover:text-white hover:bg-blue-700/50 backdrop-blur-sm px-2"
-              title={theme === 'light' ? 'Switch to dark mode' : 'Switch to light mode'}
+              title={
+                theme === "light"
+                  ? "Switch to dark mode"
+                  : "Switch to light mode"
+              }
             >
-              {theme === 'light' ? (
+              {theme === "light" ? (
                 <Moon className="h-4 w-4 transition-all duration-300" />
               ) : (
                 <Sun className="h-4 w-4 transition-all duration-300" />
               )}
             </Button>
-            
+
             {/* Only show Admin button if user is admin */}
             {authData?.isAdmin && (
               <Link href="/admin">
@@ -131,11 +149,13 @@ export default function Header() {
                   className="text-blue-100 hover:text-white hover:bg-blue-700/50 backdrop-blur-sm px-2 sm:px-3"
                 >
                   <Settings className="h-4 w-4 sm:mr-1" />
-                  <span className="hidden sm:inline"><TranslatedText>Admin</TranslatedText></span>
+                  <span className="hidden sm:inline">
+                    <TranslatedText>Admin</TranslatedText>
+                  </span>
                 </Button>
               </Link>
             )}
-            
+
             <div className="ml-2 sm:ml-4 pl-2 sm:pl-4 border-l border-blue-400/30">
               <Button
                 variant="ghost"

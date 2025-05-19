@@ -1,35 +1,35 @@
-import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
-import { useMutation, useQuery } from '@tanstack/react-query';
-import { 
-  Card, 
-  CardContent, 
-  CardHeader, 
-  CardTitle, 
+import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
   CardDescription,
-  CardFooter
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { 
-  Form, 
-  FormControl, 
-  FormField, 
-  FormItem, 
-  FormLabel, 
-  FormMessage 
-} from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, LockIcon, LogIn } from 'lucide-react';
-import DashboardLayout from '@/components/dashboard/dashboard-layout';
+  CardFooter,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle, LockIcon, LogIn } from "lucide-react";
+import DashboardLayout from "@/components/dashboard/dashboard-layout";
 
 // Login form schema
 const loginSchema = z.object({
-  username: z.string().min(1, 'Username is required'),
-  password: z.string().min(1, 'Password is required'),
+  username: z.string().min(1, "Username is required"),
+  password: z.string().min(1, "Password is required"),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -43,16 +43,16 @@ interface AuthStatusResponse {
 export default function AdminPage() {
   const { toast } = useToast();
   const [loginError, setLoginError] = useState<string | null>(null);
-  
+
   // Check if user is already logged in
   const authStatusQuery = useQuery<AuthStatusResponse>({
-    queryKey: ['/api/auth/status'],
+    queryKey: ["/api/auth/status"],
     refetchOnWindowFocus: false,
   });
-  
+
   // Redirect to admin dashboard if already logged in
   if (authStatusQuery.data?.isLoggedIn) {
-    window.location.href = '/admin/dashboard';
+    window.location.href = "/admin/dashboard";
     return null;
   }
 
@@ -60,52 +60,54 @@ export default function AdminPage() {
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      username: '',
-      password: '',
-    }
+      username: "",
+      password: "",
+    },
   });
 
   // Login mutation
   const loginMutation = useMutation({
     mutationFn: async (credentials: LoginFormValues) => {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(credentials),
       });
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+        throw new Error(errorData.message || "Login failed");
       }
-      
+
       return response.json();
     },
     onSuccess: (data) => {
       // Check if the user is an admin
-      if (data.role !== 'admin') {
-        setLoginError('You are not authorized to access the admin panel. This login is for administrators only.');
-        
+      if (data.role !== "admin") {
+        setLoginError(
+          "You are not authorized to access the admin panel. This login is for administrators only.",
+        );
+
         // Log out the non-admin user who tried to log in
-        fetch('/api/auth/logout', { method: 'POST' });
-        
+        fetch("/api/auth/logout", { method: "POST" });
+
         return;
       }
-      
+
       toast({
-        title: 'Login successful',
-        description: 'You are now logged in as admin',
+        title: "Login successful",
+        description: "You are now logged in as admin",
       });
       setLoginError(null);
       // Redirect to admin dashboard
-      window.location.href = '/admin/dashboard';
+      window.location.href = "/admin/dashboard";
     },
     onError: (error: Error) => {
       setLoginError(error.message);
-      console.error('Login error:', error);
-    }
+      console.error("Login error:", error);
+    },
   });
 
   // Form submission handler
@@ -117,10 +119,14 @@ export default function AdminPage() {
     <div className="flex flex-col min-h-screen bg-gradient-to-br from-blue-100 to-blue-50">
       <div className="absolute top-10 left-10">
         <div className="flex items-center text-blue-800">
-          <img src="/images/jal-jeevan-mission-logo.png" alt="Har Ghar Jal - Jal Jeevan Mission" className="h-24" />
+          <img
+            src="/images/jal-jeevan-mission-logo.png"
+            alt="Har Ghar Jal - Jal Jeevan Mission"
+            className="h-24"
+          />
         </div>
       </div>
-      
+
       <div className="flex-1 flex items-center justify-center">
         <Card className="w-full max-w-md shadow-lg border-blue-100">
           <CardHeader className="space-y-1 bg-gradient-to-r from-blue-50 to-blue-100/50">
@@ -129,7 +135,9 @@ export default function AdminPage() {
                 <LockIcon className="w-8 h-8 text-white" />
               </div>
             </div>
-            <CardTitle className="text-2xl font-bold text-center text-blue-900">Admin Login</CardTitle>
+            <CardTitle className="text-2xl font-bold text-center text-blue-900">
+              Admin Login
+            </CardTitle>
             <CardDescription className="text-center text-blue-700">
               Enter your credentials to access the admin dashboard
             </CardDescription>
@@ -143,7 +151,10 @@ export default function AdminPage() {
               </Alert>
             )}
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                className="space-y-4"
+              >
                 <FormField
                   control={form.control}
                   name="username"
@@ -151,9 +162,9 @@ export default function AdminPage() {
                     <FormItem>
                       <FormLabel className="text-blue-800">Username</FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Enter your admin username" 
-                          {...field} 
+                        <Input
+                          placeholder="Enter your admin username"
+                          {...field}
                           className="border-blue-200 focus-visible:ring-blue-500"
                         />
                       </FormControl>
@@ -168,10 +179,10 @@ export default function AdminPage() {
                     <FormItem>
                       <FormLabel className="text-blue-800">Password</FormLabel>
                       <FormControl>
-                        <Input 
-                          type="password" 
-                          placeholder="Enter your password" 
-                          {...field} 
+                        <Input
+                          type="password"
+                          placeholder="Enter your password"
+                          {...field}
                           className="border-blue-200 focus-visible:ring-blue-500"
                         />
                       </FormControl>
@@ -179,16 +190,32 @@ export default function AdminPage() {
                     </FormItem>
                   )}
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   className="w-full bg-blue-900 hover:bg-blue-800 py-5 text-lg mt-2"
                   disabled={loginMutation.isPending}
                 >
                   {loginMutation.isPending ? (
                     <div className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      <svg
+                        className="animate-spin -ml-1 mr-2 h-5 w-5 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
                       </svg>
                       Logging in...
                     </div>
@@ -207,9 +234,21 @@ export default function AdminPage() {
               <p className="text-sm text-blue-700 mb-2">
                 Only authorized administrators can access this page
               </p>
-              <a href="/" className="text-sm text-blue-600 hover:underline flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clipRule="evenodd" />
+              <a
+                href="/"
+                className="text-sm text-blue-600 hover:underline flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-4 w-4 mr-1"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z"
+                    clipRule="evenodd"
+                  />
                 </svg>
                 Back to Login Selection
               </a>
@@ -217,18 +256,27 @@ export default function AdminPage() {
           </CardFooter>
         </Card>
       </div>
-      
+
       {/* Company footer branding */}
-      <footer className="w-full py-6 bg-white/50 border-t border-blue-100 mt-auto">
-        <div className="flex flex-col items-center justify-center">
-          <img
-            src="/images/company/cstech-ai-logo.jpg"
-            alt="CS Tech AI"
-            className="h-16 mb-3"
-          />
-          <p className="text-sm text-blue-700 font-medium">
-            Powered by CSTECH AI
-          </p>
+      <footer className="bg-gradient-to-r from-blue-50 to-blue-100 border-t border-blue-200 py-4 relative z-10">
+        <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 max-w-full lg:max-w-[90rem] 2xl:max-w-[120rem]">
+          <div className="flex flex-col sm:flex-row justify-between items-center">
+            <div className="flex items-center mb-3 sm:mb-0">
+              <img
+                src="https://www.ceinsys.com/wp-content/uploads/2024/12/Final-logo-bw_reverse-02-1536x449.png"
+                alt="CS Tech AI"
+                className="h-16 sm:h-20"
+                style={{
+                  background: "linear-gradient(to right, violet, blue)",
+                }}
+              />
+            </div>
+            <div className="text-center sm:text-right text-sm text-blue-800">
+              <p className="font-medium text-lg sm:text-xl">
+                Powered by CSTECH AI
+              </p>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
