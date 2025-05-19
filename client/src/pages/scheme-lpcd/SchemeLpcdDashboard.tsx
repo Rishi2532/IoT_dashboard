@@ -178,6 +178,31 @@ const SchemeLpcdDashboard = () => {
   >({
     queryKey: ["/api/regions"],
   });
+  
+  // Fetch scheme status data for filtering
+  const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } = useQuery<any[]>({
+    queryKey: ["/api/schemes", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/schemes${queryString ? `?${queryString}` : ""}`;
+
+      console.log("Fetching scheme status data with URL:", url);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch scheme status data");
+      }
+
+      const data = await response.json();
+      console.log(`Received ${data.length} scheme status records`);
+      return data;
+    },
+  });
 
   // Get latest LPCD value
   const getLatestLpcdValue = (scheme: SchemeLpcdData): number | null => {
@@ -274,29 +299,43 @@ const SchemeLpcdDashboard = () => {
       );
     }
     
+    // Create a map of scheme IDs to their scheme status data for filtering
+    const schemeStatusMap = new Map();
+    if (schemeStatusData && schemeStatusData.length > 0) {
+      schemeStatusData.forEach(status => {
+        schemeStatusMap.set(status.scheme_id, status);
+      });
+    }
+    
     // Apply commissioned status filter
     if (commissionedFilter !== "all") {
       filtered = filtered.filter((scheme) => {
-        return 'mjp_commissioned' in scheme && scheme.mjp_commissioned === commissionedFilter;
+        // Get scheme status from the map
+        const status = schemeStatusMap.get(scheme.scheme_id);
+        return status && status.mjp_commissioned === commissionedFilter;
       });
     }
     
     // Apply fully completed filter
     if (fullyCompletedFilter !== "all") {
       filtered = filtered.filter((scheme) => {
-        return 'mjp_fully_completed' in scheme && scheme.mjp_fully_completed === fullyCompletedFilter;
+        // Get scheme status from the map
+        const status = schemeStatusMap.get(scheme.scheme_id);
+        return status && status.mjp_fully_completed === fullyCompletedFilter;
       });
     }
     
     // Apply scheme status filter
     if (schemeStatusFilter !== "all") {
       filtered = filtered.filter((scheme) => {
-        if (!('fully_completion_scheme_status' in scheme)) return false;
+        // Get scheme status from the map
+        const status = schemeStatusMap.get(scheme.scheme_id);
+        if (!status) return false;
         
         if (schemeStatusFilter === "Connected") {
-          return scheme.fully_completion_scheme_status !== "Not-Connected";
+          return status.fully_completion_scheme_status !== "Not-Connected";
         }
-        return scheme.fully_completion_scheme_status === schemeStatusFilter;
+        return status.fully_completion_scheme_status === schemeStatusFilter;
       });
     }
 
