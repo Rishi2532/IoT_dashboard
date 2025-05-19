@@ -997,6 +997,9 @@ const SchemeLpcdDashboard = () => {
                                 <div className="text-xs flex gap-1 mt-1">
                                   <span className="text-green-600">↑{scheme.villages_above_55}</span>
                                   <span className="text-red-600">↓{scheme.villages_below_55}</span>
+                                  {scheme.villages_zero_supply > 0 && 
+                                    <span className="text-gray-500">⚪{scheme.villages_zero_supply}</span>
+                                  }
                                 </div>
                               </div>
                             </TableCell>

@@ -19,7 +19,43 @@ router.get('/', async (req, res) => {
       // and aggregate the data by scheme
       
       let baseQuery = `
-        WITH scheme_aggregation AS (
+        -- First, get a clean, deduplicated view of the raw village data with correct LPCD counts
+        WITH village_counts AS (
+          SELECT 
+            scheme_id,
+            block,
+            village_name,
+            CASE WHEN lpcd_value_day7 >= 55 THEN 1 ELSE 0 END as is_above_55,
+            CASE WHEN lpcd_value_day7 < 55 AND lpcd_value_day7 > 0 THEN 1 ELSE 0 END as is_below_55,
+            CASE WHEN lpcd_value_day7 = 0 OR lpcd_value_day7 IS NULL THEN 1 ELSE 0 END as is_zero_supply
+          FROM water_scheme_data
+        ),
+        
+        -- Create deduplicated village data with only one row per village
+        deduplicated_villages AS (
+          SELECT DISTINCT ON (scheme_id, block, village_name)
+            scheme_id,
+            scheme_name,
+            region,
+            circle,
+            division,
+            sub_division,
+            block,
+            village_name,
+            population,
+            lpcd_value_day7,
+            water_value_day1,
+            water_value_day2,
+            water_value_day3,
+            water_value_day4,
+            water_value_day5,
+            water_value_day6
+          FROM water_scheme_data
+          ORDER BY scheme_id, block, village_name, lpcd_value_day7 DESC NULLS LAST
+        ),
+        
+        -- Now aggregate the deduplicated data
+        scheme_aggregation AS (
           SELECT 
             wsd.scheme_id,
             wsd.scheme_name,
@@ -39,27 +75,30 @@ router.get('/', async (req, res) => {
             SUM(wsd.water_value_day6) as total_water_day6,
             
             -- Keep the date values (will be the same per scheme)
-            MAX(wsd.water_date_day1) as water_date_day1,
-            MAX(wsd.water_date_day2) as water_date_day2,
-            MAX(wsd.water_date_day3) as water_date_day3,
-            MAX(wsd.water_date_day4) as water_date_day4,
-            MAX(wsd.water_date_day5) as water_date_day5,
-            MAX(wsd.water_date_day6) as water_date_day6,
-            MAX(wsd.lpcd_date_day1) as lpcd_date_day1,
-            MAX(wsd.lpcd_date_day2) as lpcd_date_day2,
-            MAX(wsd.lpcd_date_day3) as lpcd_date_day3,
-            MAX(wsd.lpcd_date_day4) as lpcd_date_day4,
-            MAX(wsd.lpcd_date_day5) as lpcd_date_day5,
-            MAX(wsd.lpcd_date_day6) as lpcd_date_day6,
-            MAX(wsd.lpcd_date_day7) as lpcd_date_day7,
+            MAX(ws.water_date_day1) as water_date_day1,
+            MAX(ws.water_date_day2) as water_date_day2,
+            MAX(ws.water_date_day3) as water_date_day3,
+            MAX(ws.water_date_day4) as water_date_day4,
+            MAX(ws.water_date_day5) as water_date_day5,
+            MAX(ws.water_date_day6) as water_date_day6,
+            MAX(ws.lpcd_date_day1) as lpcd_date_day1,
+            MAX(ws.lpcd_date_day2) as lpcd_date_day2,
+            MAX(ws.lpcd_date_day3) as lpcd_date_day3,
+            MAX(ws.lpcd_date_day4) as lpcd_date_day4,
+            MAX(ws.lpcd_date_day5) as lpcd_date_day5,
+            MAX(ws.lpcd_date_day6) as lpcd_date_day6,
+            MAX(ws.lpcd_date_day7) as lpcd_date_day7,
             
             -- Count stats based on the block-specific village counts
-            -- This uses the correct village count for each block/scheme
-            COUNT(wsd.village_name) as total_villages,
+            -- Use COUNT DISTINCT to avoid duplicates
+            COUNT(DISTINCT wsd.village_name) as total_villages,
+            
             -- Below 55 LPCD but above 0
             SUM(CASE WHEN wsd.lpcd_value_day7 < 55 AND wsd.lpcd_value_day7 > 0 THEN 1 ELSE 0 END) as villages_below_55,
+            
             -- Above or equal to 55 LPCD
             SUM(CASE WHEN wsd.lpcd_value_day7 >= 55 THEN 1 ELSE 0 END) as villages_above_55,
+            
             -- Zero or NULL LPCD value
             SUM(CASE WHEN wsd.lpcd_value_day7 = 0 OR wsd.lpcd_value_day7 IS NULL THEN 1 ELSE 0 END) as villages_zero_supply,
             
@@ -67,7 +106,12 @@ router.get('/', async (req, res) => {
             MAX(ss.dashboard_url) as dashboard_url,
             MAX(ss.mjp_commissioned) as mjp_commissioned
           FROM 
-            water_scheme_data wsd
+            deduplicated_villages wsd
+          LEFT JOIN
+            water_scheme_data ws ON 
+              wsd.scheme_id = ws.scheme_id AND 
+              wsd.block = ws.block AND 
+              wsd.village_name = ws.village_name
           LEFT JOIN
             scheme_status ss ON wsd.scheme_id = ss.scheme_id
           GROUP BY 
