@@ -643,7 +643,7 @@ const EnhancedLpcdDashboard = () => {
             "Days Above 55L": scheme.above_55_lpcd_count || 0,
             "Days Below 55L": scheme.below_55_lpcd_count || 0,
             
-            // Water consumption values with dates as headers
+            // Water consumption values with dates as headers (only 6 days available)
             [`Water (${date1})`]: 
               scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined
                 ? Number(scheme.water_value_day1).toFixed(4)
@@ -667,10 +667,6 @@ const EnhancedLpcdDashboard = () => {
             [`Water (${date6})`]: 
               scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined
                 ? Number(scheme.water_value_day6).toFixed(4)
-                : "N/A",
-            [`Water (${date7})`]: 
-              scheme.water_value_day7 !== null && scheme.water_value_day7 !== undefined
-                ? Number(scheme.water_value_day7).toFixed(4)
                 : "N/A",
             
             // LPCD values with dates as headers
