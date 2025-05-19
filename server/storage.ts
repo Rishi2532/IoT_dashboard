@@ -2753,9 +2753,15 @@ export class PostgresStorage implements IStorage {
             // Count inserted/updated records based on result
             const affectedCount = result.rowCount || batch.length;
             
-            // Since we're using ON CONFLICT DO UPDATE, we need to determine how many were inserts vs updates
-            // For simplicity, we'll count them all as inserts in this batch approach
-            inserted += affectedCount;
+            // Since we're using ON CONFLICT DO UPDATE, we need to properly count inserts vs updates
+            // Count existing keys in this batch as updates, and the rest as inserts
+            const existingKeysInBatch = batch.filter(record => {
+              const key = `${record.scheme_id}|${record.village_name}|${record.esr_name}`;
+              return existingRecordsMap.has(key);
+            }).length;
+            
+            updated += existingKeysInBatch;
+            inserted += (affectedCount - existingKeysInBatch);
             
             console.log(`Processed batch ${Math.floor(i/insertBatchSize) + 1}/${Math.ceil(toInsert.length/insertBatchSize)}, affected rows: ${affectedCount}`);
           } catch (error) {
