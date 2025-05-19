@@ -56,6 +56,10 @@ interface PressureData {
   scheme_id: string;
   scheme_name: string;
   region: string;
+  circle?: string;
+  division?: string;
+  sub_division?: string;
+  block?: string;
   village_name: string;
   esr_name: string;
   sensor_id?: string;
@@ -78,6 +82,9 @@ interface PressureData {
   pressure_less_than_02_bar?: number | null;
   pressure_between_02_07_bar?: number | null;
   pressure_greater_than_07_bar?: number | null;
+  pressure_less_than_05_bar?: number | null;
+  pressure_between_05_10_bar?: number | null;
+  pressure_greater_than_10_bar?: number | null;
   // Dashboard URL for PI Vision integration
   dashboard_url?: string;
 }
@@ -408,6 +415,17 @@ const PressureDashboard: React.FC = () => {
   // Function to export data to Excel
   const exportToExcel = (data: PressureData[], filename: string) => {
     try {
+      // Helper function to format date for better readability in Excel
+      const formatDateForHeader = (dateStr: string | null | undefined) => {
+        if (!dateStr) return "N/A";
+        try {
+          const date = new Date(dateStr);
+          return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+        } catch {
+          return dateStr || "N/A";
+        }
+      };
+      
       // Get scheme status data for export
       const schemeStatusMap = new Map();
       if (schemeStatusData && schemeStatusData.length > 0) {
@@ -438,16 +456,63 @@ const PressureDashboard: React.FC = () => {
         const fullyCompleted = schemeStatus ? schemeStatus.mjp_fully_completed : "N/A";
         const schemeStatusValue = schemeStatus ? schemeStatus.fully_completion_scheme_status : "N/A";
 
+        // Format dates for headers
+        const date1 = formatDateForHeader(item.pressure_date_day_1);
+        const date2 = formatDateForHeader(item.pressure_date_day_2);
+        const date3 = formatDateForHeader(item.pressure_date_day_3);
+        const date4 = formatDateForHeader(item.pressure_date_day_4);
+        const date5 = formatDateForHeader(item.pressure_date_day_5);
+        const date6 = formatDateForHeader(item.pressure_date_day_6);
+        const date7 = formatDateForHeader(item.pressure_date_day_7);
+        
         return {
           "Scheme ID": item.scheme_id,
           "Scheme Name": item.scheme_name || "N/A",
-          Region: item.region || "N/A",
+          "Region": item.region || "N/A",
+          "Circle": item.circle || "N/A",
+          "Division": item.division || "N/A",
+          "Sub Division": item.sub_division || "N/A", 
+          "Block": item.block || "N/A",
           "Village Name": item.village_name || "N/A",
           "ESR Name": item.esr_name || "N/A",
+          
+          // Latest pressure value and status
           "Latest Pressure Value (bar)":
             latestPressure !== null ? latestPressure.toFixed(2) : "No data",
-          "Last Updated": latestDate || "No data",
-          Status: statusText,
+          "Last Updated": latestDate ? formatDateForHeader(latestDate) : "No data",
+          "Status": statusText,
+          
+          // Daily pressure values with date headers
+          [`Pressure (${date1}) bar`]: 
+            item.pressure_value_1 !== null && item.pressure_value_1 !== undefined
+              ? Number(item.pressure_value_1).toFixed(2)
+              : "N/A",
+          [`Pressure (${date2}) bar`]: 
+            item.pressure_value_2 !== null && item.pressure_value_2 !== undefined
+              ? Number(item.pressure_value_2).toFixed(2)
+              : "N/A",
+          [`Pressure (${date3}) bar`]: 
+            item.pressure_value_3 !== null && item.pressure_value_3 !== undefined
+              ? Number(item.pressure_value_3).toFixed(2)
+              : "N/A",
+          [`Pressure (${date4}) bar`]: 
+            item.pressure_value_4 !== null && item.pressure_value_4 !== undefined
+              ? Number(item.pressure_value_4).toFixed(2)
+              : "N/A",
+          [`Pressure (${date5}) bar`]: 
+            item.pressure_value_5 !== null && item.pressure_value_5 !== undefined
+              ? Number(item.pressure_value_5).toFixed(2)
+              : "N/A",
+          [`Pressure (${date6}) bar`]: 
+            item.pressure_value_6 !== null && item.pressure_value_6 !== undefined
+              ? Number(item.pressure_value_6).toFixed(2)
+              : "N/A",
+          [`Pressure (${date7}) bar`]: 
+            item.pressure_value_7 !== null && item.pressure_value_7 !== undefined
+              ? Number(item.pressure_value_7).toFixed(2)
+              : "N/A",
+          
+          // Analysis data
           "Days Below Range (<0.2 bar)": item.pressure_less_than_02_bar || 0,
           "Days Optimal Range (0.2-0.7 bar)":
             item.pressure_between_02_07_bar || 0,
@@ -456,24 +521,11 @@ const PressureDashboard: React.FC = () => {
             item.number_of_consistent_zero_value_in_pressure === 7
               ? "Yes"
               : "No",
+          
+          // Scheme status info  
           "Commissioned": commissioned,
           "Fully Completed": fullyCompleted,
           "Scheme Status": schemeStatusValue,
-          // Additional pressure values for historical data
-          "Pressure Day 1": item.pressure_value_1 !== null ? 
-            Number(item.pressure_value_1).toFixed(2) : "N/A",
-          "Pressure Day 2": item.pressure_value_2 !== null ? 
-            Number(item.pressure_value_2).toFixed(2) : "N/A",
-          "Pressure Day 3": item.pressure_value_3 !== null ? 
-            Number(item.pressure_value_3).toFixed(2) : "N/A",
-          "Pressure Day 4": item.pressure_value_4 !== null ? 
-            Number(item.pressure_value_4).toFixed(2) : "N/A",
-          "Pressure Day 5": item.pressure_value_5 !== null ? 
-            Number(item.pressure_value_5).toFixed(2) : "N/A",
-          "Pressure Day 6": item.pressure_value_6 !== null ? 
-            Number(item.pressure_value_6).toFixed(2) : "N/A",
-          "Pressure Day 7": item.pressure_value_7 !== null ? 
-            Number(item.pressure_value_7).toFixed(2) : "N/A",
         };
       });
 
