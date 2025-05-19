@@ -643,10 +643,7 @@ const PressureDashboard: React.FC = () => {
               <Select
                 value={commissionedFilter}
                 onValueChange={(value) => {
-                  // If "Not Commissioned", reset "Fully Completed" filter
-                  if (value === "No") {
-                    setFullyCompletedFilter("all");
-                  }
+                  // No automatic changes to other filters
                   setCommissionedFilter(value);
                   setPage(1); // Reset to first page when filter changes
                 }}
@@ -660,6 +657,14 @@ const PressureDashboard: React.FC = () => {
                   <SelectItem value="No">Not Commissioned</SelectItem>
                 </SelectContent>
               </Select>
+              {commissionedFilter !== "all" && (
+                <div className="mt-1 text-xs text-blue-600 font-medium">
+                  {filteredData.filter(item => {
+                    const status = schemeStatusMap.get(item.scheme_id);
+                    return status && status.mjp_commissioned === commissionedFilter;
+                  }).length} schemes
+                </div>
+              )}
             </div>
 
             {/* Fully Completed Filter */}
@@ -669,12 +674,8 @@ const PressureDashboard: React.FC = () => {
               </label>
               <Select
                 value={fullyCompletedFilter}
-                disabled={commissionedFilter === "No"} 
                 onValueChange={(value) => {
-                  // If "Fully Completed", ensure "Commissioned" is set to "Yes"
-                  if (value === "Fully Completed") {
-                    setCommissionedFilter("Yes");
-                  }
+                  // No automatic changes to other filters
                   setFullyCompletedFilter(value);
                   setPage(1); // Reset to first page when filter changes
                 }}
