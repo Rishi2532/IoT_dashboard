@@ -99,6 +99,8 @@ export interface SchemeLpcdData {
   lpcd_date_day6: string;
   lpcd_date_day7: string;
   mjp_commissioned: string;
+  mjp_fully_completed?: string;
+  fully_completion_scheme_status?: string;
   dashboard_url?: string;
 }
 
@@ -132,6 +134,9 @@ const SchemeLpcdDashboard = () => {
   const [currentFilter, setCurrentFilter] = useState<LpcdRange>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [showCharts, setShowCharts] = useState<boolean>(true);
+  const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
+  const [fullyCompletedFilter, setFullyCompletedFilter] = useState<string>("all");
+  const [schemeStatusFilter, setSchemeStatusFilter] = useState<string>("all");
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -267,6 +272,32 @@ const SchemeLpcdDashboard = () => {
           scheme.scheme_name?.toLowerCase().includes(query) ||
           scheme.scheme_id?.toLowerCase().includes(query),
       );
+    }
+    
+    // Apply commissioned status filter
+    if (commissionedFilter !== "all") {
+      filtered = filtered.filter((scheme) => {
+        return 'mjp_commissioned' in scheme && scheme.mjp_commissioned === commissionedFilter;
+      });
+    }
+    
+    // Apply fully completed filter
+    if (fullyCompletedFilter !== "all") {
+      filtered = filtered.filter((scheme) => {
+        return 'mjp_fully_completed' in scheme && scheme.mjp_fully_completed === fullyCompletedFilter;
+      });
+    }
+    
+    // Apply scheme status filter
+    if (schemeStatusFilter !== "all") {
+      filtered = filtered.filter((scheme) => {
+        if (!('fully_completion_scheme_status' in scheme)) return false;
+        
+        if (schemeStatusFilter === "Connected") {
+          return scheme.fully_completion_scheme_status !== "Not-Connected";
+        }
+        return scheme.fully_completion_scheme_status === schemeStatusFilter;
+      });
     }
 
     // Apply LPCD range filter
@@ -842,6 +873,71 @@ const SchemeLpcdDashboard = () => {
               ))}
             </SelectContent>
           </Select>
+          
+          {/* Commissioned Status Filter */}
+          <Select
+            value={commissionedFilter}
+            onValueChange={(value) => {
+              setCommissionedFilter(value);
+              setPage(1);
+              if (value === "No" && fullyCompletedFilter === "Fully Completed") {
+                setFullyCompletedFilter("In Progress");
+              }
+            }}
+          >
+            <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
+              <SelectValue placeholder="Commissioned Status" />
+            </SelectTrigger>
+            <SelectContent className="border border-blue-100">
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Yes">Commissioned</SelectItem>
+              <SelectItem value="No">Not Commissioned</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* MJP Fully Completed Filter */}
+          <Select
+            value={fullyCompletedFilter}
+            onValueChange={(value) => {
+              setFullyCompletedFilter(value);
+              setPage(1);
+              if (value === "Fully Completed" && commissionedFilter !== "Yes") {
+                setCommissionedFilter("Yes");
+              }
+            }}
+          >
+            <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
+              <SelectValue placeholder="Completion Status" />
+            </SelectTrigger>
+            <SelectContent className="border border-blue-100">
+              <SelectItem value="all">All Status</SelectItem>
+              <SelectItem value="Fully Completed" disabled={commissionedFilter === "No"}>
+                Fully Completed
+              </SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Scheme Status Filter */}
+          <Select
+            value={schemeStatusFilter}
+            onValueChange={(value) => {
+              setSchemeStatusFilter(value);
+              setPage(1);
+            }}
+          >
+            <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
+              <SelectValue placeholder="IoT Status" />
+            </SelectTrigger>
+            <SelectContent className="border border-blue-100">
+              <SelectItem value="all">All IoT Status</SelectItem>
+              <SelectItem value="Connected">Connected</SelectItem>
+              <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+              <SelectItem value="Not-Connected">Not Connected</SelectItem>
+            </SelectContent>
+          </Select>
+          
           <Button
             variant="outline"
             size="icon"
