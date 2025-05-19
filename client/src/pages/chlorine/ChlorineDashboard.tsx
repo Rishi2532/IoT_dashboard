@@ -116,6 +116,9 @@ const ChlorineDashboard: React.FC = () => {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [currentFilter, setCurrentFilter] = useState<ChlorineRange>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
+  const [fullyCompletedFilter, setFullyCompletedFilter] = useState<string>("all");
+  const [schemeStatusFilter, setSchemeStatusFilter] = useState<string>("all");
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -186,6 +189,31 @@ const ChlorineDashboard: React.FC = () => {
     RegionData[]
   >({
     queryKey: ["/api/regions"],
+  });
+  
+  // Fetch scheme status data for filtering
+  const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } = useQuery<any[]>({
+    queryKey: ["/api/schemes", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/schemes${queryString ? `?${queryString}` : ""}`;
+
+      console.log("Fetching scheme status data with URL:", url);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch scheme status data");
+      }
+
+      const data = await response.json();
+      console.log(`Received ${data.length} scheme status records`);
+      return data;
+    },
   });
 
   // Get latest chlorine value
