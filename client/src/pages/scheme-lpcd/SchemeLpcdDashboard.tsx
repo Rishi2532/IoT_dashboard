@@ -415,10 +415,18 @@ const SchemeLpcdDashboard = () => {
         });
         break;
       case "mjpYes":
-        filtered = filtered.filter((scheme) => scheme.mjp_commissioned === "Yes");
+        filtered = filtered.filter((scheme) => {
+          // Get scheme status from the map
+          const status = schemeStatusMap.get(scheme.scheme_id);
+          return status ? status.mjp_commissioned === "Yes" : scheme.mjp_commissioned === "Yes";
+        });
         break;
       case "mjpNo":
-        filtered = filtered.filter((scheme) => scheme.mjp_commissioned === "No");
+        filtered = filtered.filter((scheme) => {
+          // Get scheme status from the map
+          const status = schemeStatusMap.get(scheme.scheme_id);
+          return status ? status.mjp_commissioned === "No" : scheme.mjp_commissioned === "No";
+        });
         break;
     }
 
