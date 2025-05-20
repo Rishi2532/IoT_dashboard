@@ -266,10 +266,8 @@ const ChlorineDashboard: React.FC = () => {
   const handleCommissionedFilterChange = (value: string) => {
     setCommissionedFilter(value);
     
-    // If "Not Commissioned", reset and disable "Fully Completed" filter
-    if (value === "No") {
-      setFullyCompletedFilter("all");
-    }
+    // If "Not Commissioned", maintain the fully completed filter value
+    // We'll handle the filtering logic differently
     
     // Reset page to 1 when filter changes
     setPage(1);
@@ -279,8 +277,9 @@ const ChlorineDashboard: React.FC = () => {
   const handleFullyCompletedFilterChange = (value: string) => {
     setFullyCompletedFilter(value);
     
-    // If "Fully Completed", set "Commissioned" to "Yes"
-    if (value === "Fully Completed") {
+    // If "Fully Completed", set "Commissioned" to "Yes" if not already set
+    if (value === "Fully Completed" && commissionedFilter === "No") {
+      // Automatically adjust the commissioned filter to allow the selection
       setCommissionedFilter("Yes");
     }
     
@@ -340,6 +339,33 @@ const ChlorineDashboard: React.FC = () => {
       filtered = filtered.filter((item) => {
         // Get scheme status from the map using scheme_id
         const status = schemeStatusMap.get(item.scheme_id);
+        
+        // For "In Progress" status, we want schemes that are either:
+        // 1. Commissioned with mjp_fully_completed = "In Progress"
+        // 2. Not commissioned (since they're also in progress by definition)
+        if (fullyCompletedFilter === "In Progress") {
+          if (commissionedFilter === "No") {
+            // If specifically filtered for Not Commissioned, show In Progress
+            return status && status.mjp_commissioned === "No";
+          } else if (commissionedFilter === "Yes") {
+            // If specifically filtered for Commissioned, show only those In Progress
+            return status && status.mjp_commissioned === "Yes" && status.mjp_fully_completed === "In Progress";
+          } else {
+            // For "all" commissioned status, show both commissioned and not commissioned In Progress
+            return status && (
+              (status.mjp_commissioned === "Yes" && status.mjp_fully_completed === "In Progress") ||
+              status.mjp_commissioned === "No"
+            );
+          }
+        }
+        
+        // For "Fully Completed", only show if commissioned is "Yes" (or "all")
+        if (fullyCompletedFilter === "Fully Completed") {
+          return status && status.mjp_fully_completed === fullyCompletedFilter && 
+                (commissionedFilter === "all" || status.mjp_commissioned === "Yes");
+        }
+        
+        // Default case for other filter values
         return status && status.mjp_fully_completed === fullyCompletedFilter;
       });
     }
