@@ -132,7 +132,8 @@ const PressureDashboard: React.FC = () => {
   const [currentFilter, setCurrentFilter] = useState<PressureRange>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
-  const [fullyCompletedFilter, setFullyCompletedFilter] = useState<string>("all");
+  const [fullyCompletedFilter, setFullyCompletedFilter] =
+    useState<string>("all");
   const [schemeStatusFilter, setSchemeStatusFilter] = useState<string>("all");
 
   // Pagination state
@@ -207,31 +208,32 @@ const PressureDashboard: React.FC = () => {
   >({
     queryKey: ["/api/regions"],
   });
-  
+
   // Fetch scheme status data for filtering
-  const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } = useQuery<any[]>({
-    queryKey: ["/api/schemes", selectedRegion],
-    queryFn: async () => {
-      const params = new URLSearchParams();
+  const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } =
+    useQuery<any[]>({
+      queryKey: ["/api/schemes", selectedRegion],
+      queryFn: async () => {
+        const params = new URLSearchParams();
 
-      if (selectedRegion && selectedRegion !== "all") {
-        params.append("region", selectedRegion);
-      }
+        if (selectedRegion && selectedRegion !== "all") {
+          params.append("region", selectedRegion);
+        }
 
-      const queryString = params.toString();
-      const url = `/api/schemes${queryString ? `?${queryString}` : ""}`;
+        const queryString = params.toString();
+        const url = `/api/schemes${queryString ? `?${queryString}` : ""}`;
 
-      console.log("Fetching scheme status data with URL:", url);
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Failed to fetch scheme status data");
-      }
+        console.log("Fetching scheme status data with URL:", url);
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error("Failed to fetch scheme status data");
+        }
 
-      const data = await response.json();
-      console.log(`Received ${data.length} scheme status records`);
-      return data;
-    },
-  });
+        const data = await response.json();
+        console.log(`Received ${data.length} scheme status records`);
+        return data;
+      },
+    });
 
   // Get latest pressure value
   const getLatestPressureValue = (data: PressureData): number | null => {
@@ -282,33 +284,33 @@ const PressureDashboard: React.FC = () => {
   // Handler for commissioned filter changes
   const handleCommissionedFilterChange = (value: string) => {
     setCommissionedFilter(value);
-    
+
     // If "Not Commissioned", reset and disable "Fully Completed" filter
     if (value === "No") {
       setFullyCompletedFilter("all");
     }
-    
+
     // Reset page to 1 when filter changes
     setPage(1);
   };
-  
+
   // Handler for fully completed filter changes
   const handleFullyCompletedFilterChange = (value: string) => {
     setFullyCompletedFilter(value);
-    
+
     // If "Fully Completed", set "Commissioned" to "Yes"
     if (value === "Fully Completed") {
       setCommissionedFilter("Yes");
     }
-    
+
     // Reset page to 1 when filter changes
     setPage(1);
   };
-  
+
   // Handler for scheme status filter changes
   const handleSchemeStatusFilterChange = (value: string) => {
     setSchemeStatusFilter(value);
-    
+
     // Reset page to 1 when filter changes
     setPage(1);
   };
@@ -317,7 +319,7 @@ const PressureDashboard: React.FC = () => {
   const schemeStatusMap = useMemo(() => {
     const map = new Map();
     if (schemeStatusData && schemeStatusData.length > 0) {
-      schemeStatusData.forEach(status => {
+      schemeStatusData.forEach((status) => {
         map.set(status.scheme_id, status);
       });
     }
@@ -344,15 +346,15 @@ const PressureDashboard: React.FC = () => {
     if (selectedRegion && selectedRegion !== "all") {
       filtered = filtered.filter((item) => item.region === selectedRegion);
     }
-    
+
     // Create a map of scheme IDs to their scheme status data for filtering
     const schemeStatusMap = new Map();
     if (schemeStatusData && schemeStatusData.length > 0) {
-      schemeStatusData.forEach(status => {
+      schemeStatusData.forEach((status) => {
         schemeStatusMap.set(status.scheme_id, status);
       });
     }
-    
+
     // Apply commissioned status filter
     if (commissionedFilter !== "all") {
       filtered = filtered.filter((item) => {
@@ -361,7 +363,7 @@ const PressureDashboard: React.FC = () => {
         return status && status.mjp_commissioned === commissionedFilter;
       });
     }
-    
+
     // Apply fully completed filter
     if (fullyCompletedFilter !== "all") {
       filtered = filtered.filter((item) => {
@@ -370,14 +372,14 @@ const PressureDashboard: React.FC = () => {
         return status && status.mjp_fully_completed === fullyCompletedFilter;
       });
     }
-    
+
     // Apply scheme status filter
     if (schemeStatusFilter !== "all") {
       filtered = filtered.filter((item) => {
         // Get scheme status from the map using scheme_id
         const status = schemeStatusMap.get(item.scheme_id);
         if (!status) return false;
-        
+
         if (schemeStatusFilter === "Connected") {
           return status.fully_completion_scheme_status !== "Not-Connected";
         }
@@ -386,7 +388,15 @@ const PressureDashboard: React.FC = () => {
     }
 
     return filtered;
-  }, [allPressureData, searchQuery, selectedRegion, commissionedFilter, fullyCompletedFilter, schemeStatusFilter, schemeStatusData]);
+  }, [
+    allPressureData,
+    searchQuery,
+    selectedRegion,
+    commissionedFilter,
+    fullyCompletedFilter,
+    schemeStatusFilter,
+    schemeStatusData,
+  ]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -431,16 +441,19 @@ const PressureDashboard: React.FC = () => {
         if (!dateStr) return "N/A";
         try {
           const date = new Date(dateStr);
-          return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+          return date.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+          });
         } catch {
           return dateStr || "N/A";
         }
       };
-      
+
       // Get scheme status data for export
       const schemeStatusMap = new Map();
       if (schemeStatusData && schemeStatusData.length > 0) {
-        schemeStatusData.forEach(status => {
+        schemeStatusData.forEach((status) => {
           schemeStatusMap.set(status.scheme_id, status);
         });
       }
@@ -463,9 +476,15 @@ const PressureDashboard: React.FC = () => {
 
         // Get scheme status info
         const schemeStatus = schemeStatusMap.get(item.scheme_id);
-        const commissioned = schemeStatus ? schemeStatus.mjp_commissioned : "N/A";
-        const fullyCompleted = schemeStatus ? schemeStatus.mjp_fully_completed : "N/A";
-        const schemeStatusValue = schemeStatus ? schemeStatus.fully_completion_scheme_status : "N/A";
+        const commissioned = schemeStatus
+          ? schemeStatus.mjp_commissioned
+          : "N/A";
+        const fullyCompleted = schemeStatus
+          ? schemeStatus.mjp_fully_completed
+          : "N/A";
+        const schemeStatusValue = schemeStatus
+          ? schemeStatus.fully_completion_scheme_status
+          : "N/A";
 
         // Format dates for headers
         const date1 = formatDateForHeader(item.pressure_date_day_1);
@@ -475,54 +494,63 @@ const PressureDashboard: React.FC = () => {
         const date5 = formatDateForHeader(item.pressure_date_day_5);
         const date6 = formatDateForHeader(item.pressure_date_day_6);
         const date7 = formatDateForHeader(item.pressure_date_day_7);
-        
+
         return {
           "Scheme ID": item.scheme_id,
           "Scheme Name": item.scheme_name || "N/A",
-          "Region": item.region || "N/A",
-          "Circle": item.circle || "N/A",
-          "Division": item.division || "N/A",
-          "Sub Division": item.sub_division || "N/A", 
-          "Block": item.block || "N/A",
+          Region: item.region || "N/A",
+          Circle: item.circle || "N/A",
+          Division: item.division || "N/A",
+          "Sub Division": item.sub_division || "N/A",
+          Block: item.block || "N/A",
           "Village Name": item.village_name || "N/A",
           "ESR Name": item.esr_name || "N/A",
-          
+
           // Latest pressure value and status
           "Latest Pressure Value (bar)":
             latestPressure !== null ? latestPressure.toFixed(2) : "No data",
-          "Last Updated": latestDate ? formatDateForHeader(latestDate) : "No data",
-          "Status": statusText,
-          
+          "Last Updated": latestDate
+            ? formatDateForHeader(latestDate)
+            : "No data",
+          Status: statusText,
+
           // Daily pressure values with date headers
-          [`Pressure (${date1}) bar`]: 
-            item.pressure_value_1 !== null && item.pressure_value_1 !== undefined
+          [`Pressure (${date1}) bar`]:
+            item.pressure_value_1 !== null &&
+            item.pressure_value_1 !== undefined
               ? Number(item.pressure_value_1).toFixed(2)
               : "N/A",
-          [`Pressure (${date2}) bar`]: 
-            item.pressure_value_2 !== null && item.pressure_value_2 !== undefined
+          [`Pressure (${date2}) bar`]:
+            item.pressure_value_2 !== null &&
+            item.pressure_value_2 !== undefined
               ? Number(item.pressure_value_2).toFixed(2)
               : "N/A",
-          [`Pressure (${date3}) bar`]: 
-            item.pressure_value_3 !== null && item.pressure_value_3 !== undefined
+          [`Pressure (${date3}) bar`]:
+            item.pressure_value_3 !== null &&
+            item.pressure_value_3 !== undefined
               ? Number(item.pressure_value_3).toFixed(2)
               : "N/A",
-          [`Pressure (${date4}) bar`]: 
-            item.pressure_value_4 !== null && item.pressure_value_4 !== undefined
+          [`Pressure (${date4}) bar`]:
+            item.pressure_value_4 !== null &&
+            item.pressure_value_4 !== undefined
               ? Number(item.pressure_value_4).toFixed(2)
               : "N/A",
-          [`Pressure (${date5}) bar`]: 
-            item.pressure_value_5 !== null && item.pressure_value_5 !== undefined
+          [`Pressure (${date5}) bar`]:
+            item.pressure_value_5 !== null &&
+            item.pressure_value_5 !== undefined
               ? Number(item.pressure_value_5).toFixed(2)
               : "N/A",
-          [`Pressure (${date6}) bar`]: 
-            item.pressure_value_6 !== null && item.pressure_value_6 !== undefined
+          [`Pressure (${date6}) bar`]:
+            item.pressure_value_6 !== null &&
+            item.pressure_value_6 !== undefined
               ? Number(item.pressure_value_6).toFixed(2)
               : "N/A",
-          [`Pressure (${date7}) bar`]: 
-            item.pressure_value_7 !== null && item.pressure_value_7 !== undefined
+          [`Pressure (${date7}) bar`]:
+            item.pressure_value_7 !== null &&
+            item.pressure_value_7 !== undefined
               ? Number(item.pressure_value_7).toFixed(2)
               : "N/A",
-          
+
           // Analysis data
           "Days Below Range (<0.2 bar)": item.pressure_less_than_02_bar || 0,
           "Days Optimal Range (0.2-0.7 bar)":
@@ -532,9 +560,9 @@ const PressureDashboard: React.FC = () => {
             item.number_of_consistent_zero_value_in_pressure === 7
               ? "Yes"
               : "No",
-          
-          // Scheme status info  
-          "Commissioned": commissioned,
+
+          // Scheme status info
+          Commissioned: commissioned,
           "Fully Completed": fullyCompleted,
           "Scheme Status": schemeStatusValue,
         };
@@ -639,9 +667,9 @@ const PressureDashboard: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
-      {/* Region Filter */}
-      <div className="bg-white rounded-xl shadow-md mb-6 p-4 border border-blue-100">
-        <div className="flex flex-col md:flex-row gap-4 items-center">
+      <div className="bg-white rounded-xl shadow-sm mb-6 p-4 border border-blue-100">
+        <div className="flex flex-col md:flex-row md:flex-wrap gap-4 items-start md:items-end">
+          {/* Select Region */}
           <div className="w-full md:w-64">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Select Region
@@ -653,7 +681,7 @@ const PressureDashboard: React.FC = () => {
                 setPage(1);
               }}
             >
-              <SelectTrigger className="bg-white border border-blue-200 shadow-sm focus:ring-blue-500 focus:border-blue-500">
+              <SelectTrigger className="bg-white border border-blue-200 shadow-sm focus:ring-blue-500 focus:border-blue-500 h-10">
                 <SelectValue placeholder="All Regions" />
               </SelectTrigger>
               <SelectContent>
@@ -670,7 +698,8 @@ const PressureDashboard: React.FC = () => {
             </Select>
           </div>
 
-          <div className="w-full md:w-96 relative">
+          {/* Search ESRs */}
+          <div className="w-full md:w-96">
             <label className="block text-sm font-medium text-gray-700 mb-1">
               Search ESRs
             </label>
@@ -678,11 +707,11 @@ const PressureDashboard: React.FC = () => {
               <Search className="absolute left-3 top-1/2 h-4 w-4 text-gray-400 -translate-y-1/2" />
               <Input
                 placeholder="Search by scheme, village or ESR name..."
-                className="pl-9 pr-4 py-2 border-blue-200 focus:ring-blue-500 focus:border-blue-500"
+                className="pl-9 pr-4 py-2 border-blue-200 focus:ring-blue-500 focus:border-blue-500 h-10"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
-                  setPage(1); // Reset to first page on search
+                  setPage(1);
                 }}
               />
               {searchQuery && (
@@ -696,99 +725,108 @@ const PressureDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Additional Filter Controls */}
-          <div className="flex flex-wrap gap-4 mt-4">
-            {/* Commissioned Status Filter */}
-            <div className="w-full sm:w-auto">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Commissioned Status
-              </label>
+          {/* MJP Civil Status */}
+          <div className="w-full sm:w-80">
+            <div className="border border-blue-100 rounded-lg p-3 bg-blue-50 shadow-inner">
+              <h3 className="text-sm font-semibold text-blue-800 mb-2 text-center tracking-wide">
+                MJP Civil Status
+              </h3>
+
+              {/* Commissioned Filter */}
               <Select
                 value={commissionedFilter}
                 onValueChange={(value) => {
-                  // No automatic changes to other filters
                   setCommissionedFilter(value);
-                  setPage(1); // Reset to first page when filter changes
+                  setPage(1);
                 }}
               >
-                <SelectTrigger className="w-full sm:w-40 bg-white border border-blue-200 shadow-sm">
-                  <SelectValue placeholder="All" />
+                <SelectTrigger className="w-full mb-3 bg-white border border-blue-200 shadow-sm h-10">
+                  <SelectValue placeholder="Scheme Readiness" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="all">Scheme Readiness</SelectItem>
                   <SelectItem value="Yes">Commissioned</SelectItem>
                   <SelectItem value="No">Not Commissioned</SelectItem>
                 </SelectContent>
               </Select>
-              {commissionedFilter !== "all" && (
-                <div className="mt-1 text-xs text-blue-600 font-medium">
-                  {filteredData.filter(item => {
-                    const status = schemeStatusMap.get(item.scheme_id);
-                    return status && status.mjp_commissioned === commissionedFilter;
-                  }).length} schemes
-                </div>
-              )}
-            </div>
 
-            {/* Fully Completed Filter */}
-            <div className="w-full sm:w-auto">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Fully Completed
-              </label>
+              {/* Fully Completed Filter */}
               <Select
                 value={fullyCompletedFilter}
                 onValueChange={(value) => {
-                  // No automatic changes to other filters
                   setFullyCompletedFilter(value);
-                  setPage(1); // Reset to first page when filter changes
+                  setPage(1);
                 }}
               >
-                <SelectTrigger className={`w-full sm:w-40 bg-white border border-blue-200 shadow-sm ${commissionedFilter === "No" ? "opacity-50" : ""}`}>
-                  <SelectValue placeholder="All" />
+                <SelectTrigger
+                  className={`w-full bg-white border border-blue-200 shadow-sm h-10 ${
+                    commissionedFilter === "No" ? "opacity-50" : ""
+                  }`}
+                >
+                  <SelectValue placeholder="Scheme Status" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                  <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                  <SelectItem value="all">Scheme Status</SelectItem>
+                  <SelectItem value="Fully Completed">
+                    Fully Completed
+                  </SelectItem>
                   <SelectItem value="In Progress">In Progress</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
 
-            {/* Scheme Status Filter */}
-            <div className="w-full sm:w-auto">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Scheme Status
-              </label>
-              <Select
-                value={schemeStatusFilter}
-                onValueChange={(value) => {
-                  setSchemeStatusFilter(value);
-                  setPage(1); // Reset to first page when filter changes
-                }}
-              >
-                <SelectTrigger className="w-full sm:w-40 bg-white border border-blue-200 shadow-sm">
-                  <SelectValue placeholder="All" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
-                    <SelectItem value="Fully Completed">Fully Completed</SelectItem>
-                  <SelectItem value="In Progress">In Progress</SelectItem>
-                  <SelectItem value="Not-Connected">Not Connected</SelectItem>
-                </SelectContent>
-              </Select>
+              {commissionedFilter !== "all" && (
+                <div className="mt-2 text-xs text-blue-700 text-center font-medium">
+                  {
+                    filteredData.filter((item) => {
+                      const status = schemeStatusMap.get(item.scheme_id);
+                      return (
+                        status && status.mjp_commissioned === commissionedFilter
+                      );
+                    }).length
+                  }{" "}
+                  schemes
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="ml-auto self-end flex gap-2 mt-4">
+          {/* Scheme Status */}
+          <div className="w-full sm:w-40">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Scheme Status
+            </label>
+            <Select
+              value={schemeStatusFilter}
+              onValueChange={(value) => {
+                setSchemeStatusFilter(value);
+                setPage(1);
+              }}
+            >
+              <SelectTrigger className="w-full bg-white border border-blue-200 shadow-sm h-10">
+                <SelectValue placeholder="All" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                <SelectItem value="In Progress">In Progress</SelectItem>
+                <SelectItem value="Not-Connected">Not Connected</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Export & Refresh */}
+          <div className="flex gap-2 ml-auto mt-2 md:mt-0">
             <Button
               onClick={() =>
                 exportToExcel(
                   filteredData,
-                  `Pressure_Data_${selectedRegion}_${currentFilter}_${new Date().toISOString().split("T")[0]}`,
+                  `Pressure_Data_${selectedRegion}_${currentFilter}_${
+                    new Date().toISOString().split("T")[0]
+                  }`,
                 )
               }
               variant="outline"
-              className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 gap-2"
+              className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 gap-2 h-10"
             >
               <Download className="h-4 w-4" />
               Export to Excel
@@ -797,7 +835,7 @@ const PressureDashboard: React.FC = () => {
             <Button
               onClick={() => refetch()}
               variant="outline"
-              className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 gap-2"
+              className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 gap-2 h-10"
             >
               <RefreshCw className="h-4 w-4" />
               Refresh Data
@@ -807,7 +845,7 @@ const PressureDashboard: React.FC = () => {
       </div>
 
       {/* Import Statistics Card */}
-      {dashboardStats?.lastImport && (
+      {/* {dashboardStats?.lastImport && (
         <div className="bg-white rounded-xl shadow-md mb-6 p-4 border border-blue-100">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div>
@@ -839,7 +877,7 @@ const PressureDashboard: React.FC = () => {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Dashboard Cards */}
       <div className="grid gap-6 md:grid-cols-4 mb-8">
@@ -1178,12 +1216,16 @@ const PressureDashboard: React.FC = () => {
                             variant="outline"
                             size="sm"
                             className="py-1 px-2 h-8 text-xs"
-                            onClick={() => window.open(item.dashboard_url, "_blank")}
+                            onClick={() =>
+                              window.open(item.dashboard_url, "_blank")
+                            }
                           >
                             <Gauge className="h-3.5 w-3.5 mr-1" /> View
                           </Button>
                         ) : (
-                          <span className="text-xs text-gray-400">Not available</span>
+                          <span className="text-xs text-gray-400">
+                            Not available
+                          </span>
                         )}
                       </TableCell>
                       <TableCell className="text-right border-b border-blue-200">
@@ -1451,7 +1493,7 @@ const PressureDashboard: React.FC = () => {
                                       </div>
                                     </div>
                                   </div>
-                                  
+
                                   {/* PI Vision Dashboard Link */}
                                   <div className="mt-6 pt-6 border-t border-gray-200">
                                     <div className="flex justify-between items-center">
@@ -1460,20 +1502,32 @@ const PressureDashboard: React.FC = () => {
                                           PI Vision Dashboard
                                         </h3>
                                         <p className="text-sm text-gray-500">
-                                          View detailed historical pressure data in PI Vision
+                                          View detailed historical pressure data
+                                          in PI Vision
                                         </p>
                                       </div>
                                       {selectedESR.dashboard_url ? (
                                         <Button
                                           variant="outline"
                                           className="border-blue-200 text-blue-600 hover:bg-blue-50"
-                                          onClick={() => window.open(selectedESR.dashboard_url, "_blank")}
+                                          onClick={() =>
+                                            window.open(
+                                              selectedESR.dashboard_url,
+                                              "_blank",
+                                            )
+                                          }
                                         >
-                                          <Gauge className="h-4 w-4 mr-2" /> Open Dashboard
+                                          <Gauge className="h-4 w-4 mr-2" />{" "}
+                                          Open Dashboard
                                         </Button>
                                       ) : (
-                                        <Button variant="outline" disabled className="opacity-50">
-                                          <Gauge className="h-4 w-4 mr-2" /> Dashboard Not Available
+                                        <Button
+                                          variant="outline"
+                                          disabled
+                                          className="opacity-50"
+                                        >
+                                          <Gauge className="h-4 w-4 mr-2" />{" "}
+                                          Dashboard Not Available
                                         </Button>
                                       )}
                                     </div>
