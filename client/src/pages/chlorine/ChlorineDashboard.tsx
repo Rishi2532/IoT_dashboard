@@ -109,133 +109,7 @@ type ChlorineRange =
   | "consistent_optimal"
   | "consistent_above";
 
-// Component to render at the top of the page showing scheme counts
-const SchemeCountDisplay = ({ schemeStatusData, commissionedFilter, fullyCompletedFilter, schemeStatusFilter }: any) => {
-  // Get unique scheme IDs from the data
-  const uniqueSchemeIds = Array.from(new Set(schemeStatusData?.map((scheme: any) => scheme.scheme_id) || []));
-  const totalSchemes = uniqueSchemeIds.length;
-  
-  // Filter schemes by commissioned status
-  const commissionedSchemes = commissionedFilter !== "all" ? 
-    uniqueSchemeIds.filter(id => {
-      const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
-      return scheme && scheme.mjp_commissioned === commissionedFilter;
-    }).length : 0;
-  
-  // Filter schemes by fully completed status
-  const fullyCompletedSchemes = fullyCompletedFilter !== "all" ?
-    uniqueSchemeIds.filter(id => {
-      const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
-      return scheme && scheme.mjp_fully_completed === fullyCompletedFilter;
-    }).length : 0;
-  
-  // Filter schemes by scheme status
-  const schemeStatusSchemes = schemeStatusFilter !== "all" ?
-    uniqueSchemeIds.filter(id => {
-      const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
-      return scheme && (schemeStatusFilter === "Connected" ? 
-        scheme.fully_completion_scheme_status !== "Not-Connected" :
-        scheme.fully_completion_scheme_status === schemeStatusFilter);
-    }).length : 0;
-  
-  // Update the DOM element with the scheme count information
-  React.useEffect(() => {
-    const schemeCountContainer = document.getElementById('scheme-count-container');
-    if (schemeCountContainer) {
-      schemeCountContainer.innerHTML = `
-        <div class="flex items-center">
-          <span class="font-semibold">${totalSchemes}</span>
-          <span class="ml-1">schemes found</span>
-          ${commissionedFilter !== "all" ? 
-            `<span class="ml-2 px-2 py-1 bg-blue-50 text-blue-700 rounded-md font-medium">
-              ${commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"}: 
-              <span class="font-bold">${commissionedSchemes}</span>
-             </span>` : ''
-          }
-          ${fullyCompletedFilter !== "all" ? 
-            `<span class="ml-2 px-2 py-1 bg-green-50 text-green-700 rounded-md font-medium">
-              ${fullyCompletedFilter}: 
-              <span class="font-bold">${fullyCompletedSchemes}</span>
-             </span>` : ''
-          }
-          ${schemeStatusFilter !== "all" ? 
-            `<span class="ml-2 px-2 py-1 bg-purple-50 text-purple-700 rounded-md font-medium">
-              ${schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter}: 
-              <span class="font-bold">${schemeStatusSchemes}</span>
-             </span>` : ''
-          }
-        </div>
-      `;
-    }
-  }, [totalSchemes, commissionedFilter, commissionedSchemes, fullyCompletedFilter, fullyCompletedSchemes, schemeStatusFilter, schemeStatusSchemes]);
-  
-  return null;
-};
-
 const ChlorineDashboard: React.FC = () => {
-  // For updating the scheme count display at the top of the page
-  useEffect(() => {
-    const updateSchemeCount = () => {
-      const countContainer = document.getElementById('scheme-count-container');
-      if (!countContainer) return;
-      
-      const uniqueSchemeIds = Array.from(new Set(schemeStatusData?.map((s: any) => s.scheme_id) || []));
-      const totalSchemes = uniqueSchemeIds.length;
-      
-      // Calculate filtered scheme counts
-      let filteredCount = totalSchemes;
-      let filterText = '';
-      
-      if (commissionedFilter !== "all") {
-        const count = uniqueSchemeIds.filter(id => {
-          const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
-          return scheme && scheme.mjp_commissioned === commissionedFilter;
-        }).length;
-        
-        filteredCount = count;
-        filterText = `${commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"}`;
-      }
-      
-      if (fullyCompletedFilter !== "all") {
-        const count = uniqueSchemeIds.filter(id => {
-          const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
-          return scheme && scheme.mjp_fully_completed === fullyCompletedFilter;
-        }).length;
-        
-        filteredCount = count;
-        filterText = fullyCompletedFilter;
-      }
-      
-      if (schemeStatusFilter !== "all") {
-        const count = uniqueSchemeIds.filter(id => {
-          const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
-          return scheme && (schemeStatusFilter === "Connected" ? 
-            scheme.fully_completion_scheme_status !== "Not-Connected" : 
-            scheme.fully_completion_scheme_status === schemeStatusFilter);
-        }).length;
-        
-        filteredCount = count;
-        filterText = schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter;
-      }
-      
-      // Update the display
-      countContainer.innerHTML = `
-        <div class="flex items-center">
-          <span class="font-semibold">${totalSchemes}</span>
-          <span class="ml-1">schemes found</span>
-          ${(commissionedFilter !== "all" || fullyCompletedFilter !== "all" || schemeStatusFilter !== "all") ? 
-            `<span class="ml-2 text-gray-500">
-              (${filteredCount} ${filterText} schemes)
-            </span>` : ''
-          }
-        </div>
-      `;
-    };
-    
-    if (schemeStatusData) {
-      updateSchemeCount();
-    }
-  }, [schemeStatusData, commissionedFilter, fullyCompletedFilter, schemeStatusFilter]);
   const { toast } = useToast();
 
   // Filter state
@@ -396,8 +270,10 @@ const ChlorineDashboard: React.FC = () => {
   const handleCommissionedFilterChange = (value: string) => {
     setCommissionedFilter(value);
 
-    // If "Not Commissioned", maintain the fully completed filter value
-    // We'll handle the filtering logic differently
+    // If "Not Commissioned", reset and disable "Fully Completed" filter
+    if (value === "No") {
+      setFullyCompletedFilter("all");
+    }
 
     // Reset page to 1 when filter changes
     setPage(1);
@@ -407,9 +283,8 @@ const ChlorineDashboard: React.FC = () => {
   const handleFullyCompletedFilterChange = (value: string) => {
     setFullyCompletedFilter(value);
 
-    // If "Fully Completed", set "Commissioned" to "Yes" if not already set
-    if (value === "Fully Completed" && commissionedFilter === "No") {
-      // Automatically adjust the commissioned filter to allow the selection
+    // If "Fully Completed", set "Commissioned" to "Yes"
+    if (value === "Fully Completed") {
       setCommissionedFilter("Yes");
     }
 
@@ -469,42 +344,6 @@ const ChlorineDashboard: React.FC = () => {
       filtered = filtered.filter((item) => {
         // Get scheme status from the map using scheme_id
         const status = schemeStatusMap.get(item.scheme_id);
-
-        // For "In Progress" status, we want schemes that are either:
-        // 1. Commissioned with mjp_fully_completed = "In Progress"
-        // 2. Not commissioned (since they're also in progress by definition)
-        if (fullyCompletedFilter === "In Progress") {
-          if (commissionedFilter === "No") {
-            // If specifically filtered for Not Commissioned, show In Progress
-            return status && status.mjp_commissioned === "No";
-          } else if (commissionedFilter === "Yes") {
-            // If specifically filtered for Commissioned, show only those In Progress
-            return (
-              status &&
-              status.mjp_commissioned === "Yes" &&
-              status.mjp_fully_completed === "In Progress"
-            );
-          } else {
-            // For "all" commissioned status, show both commissioned and not commissioned In Progress
-            return (
-              status &&
-              ((status.mjp_commissioned === "Yes" &&
-                status.mjp_fully_completed === "In Progress") ||
-                status.mjp_commissioned === "No")
-            );
-          }
-        }
-
-        // For "Fully Completed", only show if commissioned is "Yes" (or "all")
-        if (fullyCompletedFilter === "Fully Completed") {
-          return (
-            status &&
-            status.mjp_fully_completed === fullyCompletedFilter &&
-            (commissionedFilter === "all" || status.mjp_commissioned === "Yes")
-          );
-        }
-
-        // Default case for other filter values
         return status && status.mjp_fully_completed === fullyCompletedFilter;
       });
     }
@@ -781,14 +620,19 @@ const ChlorineDashboard: React.FC = () => {
             <Select
               value={fullyCompletedFilter}
               onValueChange={handleFullyCompletedFilterChange}
-              disabled={false} // Never disable the filter, we'll handle the logic in filtering
+              disabled={commissionedFilter === "No"}
             >
               <SelectTrigger className="bg-white border border-blue-200 shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+                <SelectItem
+                  value="Fully Completed"
+                  disabled={commissionedFilter === "No"}
+                >
+                  Fully Completed
+                </SelectItem>
                 <SelectItem value="In Progress">In Progress</SelectItem>
               </SelectContent>
             </Select>
@@ -1154,94 +998,33 @@ const ChlorineDashboard: React.FC = () => {
       {/* Data Table */}
       <Card className="mb-6 shadow-md border-0">
         <CardHeader className="pb-3 border-b">
-          <div className="flex flex-col space-y-3">
-            {/* Main Title */}
-            <CardTitle className="flex items-center gap-2">
-              {currentFilter === "below_0.2" && (
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-              )}
-              {currentFilter === "between_0.2_0.5" && (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              )}
-              {currentFilter === "above_0.5" && (
-                <AlertCircle className="h-5 w-5 text-orange-600" />
-              )}
-              {currentFilter === "consistent_zero" && (
-                <Activity className="h-5 w-5 text-gray-600" />
-              )}
-              {currentFilter === "consistent_below" && (
-                <AlertTriangle className="h-5 w-5 text-red-600" />
-              )}
-              {currentFilter === "consistent_optimal" && (
-                <CheckCircle className="h-5 w-5 text-green-600" />
-              )}
-              {currentFilter === "consistent_above" && (
-                <AlertCircle className="h-5 w-5 text-orange-600" />
-              )}
-              {getFilterTitle(currentFilter)}
-              <span className="ml-2 text-sm font-normal text-gray-500">
-                ({filteredData.length} ESRs found)
-              </span>
-            </CardTitle>
-            
-            {/* Filter badges row */}
-            {(commissionedFilter !== "all" || fullyCompletedFilter !== "all" || schemeStatusFilter !== "all") && (
-              <div className="flex flex-wrap gap-2 text-sm">
-                {commissionedFilter !== "all" && (
-                  <div className="border px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
-                    {commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"} Schemes: 
-                    <span className="font-bold ml-1">{
-                      // Count unique schemes that match commissioned filter
-                      Array.from(new Set(
-                        filteredData
-                          .filter(item => {
-                            const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
-                            return status && status.mjp_commissioned === commissionedFilter;
-                          })
-                          .map(item => item.scheme_id)
-                      )).length
-                    }</span>
-                  </div>
-                )}
-                
-                {fullyCompletedFilter !== "all" && (
-                  <div className="border px-3 py-1 rounded-full bg-green-50 text-green-700 font-medium">
-                    {fullyCompletedFilter} Schemes: 
-                    <span className="font-bold ml-1">{
-                      // Count unique schemes that match fully completed filter
-                      Array.from(new Set(
-                        filteredData
-                          .filter(item => {
-                            const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
-                            return status && status.mjp_fully_completed === fullyCompletedFilter;
-                          })
-                          .map(item => item.scheme_id)
-                      )).length
-                    }</span>
-                  </div>
-                )}
-                
-                {schemeStatusFilter !== "all" && (
-                  <div className="border px-3 py-1 rounded-full bg-purple-50 text-purple-700 font-medium">
-                    {schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter} Schemes: 
-                    <span className="font-bold ml-1">{
-                      // Count unique schemes that match scheme status filter
-                      Array.from(new Set(
-                        filteredData
-                          .filter(item => {
-                            const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
-                            return status && (schemeStatusFilter === "Connected" ? 
-                              status.fully_completion_scheme_status !== "Not-Connected" :
-                              status.fully_completion_scheme_status === schemeStatusFilter);
-                          })
-                          .map(item => item.scheme_id)
-                      )).length
-                    }</span>
-                  </div>
-                )}
-              </div>
+          <CardTitle className="flex items-center gap-2">
+            {currentFilter === "below_0.2" && (
+              <AlertTriangle className="h-5 w-5 text-red-600" />
             )}
-          </div>
+            {currentFilter === "between_0.2_0.5" && (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            )}
+            {currentFilter === "above_0.5" && (
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+            )}
+            {currentFilter === "consistent_zero" && (
+              <Activity className="h-5 w-5 text-gray-600" />
+            )}
+            {currentFilter === "consistent_below" && (
+              <AlertTriangle className="h-5 w-5 text-red-600" />
+            )}
+            {currentFilter === "consistent_optimal" && (
+              <CheckCircle className="h-5 w-5 text-green-600" />
+            )}
+            {currentFilter === "consistent_above" && (
+              <AlertCircle className="h-5 w-5 text-orange-600" />
+            )}
+            {getFilterTitle(currentFilter)}
+            <span className="ml-2 text-sm font-normal text-gray-500">
+              ({filteredData.length} ESRs found)
+            </span>
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           {filteredData.length === 0 ? (
@@ -1260,101 +1043,6 @@ const ChlorineDashboard: React.FC = () => {
           ) : (
             <>
               <div className="overflow-hidden rounded-md">
-                {/* Results count */}
-                <div className="mb-4 text-sm text-gray-600 flex flex-col sm:flex-row justify-between items-start sm:items-center">
-                  {!isLoadingChlorine && (
-                    <>
-                      <div className="flex items-center">
-                        <span className="font-semibold">
-                          {filteredData.length}
-                        </span>
-                        <span className="ml-1">
-                          {filteredData.length === 1 ? "ESR" : "ESRs"} found
-                        </span>
-                        {(currentFilter !== "all" ||
-                          selectedRegion !== "all" ||
-                          commissionedFilter !== "all" ||
-                          fullyCompletedFilter !== "all" ||
-                          schemeStatusFilter !== "all") && (
-                          <span className="ml-1">with applied filters</span>
-                        )}
-                      </div>
-
-                      {/* Filter details */}
-                      <div className="mt-2 sm:mt-0 text-xs flex flex-wrap gap-2">
-                        {commissionedFilter !== "all" && (
-                          <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
-                            {commissionedFilter === "Yes"
-                              ? "Commissioned"
-                              : "Not Commissioned"}
-                            :
-                            <span className="font-semibold ml-1">
-                              {
-                                filteredData.filter((item) => {
-                                  const status = schemeStatusData?.find(
-                                    (s) => s.scheme_id === item.scheme_id,
-                                  );
-                                  return (
-                                    status &&
-                                    status.mjp_commissioned ===
-                                      commissionedFilter
-                                  );
-                                }).length
-                              }
-                            </span>
-                          </span>
-                        )}
-
-                        {fullyCompletedFilter !== "all" && (
-                          <span className="px-2 py-1 bg-green-50 text-green-700 rounded-md">
-                            {fullyCompletedFilter}:
-                            <span className="font-semibold ml-1">
-                              {
-                                filteredData.filter((item) => {
-                                  const status = schemeStatusData?.find(
-                                    (s) => s.scheme_id === item.scheme_id,
-                                  );
-                                  return (
-                                    status &&
-                                    status.mjp_fully_completed ===
-                                      fullyCompletedFilter
-                                  );
-                                }).length
-                              }
-                            </span>
-                          </span>
-                        )}
-
-                        {schemeStatusFilter !== "all" && (
-                          <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-md">
-                            {schemeStatusFilter === "Connected"
-                              ? "Connected"
-                              : schemeStatusFilter}
-                            :
-                            <span className="font-semibold ml-1">
-                              {
-                                filteredData.filter((item) => {
-                                  const status = schemeStatusData?.find(
-                                    (s) => s.scheme_id === item.scheme_id,
-                                  );
-                                  return (
-                                    status &&
-                                    (schemeStatusFilter === "Connected"
-                                      ? status.fully_completion_scheme_status !==
-                                        "Not-Connected"
-                                      : status.fully_completion_scheme_status ===
-                                        schemeStatusFilter)
-                                  );
-                                }).length
-                              }
-                            </span>
-                          </span>
-                        )}
-                      </div>
-                    </>
-                  )}
-                </div>
-
                 <Table className="border-collapse">
                   <TableHeader className="bg-blue-50">
                     <TableRow className="chlorine-item hover:bg-blue-100">
