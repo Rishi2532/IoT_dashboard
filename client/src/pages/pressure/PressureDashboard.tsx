@@ -313,6 +313,17 @@ const PressureDashboard: React.FC = () => {
     setPage(1);
   };
 
+  // Create scheme status map
+  const schemeStatusMap = useMemo(() => {
+    const map = new Map();
+    if (schemeStatusData && schemeStatusData.length > 0) {
+      schemeStatusData.forEach(status => {
+        map.set(status.scheme_id, status);
+      });
+    }
+    return map;
+  }, [schemeStatusData]);
+
   // Filter and search data
   const filteredData = useMemo(() => {
     let filtered = [...allPressureData];
