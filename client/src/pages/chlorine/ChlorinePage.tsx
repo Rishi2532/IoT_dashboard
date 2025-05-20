@@ -11,8 +11,9 @@ const ChlorinePage = () => {
         </div>
         <div className="flex-1 px-4">
           <div className="w-full">
-            <div className="border-b pb-2 mb-4">
+            <div className="border-b pb-2 mb-4 flex flex-col space-y-2">
               <h1 className="text-2xl font-bold">Chlorine Monitoring Dashboard</h1>
+              <div id="scheme-count-container" className="flex items-center text-sm text-gray-600"></div>
             </div>
             <ChlorineDashboard />
           </div>

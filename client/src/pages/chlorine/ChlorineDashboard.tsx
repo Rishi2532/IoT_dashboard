@@ -109,7 +109,133 @@ type ChlorineRange =
   | "consistent_optimal"
   | "consistent_above";
 
+// Component to render at the top of the page showing scheme counts
+const SchemeCountDisplay = ({ schemeStatusData, commissionedFilter, fullyCompletedFilter, schemeStatusFilter }: any) => {
+  // Get unique scheme IDs from the data
+  const uniqueSchemeIds = Array.from(new Set(schemeStatusData?.map((scheme: any) => scheme.scheme_id) || []));
+  const totalSchemes = uniqueSchemeIds.length;
+  
+  // Filter schemes by commissioned status
+  const commissionedSchemes = commissionedFilter !== "all" ? 
+    uniqueSchemeIds.filter(id => {
+      const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
+      return scheme && scheme.mjp_commissioned === commissionedFilter;
+    }).length : 0;
+  
+  // Filter schemes by fully completed status
+  const fullyCompletedSchemes = fullyCompletedFilter !== "all" ?
+    uniqueSchemeIds.filter(id => {
+      const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
+      return scheme && scheme.mjp_fully_completed === fullyCompletedFilter;
+    }).length : 0;
+  
+  // Filter schemes by scheme status
+  const schemeStatusSchemes = schemeStatusFilter !== "all" ?
+    uniqueSchemeIds.filter(id => {
+      const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
+      return scheme && (schemeStatusFilter === "Connected" ? 
+        scheme.fully_completion_scheme_status !== "Not-Connected" :
+        scheme.fully_completion_scheme_status === schemeStatusFilter);
+    }).length : 0;
+  
+  // Update the DOM element with the scheme count information
+  React.useEffect(() => {
+    const schemeCountContainer = document.getElementById('scheme-count-container');
+    if (schemeCountContainer) {
+      schemeCountContainer.innerHTML = `
+        <div class="flex items-center">
+          <span class="font-semibold">${totalSchemes}</span>
+          <span class="ml-1">schemes found</span>
+          ${commissionedFilter !== "all" ? 
+            `<span class="ml-2 px-2 py-1 bg-blue-50 text-blue-700 rounded-md font-medium">
+              ${commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"}: 
+              <span class="font-bold">${commissionedSchemes}</span>
+             </span>` : ''
+          }
+          ${fullyCompletedFilter !== "all" ? 
+            `<span class="ml-2 px-2 py-1 bg-green-50 text-green-700 rounded-md font-medium">
+              ${fullyCompletedFilter}: 
+              <span class="font-bold">${fullyCompletedSchemes}</span>
+             </span>` : ''
+          }
+          ${schemeStatusFilter !== "all" ? 
+            `<span class="ml-2 px-2 py-1 bg-purple-50 text-purple-700 rounded-md font-medium">
+              ${schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter}: 
+              <span class="font-bold">${schemeStatusSchemes}</span>
+             </span>` : ''
+          }
+        </div>
+      `;
+    }
+  }, [totalSchemes, commissionedFilter, commissionedSchemes, fullyCompletedFilter, fullyCompletedSchemes, schemeStatusFilter, schemeStatusSchemes]);
+  
+  return null;
+};
+
 const ChlorineDashboard: React.FC = () => {
+  // For updating the scheme count display at the top of the page
+  useEffect(() => {
+    const updateSchemeCount = () => {
+      const countContainer = document.getElementById('scheme-count-container');
+      if (!countContainer) return;
+      
+      const uniqueSchemeIds = Array.from(new Set(schemeStatusData?.map((s: any) => s.scheme_id) || []));
+      const totalSchemes = uniqueSchemeIds.length;
+      
+      // Calculate filtered scheme counts
+      let filteredCount = totalSchemes;
+      let filterText = '';
+      
+      if (commissionedFilter !== "all") {
+        const count = uniqueSchemeIds.filter(id => {
+          const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
+          return scheme && scheme.mjp_commissioned === commissionedFilter;
+        }).length;
+        
+        filteredCount = count;
+        filterText = `${commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"}`;
+      }
+      
+      if (fullyCompletedFilter !== "all") {
+        const count = uniqueSchemeIds.filter(id => {
+          const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
+          return scheme && scheme.mjp_fully_completed === fullyCompletedFilter;
+        }).length;
+        
+        filteredCount = count;
+        filterText = fullyCompletedFilter;
+      }
+      
+      if (schemeStatusFilter !== "all") {
+        const count = uniqueSchemeIds.filter(id => {
+          const scheme = schemeStatusData?.find((s: any) => s.scheme_id === id);
+          return scheme && (schemeStatusFilter === "Connected" ? 
+            scheme.fully_completion_scheme_status !== "Not-Connected" : 
+            scheme.fully_completion_scheme_status === schemeStatusFilter);
+        }).length;
+        
+        filteredCount = count;
+        filterText = schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter;
+      }
+      
+      // Update the display
+      countContainer.innerHTML = `
+        <div class="flex items-center">
+          <span class="font-semibold">${totalSchemes}</span>
+          <span class="ml-1">schemes found</span>
+          ${(commissionedFilter !== "all" || fullyCompletedFilter !== "all" || schemeStatusFilter !== "all") ? 
+            `<span class="ml-2 text-gray-500">
+              (${filteredCount} ${filterText} schemes)
+            </span>` : ''
+          }
+        </div>
+      `;
+    };
+    
+    if (schemeStatusData) {
+      updateSchemeCount();
+    }
+  }, [schemeStatusData, commissionedFilter, fullyCompletedFilter, schemeStatusFilter]);
   const { toast } = useToast();
 
   // Filter state
