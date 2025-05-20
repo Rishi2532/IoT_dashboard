@@ -624,14 +624,14 @@ const ChlorineDashboard: React.FC = () => {
             <Select
               value={fullyCompletedFilter}
               onValueChange={handleFullyCompletedFilterChange}
-              disabled={commissionedFilter === "No"}
+              disabled={false} // Never disable the filter, we'll handle the logic in filtering
             >
               <SelectTrigger className="bg-white border border-blue-200 shadow-sm focus:ring-blue-500 focus:border-blue-500">
                 <SelectValue placeholder="All Status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Fully Completed" disabled={commissionedFilter === "No"}>
+                <SelectItem value="Fully Completed">
                   Fully Completed
                 </SelectItem>
                 <SelectItem value="In Progress">In Progress</SelectItem>
@@ -1043,6 +1043,25 @@ const ChlorineDashboard: React.FC = () => {
           ) : (
             <>
               <div className="overflow-hidden rounded-md">
+                {/* Results count */}
+                <div className="mb-4 text-sm text-gray-600">
+                  {!isLoadingChlorine && (
+                    <div className="flex items-center">
+                      <span className="font-semibold">{filteredData.length}</span>
+                      <span className="ml-1">
+                        {filteredData.length === 1 ? "ESR" : "ESRs"} found
+                      </span>
+                      {(currentFilter !== "all" ||
+                        selectedRegion !== "all" ||
+                        commissionedFilter !== "all" ||
+                        fullyCompletedFilter !== "all" ||
+                        schemeStatusFilter !== "all") && (
+                        <span className="ml-1">with applied filters</span>
+                      )}
+                    </div>
+                  )}
+                </div>
+                
                 <Table className="border-collapse">
                   <TableHeader className="bg-blue-50">
                     <TableRow className="chlorine-item hover:bg-blue-100">
