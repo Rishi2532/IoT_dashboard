@@ -1044,21 +1044,64 @@ const ChlorineDashboard: React.FC = () => {
             <>
               <div className="overflow-hidden rounded-md">
                 {/* Results count */}
-                <div className="mb-4 text-sm text-gray-600">
+                <div className="mb-4 text-sm text-gray-600 flex flex-col sm:flex-row justify-between items-start sm:items-center">
                   {!isLoadingChlorine && (
-                    <div className="flex items-center">
-                      <span className="font-semibold">{filteredData.length}</span>
-                      <span className="ml-1">
-                        {filteredData.length === 1 ? "ESR" : "ESRs"} found
-                      </span>
-                      {(currentFilter !== "all" ||
-                        selectedRegion !== "all" ||
-                        commissionedFilter !== "all" ||
-                        fullyCompletedFilter !== "all" ||
-                        schemeStatusFilter !== "all") && (
-                        <span className="ml-1">with applied filters</span>
-                      )}
-                    </div>
+                    <>
+                      <div className="flex items-center">
+                        <span className="font-semibold">{filteredData.length}</span>
+                        <span className="ml-1">
+                          {filteredData.length === 1 ? "ESR" : "ESRs"} found
+                        </span>
+                        {(currentFilter !== "all" ||
+                          selectedRegion !== "all" ||
+                          commissionedFilter !== "all" ||
+                          fullyCompletedFilter !== "all" ||
+                          schemeStatusFilter !== "all") && (
+                          <span className="ml-1">with applied filters</span>
+                        )}
+                      </div>
+                      
+                      {/* Filter details */}
+                      <div className="mt-2 sm:mt-0 text-xs flex flex-wrap gap-2">
+                        {commissionedFilter !== "all" && (
+                          <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
+                            {commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"}: 
+                            <span className="font-semibold ml-1">
+                              {filteredData.filter(item => {
+                                const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                                return status && status.mjp_commissioned === commissionedFilter;
+                              }).length}
+                            </span>
+                          </span>
+                        )}
+                        
+                        {fullyCompletedFilter !== "all" && (
+                          <span className="px-2 py-1 bg-green-50 text-green-700 rounded-md">
+                            {fullyCompletedFilter}: 
+                            <span className="font-semibold ml-1">
+                              {filteredData.filter(item => {
+                                const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                                return status && status.mjp_fully_completed === fullyCompletedFilter;
+                              }).length}
+                            </span>
+                          </span>
+                        )}
+                        
+                        {schemeStatusFilter !== "all" && (
+                          <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-md">
+                            {schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter}: 
+                            <span className="font-semibold ml-1">
+                              {filteredData.filter(item => {
+                                const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                                return status && (schemeStatusFilter === "Connected" ? 
+                                  status.fully_completion_scheme_status !== "Not-Connected" :
+                                  status.fully_completion_scheme_status === schemeStatusFilter);
+                              }).length}
+                            </span>
+                          </span>
+                        )}
+                      </div>
+                    </>
                   )}
                 </div>
                 
