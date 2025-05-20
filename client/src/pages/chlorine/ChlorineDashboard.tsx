@@ -1464,9 +1464,49 @@ const ChlorineDashboard: React.FC = () => {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="mt-4 flex justify-center">
-                  <Pagination>
-                    <PaginationContent>
+                <div className="flex flex-col space-y-3">
+                  {/* Scheme count display - similar to scheme-table.tsx */}
+                  <div className="text-center">
+                    <p className="text-sm text-gray-700">
+                      <span className="font-medium">
+                        {Array.from(new Set(filteredData.map(item => item.scheme_id))).length}
+                      </span>{" "}
+                      {Array.from(new Set(filteredData.map(item => item.scheme_id))).length === 1 ? "scheme" : "schemes"} found
+                      {commissionedFilter !== "all" && (
+                        <span className="ml-2 text-blue-600">
+                          ({Array.from(new Set(filteredData.filter(item => {
+                              const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                              return status && status.mjp_commissioned === commissionedFilter;
+                            }).map(item => item.scheme_id))).length}{" "}
+                          {commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"})
+                        </span>
+                      )}
+                      {fullyCompletedFilter !== "all" && (
+                        <span className="ml-2 text-green-600">
+                          ({Array.from(new Set(filteredData.filter(item => {
+                              const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                              return status && status.mjp_fully_completed === fullyCompletedFilter;
+                            }).map(item => item.scheme_id))).length}{" "}
+                          {fullyCompletedFilter})
+                        </span>
+                      )}
+                      {schemeStatusFilter !== "all" && (
+                        <span className="ml-2 text-purple-600">
+                          ({Array.from(new Set(filteredData.filter(item => {
+                              const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                              return status && (schemeStatusFilter === "Connected" ? 
+                                status.fully_completion_scheme_status !== "Not-Connected" :
+                                status.fully_completion_scheme_status === schemeStatusFilter);
+                            }).map(item => item.scheme_id))).length}{" "}
+                          {schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter})
+                        </span>
+                      )}
+                    </p>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <Pagination>
+                      <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
                           onClick={() => setPage((p) => Math.max(1, p - 1))}
