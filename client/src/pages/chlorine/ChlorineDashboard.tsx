@@ -620,6 +620,15 @@ const ChlorineDashboard: React.FC = () => {
                 <SelectItem value="In Progress">In Progress</SelectItem>
               </SelectContent>
             </Select>
+            {fullyCompletedFilter !== "all" && (
+              <div className="mt-1 text-xs text-blue-600 font-medium">
+                {filteredData.filter(item => {
+                  // Get scheme status from the array using scheme_id
+                  const status = schemeStatusData.find(status => status.scheme_id === item.scheme_id);
+                  return status && status.fully_completed === fullyCompletedFilter;
+                }).length} schemes
+              </div>
+            )}
           </div>
 
           {/* Scheme Status Filter */}
@@ -642,6 +651,15 @@ const ChlorineDashboard: React.FC = () => {
                 <SelectItem value="Not-Connected">Not Connected</SelectItem>
               </SelectContent>
             </Select>
+            {schemeStatusFilter !== "all" && (
+              <div className="mt-1 text-xs text-blue-600 font-medium">
+                {filteredData.filter(item => {
+                  // Get scheme status from the array using scheme_id
+                  const status = schemeStatusData.find(status => status.scheme_id === item.scheme_id);
+                  return status && status.scheme_status === schemeStatusFilter;
+                }).length} schemes
+              </div>
+            )}
           </div>
 
           <div className="w-full md:w-96 relative">
