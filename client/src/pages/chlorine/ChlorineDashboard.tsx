@@ -117,7 +117,8 @@ const ChlorineDashboard: React.FC = () => {
   const [currentFilter, setCurrentFilter] = useState<ChlorineRange>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
-  const [fullyCompletedFilter, setFullyCompletedFilter] = useState<string>("all");
+  const [fullyCompletedFilter, setFullyCompletedFilter] =
+    useState<string>("all");
   const [schemeStatusFilter, setSchemeStatusFilter] = useState<string>("all");
 
   // Pagination state
@@ -156,7 +157,9 @@ const ChlorineDashboard: React.FC = () => {
       }
 
       const data = await response.json();
-      console.log(`Received ${data.length} chlorine records for region: ${selectedRegion}, filter: ${currentFilter}`);
+      console.log(
+        `Received ${data.length} chlorine records for region: ${selectedRegion}, filter: ${currentFilter}`,
+      );
       return data;
     },
   });
@@ -190,31 +193,32 @@ const ChlorineDashboard: React.FC = () => {
   >({
     queryKey: ["/api/regions"],
   });
-  
+
   // Fetch scheme status data for filtering
-  const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } = useQuery<any[]>({
-    queryKey: ["/api/schemes", selectedRegion],
-    queryFn: async () => {
-      const params = new URLSearchParams();
+  const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } =
+    useQuery<any[]>({
+      queryKey: ["/api/schemes", selectedRegion],
+      queryFn: async () => {
+        const params = new URLSearchParams();
 
-      if (selectedRegion && selectedRegion !== "all") {
-        params.append("region", selectedRegion);
-      }
+        if (selectedRegion && selectedRegion !== "all") {
+          params.append("region", selectedRegion);
+        }
 
-      const queryString = params.toString();
-      const url = `/api/schemes${queryString ? `?${queryString}` : ""}`;
+        const queryString = params.toString();
+        const url = `/api/schemes${queryString ? `?${queryString}` : ""}`;
 
-      console.log("Fetching scheme status data with URL:", url);
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error("Failed to fetch scheme status data");
-      }
+        console.log("Fetching scheme status data with URL:", url);
+        const response = await fetch(url);
+        if (!response.ok) {
+          throw new Error("Failed to fetch scheme status data");
+        }
 
-      const data = await response.json();
-      console.log(`Received ${data.length} scheme status records`);
-      return data;
-    },
-  });
+        const data = await response.json();
+        console.log(`Received ${data.length} scheme status records`);
+        return data;
+      },
+    });
 
   // Get latest chlorine value
   const getLatestChlorineValue = (data: ChlorineData): number | null => {
@@ -265,32 +269,32 @@ const ChlorineDashboard: React.FC = () => {
   // Handler for commissioned filter changes
   const handleCommissionedFilterChange = (value: string) => {
     setCommissionedFilter(value);
-    
+
     // If "Not Commissioned", maintain the fully completed filter value
     // We'll handle the filtering logic differently
-    
+
     // Reset page to 1 when filter changes
     setPage(1);
   };
-  
+
   // Handler for fully completed filter changes
   const handleFullyCompletedFilterChange = (value: string) => {
     setFullyCompletedFilter(value);
-    
+
     // If "Fully Completed", set "Commissioned" to "Yes" if not already set
     if (value === "Fully Completed" && commissionedFilter === "No") {
       // Automatically adjust the commissioned filter to allow the selection
       setCommissionedFilter("Yes");
     }
-    
+
     // Reset page to 1 when filter changes
     setPage(1);
   };
-  
+
   // Handler for scheme status filter changes
   const handleSchemeStatusFilterChange = (value: string) => {
     setSchemeStatusFilter(value);
-    
+
     // Reset page to 1 when filter changes
     setPage(1);
   };
@@ -307,24 +311,24 @@ const ChlorineDashboard: React.FC = () => {
           item.scheme_name?.toLowerCase().includes(query) ||
           item.region?.toLowerCase().includes(query) ||
           item.village_name?.toLowerCase().includes(query) ||
-          item.esr_name?.toLowerCase().includes(query)
-          // Removed sensor_id from search as requested
+          item.esr_name?.toLowerCase().includes(query),
+        // Removed sensor_id from search as requested
       );
     }
 
     // Double-check region filtering to ensure only data from selected region is shown
-    if (selectedRegion && selectedRegion !== 'all') {
-      filtered = filtered.filter(item => item.region === selectedRegion);
+    if (selectedRegion && selectedRegion !== "all") {
+      filtered = filtered.filter((item) => item.region === selectedRegion);
     }
-    
+
     // Create a map of scheme IDs to their scheme status data for filtering
     const schemeStatusMap = new Map();
     if (schemeStatusData && schemeStatusData.length > 0) {
-      schemeStatusData.forEach(status => {
+      schemeStatusData.forEach((status) => {
         schemeStatusMap.set(status.scheme_id, status);
       });
     }
-    
+
     // Apply commissioned status filter
     if (commissionedFilter !== "all") {
       filtered = filtered.filter((item) => {
@@ -333,13 +337,13 @@ const ChlorineDashboard: React.FC = () => {
         return status && status.mjp_commissioned === commissionedFilter;
       });
     }
-    
+
     // Apply fully completed filter
     if (fullyCompletedFilter !== "all") {
       filtered = filtered.filter((item) => {
         // Get scheme status from the map using scheme_id
         const status = schemeStatusMap.get(item.scheme_id);
-        
+
         // For "In Progress" status, we want schemes that are either:
         // 1. Commissioned with mjp_fully_completed = "In Progress"
         // 2. Not commissioned (since they're also in progress by definition)
@@ -349,34 +353,43 @@ const ChlorineDashboard: React.FC = () => {
             return status && status.mjp_commissioned === "No";
           } else if (commissionedFilter === "Yes") {
             // If specifically filtered for Commissioned, show only those In Progress
-            return status && status.mjp_commissioned === "Yes" && status.mjp_fully_completed === "In Progress";
+            return (
+              status &&
+              status.mjp_commissioned === "Yes" &&
+              status.mjp_fully_completed === "In Progress"
+            );
           } else {
             // For "all" commissioned status, show both commissioned and not commissioned In Progress
-            return status && (
-              (status.mjp_commissioned === "Yes" && status.mjp_fully_completed === "In Progress") ||
-              status.mjp_commissioned === "No"
+            return (
+              status &&
+              ((status.mjp_commissioned === "Yes" &&
+                status.mjp_fully_completed === "In Progress") ||
+                status.mjp_commissioned === "No")
             );
           }
         }
-        
+
         // For "Fully Completed", only show if commissioned is "Yes" (or "all")
         if (fullyCompletedFilter === "Fully Completed") {
-          return status && status.mjp_fully_completed === fullyCompletedFilter && 
-                (commissionedFilter === "all" || status.mjp_commissioned === "Yes");
+          return (
+            status &&
+            status.mjp_fully_completed === fullyCompletedFilter &&
+            (commissionedFilter === "all" || status.mjp_commissioned === "Yes")
+          );
         }
-        
+
         // Default case for other filter values
         return status && status.mjp_fully_completed === fullyCompletedFilter;
       });
     }
-    
+
     // Apply scheme status filter
     if (schemeStatusFilter !== "all") {
       filtered = filtered.filter((item) => {
         // Get scheme status from the map using scheme_id
         const status = schemeStatusMap.get(item.scheme_id);
         if (!status) return false;
-        
+
         if (schemeStatusFilter === "Connected") {
           return status.fully_completion_scheme_status !== "Not-Connected";
         }
@@ -385,7 +398,15 @@ const ChlorineDashboard: React.FC = () => {
     }
 
     return filtered;
-  }, [allChlorineData, searchQuery, selectedRegion, commissionedFilter, fullyCompletedFilter, schemeStatusFilter, schemeStatusData]);
+  }, [
+    allChlorineData,
+    searchQuery,
+    selectedRegion,
+    commissionedFilter,
+    fullyCompletedFilter,
+    schemeStatusFilter,
+    schemeStatusData,
+  ]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -430,12 +451,15 @@ const ChlorineDashboard: React.FC = () => {
         if (!dateStr) return "N/A";
         try {
           const date = new Date(dateStr);
-          return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+          return date.toLocaleDateString("en-IN", {
+            day: "2-digit",
+            month: "short",
+          });
         } catch {
           return dateStr || "N/A";
         }
       };
-      
+
       // Format data for Excel
       const worksheetData = data.map((item) => {
         const latestChlorine = getLatestChlorineValue(item);
@@ -453,45 +477,52 @@ const ChlorineDashboard: React.FC = () => {
         return {
           "Scheme ID": item.scheme_id,
           "Scheme Name": item.scheme_name || "N/A",
-          "Region": item.region || "N/A",
+          Region: item.region || "N/A",
           "Village Name": item.village_name || "N/A",
           "ESR Name": item.esr_name || "N/A",
-          
+
           // Latest chlorine value
           "Latest Chlorine Value (mg/l)":
             latestChlorine !== null ? latestChlorine.toFixed(2) : "No data",
-          "Status": statusText,
-          
+          Status: statusText,
+
           // Daily chlorine values with date headers
-          [`Chlorine (${date1}) mg/l`]: 
-            item.chlorine_value_1 !== null && item.chlorine_value_1 !== undefined
+          [`Chlorine (${date1}) mg/l`]:
+            item.chlorine_value_1 !== null &&
+            item.chlorine_value_1 !== undefined
               ? Number(item.chlorine_value_1).toFixed(2)
               : "N/A",
-          [`Chlorine (${date2}) mg/l`]: 
-            item.chlorine_value_2 !== null && item.chlorine_value_2 !== undefined
+          [`Chlorine (${date2}) mg/l`]:
+            item.chlorine_value_2 !== null &&
+            item.chlorine_value_2 !== undefined
               ? Number(item.chlorine_value_2).toFixed(2)
               : "N/A",
-          [`Chlorine (${date3}) mg/l`]: 
-            item.chlorine_value_3 !== null && item.chlorine_value_3 !== undefined
+          [`Chlorine (${date3}) mg/l`]:
+            item.chlorine_value_3 !== null &&
+            item.chlorine_value_3 !== undefined
               ? Number(item.chlorine_value_3).toFixed(2)
               : "N/A",
-          [`Chlorine (${date4}) mg/l`]: 
-            item.chlorine_value_4 !== null && item.chlorine_value_4 !== undefined
+          [`Chlorine (${date4}) mg/l`]:
+            item.chlorine_value_4 !== null &&
+            item.chlorine_value_4 !== undefined
               ? Number(item.chlorine_value_4).toFixed(2)
               : "N/A",
-          [`Chlorine (${date5}) mg/l`]: 
-            item.chlorine_value_5 !== null && item.chlorine_value_5 !== undefined
+          [`Chlorine (${date5}) mg/l`]:
+            item.chlorine_value_5 !== null &&
+            item.chlorine_value_5 !== undefined
               ? Number(item.chlorine_value_5).toFixed(2)
               : "N/A",
-          [`Chlorine (${date6}) mg/l`]: 
-            item.chlorine_value_6 !== null && item.chlorine_value_6 !== undefined
+          [`Chlorine (${date6}) mg/l`]:
+            item.chlorine_value_6 !== null &&
+            item.chlorine_value_6 !== undefined
               ? Number(item.chlorine_value_6).toFixed(2)
               : "N/A",
-          [`Chlorine (${date7}) mg/l`]: 
-            item.chlorine_value_7 !== null && item.chlorine_value_7 !== undefined
+          [`Chlorine (${date7}) mg/l`]:
+            item.chlorine_value_7 !== null &&
+            item.chlorine_value_7 !== undefined
               ? Number(item.chlorine_value_7).toFixed(2)
               : "N/A",
-          
+
           // Analysis data
           "Days Below Range (<0.2 mg/l)": item.chlorine_less_than_02_mgl || 0,
           "Days Optimal Range (0.2-0.5 mg/l)":
@@ -631,9 +662,7 @@ const ChlorineDashboard: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="Fully Completed">
-                  Fully Completed
-                </SelectItem>
+                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
                 <SelectItem value="In Progress">In Progress</SelectItem>
               </SelectContent>
             </Select>
@@ -699,7 +728,8 @@ const ChlorineDashboard: React.FC = () => {
               className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100 gap-2"
             >
               <Download className="h-4 w-4" />
-              Export to Excel{filteredData.length > 0 ? ` (${filteredData.length})` : ''}
+              Export to Excel
+              {filteredData.length > 0 ? ` (${filteredData.length})` : ""}
             </Button>
             <Button
               onClick={() => refetch()}
@@ -1048,7 +1078,9 @@ const ChlorineDashboard: React.FC = () => {
                   {!isLoadingChlorine && (
                     <>
                       <div className="flex items-center">
-                        <span className="font-semibold">{filteredData.length}</span>
+                        <span className="font-semibold">
+                          {filteredData.length}
+                        </span>
                         <span className="ml-1">
                           {filteredData.length === 1 ? "ESR" : "ESRs"} found
                         </span>
@@ -1060,43 +1092,74 @@ const ChlorineDashboard: React.FC = () => {
                           <span className="ml-1">with applied filters</span>
                         )}
                       </div>
-                      
+
                       {/* Filter details */}
                       <div className="mt-2 sm:mt-0 text-xs flex flex-wrap gap-2">
                         {commissionedFilter !== "all" && (
                           <span className="px-2 py-1 bg-blue-50 text-blue-700 rounded-md">
-                            {commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"}: 
+                            {commissionedFilter === "Yes"
+                              ? "Commissioned"
+                              : "Not Commissioned"}
+                            :
                             <span className="font-semibold ml-1">
-                              {filteredData.filter(item => {
-                                const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
-                                return status && status.mjp_commissioned === commissionedFilter;
-                              }).length}
+                              {
+                                filteredData.filter((item) => {
+                                  const status = schemeStatusData?.find(
+                                    (s) => s.scheme_id === item.scheme_id,
+                                  );
+                                  return (
+                                    status &&
+                                    status.mjp_commissioned ===
+                                      commissionedFilter
+                                  );
+                                }).length
+                              }
                             </span>
                           </span>
                         )}
-                        
+
                         {fullyCompletedFilter !== "all" && (
                           <span className="px-2 py-1 bg-green-50 text-green-700 rounded-md">
-                            {fullyCompletedFilter}: 
+                            {fullyCompletedFilter}:
                             <span className="font-semibold ml-1">
-                              {filteredData.filter(item => {
-                                const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
-                                return status && status.mjp_fully_completed === fullyCompletedFilter;
-                              }).length}
+                              {
+                                filteredData.filter((item) => {
+                                  const status = schemeStatusData?.find(
+                                    (s) => s.scheme_id === item.scheme_id,
+                                  );
+                                  return (
+                                    status &&
+                                    status.mjp_fully_completed ===
+                                      fullyCompletedFilter
+                                  );
+                                }).length
+                              }
                             </span>
                           </span>
                         )}
-                        
+
                         {schemeStatusFilter !== "all" && (
                           <span className="px-2 py-1 bg-purple-50 text-purple-700 rounded-md">
-                            {schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter}: 
+                            {schemeStatusFilter === "Connected"
+                              ? "Connected"
+                              : schemeStatusFilter}
+                            :
                             <span className="font-semibold ml-1">
-                              {filteredData.filter(item => {
-                                const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
-                                return status && (schemeStatusFilter === "Connected" ? 
-                                  status.fully_completion_scheme_status !== "Not-Connected" :
-                                  status.fully_completion_scheme_status === schemeStatusFilter);
-                              }).length}
+                              {
+                                filteredData.filter((item) => {
+                                  const status = schemeStatusData?.find(
+                                    (s) => s.scheme_id === item.scheme_id,
+                                  );
+                                  return (
+                                    status &&
+                                    (schemeStatusFilter === "Connected"
+                                      ? status.fully_completion_scheme_status !==
+                                        "Not-Connected"
+                                      : status.fully_completion_scheme_status ===
+                                        schemeStatusFilter)
+                                  );
+                                }).length
+                              }
                             </span>
                           </span>
                         )}
@@ -1104,7 +1167,7 @@ const ChlorineDashboard: React.FC = () => {
                     </>
                   )}
                 </div>
-                
+
                 <Table className="border-collapse">
                   <TableHeader className="bg-blue-50">
                     <TableRow className="chlorine-item hover:bg-blue-100">
@@ -1171,7 +1234,7 @@ const ChlorineDashboard: React.FC = () => {
                       // Add alternating row colors
                       const isEven = index % 2 === 0;
                       const baseRowClass = isEven ? "bg-white" : "bg-blue-50";
-                      
+
                       return (
                         <TableRow
                           key={`${item.scheme_id}-${item.village_name}-${item.esr_name}-${index}`}
@@ -1183,9 +1246,15 @@ const ChlorineDashboard: React.FC = () => {
                           <TableCell className="font-mono text-sm border-b border-blue-200">
                             {item.scheme_id}
                           </TableCell>
-                          <TableCell className="border-b border-blue-200">{item.scheme_name}</TableCell>
-                          <TableCell className="border-b border-blue-200">{item.village_name}</TableCell>
-                          <TableCell className="border-b border-blue-200">{item.esr_name}</TableCell>
+                          <TableCell className="border-b border-blue-200">
+                            {item.scheme_name}
+                          </TableCell>
+                          <TableCell className="border-b border-blue-200">
+                            {item.village_name}
+                          </TableCell>
+                          <TableCell className="border-b border-blue-200">
+                            {item.esr_name}
+                          </TableCell>
                           <TableCell className="font-medium border-b border-blue-200">
                             {latestValue !== null ? (
                               <span
@@ -1217,12 +1286,16 @@ const ChlorineDashboard: React.FC = () => {
                                 variant="outline"
                                 size="sm"
                                 className="py-1 px-2 h-8 text-xs"
-                                onClick={() => window.open(item.dashboard_url, "_blank")}
+                                onClick={() =>
+                                  window.open(item.dashboard_url, "_blank")
+                                }
                               >
                                 <BarChart className="h-3.5 w-3.5 mr-1" /> View
                               </Button>
                             ) : (
-                              <span className="text-xs text-gray-400">Not available</span>
+                              <span className="text-xs text-gray-400">
+                                Not available
+                              </span>
                             )}
                           </TableCell>
                           <TableCell className="border-b border-blue-200">
@@ -1244,10 +1317,13 @@ const ChlorineDashboard: React.FC = () => {
                                       <DialogTitle className="text-xl font-bold flex items-center justify-between">
                                         <div className="flex items-center gap-2">
                                           <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center">
-                                            <span className="font-bold text-teal-600">Cl</span>
+                                            <span className="font-bold text-teal-600">
+                                              Cl
+                                            </span>
                                           </div>
                                           <span>
-                                            {selectedESR.esr_name} - {selectedESR.village_name}
+                                            {selectedESR.esr_name} -{" "}
+                                            {selectedESR.village_name}
                                           </span>
                                           {selectedESR.dashboard_url && (
                                             <Button
@@ -1255,10 +1331,14 @@ const ChlorineDashboard: React.FC = () => {
                                               size="sm"
                                               className="ml-2 text-xs"
                                               onClick={() =>
-                                                window.open(selectedESR.dashboard_url, "_blank")
+                                                window.open(
+                                                  selectedESR.dashboard_url,
+                                                  "_blank",
+                                                )
                                               }
                                             >
-                                              <BarChart className="h-4 w-4 mr-1" /> PI Vision Dashboard
+                                              <BarChart className="h-4 w-4 mr-1" />{" "}
+                                              PI Vision Dashboard
                                             </Button>
                                           )}
                                         </div>
@@ -1412,7 +1492,9 @@ const ChlorineDashboard: React.FC = () => {
                                       <div className="border-t border-gray-200 pt-6">
                                         <h3 className="font-medium text-lg mb-4 text-teal-800 flex items-center gap-2">
                                           <div className="w-6 h-6 rounded-full bg-teal-100 flex items-center justify-center">
-                                            <div className="h-3 w-3 text-teal-600 text-[10px] font-bold">Cl</div>
+                                            <div className="h-3 w-3 text-teal-600 text-[10px] font-bold">
+                                              Cl
+                                            </div>
                                           </div>
                                           7-Day Chlorine History
                                         </h3>
