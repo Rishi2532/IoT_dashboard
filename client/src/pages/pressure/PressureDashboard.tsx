@@ -712,8 +712,7 @@ const PressureDashboard: React.FC = () => {
               {commissionedFilter !== "all" && (
                 <div className="mt-1 text-xs text-blue-600 font-medium">
                   {filteredData.filter(item => {
-                    // Get scheme status from the array using scheme_id
-                    const status = schemeStatusData.find(status => status.scheme_id === item.scheme_id);
+                    const status = schemeStatusMap.get(item.scheme_id);
                     return status && status.mjp_commissioned === commissionedFilter;
                   }).length} schemes
                 </div>
