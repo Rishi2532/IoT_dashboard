@@ -131,9 +131,14 @@ export default function SchemeTable({
         {/* Left side: Title + Description + Search bars */}
         <div className="flex flex-col space-y-3 sm:space-y-4 w-full sm:w-1/2">
           <div>
-            <CardTitle className="text-base sm:text-lg lg:text-xl xl:text-2xl font-medium text-neutral-900">
-              Scheme Status
-            </CardTitle>
+            <div className="flex items-center gap-3">
+              <CardTitle className="text-base sm:text-lg lg:text-xl xl:text-2xl font-medium text-neutral-900">
+                Scheme Status
+              </CardTitle>
+              <span className="px-3 py-1 bg-blue-100 rounded-full text-blue-800 text-sm font-medium">
+                {filteredSchemes.length} schemes found
+              </span>
+            </div>
             <CardDescription className="mt-1 max-w-2xl text-xs sm:text-sm lg:text-base text-neutral-500">
               Details of water schemes and their current status
             </CardDescription>

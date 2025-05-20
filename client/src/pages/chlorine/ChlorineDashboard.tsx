@@ -1053,8 +1053,8 @@ const ChlorineDashboard: React.FC = () => {
                 <AlertCircle className="h-5 w-5 text-orange-600" />
               )}
               {getFilterTitle(currentFilter)}
-              <span className="ml-2 text-sm font-normal text-gray-500">
-                ({filteredData.length} ESRs found)
+              <span className="ml-2 px-2 py-1 bg-blue-100 rounded-full text-blue-800 text-sm font-medium">
+                {filteredData.length} {filteredData.length === 1 ? "ESR" : "ESRs"} found
               </span>
             </CardTitle>
             
