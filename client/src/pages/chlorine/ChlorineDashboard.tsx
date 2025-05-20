@@ -1028,33 +1028,79 @@ const ChlorineDashboard: React.FC = () => {
       {/* Data Table */}
       <Card className="mb-6 shadow-md border-0">
         <CardHeader className="pb-3 border-b">
-          <CardTitle className="flex items-center gap-2">
-            {currentFilter === "below_0.2" && (
-              <AlertTriangle className="h-5 w-5 text-red-600" />
+          <div className="flex flex-col space-y-3">
+            {/* Main Title */}
+            <CardTitle className="flex items-center gap-2">
+              {currentFilter === "below_0.2" && (
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+              )}
+              {currentFilter === "between_0.2_0.5" && (
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              )}
+              {currentFilter === "above_0.5" && (
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+              )}
+              {currentFilter === "consistent_zero" && (
+                <Activity className="h-5 w-5 text-gray-600" />
+              )}
+              {currentFilter === "consistent_below" && (
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+              )}
+              {currentFilter === "consistent_optimal" && (
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              )}
+              {currentFilter === "consistent_above" && (
+                <AlertCircle className="h-5 w-5 text-orange-600" />
+              )}
+              {getFilterTitle(currentFilter)}
+              <span className="ml-2 text-sm font-normal text-gray-500">
+                ({filteredData.length} ESRs found)
+              </span>
+            </CardTitle>
+            
+            {/* Filter badges row */}
+            {(commissionedFilter !== "all" || fullyCompletedFilter !== "all" || schemeStatusFilter !== "all") && (
+              <div className="flex flex-wrap gap-2 text-sm">
+                {commissionedFilter !== "all" && (
+                  <div className="border px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
+                    {commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"}: 
+                    <span className="font-bold ml-1">{
+                      filteredData.filter(item => {
+                        const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                        return status && status.mjp_commissioned === commissionedFilter;
+                      }).length
+                    }</span>
+                  </div>
+                )}
+                
+                {fullyCompletedFilter !== "all" && (
+                  <div className="border px-3 py-1 rounded-full bg-green-50 text-green-700 font-medium">
+                    {fullyCompletedFilter}: 
+                    <span className="font-bold ml-1">{
+                      filteredData.filter(item => {
+                        const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                        return status && status.mjp_fully_completed === fullyCompletedFilter;
+                      }).length
+                    }</span>
+                  </div>
+                )}
+                
+                {schemeStatusFilter !== "all" && (
+                  <div className="border px-3 py-1 rounded-full bg-purple-50 text-purple-700 font-medium">
+                    {schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter}: 
+                    <span className="font-bold ml-1">{
+                      filteredData.filter(item => {
+                        const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                        return status && (schemeStatusFilter === "Connected" ? 
+                          status.fully_completion_scheme_status !== "Not-Connected" :
+                          status.fully_completion_scheme_status === schemeStatusFilter);
+                      }).length
+                    }</span>
+                  </div>
+                )}
+              </div>
             )}
-            {currentFilter === "between_0.2_0.5" && (
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            )}
-            {currentFilter === "above_0.5" && (
-              <AlertCircle className="h-5 w-5 text-orange-600" />
-            )}
-            {currentFilter === "consistent_zero" && (
-              <Activity className="h-5 w-5 text-gray-600" />
-            )}
-            {currentFilter === "consistent_below" && (
-              <AlertTriangle className="h-5 w-5 text-red-600" />
-            )}
-            {currentFilter === "consistent_optimal" && (
-              <CheckCircle className="h-5 w-5 text-green-600" />
-            )}
-            {currentFilter === "consistent_above" && (
-              <AlertCircle className="h-5 w-5 text-orange-600" />
-            )}
-            {getFilterTitle(currentFilter)}
-            <span className="ml-2 text-sm font-normal text-gray-500">
-              ({filteredData.length} ESRs found)
-            </span>
-          </CardTitle>
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           {filteredData.length === 0 ? (
