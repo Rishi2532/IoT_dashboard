@@ -1063,38 +1063,53 @@ const ChlorineDashboard: React.FC = () => {
               <div className="flex flex-wrap gap-2 text-sm">
                 {commissionedFilter !== "all" && (
                   <div className="border px-3 py-1 rounded-full bg-blue-50 text-blue-700 font-medium">
-                    {commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"}: 
+                    {commissionedFilter === "Yes" ? "Commissioned" : "Not Commissioned"} Schemes: 
                     <span className="font-bold ml-1">{
-                      filteredData.filter(item => {
-                        const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
-                        return status && status.mjp_commissioned === commissionedFilter;
-                      }).length
+                      // Count unique schemes that match commissioned filter
+                      Array.from(new Set(
+                        filteredData
+                          .filter(item => {
+                            const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                            return status && status.mjp_commissioned === commissionedFilter;
+                          })
+                          .map(item => item.scheme_id)
+                      )).length
                     }</span>
                   </div>
                 )}
                 
                 {fullyCompletedFilter !== "all" && (
                   <div className="border px-3 py-1 rounded-full bg-green-50 text-green-700 font-medium">
-                    {fullyCompletedFilter}: 
+                    {fullyCompletedFilter} Schemes: 
                     <span className="font-bold ml-1">{
-                      filteredData.filter(item => {
-                        const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
-                        return status && status.mjp_fully_completed === fullyCompletedFilter;
-                      }).length
+                      // Count unique schemes that match fully completed filter
+                      Array.from(new Set(
+                        filteredData
+                          .filter(item => {
+                            const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                            return status && status.mjp_fully_completed === fullyCompletedFilter;
+                          })
+                          .map(item => item.scheme_id)
+                      )).length
                     }</span>
                   </div>
                 )}
                 
                 {schemeStatusFilter !== "all" && (
                   <div className="border px-3 py-1 rounded-full bg-purple-50 text-purple-700 font-medium">
-                    {schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter}: 
+                    {schemeStatusFilter === "Connected" ? "Connected" : schemeStatusFilter} Schemes: 
                     <span className="font-bold ml-1">{
-                      filteredData.filter(item => {
-                        const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
-                        return status && (schemeStatusFilter === "Connected" ? 
-                          status.fully_completion_scheme_status !== "Not-Connected" :
-                          status.fully_completion_scheme_status === schemeStatusFilter);
-                      }).length
+                      // Count unique schemes that match scheme status filter
+                      Array.from(new Set(
+                        filteredData
+                          .filter(item => {
+                            const status = schemeStatusData?.find(s => s.scheme_id === item.scheme_id);
+                            return status && (schemeStatusFilter === "Connected" ? 
+                              status.fully_completion_scheme_status !== "Not-Connected" :
+                              status.fully_completion_scheme_status === schemeStatusFilter);
+                          })
+                          .map(item => item.scheme_id)
+                      )).length
                     }</span>
                   </div>
                 )}
