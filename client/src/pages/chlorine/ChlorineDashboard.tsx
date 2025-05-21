@@ -97,6 +97,13 @@ interface ChlorineDashboardStats {
   consistentBelowRangeSensors: number;
   consistentOptimalSensors: number;
   consistentAboveRangeSensors: number;
+  lastImport?: {
+    inserted: number;
+    updated: number;
+    totalProcessed: number;
+    timestamp: string;
+    errors: number;
+  };
 }
 
 type ChlorineRange =
@@ -112,14 +119,16 @@ type ChlorineRange =
 const ChlorineDashboard: React.FC = () => {
   const { toast } = useToast();
 
-  // Filter state
+  // Global filter state (affects both cards and table)
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
-  const [currentFilter, setCurrentFilter] = useState<ChlorineRange>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
   const [fullyCompletedFilter, setFullyCompletedFilter] =
     useState<string>("all");
   const [schemeStatusFilter, setSchemeStatusFilter] = useState<string>("all");
+  
+  // Card-specific filter state (only affects table data, not card values)
+  const [selectedCardFilter, setSelectedCardFilter] = useState<ChlorineRange>("all");
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -135,7 +144,7 @@ const ChlorineDashboard: React.FC = () => {
     error: chlorineError,
     refetch,
   } = useQuery<ChlorineData[]>({
-    queryKey: ["/api/chlorine", selectedRegion, currentFilter],
+    queryKey: ["/api/chlorine", selectedRegion],
     queryFn: async () => {
       const params = new URLSearchParams();
 
@@ -505,7 +514,7 @@ const ChlorineDashboard: React.FC = () => {
 
   // Handler for dashboard card clicks
   const handleCardClick = (range: ChlorineRange) => {
-    setCurrentFilter(range);
+    setSelectedCardFilter(range);
     setPage(1); // Reset to first page when filter changes
   };
 

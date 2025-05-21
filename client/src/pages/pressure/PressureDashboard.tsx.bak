@@ -328,65 +328,6 @@ const PressureDashboard: React.FC = () => {
     return map;
   }, [schemeStatusData]);
 
-  // Calculate local dashboard stats based on filtered data
-  const calculateLocalDashboardStats = (data: PressureData[]): PressureDashboardStats => {
-    const stats: PressureDashboardStats = {
-      totalSensors: data.length,
-      belowRangeSensors: 0,
-      optimalRangeSensors: 0,
-      aboveRangeSensors: 0,
-      consistentZeroSensors: 0,
-      consistentBelowRangeSensors: 0,
-      consistentOptimalSensors: 0,
-      consistentAboveRangeSensors: 0
-    };
-    
-    // Count by category
-    data.forEach(item => {
-      const latestValue = getLatestPressureValue(item);
-      
-      if (latestValue !== null) {
-        if (latestValue < 0.2 && latestValue >= 0) {
-          stats.belowRangeSensors++;
-        } else if (latestValue >= 0.2 && latestValue <= 0.7) {
-          stats.optimalRangeSensors++;
-        } else if (latestValue > 0.7) {
-          stats.aboveRangeSensors++;
-        }
-      }
-      
-      // Count consistent readings
-      if ((item.number_of_consistent_zero_value_in_pressure || 0) === 7) {
-        stats.consistentZeroSensors++;
-      }
-      
-      const values = [
-        parseFloat(String(item.pressure_value_1 || 0)),
-        parseFloat(String(item.pressure_value_2 || 0)),
-        parseFloat(String(item.pressure_value_3 || 0)),
-        parseFloat(String(item.pressure_value_4 || 0)),
-        parseFloat(String(item.pressure_value_5 || 0)),
-        parseFloat(String(item.pressure_value_6 || 0)),
-        parseFloat(String(item.pressure_value_7 || 0)),
-      ];
-      
-      if (values.every(val => val > 0 && val < 0.2)) {
-        stats.consistentBelowRangeSensors++;
-      } else if (values.every(val => val >= 0.2 && val <= 0.7)) {
-        stats.consistentOptimalSensors++;
-      } else if (values.every(val => val > 0.7)) {
-        stats.consistentAboveRangeSensors++;
-      }
-    });
-    
-    // Preserve import statistics if available
-    if (dashboardStats?.lastImport) {
-      stats.lastImport = dashboardStats.lastImport;
-    }
-    
-    return stats;
-  };
-
   // Filter and search data
   const filteredData = useMemo(() => {
     let filtered = [...allPressureData];
