@@ -825,7 +825,7 @@ const ChlorineDashboard: React.FC = () => {
         {/* Total Sensors Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "all" ? "ring-2 ring-teal-500 ring-offset-2" : ""
+            selectedCardFilter === "all" ? "ring-2 ring-teal-500 ring-offset-2" : ""
           } transform hover:scale-[1.02]`}
           onClick={() => handleCardClick("all")}
         >
@@ -908,7 +908,7 @@ const ChlorineDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-green-600">
-              {dashboardStats?.optimalRangeSensors || 0}
+              {updatedCardStats?.optimalRangeSensors || 0}
             </p>
             <div className="flex items-center mt-2">
               <p className="text-sm text-green-600/80 font-medium">
@@ -942,7 +942,7 @@ const ChlorineDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-orange-600">
-              {dashboardStats?.aboveRangeSensors || 0}
+              {updatedCardStats?.aboveRangeSensors || 0}
             </p>
             <div className="flex items-center mt-2">
               <p className="text-sm text-orange-600/80 font-medium">
@@ -964,7 +964,7 @@ const ChlorineDashboard: React.FC = () => {
         {/* Consistent Zero Card */}
         <Card
           className={`cursor-pointer border border-gray-200 hover:shadow-md transition-all duration-200 ${
-            currentFilter === "consistent_zero"
+            selectedCardFilter === "consistent_zero"
               ? "ring-2 ring-gray-500 ring-offset-2"
               : ""
           }`}
@@ -980,7 +980,7 @@ const ChlorineDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-gray-700">
-              {dashboardStats?.consistentZeroSensors || 0}
+              {updatedCardStats?.consistentZeroSensors || 0}
             </p>
             <p className="text-xs text-gray-500 mt-1">
               ESRs with zero chlorine for 7 days
@@ -1015,7 +1015,7 @@ const ChlorineDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-red-600">
-              {dashboardStats?.consistentBelowRangeSensors || 0}
+              {updatedCardStats?.consistentBelowRangeSensors || 0}
             </p>
             <p className="text-xs text-red-500/80 mt-1">
               ESRs with &lt;0.2mg/l for 7 days
@@ -1050,7 +1050,7 @@ const ChlorineDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-green-600">
-              {dashboardStats?.consistentOptimalSensors || 0}
+              {updatedCardStats?.consistentOptimalSensors || 0}
             </p>
             <p className="text-xs text-green-500/80 mt-1">
               ESRs with 0.2-0.5mg/l for 7 days
@@ -1085,7 +1085,7 @@ const ChlorineDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <p className="text-3xl font-bold text-orange-600">
-              {dashboardStats?.consistentAboveRangeSensors || 0}
+              {updatedCardStats?.consistentAboveRangeSensors || 0}
             </p>
             <p className="text-xs text-orange-500/80 mt-1">
               ESRs with &gt;0.5mg/l for 7 days
