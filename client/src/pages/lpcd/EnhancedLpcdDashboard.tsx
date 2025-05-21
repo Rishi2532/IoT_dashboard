@@ -1585,7 +1585,7 @@ const EnhancedLpcdDashboard = () => {
                             <TableHead className="text-white font-semibold">
                               Village
                             </TableHead>
-                            <TableHead className="text-white font-semibold">
+                            <TableHead className="text-white font-semibold text-center">
                               Population
                             </TableHead>
                             <TableHead className="text-white font-semibold">
@@ -1625,7 +1625,7 @@ const EnhancedLpcdDashboard = () => {
                                 <TableCell className="border-b border-blue-200 font-medium text-gray-800">
                                   {scheme.village_name}
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200 text-right font-mono font-medium">
+                                <TableCell className="border-b border-blue-200 text-center font-mono font-medium">
                                   {scheme.population?.toLocaleString() || "N/A"}
                                 </TableCell>
                                 <TableCell className="border-b border-blue-200">
