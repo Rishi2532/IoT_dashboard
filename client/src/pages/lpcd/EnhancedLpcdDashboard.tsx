@@ -1399,7 +1399,7 @@ const EnhancedLpcdDashboard = () => {
 
                           <span className="font-medium text-red-900">
                             {(() => {
-                              const noSupplyVillages = globallyFilteredData.filter(scheme => 
+                              const noSupplyVillages = getGloballyFilteredSchemes().filter(scheme => 
                                 hasNoCurrentWaterSupply(scheme)
                               );
                               const totalPopulation = noSupplyVillages.reduce(
