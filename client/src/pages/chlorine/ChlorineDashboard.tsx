@@ -129,6 +129,8 @@ const ChlorineDashboard: React.FC = () => {
   
   // Card-specific filter state (only affects table data, not card values)
   const [selectedCardFilter, setSelectedCardFilter] = useState<ChlorineRange>("all");
+  
+  // Remove the old currentFilter state entirely - we'll use selectedCardFilter instead
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -152,9 +154,8 @@ const ChlorineDashboard: React.FC = () => {
         params.append("region", selectedRegion);
       }
 
-      if (currentFilter && currentFilter !== "all") {
-        params.append("chlorineRange", currentFilter);
-      }
+      // No longer filtering API requests by card selection
+      // This ensures we get all data for the region and can filter locally
 
       const queryString = params.toString();
       const url = `/api/chlorine${queryString ? `?${queryString}` : ""}`;
@@ -309,11 +310,58 @@ const ChlorineDashboard: React.FC = () => {
   };
 
   // Calculate dashboard stats locally based on filtered data
-  const calculateDashboardStats = (data: ChlorineData[]): ChlorineDashboardStats => {
-    // Start with all data (after global filters but before card-specific filters)
-    const totalSensors = data.length;
+  // Apply global filters to data for both cards and table
+  const globallyFilteredData = useMemo(() => {
+    let filtered = [...allChlorineData];
+
+    // Apply search filter if query exists
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (item) =>
+          item.scheme_name?.toLowerCase().includes(query) ||
+          item.region?.toLowerCase().includes(query) ||
+          item.village_name?.toLowerCase().includes(query) ||
+          item.esr_name?.toLowerCase().includes(query),
+      );
+    }
+
+    // Double-check region filtering to ensure only data from selected region is shown
+    if (selectedRegion && selectedRegion !== "all") {
+      filtered = filtered.filter((item) => item.region === selectedRegion);
+    }
+
+    // Create a map of scheme IDs to their scheme status data for filtering
+    const schemeStatusMap = new Map();
+    if (schemeStatusData && schemeStatusData.length > 0) {
+      schemeStatusData.forEach((status) => {
+        schemeStatusMap.set(status.scheme_id, status);
+      });
+    }
+
+    // Apply commissioned status filter
+    if (commissionedFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        // Get scheme status from the map using scheme_id
+        const status = schemeStatusMap.get(item.scheme_id);
+        return status && status.mjp_commissioned === commissionedFilter;
+      });
+    }
+
+    // No need for additional filtering here as global filters are already applied in globallyFilteredData
     
-    // Count sensors in different categories
+    return filtered;
+  }, [allChlorineData, selectedRegion, searchQuery, commissionedFilter, fullyCompletedFilter, schemeStatusFilter, schemeStatusData]);
+  
+  // Calculate card statistics based on the globally filtered data
+  const updatedCardStats = useMemo(() => {
+    if (!apiDashboardStats) return null;
+    
+    // Start with a copy of the API stats
+    const stats = {...apiDashboardStats};
+    
+    // Count values by category from the globally filtered data (respects all global filters)
+    let totalSensors = 0;
     let belowRangeSensors = 0;
     let optimalRangeSensors = 0;
     let aboveRangeSensors = 0;
@@ -321,11 +369,12 @@ const ChlorineDashboard: React.FC = () => {
     let consistentBelowRangeSensors = 0;
     let consistentOptimalSensors = 0;
     let consistentAboveRangeSensors = 0;
-
-    data.forEach(item => {
+    
+    globallyFilteredData.forEach(item => {
+      totalSensors++;
+      
       const latestValue = getLatestChlorineValue(item);
       
-      // Count by latest value range
       if (latestValue !== null) {
         if (latestValue < 0.2 && latestValue >= 0) {
           belowRangeSensors++;
@@ -360,8 +409,8 @@ const ChlorineDashboard: React.FC = () => {
       }
     });
     
-    // Preserve last import stats from API if available
     return {
+      ...stats,
       totalSensors,
       belowRangeSensors,
       optimalRangeSensors,
@@ -369,47 +418,67 @@ const ChlorineDashboard: React.FC = () => {
       consistentZeroSensors,
       consistentBelowRangeSensors,
       consistentOptimalSensors,
-      consistentAboveRangeSensors,
-      lastImport: apiDashboardStats?.lastImport
+      consistentAboveRangeSensors
     };
-  };
+  }, [apiDashboardStats, globallyFilteredData]);
 
-  // Filter and search data
+  // Final data filtering - uses globally filtered data and applies card-specific filters
   const filteredData = useMemo(() => {
-    let filtered = [...allChlorineData];
-
-    // Apply search filter if query exists
-    if (searchQuery.trim() !== "") {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(
-        (item) =>
-          item.scheme_name?.toLowerCase().includes(query) ||
-          item.region?.toLowerCase().includes(query) ||
-          item.village_name?.toLowerCase().includes(query) ||
-          item.esr_name?.toLowerCase().includes(query),
-        // Removed sensor_id from search as requested
-      );
-    }
-
-    // Double-check region filtering to ensure only data from selected region is shown
-    if (selectedRegion && selectedRegion !== "all") {
-      filtered = filtered.filter((item) => item.region === selectedRegion);
-    }
-
-    // Create a map of scheme IDs to their scheme status data for filtering
-    const schemeStatusMap = new Map();
-    if (schemeStatusData && schemeStatusData.length > 0) {
-      schemeStatusData.forEach((status) => {
-        schemeStatusMap.set(status.scheme_id, status);
-      });
-    }
-
-    // Apply commissioned status filter
-    if (commissionedFilter !== "all") {
+    // Start with the globally filtered data that affects both cards and table
+    let filtered = [...globallyFilteredData];
+    
+    // Apply card-specific filter if selected (only affects table, not card values)
+    if (selectedCardFilter && selectedCardFilter !== "all") {
       filtered = filtered.filter((item) => {
-        // Get scheme status from the map using scheme_id
-        const status = schemeStatusMap.get(item.scheme_id);
-        return status && status.mjp_commissioned === commissionedFilter;
+        const latestValue = getLatestChlorineValue(item);
+
+        switch (selectedCardFilter) {
+          case "below_0.2":
+            return latestValue !== null && latestValue < 0.2 && latestValue >= 0;
+          case "between_0.2_0.5":
+            return (
+              latestValue !== null && latestValue >= 0.2 && latestValue <= 0.5
+            );
+          case "above_0.5":
+            return latestValue !== null && latestValue > 0.5;
+          case "consistent_zero":
+            return (item.number_of_consistent_zero_value_in_chlorine || 0) === 7;
+          case "consistent_below":
+            const belowValues = [
+              parseFloat(String(item.chlorine_value_1 || 0)),
+              parseFloat(String(item.chlorine_value_2 || 0)),
+              parseFloat(String(item.chlorine_value_3 || 0)),
+              parseFloat(String(item.chlorine_value_4 || 0)),
+              parseFloat(String(item.chlorine_value_5 || 0)),
+              parseFloat(String(item.chlorine_value_6 || 0)),
+              parseFloat(String(item.chlorine_value_7 || 0)),
+            ];
+            return belowValues.every(val => val > 0 && val < 0.2);
+          case "consistent_optimal":
+            const optimalValues = [
+              parseFloat(String(item.chlorine_value_1 || 0)),
+              parseFloat(String(item.chlorine_value_2 || 0)),
+              parseFloat(String(item.chlorine_value_3 || 0)),
+              parseFloat(String(item.chlorine_value_4 || 0)),
+              parseFloat(String(item.chlorine_value_5 || 0)),
+              parseFloat(String(item.chlorine_value_6 || 0)),
+              parseFloat(String(item.chlorine_value_7 || 0)),
+            ];
+            return optimalValues.every(val => val >= 0.2 && val <= 0.5);
+          case "consistent_above":
+            const aboveValues = [
+              parseFloat(String(item.chlorine_value_1 || 0)),
+              parseFloat(String(item.chlorine_value_2 || 0)),
+              parseFloat(String(item.chlorine_value_3 || 0)),
+              parseFloat(String(item.chlorine_value_4 || 0)),
+              parseFloat(String(item.chlorine_value_5 || 0)),
+              parseFloat(String(item.chlorine_value_6 || 0)),
+              parseFloat(String(item.chlorine_value_7 || 0)),
+            ];
+            return aboveValues.every(val => val > 0.5);
+          default:
+            return true;
+        }
       });
     }
 
