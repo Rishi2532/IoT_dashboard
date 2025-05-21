@@ -544,11 +544,11 @@ const PressureDashboard: React.FC = () => {
         const { statusText } = getPressureStatusInfo(latestPressure);
 
         // Get the latest date
-        let latestDate = null;
+        let latestDate: string | null = null;
         for (const day of [7, 6, 5, 4, 3, 2, 1]) {
-          const dateValue =
-            item[`pressure_date_day_${day}` as keyof PressureData];
-          if (dateValue) {
+          const dateKey = `pressure_date_day_${day}` as keyof PressureData;
+          const dateValue = item[dateKey];
+          if (dateValue && typeof dateValue === 'string') {
             latestDate = dateValue;
             break;
           }
