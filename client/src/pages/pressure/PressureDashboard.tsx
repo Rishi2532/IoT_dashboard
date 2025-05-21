@@ -1026,7 +1026,7 @@ const PressureDashboard: React.FC = () => {
         {/* Optimal Range Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "between_0.2_0.7"
+            selectedCardFilter === "between_0.2_0.7"
               ? "ring-2 ring-green-500 ring-offset-2"
               : ""
           } transform hover:scale-[1.02]`}
@@ -1060,7 +1060,7 @@ const PressureDashboard: React.FC = () => {
         {/* Above Range Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "above_0.7"
+            selectedCardFilter === "above_0.7"
               ? "ring-2 ring-orange-500 ring-offset-2"
               : ""
           } transform hover:scale-[1.02]`}
@@ -1097,7 +1097,7 @@ const PressureDashboard: React.FC = () => {
         {/* Consistent Zero Pressure Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "consistent_zero"
+            selectedCardFilter === "consistent_zero"
               ? "ring-2 ring-gray-500 ring-offset-2"
               : ""
           } transform hover:scale-[1.02]`}
@@ -1122,7 +1122,7 @@ const PressureDashboard: React.FC = () => {
         {/* Consistent Below Range Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "consistent_below"
+            selectedCardFilter === "consistent_below"
               ? "ring-2 ring-red-500 ring-offset-2"
               : ""
           } transform hover:scale-[1.02]`}
@@ -1147,7 +1147,7 @@ const PressureDashboard: React.FC = () => {
         {/* Consistent Optimal Range Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "consistent_optimal"
+            selectedCardFilter === "consistent_optimal"
               ? "ring-2 ring-green-500 ring-offset-2"
               : ""
           } transform hover:scale-[1.02]`}
@@ -1172,7 +1172,7 @@ const PressureDashboard: React.FC = () => {
         {/* Consistent Above Range Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "consistent_above"
+            selectedCardFilter === "consistent_above"
               ? "ring-2 ring-orange-500 ring-offset-2"
               : ""
           } transform hover:scale-[1.02]`}
