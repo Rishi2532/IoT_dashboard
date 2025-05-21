@@ -130,7 +130,7 @@ const ChlorineDashboard: React.FC = () => {
   // Card-specific filter state (only affects table data, not card values)
   const [selectedCardFilter, setSelectedCardFilter] = useState<ChlorineRange>("all");
   
-  // Remove the old currentFilter state entirely - we'll use selectedCardFilter instead
+  // Remove the old selectedCardFilter state entirely - we'll use selectedCardFilter instead
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -890,7 +890,7 @@ const ChlorineDashboard: React.FC = () => {
         {/* Optimal Range Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "between_0.2_0.5"
+            selectedCardFilter === "between_0.2_0.5"
               ? "ring-2 ring-green-500 ring-offset-2"
               : ""
           } transform hover:scale-[1.02]`}
@@ -924,7 +924,7 @@ const ChlorineDashboard: React.FC = () => {
         {/* Above Range Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "above_0.5"
+            selectedCardFilter === "above_0.5"
               ? "ring-2 ring-orange-500 ring-offset-2"
               : ""
           } transform hover:scale-[1.02]`}
@@ -999,7 +999,7 @@ const ChlorineDashboard: React.FC = () => {
         {/* Consistent Below Range Card */}
         <Card
           className={`cursor-pointer border border-gray-200 hover:shadow-md transition-all duration-200 ${
-            currentFilter === "consistent_below"
+            selectedCardFilter === "consistent_below"
               ? "ring-2 ring-red-500 ring-offset-2"
               : ""
           }`}
@@ -1034,7 +1034,7 @@ const ChlorineDashboard: React.FC = () => {
         {/* Consistent Optimal Card */}
         <Card
           className={`cursor-pointer border border-gray-200 hover:shadow-md transition-all duration-200 ${
-            currentFilter === "consistent_optimal"
+            selectedCardFilter === "consistent_optimal"
               ? "ring-2 ring-green-500 ring-offset-2"
               : ""
           }`}
@@ -1069,7 +1069,7 @@ const ChlorineDashboard: React.FC = () => {
         {/* Consistent Above Range Card */}
         <Card
           className={`cursor-pointer border border-gray-200 hover:shadow-md transition-all duration-200 ${
-            currentFilter === "consistent_above"
+            selectedCardFilter === "consistent_above"
               ? "ring-2 ring-orange-500 ring-offset-2"
               : ""
           }`}
@@ -1108,28 +1108,28 @@ const ChlorineDashboard: React.FC = () => {
           <div className="flex flex-col space-y-3">
             {/* Main Title */}
             <CardTitle className="flex items-center gap-2">
-              {currentFilter === "below_0.2" && (
+              {selectedCardFilter === "below_0.2" && (
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               )}
-              {currentFilter === "between_0.2_0.5" && (
+              {selectedCardFilter === "between_0.2_0.5" && (
                 <CheckCircle className="h-5 w-5 text-green-600" />
               )}
-              {currentFilter === "above_0.5" && (
+              {selectedCardFilter === "above_0.5" && (
                 <AlertCircle className="h-5 w-5 text-orange-600" />
               )}
-              {currentFilter === "consistent_zero" && (
+              {selectedCardFilter === "consistent_zero" && (
                 <Activity className="h-5 w-5 text-gray-600" />
               )}
-              {currentFilter === "consistent_below" && (
+              {selectedCardFilter === "consistent_below" && (
                 <AlertTriangle className="h-5 w-5 text-red-600" />
               )}
-              {currentFilter === "consistent_optimal" && (
+              {selectedCardFilter === "consistent_optimal" && (
                 <CheckCircle className="h-5 w-5 text-green-600" />
               )}
-              {currentFilter === "consistent_above" && (
+              {selectedCardFilter === "consistent_above" && (
                 <AlertCircle className="h-5 w-5 text-orange-600" />
               )}
-              {getFilterTitle(currentFilter)}
+              {getFilterTitle(selectedCardFilter)}
               <span className="ml-2 px-2 py-1 bg-blue-100 rounded-full text-blue-800 text-sm font-medium">
                 {filteredData.length} {filteredData.length === 1 ? "ESR" : "ESRs"} found
               </span>
@@ -1207,7 +1207,7 @@ const ChlorineDashboard: React.FC = () => {
                         <span className="ml-1">
                           {filteredData.length === 1 ? "ESR" : "ESRs"} found
                         </span>
-                        {(currentFilter !== "all" ||
+                        {(selectedCardFilter !== "all" ||
                           selectedRegion !== "all" ||
                           commissionedFilter !== "all" ||
                           fullyCompletedFilter !== "all" ||
