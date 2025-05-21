@@ -433,10 +433,73 @@ const SchemeLpcdDashboard = () => {
     return filtered;
   };
 
-  // Calculate filter counts
+  // Get data with global filters applied for cards
+  const getGloballyFilteredSchemes = () => {
+    if (!allSchemeLpcdData) return [];
+
+    let filtered = [...allSchemeLpcdData];
+
+    // Apply search query filter (for scheme name)
+    if (searchQuery.trim() !== "") {
+      const query = searchQuery.toLowerCase().trim();
+      filtered = filtered.filter(
+        (scheme) =>
+          scheme.scheme_name?.toLowerCase().includes(query) ||
+          scheme.scheme_id?.toLowerCase().includes(query),
+      );
+    }
+    
+    // Apply scheme status filters using the scheme status data
+    // Create a map of scheme IDs to their scheme status data for filtering
+    const schemeStatusMap = new Map();
+    if (schemeStatusData && schemeStatusData.length > 0) {
+      schemeStatusData.forEach(status => {
+        schemeStatusMap.set(status.scheme_id, status);
+      });
+    }
+    
+    // Apply commissioned status filter
+    if (commissionedFilter !== "all") {
+      filtered = filtered.filter((scheme) => {
+        // Get scheme status from the map
+        const status = schemeStatusMap.get(scheme.scheme_id);
+        return status && status.mjp_commissioned === commissionedFilter;
+      });
+    }
+    
+    // Apply fully completed filter
+    if (fullyCompletedFilter !== "all") {
+      filtered = filtered.filter((scheme) => {
+        // Get scheme status from the map
+        const status = schemeStatusMap.get(scheme.scheme_id);
+        return status && status.mjp_fully_completed === fullyCompletedFilter;
+      });
+    }
+    
+    // Apply scheme status filter
+    if (schemeStatusFilter !== "all") {
+      filtered = filtered.filter((scheme) => {
+        // Get scheme status from the map
+        const status = schemeStatusMap.get(scheme.scheme_id);
+        if (!status) return false;
+        
+        if (schemeStatusFilter === "Connected") {
+          return status.fully_completion_scheme_status !== "Not-Connected";
+        }
+        return status.fully_completion_scheme_status === schemeStatusFilter;
+      });
+    }
+    
+    return filtered;
+  };
+
+  // Calculate filter counts based on globally filtered data
   const getFilterCounts = () => {
+    // Get data with global filters applied
+    const globallyFilteredData = getGloballyFilteredSchemes();
+    
     const counts = {
-      total: allSchemeLpcdData.length,
+      total: globallyFilteredData.length,
       above55: 0,
       below55: 0,
       totalPopulation: 0,
@@ -457,13 +520,13 @@ const SchemeLpcdDashboard = () => {
       },
     };
 
-    if (!allSchemeLpcdData) return counts;
+    if (globallyFilteredData.length === 0) return counts;
 
     // Update total count
-    counts.total = allSchemeLpcdData.length;
+    counts.total = globallyFilteredData.length;
 
     // Count schemes in each category
-    allSchemeLpcdData.forEach((scheme) => {
+    globallyFilteredData.forEach((scheme) => {
       const lpcdValue = getLatestLpcdValue(scheme);
       const population = scheme.total_population ? Number(scheme.total_population) : 0;
 
