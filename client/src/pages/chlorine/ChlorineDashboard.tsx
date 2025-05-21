@@ -347,6 +347,29 @@ const ChlorineDashboard: React.FC = () => {
         return status && status.mjp_commissioned === commissionedFilter;
       });
     }
+    
+    // Apply fully completed filter
+    if (fullyCompletedFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        // Get scheme status from the map using scheme_id
+        const status = schemeStatusMap.get(item.scheme_id);
+        return status && status.mjp_fully_completed === fullyCompletedFilter;
+      });
+    }
+    
+    // Apply scheme status filter
+    if (schemeStatusFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        // Get scheme status from the map using scheme_id
+        const status = schemeStatusMap.get(item.scheme_id);
+        if (!status) return false;
+        
+        if (schemeStatusFilter === "Connected") {
+          return status.fully_completion_scheme_status !== "Not-Connected";
+        }
+        return status.fully_completion_scheme_status === schemeStatusFilter;
+      });
+    }
 
     // No need for additional filtering here as global filters are already applied in globallyFilteredData
     
