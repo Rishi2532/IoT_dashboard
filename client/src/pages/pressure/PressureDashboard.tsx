@@ -1180,7 +1180,7 @@ const PressureDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-green-600">
-              {dashboardStats?.optimalRangeSensors || 0}
+              {updatedCardStats?.optimalRangeSensors || 0}
             </p>
             <div className="flex items-center mt-2">
               <p className="text-sm text-green-600/80 font-medium">
@@ -1214,7 +1214,7 @@ const PressureDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-orange-600">
-              {dashboardStats?.aboveRangeSensors || 0}
+              {updatedCardStats?.aboveRangeSensors || 0}
             </p>
             <div className="flex items-center mt-2">
               <p className="text-sm text-orange-600/80 font-medium">
@@ -1247,7 +1247,7 @@ const PressureDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-gray-700">
-              {dashboardStats?.consistentZeroSensors || 0}
+              {updatedCardStats?.consistentZeroSensors || 0}
             </p>
             <p className="text-sm text-gray-600/80 mt-2 font-medium">
               ESRs with zero pressure for 7 days
@@ -1272,7 +1272,7 @@ const PressureDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-red-700">
-              {dashboardStats?.consistentBelowRangeSensors || 0}
+              {updatedCardStats?.consistentBelowRangeSensors || 0}
             </p>
             <p className="text-sm text-red-600/80 mt-2 font-medium">
               ESRs with pressure {"<"}0.2 bar for 7 days
@@ -1297,7 +1297,7 @@ const PressureDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-green-700">
-              {dashboardStats?.consistentOptimalSensors || 0}
+              {updatedCardStats?.consistentOptimalSensors || 0}
             </p>
             <p className="text-sm text-green-600/80 mt-2 font-medium">
               ESRs with pressure 0.2-0.7 bar for 7 days
@@ -1322,7 +1322,7 @@ const PressureDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-orange-700">
-              {dashboardStats?.consistentAboveRangeSensors || 0}
+              {updatedCardStats?.consistentAboveRangeSensors || 0}
             </p>
             <p className="text-sm text-orange-600/80 mt-2 font-medium">
               ESRs with pressure {">"}0.7 bar for 7 days
