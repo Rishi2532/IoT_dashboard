@@ -442,7 +442,7 @@ const EnhancedLpcdDashboard = () => {
   const getFilterCounts = () => {
     // Get the globally filtered data for calculating card statistics
     const globallyFilteredData = getGloballyFilteredSchemes();
-
+    
     const counts = {
       total: globallyFilteredData.length,
       above55: 0,
@@ -625,7 +625,7 @@ const EnhancedLpcdDashboard = () => {
         // Filter data based on current filters
         const dataToExport = filteredSchemes.map((scheme, index) => {
           const lpcdValue = getLatestLpcdValue(scheme);
-
+          
           // Format dates for headers
           const date1 = formatDateForHeader(scheme.lpcd_date_day1);
           const date2 = formatDateForHeader(scheme.lpcd_date_day2);
@@ -634,7 +634,7 @@ const EnhancedLpcdDashboard = () => {
           const date5 = formatDateForHeader(scheme.lpcd_date_day5);
           const date6 = formatDateForHeader(scheme.lpcd_date_day6);
           const date7 = formatDateForHeader(scheme.lpcd_date_day7);
-
+          
           return {
             "No.": index + 1,
             "Region": scheme.region,
@@ -650,7 +650,7 @@ const EnhancedLpcdDashboard = () => {
             "Status": getLpcdStatusText(lpcdValue),
             "Days Above 55L": scheme.above_55_lpcd_count || 0,
             "Days Below 55L": scheme.below_55_lpcd_count || 0,
-
+            
             // Water consumption values with dates as headers (only 6 days available)
             [`Water (${date1})`]: 
               scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined
@@ -676,7 +676,7 @@ const EnhancedLpcdDashboard = () => {
               scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined
                 ? Number(scheme.water_value_day6).toFixed(4)
                 : "N/A",
-
+            
             // LPCD values with dates as headers
             [`LPCD (${date1})`]:
               scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined
@@ -847,7 +847,6 @@ const EnhancedLpcdDashboard = () => {
       {
         day: 5,
         value: selectedVillage.lpcd_value_day5,
-        date: selectedVillage.lpcd_day5,
         date: selectedVillage.lpcd_date_day5,
       },
       {
@@ -1223,7 +1222,7 @@ const EnhancedLpcdDashboard = () => {
             </Button>
           </div>
         </div>
-
+      
 
 
 
@@ -1575,29 +1574,29 @@ const EnhancedLpcdDashboard = () => {
                         <TableHeader>
                           <TableRow className="bg-blue-600 hover:bg-blue-700">
                             <TableHead className="w-[50px] text-white font-semibold">
-                          #
-                        </TableHead>
-                        <TableHead className="w-[120px] text-white font-semibold">
-                          Region
-                        </TableHead>
-                        <TableHead className="w-[250px] text-white font-semibold">
-                          Scheme Name
-                        </TableHead>
-                        <TableHead className="w-[180px] text-white font-semibold">
-                          Village
-                        </TableHead>
-                        <TableHead className="w-[120px] text-white font-semibold text-right">
-                          Population
-                        </TableHead>
-                        <TableHead className="w-[120px] text-white font-semibold text-right">
-                          Current LPCD
-                        </TableHead>
-                        <TableHead className="w-[100px] text-white font-semibold">
-                          Status
-                        </TableHead>
-                        <TableHead className="w-[120px] text-white font-semibold">
-                          Actions
-                        </TableHead>
+                              #
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Region
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Scheme Name
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Village
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Population
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Current LPCD
+                            </TableHead>
+                            <TableHead className="text-white font-semibold">
+                              Status
+                            </TableHead>
+                            <TableHead className="w-[120px] text-white font-semibold">
+                              Actions
+                            </TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1624,10 +1623,9 @@ const EnhancedLpcdDashboard = () => {
                                   </div>
                                 </TableCell>
                                 <TableCell className="border-b border-blue-200 font-medium text-gray-800">
-                                  {```text
-scheme.village_name}
+                                  {scheme.village_name}
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200 text-right font-mono font-medium whitespace-nowrap pr-4">
+                                <TableCell className="border-b border-blue-200 text-right font-mono font-medium">
                                   {scheme.population?.toLocaleString() || "N/A"}
                                 </TableCell>
                                 <TableCell className="border-b border-blue-200">
