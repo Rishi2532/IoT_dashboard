@@ -168,7 +168,7 @@ const ChlorineDashboard: React.FC = () => {
 
       const data = await response.json();
       console.log(
-        `Received ${data.length} chlorine records for region: ${selectedRegion}, filter: ${currentFilter}`,
+        `Received ${data.length} chlorine records for region: ${selectedRegion}, filter: ${selectedCardFilter}`,
       );
       return data;
     },
@@ -856,7 +856,7 @@ const ChlorineDashboard: React.FC = () => {
         {/* Below Range Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "below_0.2"
+            selectedCardFilter === "below_0.2"
               ? "ring-2 ring-red-500 ring-offset-2"
               : ""
           } transform hover:scale-[1.02]`}
