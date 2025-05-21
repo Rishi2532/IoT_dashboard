@@ -482,75 +482,8 @@ const ChlorineDashboard: React.FC = () => {
       });
     }
 
-    // Apply fully completed filter
-    if (fullyCompletedFilter !== "all") {
-      filtered = filtered.filter((item) => {
-        // Get scheme status from the map using scheme_id
-        const status = schemeStatusMap.get(item.scheme_id);
-
-        // For "In Progress" status, we want schemes that are either:
-        // 1. Commissioned with mjp_fully_completed = "In Progress"
-        // 2. Not commissioned (since they're also in progress by definition)
-        if (fullyCompletedFilter === "In Progress") {
-          if (commissionedFilter === "No") {
-            // If specifically filtered for Not Commissioned, show In Progress
-            return status && status.mjp_commissioned === "No";
-          } else if (commissionedFilter === "Yes") {
-            // If specifically filtered for Commissioned, show only those In Progress
-            return (
-              status &&
-              status.mjp_commissioned === "Yes" &&
-              status.mjp_fully_completed === "In Progress"
-            );
-          } else {
-            // For "all" commissioned status, show both commissioned and not commissioned In Progress
-            return (
-              status &&
-              ((status.mjp_commissioned === "Yes" &&
-                status.mjp_fully_completed === "In Progress") ||
-                status.mjp_commissioned === "No")
-            );
-          }
-        }
-
-        // For "Fully Completed", only show if commissioned is "Yes" (or "all")
-        if (fullyCompletedFilter === "Fully Completed") {
-          return (
-            status &&
-            status.mjp_fully_completed === fullyCompletedFilter &&
-            (commissionedFilter === "all" || status.mjp_commissioned === "Yes")
-          );
-        }
-
-        // Default case for other filter values
-        return status && status.mjp_fully_completed === fullyCompletedFilter;
-      });
-    }
-
-    // Apply scheme status filter
-    if (schemeStatusFilter !== "all") {
-      filtered = filtered.filter((item) => {
-        // Get scheme status from the map using scheme_id
-        const status = schemeStatusMap.get(item.scheme_id);
-        if (!status) return false;
-
-        if (schemeStatusFilter === "Connected") {
-          return status.fully_completion_scheme_status !== "Not-Connected";
-        }
-        return status.fully_completion_scheme_status === schemeStatusFilter;
-      });
-    }
-
     return filtered;
-  }, [
-    allChlorineData,
-    searchQuery,
-    selectedRegion,
-    commissionedFilter,
-    fullyCompletedFilter,
-    schemeStatusFilter,
-    schemeStatusData,
-  ]);
+  }, [globallyFilteredData, selectedCardFilter]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -865,7 +798,7 @@ const ChlorineDashboard: React.FC = () => {
               onClick={() =>
                 exportToExcel(
                   filteredData,
-                  `Chlorine_Data_${selectedRegion}_${currentFilter}_${new Date().toISOString().split("T")[0]}`,
+                  `Chlorine_Data_${selectedRegion}_${selectedCardFilter}_${new Date().toISOString().split("T")[0]}`,
                 )
               }
               variant="outline"
@@ -912,7 +845,7 @@ const ChlorineDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-teal-600">
-              {dashboardStats?.totalSensors || 0}
+              {updatedCardStats?.totalSensors || 0}
             </p>
             <p className="text-sm text-teal-600/80 mt-2 font-medium">
               Total chlorine sensors connected
@@ -941,7 +874,7 @@ const ChlorineDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-red-600">
-              {dashboardStats?.belowRangeSensors || 0}
+              {updatedCardStats?.belowRangeSensors || 0}
             </p>
             <div className="flex items-center mt-2">
               <p className="text-sm text-red-600/80 font-medium">
