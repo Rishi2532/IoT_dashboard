@@ -965,7 +965,7 @@ const PressureDashboard: React.FC = () => {
         {/* Total Sensors Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "all" ? "ring-2 ring-blue-500 ring-offset-2" : ""
+            selectedCardFilter === "all" ? "ring-2 ring-blue-500 ring-offset-2" : ""
           } transform hover:scale-[1.02]`}
           onClick={() => handleCardClick("all")}
         >
@@ -992,7 +992,7 @@ const PressureDashboard: React.FC = () => {
         {/* Below Range Card */}
         <Card
           className={`cursor-pointer hover:shadow-xl transition-all duration-200 border-0 overflow-hidden relative ${
-            currentFilter === "below_0.2"
+            selectedCardFilter === "below_0.2"
               ? "ring-2 ring-red-500 ring-offset-2"
               : ""
           } transform hover:scale-[1.02]`}
