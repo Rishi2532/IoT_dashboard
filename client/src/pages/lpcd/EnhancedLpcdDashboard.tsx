@@ -1398,11 +1398,16 @@ const EnhancedLpcdDashboard = () => {
                           </span>
 
                           <span className="font-medium text-red-900">
-                            {
-                              allWaterSchemeData.filter((scheme) =>
-                                hasNoCurrentWaterSupply(scheme),
-                              ).length
-                            }
+                            {(() => {
+                              const noSupplyVillages = globallyFilteredData.filter(scheme => 
+                                hasNoCurrentWaterSupply(scheme)
+                              );
+                              const totalPopulation = noSupplyVillages.reduce(
+                                (sum, village) => sum + (village.population ? Number(village.population) : 0), 
+                                0
+                              );
+                              return `${noSupplyVillages.length} (Pop: ${totalPopulation.toLocaleString()})`;
+                            })()}
                           </span>
                         </CardContent>
                       </Card>
