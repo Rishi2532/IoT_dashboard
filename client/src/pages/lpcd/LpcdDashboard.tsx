@@ -115,9 +115,21 @@ const LpcdDashboard: React.FC = () => {
     }
   });
 
-  // Apply client-side filtering for better accuracy
-  const waterSchemeData = useMemo(() => {
+  // Apply global filters (region only) for card statistics
+  const globallyFilteredData = useMemo(() => {
     let filteredData = [...allWaterSchemeData];
+    
+    // Apply region filter only
+    if (filters.region && filters.region !== 'all') {
+      filteredData = filteredData.filter(scheme => scheme.region === filters.region);
+    }
+    
+    return filteredData;
+  }, [allWaterSchemeData, filters.region]);
+  
+  // Apply card-specific filters for table data display
+  const waterSchemeData = useMemo(() => {
+    let filteredData = [...globallyFilteredData]; // Start with globally filtered data
     
     // Apply LPCD minimum filter
     if (filters.minLpcd) {
@@ -243,7 +255,7 @@ const LpcdDashboard: React.FC = () => {
     }
     
     return filteredData;
-  }, [allWaterSchemeData, filters]);
+  }, [globallyFilteredData, filters]);
   
   // Regions data query
   const { 

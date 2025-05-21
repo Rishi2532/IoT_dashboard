@@ -146,15 +146,22 @@ const SimpleLpcdDashboard: React.FC = () => {
     return null;
   };
   
-  // Apply different filter types to the data
-  const filteredData = useMemo(() => {
-    console.log('Current filter:', currentFilter);
+  // Get globally filtered data (applies only region filter)
+  const globallyFilteredData = useMemo(() => {
     let result = [...allWaterSchemeData];
     
     // Apply region filter
     if (selectedRegion !== 'all') {
       result = result.filter(scheme => scheme.region === selectedRegion);
     }
+    
+    return result;
+  }, [allWaterSchemeData, selectedRegion]);
+
+  // Apply card-specific filter to the table data
+  const filteredData = useMemo(() => {
+    console.log('Current filter:', currentFilter);
+    let result = [...globallyFilteredData];  // Start with globally filtered data
     
     // Apply LPCD filters
     switch (currentFilter) {
@@ -206,7 +213,7 @@ const SimpleLpcdDashboard: React.FC = () => {
     
     console.log(`After applying filter ${currentFilter}, results:`, result.length);
     return result;
-  }, [allWaterSchemeData, selectedRegion, currentFilter]);
+  }, [globallyFilteredData, currentFilter]);
   
   // Calculate pagination data
   const paginationData = useMemo(() => {
@@ -371,12 +378,16 @@ const SimpleLpcdDashboard: React.FC = () => {
           {/* LPCD Statistics Overview */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             {/* Villages with LPCD > 55L */}
-            <Card className="bg-green-50 border-green-200">
+            <Card 
+              className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-green-50 border-green-200 ${
+                currentFilter === "above55" ? "ring-2 ring-green-500 ring-offset-2" : ""
+              }`}
+            >
               <CardContent className="pt-6">
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-green-700">Villages with LPCD &gt; 55L</h3>
                   <p className="text-3xl font-bold text-green-600 mt-2">
-                    {allWaterSchemeData.filter(scheme => {
+                    {globallyFilteredData.filter(scheme => {
                       const lpcdValue = getLatestLpcdValue(scheme);
                       return lpcdValue !== null && lpcdValue > 55;
                     }).length}
@@ -393,12 +404,16 @@ const SimpleLpcdDashboard: React.FC = () => {
             </Card>
             
             {/* Villages with LPCD between 40-55L */}
-            <Card className="bg-yellow-50 border-yellow-200">
+            <Card 
+              className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-yellow-50 border-yellow-200 ${
+                currentFilter === "40to55" ? "ring-2 ring-yellow-500 ring-offset-2" : ""
+              }`}
+            >
               <CardContent className="pt-6">
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-yellow-700">Villages with LPCD 40-55L</h3>
                   <p className="text-3xl font-bold text-yellow-600 mt-2">
-                    {allWaterSchemeData.filter(scheme => {
+                    {globallyFilteredData.filter(scheme => {
                       const lpcdValue = getLatestLpcdValue(scheme);
                       return lpcdValue !== null && lpcdValue >= 40 && lpcdValue <= 55;
                     }).length}
@@ -415,12 +430,16 @@ const SimpleLpcdDashboard: React.FC = () => {
             </Card>
             
             {/* Villages with LPCD < 40L */}
-            <Card className="bg-red-50 border-red-200">
+            <Card 
+              className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-red-50 border-red-200 ${
+                currentFilter === "below40" ? "ring-2 ring-red-500 ring-offset-2" : ""
+              }`}
+            >
               <CardContent className="pt-6">
                 <div className="text-center">
                   <h3 className="text-lg font-semibold text-red-700">Villages with LPCD &lt; 40L</h3>
                   <p className="text-3xl font-bold text-red-600 mt-2">
-                    {allWaterSchemeData.filter(scheme => {
+                    {globallyFilteredData.filter(scheme => {
                       const lpcdValue = getLatestLpcdValue(scheme);
                       return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 40;
                     }).length}
