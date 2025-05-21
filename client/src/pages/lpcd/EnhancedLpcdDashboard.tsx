@@ -285,8 +285,8 @@ const EnhancedLpcdDashboard = () => {
     return values.every((val) => val < threshold);
   };
 
-  // Apply filters
-  const getFilteredSchemes = () => {
+  // Get globally filtered data for card statistics
+  const getGloballyFilteredSchemes = () => {
     if (!allWaterSchemeData) return [];
 
     let filtered = [...allWaterSchemeData];
@@ -341,7 +341,15 @@ const EnhancedLpcdDashboard = () => {
       });
     }
 
-    // Apply LPCD range filter
+    return filtered;
+  };
+
+  // Apply filters for table display (global filters + card selection)
+  const getFilteredSchemes = () => {
+    // Start with globally filtered data
+    let filtered = getGloballyFilteredSchemes();
+
+    // Apply LPCD range filter based on card selection
     switch (currentFilter) {
       case "all":
         // No additional filtering needed
@@ -430,10 +438,13 @@ const EnhancedLpcdDashboard = () => {
     return filtered;
   };
 
-  // Calculate filter counts
+  // Calculate filter counts using globally filtered data
   const getFilterCounts = () => {
+    // Get the globally filtered data for calculating card statistics
+    const globallyFilteredData = getGloballyFilteredSchemes();
+    
     const counts = {
-      total: allWaterSchemeData.length,
+      total: globallyFilteredData.length,
       above55: 0,
       below55: 0,
       totalPopulation: 0,
@@ -454,13 +465,10 @@ const EnhancedLpcdDashboard = () => {
       consistentlyBelow55: 0,
     };
 
-    if (!allWaterSchemeData) return counts;
+    if (globallyFilteredData.length === 0) return counts;
 
-    // Update total count
-    counts.total = allWaterSchemeData.length;
-
-    // Count schemes in each category
-    allWaterSchemeData.forEach((scheme) => {
+    // Count schemes in each category using the globally filtered data
+    globallyFilteredData.forEach((scheme) => {
       const lpcdValue = getLatestLpcdValue(scheme);
       const population = scheme.population ? Number(scheme.population) : 0;
 
