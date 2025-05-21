@@ -164,8 +164,8 @@ const ChlorineDashboard: React.FC = () => {
     },
   });
 
-  // Fetch dashboard stats
-  const { data: dashboardStats, isLoading: isLoadingStats } =
+  // Fetch dashboard stats from API - we'll override these with local calculations
+  const { data: apiDashboardStats, isLoading: isLoadingStats } =
     useQuery<ChlorineDashboardStats>({
       queryKey: ["/api/chlorine/dashboard-stats", selectedRegion],
       queryFn: async () => {
@@ -297,6 +297,72 @@ const ChlorineDashboard: React.FC = () => {
 
     // Reset page to 1 when filter changes
     setPage(1);
+  };
+
+  // Calculate dashboard stats locally based on filtered data
+  const calculateDashboardStats = (data: ChlorineData[]): ChlorineDashboardStats => {
+    // Start with all data (after global filters but before card-specific filters)
+    const totalSensors = data.length;
+    
+    // Count sensors in different categories
+    let belowRangeSensors = 0;
+    let optimalRangeSensors = 0;
+    let aboveRangeSensors = 0;
+    let consistentZeroSensors = 0;
+    let consistentBelowRangeSensors = 0;
+    let consistentOptimalSensors = 0;
+    let consistentAboveRangeSensors = 0;
+
+    data.forEach(item => {
+      const latestValue = getLatestChlorineValue(item);
+      
+      // Count by latest value range
+      if (latestValue !== null) {
+        if (latestValue < 0.2 && latestValue >= 0) {
+          belowRangeSensors++;
+        } else if (latestValue >= 0.2 && latestValue <= 0.5) {
+          optimalRangeSensors++;
+        } else if (latestValue > 0.5) {
+          aboveRangeSensors++;
+        }
+      }
+      
+      // Count consistent readings
+      if ((item.number_of_consistent_zero_value_in_chlorine || 0) === 7) {
+        consistentZeroSensors++;
+      }
+      
+      const values = [
+        parseFloat(String(item.chlorine_value_1 || 0)),
+        parseFloat(String(item.chlorine_value_2 || 0)),
+        parseFloat(String(item.chlorine_value_3 || 0)),
+        parseFloat(String(item.chlorine_value_4 || 0)),
+        parseFloat(String(item.chlorine_value_5 || 0)),
+        parseFloat(String(item.chlorine_value_6 || 0)),
+        parseFloat(String(item.chlorine_value_7 || 0)),
+      ];
+      
+      if (values.every(val => val > 0 && val < 0.2)) {
+        consistentBelowRangeSensors++;
+      } else if (values.every(val => val >= 0.2 && val <= 0.5)) {
+        consistentOptimalSensors++;
+      } else if (values.every(val => val > 0.5)) {
+        consistentAboveRangeSensors++;
+      }
+    });
+    
+    // Preserve last import stats from API if available
+    return {
+      totalSensors,
+      belowRangeSensors,
+      optimalRangeSensors,
+      aboveRangeSensors,
+      consistentZeroSensors,
+      consistentBelowRangeSensors,
+      consistentOptimalSensors,
+      consistentAboveRangeSensors,
+      lastImport: apiDashboardStats?.lastImport
+    };
   };
 
   // Filter and search data
