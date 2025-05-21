@@ -127,16 +127,15 @@ type PressureRange =
 const PressureDashboard: React.FC = () => {
   const { toast } = useToast();
 
-  // Filter state
+  // Global filter state (affects both cards and table data)
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
-  const [currentFilter, setCurrentFilter] = useState<PressureRange>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [commissionedFilter, setCommissionedFilter] = useState<string>("all");
   const [fullyCompletedFilter, setFullyCompletedFilter] =
     useState<string>("all");
   const [schemeStatusFilter, setSchemeStatusFilter] = useState<string>("all");
   
-  // Track selected card for table filtering (separate from API filtering)
+  // Card-specific filter state (only affects table data, not card counts)
   const [selectedCardFilter, setSelectedCardFilter] = useState<PressureRange>("all");
 
   // Pagination state
@@ -591,7 +590,7 @@ const PressureDashboard: React.FC = () => {
           "Latest Pressure Value (bar)":
             latestPressure !== null ? latestPressure.toFixed(2) : "No data",
           "Last Updated": latestDate
-            ? formatDateForHeader(latestDate)
+            ? typeof latestDate === 'string' ? formatDateForHeader(latestDate) : 'No data'
             : "No data",
           Status: statusText,
 
@@ -901,7 +900,7 @@ const PressureDashboard: React.FC = () => {
               onClick={() =>
                 exportToExcel(
                   filteredData,
-                  `Pressure_Data_${selectedRegion}_${currentFilter}_${
+                  `Pressure_Data_${selectedRegion}_${selectedCardFilter}_${
                     new Date().toISOString().split("T")[0]
                   }`,
                 )
@@ -1198,7 +1197,7 @@ const PressureDashboard: React.FC = () => {
       {/* Current Filter Label */}
       <div className="mb-6">
         <h2 className="text-xl font-bold text-gray-800">
-          {getFilterTitle(currentFilter)}
+          {getFilterTitle(selectedCardFilter)}
           <Badge
             variant="outline"
             className="ml-2 text-blue-600 border-blue-200 bg-blue-50"
