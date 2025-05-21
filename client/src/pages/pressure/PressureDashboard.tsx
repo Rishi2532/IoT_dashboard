@@ -387,8 +387,8 @@ const PressureDashboard: React.FC = () => {
     return stats;
   };
 
-  // Filter and search data
-  const filteredData = useMemo(() => {
+  // Apply global filters to data for both cards and table
+  const globallyFilteredData = useMemo(() => {
     let filtered = [...allPressureData];
 
     // Apply search filter if query exists
@@ -447,9 +447,18 @@ const PressureDashboard: React.FC = () => {
         return status.fully_completion_scheme_status === schemeStatusFilter;
       });
     }
-
-    // Apply card selection filter - this is only for the table display
-    // and doesn't affect the card values
+    
+    return filtered;
+  }, [allPressureData, selectedRegion, searchQuery, commissionedFilter, fullyCompletedFilter, schemeStatusFilter, schemeStatusData]);
+  
+  // Calculate card statistics based on the globally filtered data
+  const cardStats = useMemo(() => {
+    return calculateLocalDashboardStats(globallyFilteredData);
+  }, [globallyFilteredData]);
+  
+  // Apply card selection filter for table display only
+  const filteredData = useMemo(() => {
+    let filtered = [...globallyFilteredData];
     if (selectedCardFilter !== "all") {
       switch (selectedCardFilter) {
         case "below_0.2":
@@ -541,6 +550,75 @@ const PressureDashboard: React.FC = () => {
     const startIndex = (page - 1) * itemsPerPage;
     return filteredData.slice(startIndex, startIndex + itemsPerPage);
   }, [filteredData, page, itemsPerPage]);
+  
+  // Update card values to use the globally filtered data (before card-specific filtering)
+  const updatedCardStats = useMemo(() => {
+    if (!dashboardStats) return null;
+    
+    // Start with a copy of the API stats
+    const stats = {...dashboardStats};
+    
+    // Count values by category from the globally filtered data (respects all global filters)
+    let totalSensors = 0;
+    let belowRangeSensors = 0;
+    let optimalRangeSensors = 0;
+    let aboveRangeSensors = 0;
+    let consistentZeroSensors = 0;
+    let consistentBelowRangeSensors = 0;
+    let consistentOptimalSensors = 0;
+    let consistentAboveRangeSensors = 0;
+    
+    globallyFilteredData.forEach(item => {
+      totalSensors++;
+      
+      const latestValue = getLatestPressureValue(item);
+      
+      if (latestValue !== null) {
+        if (latestValue < 0.2 && latestValue >= 0) {
+          belowRangeSensors++;
+        } else if (latestValue >= 0.2 && latestValue <= 0.7) {
+          optimalRangeSensors++;
+        } else if (latestValue > 0.7) {
+          aboveRangeSensors++;
+        }
+      }
+      
+      // Count consistent readings
+      if ((item.number_of_consistent_zero_value_in_pressure || 0) === 7) {
+        consistentZeroSensors++;
+      }
+      
+      const values = [
+        parseFloat(String(item.pressure_value_1 || 0)),
+        parseFloat(String(item.pressure_value_2 || 0)),
+        parseFloat(String(item.pressure_value_3 || 0)),
+        parseFloat(String(item.pressure_value_4 || 0)),
+        parseFloat(String(item.pressure_value_5 || 0)),
+        parseFloat(String(item.pressure_value_6 || 0)),
+        parseFloat(String(item.pressure_value_7 || 0)),
+      ];
+      
+      if (values.every(val => val > 0 && val < 0.2)) {
+        consistentBelowRangeSensors++;
+      } else if (values.every(val => val >= 0.2 && val <= 0.7)) {
+        consistentOptimalSensors++;
+      } else if (values.every(val => val > 0.7)) {
+        consistentAboveRangeSensors++;
+      }
+    });
+    
+    return {
+      ...stats,
+      totalSensors,
+      belowRangeSensors,
+      optimalRangeSensors,
+      aboveRangeSensors,
+      consistentZeroSensors,
+      consistentBelowRangeSensors,
+      consistentOptimalSensors,
+      consistentAboveRangeSensors
+    };
+  }, [dashboardStats, globallyFilteredData]);
 
   // Get status filter title
   const getFilterTitle = (filter: PressureRange) => {
@@ -1039,7 +1117,7 @@ const PressureDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-blue-700">
-              {dashboardStats?.totalSensors || 0}
+              {updatedCardStats?.totalSensors || 0}
             </p>
             <p className="text-sm text-blue-600/80 mt-2 font-medium">
               Total pressure sensors connected
@@ -1068,7 +1146,7 @@ const PressureDashboard: React.FC = () => {
           </CardHeader>
           <CardContent className="relative">
             <p className="text-5xl font-bold text-red-600">
-              {dashboardStats?.belowRangeSensors || 0}
+              {updatedCardStats?.belowRangeSensors || 0}
             </p>
             <div className="flex items-center mt-2">
               <p className="text-sm text-red-600/80 font-medium">
