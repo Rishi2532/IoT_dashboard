@@ -135,6 +135,9 @@ const PressureDashboard: React.FC = () => {
   const [fullyCompletedFilter, setFullyCompletedFilter] =
     useState<string>("all");
   const [schemeStatusFilter, setSchemeStatusFilter] = useState<string>("all");
+  
+  // Track selected card for table filtering (separate from API filtering)
+  const [selectedCardFilter, setSelectedCardFilter] = useState<PressureRange>("all");
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -150,7 +153,7 @@ const PressureDashboard: React.FC = () => {
     error: pressureError,
     refetch,
   } = useQuery<PressureData[]>({
-    queryKey: ["/api/pressure", selectedRegion, currentFilter],
+    queryKey: ["/api/pressure", selectedRegion],
     queryFn: async () => {
       const params = new URLSearchParams();
 
@@ -158,9 +161,9 @@ const PressureDashboard: React.FC = () => {
         params.append("region", selectedRegion);
       }
 
-      if (currentFilter && currentFilter !== "all") {
-        params.append("pressureRange", currentFilter);
-      }
+      // Note: we're not applying currentFilter here anymore
+      // This ensures we get all data for the selected region
+      // and will filter in the UI instead
 
       const queryString = params.toString();
       const url = `/api/pressure${queryString ? `?${queryString}` : ""}`;
@@ -173,7 +176,7 @@ const PressureDashboard: React.FC = () => {
 
       const data = await response.json();
       console.log(
-        `Received ${data.length} pressure records for region: ${selectedRegion}, filter: ${currentFilter}`,
+        `Received ${data.length} pressure records for region: ${selectedRegion}`,
       );
       return data;
     },
@@ -387,6 +390,81 @@ const PressureDashboard: React.FC = () => {
       });
     }
 
+    // Apply card selection filter - this is only for the table display
+    // and doesn't affect the card values
+    if (selectedCardFilter !== "all") {
+      switch (selectedCardFilter) {
+        case "below_0.2":
+          filtered = filtered.filter((item) => {
+            const latestValue = getLatestPressureValue(item);
+            return latestValue !== null && latestValue < 0.2 && latestValue >= 0;
+          });
+          break;
+        case "between_0.2_0.7":
+          filtered = filtered.filter((item) => {
+            const latestValue = getLatestPressureValue(item);
+            return latestValue !== null && latestValue >= 0.2 && latestValue <= 0.7;
+          });
+          break;
+        case "above_0.7":
+          filtered = filtered.filter((item) => {
+            const latestValue = getLatestPressureValue(item);
+            return latestValue !== null && latestValue > 0.7;
+          });
+          break;
+        case "consistent_zero":
+          filtered = filtered.filter((item) => {
+            return (item.number_of_consistent_zero_value_in_pressure || 0) === 7;
+          });
+          break;
+        case "consistent_below":
+          // ESRs with consistent below range pressure (<0.2 bar) for 7 days
+          filtered = filtered.filter((item) => {
+            const values = [
+              parseFloat(String(item.pressure_value_1 || 0)),
+              parseFloat(String(item.pressure_value_2 || 0)),
+              parseFloat(String(item.pressure_value_3 || 0)),
+              parseFloat(String(item.pressure_value_4 || 0)),
+              parseFloat(String(item.pressure_value_5 || 0)),
+              parseFloat(String(item.pressure_value_6 || 0)),
+              parseFloat(String(item.pressure_value_7 || 0)),
+            ];
+            return values.every(val => val > 0 && val < 0.2);
+          });
+          break;
+        case "consistent_optimal":
+          // ESRs with consistent optimal range pressure (0.2-0.7 bar) for 7 days
+          filtered = filtered.filter((item) => {
+            const values = [
+              parseFloat(String(item.pressure_value_1 || 0)),
+              parseFloat(String(item.pressure_value_2 || 0)),
+              parseFloat(String(item.pressure_value_3 || 0)),
+              parseFloat(String(item.pressure_value_4 || 0)),
+              parseFloat(String(item.pressure_value_5 || 0)),
+              parseFloat(String(item.pressure_value_6 || 0)),
+              parseFloat(String(item.pressure_value_7 || 0)),
+            ];
+            return values.every(val => val >= 0.2 && val <= 0.7);
+          });
+          break;
+        case "consistent_above":
+          // ESRs with consistent above range pressure (>0.7 bar) for 7 days
+          filtered = filtered.filter((item) => {
+            const values = [
+              parseFloat(String(item.pressure_value_1 || 0)),
+              parseFloat(String(item.pressure_value_2 || 0)),
+              parseFloat(String(item.pressure_value_3 || 0)),
+              parseFloat(String(item.pressure_value_4 || 0)),
+              parseFloat(String(item.pressure_value_5 || 0)),
+              parseFloat(String(item.pressure_value_6 || 0)),
+              parseFloat(String(item.pressure_value_7 || 0)),
+            ];
+            return values.every(val => val > 0.7);
+          });
+          break;
+      }
+    }
+
     return filtered;
   }, [
     allPressureData,
@@ -396,6 +474,7 @@ const PressureDashboard: React.FC = () => {
     fullyCompletedFilter,
     schemeStatusFilter,
     schemeStatusData,
+    selectedCardFilter, // Add this to dependencies
   ]);
 
   // Calculate pagination
@@ -429,7 +508,9 @@ const PressureDashboard: React.FC = () => {
 
   // Handler for dashboard card clicks
   const handleCardClick = (range: PressureRange) => {
-    setCurrentFilter(range);
+    // Only update the selected card filter - this affects the table display
+    // but not the card values which come from dashboardStats
+    setSelectedCardFilter(range);
     setPage(1); // Reset to first page when filter changes
   };
 
