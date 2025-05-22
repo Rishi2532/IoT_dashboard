@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { File, FileDown, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Link } from 'wouter';
 
 // Report file types with friendly names and descriptions
 const REPORT_TYPES = [
@@ -64,11 +65,13 @@ function ReportsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container pt-8 pb-6">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Reports</h1>
-          <p className="text-gray-600">
-            Download the latest Excel report files with all formatting preserved
-          </p>
+        <div className="mb-8 flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Reports</h1>
+            <p className="text-gray-600">
+              Download the latest Excel report files with all formatting preserved
+            </p>
+          </div>
         </div>
 
         <div className="py-6">
