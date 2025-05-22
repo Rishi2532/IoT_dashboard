@@ -619,7 +619,7 @@ export default function AdminDashboard() {
 
         <div className="px-6">
           <Tabs defaultValue="region-import" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-6 mb-6">
+            <TabsList className="grid w-full grid-cols-7 mb-6">
               <TabsTrigger value="region-import" className="flex items-center">
                 <Database className="h-4 w-4 mr-2" />
                 Import Region Data
@@ -643,6 +643,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="manage-schemes" className="flex items-center">
                 <Cog className="h-4 w-4 mr-2" />
                 Manage Schemes
+              </TabsTrigger>
+              <TabsTrigger value="manage-reports" className="flex items-center" onClick={() => window.location.href = '/admin/manage-reports'}>
+                <FileText className="h-4 w-4 mr-2" />
+                Manage Reports
               </TabsTrigger>
             </TabsList>
             
