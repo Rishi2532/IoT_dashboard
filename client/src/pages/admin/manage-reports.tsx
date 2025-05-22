@@ -246,7 +246,7 @@ const ManageReports = () => {
             </div>
           ) : error ? (
             <div className="text-center py-8 text-red-500">
-              Failed to load report files
+              Failed to load report files: {error instanceof Error ? error.message : 'Unknown error'}
             </div>
           ) : Array.isArray(reportFiles) && reportFiles.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
