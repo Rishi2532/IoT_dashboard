@@ -9,14 +9,32 @@ import { eq } from 'drizzle-orm';
 
 const router = Router();
 
+// Check for VS Code environment and set appropriate upload directory
+const isVSCode = process.env.VSCODE_CLI === '1' || process.env.VSCODE_PID;
+
+// Set the upload directory path based on environment
+const uploadDir = isVSCode 
+  ? path.join(__dirname, '..', '..', 'uploads', 'reports')
+  : '/tmp/reports';
+
+// Ensure the upload directory exists with proper permissions
+if (!fs.existsSync(uploadDir)) {
+  fs.mkdirSync(uploadDir, { recursive: true });
+  // On non-Windows systems, set directory permissions
+  if (process.platform !== 'win32') {
+    try {
+      fs.chmodSync(uploadDir, 0o755);
+    } catch (err) {
+      console.error('Failed to set upload directory permissions:', err);
+    }
+  }
+}
+
+console.log("Report files upload directory:", uploadDir);
+
 // Set up multer storage configuration for Excel files
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    const uploadDir = path.join(process.cwd(), 'reports', 'admin');
-    // Ensure directory exists
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
     cb(null, uploadDir);
   },
   filename: function (req, file, cb) {
@@ -30,11 +48,23 @@ const storage = multer.diskStorage({
 // Configure multer upload middleware
 const upload = multer({
   storage,
-  // Allow any file type to be uploaded
   fileFilter: (req, file, cb) => {
-    cb(null, true);
+    // Only allow Excel files
+    const allowedMimes = [
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'application/octet-stream',
+    ];
+    
+    if (allowedMimes.includes(file.mimetype) || 
+        file.originalname.endsWith('.xlsx') || 
+        file.originalname.endsWith('.xls')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only Excel files are allowed.'));
+    }
   },
-  limits: { fileSize: 15 * 1024 * 1024 } // 15MB limit
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
 });
 
 // Middleware to check admin role
@@ -49,10 +79,7 @@ const requireAdmin = (req: any, res: any, next: any) => {
 // Get list of available report files
 router.get('/', async (req, res) => {
   try {
-    const files = await db
-      .select()
-      .from(reportFiles)
-      .where(eq(reportFiles.is_active, true));
+    const files = await db.select().from(reportFiles).where(eq(reportFiles.is_active, true));
     res.json(files);
   } catch (error) {
     console.error('Error fetching report files:', error);
@@ -81,13 +108,15 @@ router.get('/type/:reportType', async (req, res) => {
     }
     
     // Get the latest active file of this type
-    const [latestFile] = await db
+    const latestFiles = await db
       .select()
       .from(reportFiles)
       .where(eq(reportFiles.report_type, reportType))
       .where(eq(reportFiles.is_active, true))
       .orderBy(reportFiles.upload_date, 'desc')
       .limit(1);
+    
+    const [latestFile] = latestFiles;
     
     if (!latestFile) {
       return res.status(404).json({ error: 'Report file not found' });
