@@ -30,16 +30,9 @@ const storage = multer.diskStorage({
 // Configure multer upload middleware
 const upload = multer({
   storage,
+  // Allow any file type to be uploaded
   fileFilter: (req, file, cb) => {
-    // Only accept Excel files
-    if (
-      file.mimetype === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-      file.mimetype === 'application/vnd.ms-excel'
-    ) {
-      cb(null, true);
-    } else {
-      cb(new Error('Only Excel files (.xlsx, .xls) are allowed'));
-    }
+    cb(null, true);
   },
   limits: { fileSize: 15 * 1024 * 1024 } // 15MB limit
 });
@@ -152,7 +145,8 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: any, res
   try {
     const { report_type } = req.body;
     
-    // Validate report type
+    // Accept any report type that matches our predefined buttons
+    // This allows flexible uploading of any file to any button
     const validReportTypes = [
       'esr_level', 
       'water_consumption', 
@@ -164,6 +158,7 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: any, res
     ];
     
     if (!validReportTypes.includes(report_type)) {
+      console.log(`Received report_type: "${report_type}"`);
       // Remove uploaded file if report type is invalid
       fs.unlinkSync(req.file.path);
       return res.status(400).json({ error: 'Invalid report type' });

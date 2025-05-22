@@ -111,7 +111,7 @@ const ManageReports = () => {
 
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('reportType', reportType);
+    formData.append('report_type', reportType);
     
     setIsUploading(true);
     await uploadMutation.mutate(formData);
