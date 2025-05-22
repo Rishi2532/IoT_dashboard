@@ -199,96 +199,94 @@ export default function Dashboard() {
   // Export function 
   const handleExport = async () => {
     try {
-      // Directly fetch all data with the appropriate filters
-      // This ensures we get all pages of data for the export
-      let url = `/api/schemes`;
-      const params = new URLSearchParams();
-
-      if (selectedRegion !== "all") {
-        params.append("region", selectedRegion);
-      }
+      // Get the currently filtered schemes from SchemeTable that are shown to the user
+      // This is the most direct way to ensure we export exactly what user sees
       
-      // We'll apply the status filter from SchemeTable instead
-      // Don't apply statusFilter here as we'll get it from SchemeTable
+      // We need to find out which schemes are currently showing in the table
+      // First, look at what's being passed to SchemeTable
+      let schemesToExport = isFiltering ? geoFilteredSchemes : schemes;
+      console.log(`Starting with ${schemesToExport.length} schemes that are passed to SchemeTable`);
       
-      // Get direct access to filter values from SchemeTable component
+      // Get the schemes that are currently visible based on other filter states
+      let tableSchemesFiltered = [...schemesToExport]; // Create a copy to work with
+      
+      // Get filters from SchemeTable component (integration_status, MJP filters)
       let mjpCommissionedFilter = "all";
       let mjpFullyCompletedFilter = "all";
       let localStatusFilter = statusFilter;
       
-      // First, try to get filters directly from the global filters object
-      // that's exposed by the SchemeTable component
+      // Try to get the filters from our global object first
       if ((window as any).schemeTableFilters) {
         const filters = (window as any).schemeTableFilters;
-        console.log("Found filters from SchemeTable:", filters);
+        console.log("Found SchemeTable filters:", filters);
         
-        // Get all filter values
         mjpCommissionedFilter = filters.commissionedFilter || "all";
         mjpFullyCompletedFilter = filters.fullyCompletedFilter || "all";
         localStatusFilter = filters.statusFilter || statusFilter;
         
-        // Log what we're going to use for the export
         console.log("Using filters for export:", { 
           region: selectedRegion,
           status: localStatusFilter,
           mjpCommissioned: mjpCommissionedFilter,
           mjpFullyCompleted: mjpFullyCompletedFilter
         });
+        
+        // Apply each filter to our list
+        if (localStatusFilter !== "all") {
+          tableSchemesFiltered = tableSchemesFiltered.filter(
+            scheme => scheme.integration_status === localStatusFilter
+          );
+          console.log(`After status filter (${localStatusFilter}): ${tableSchemesFiltered.length} schemes`);
+        }
+        
+        if (mjpCommissionedFilter !== "all") {
+          tableSchemesFiltered = tableSchemesFiltered.filter(
+            scheme => scheme.mjp_commissioned === mjpCommissionedFilter
+          );
+          console.log(`After MJP commissioned filter (${mjpCommissionedFilter}): ${tableSchemesFiltered.length} schemes`);
+        }
+        
+        if (mjpFullyCompletedFilter !== "all") {
+          tableSchemesFiltered = tableSchemesFiltered.filter(
+            scheme => scheme.mjp_fully_completed === mjpFullyCompletedFilter
+          );
+          console.log(`After MJP fully completed filter (${mjpFullyCompletedFilter}): ${tableSchemesFiltered.length} schemes`);
+        }
       } else {
-        // If the global object isn't available yet, use the standard approach
-        console.log("SchemeTable filters not found, using default approach");
-        
-        // Try to find the filter values from the UI filter badges
-        const activeFilters = document.querySelectorAll('.bg-green-50, .bg-sky-50, .filter-pill, .status-badge');
-        
-        // Convert to array and check text content
-        Array.from(activeFilters).forEach(element => {
-          const text = element.textContent || '';
+        // If we can't get the filters directly, look at the count in the SchemeTable header
+        const countElement = document.querySelector('.scheme-item .text-blue-600 .font-medium');
+        if (countElement) {
+          const countText = countElement.textContent;
+          const count = parseInt(countText || '0');
           
-          // Check for commissioned status
-          if (text.includes('Yes:') || text.includes('Commissioned:')) {
-            mjpCommissionedFilter = 'Yes';
-          } else if (text.includes('No:') || text.includes('Not Commissioned:')) {
-            mjpCommissionedFilter = 'No';
+          if (!isNaN(count) && count > 0 && count < schemesToExport.length) {
+            console.log(`Found count in UI: ${count} schemes to export`);
+            
+            // Try to match the count by applying filters based on UI elements
+            if (document.querySelector('.status-filter-pill')) {
+              const statusText = document.querySelector('.status-filter-pill')?.textContent || '';
+              const statusValue = statusText.split(':')[0]?.trim();
+              
+              if (statusValue && statusValue !== 'All') {
+                console.log(`Found status filter in UI: ${statusValue}`);
+                tableSchemesFiltered = tableSchemesFiltered.filter(
+                  scheme => scheme.integration_status === statusValue
+                );
+              }
+            }
           }
-          
-          // Check for completion status
-          if (text.includes('Fully Completed:')) {
-            mjpFullyCompletedFilter = 'Fully Completed';
-          } else if (text.includes('In Progress:')) {
-            mjpFullyCompletedFilter = 'In Progress';
-          }
-        });
+        }
       }
       
-      // Apply the localStatusFilter to the export request
-      if (localStatusFilter !== "all") {
-        // Use the filter from SchemeTable 
-        console.log("Using status filter for export:", localStatusFilter);
-        params.append("status", localStatusFilter);
-      }
-      
-      if (mjpCommissionedFilter !== "all") {
-        params.append("mjp_commissioned", mjpCommissionedFilter);
-      }
-      
-      if (mjpFullyCompletedFilter !== "all") {
-        params.append("mjp_fully_completed", mjpFullyCompletedFilter);
-      }
-
-      if (params.toString()) {
-        url += `?${params.toString()}`;
-      }
-
       // Show loading toast
       toast({
         title: "Preparing Export",
         description: "Gathering data for export...",
       });
-
-      // Fetch all filtered data
-      const response = await fetch(url);
-      const allFilteredSchemes = await response.json();
+      
+      // Use the filtered schemes for export
+      const allFilteredSchemes = tableSchemesFiltered;
+      console.log(`Exporting ${allFilteredSchemes.length} schemes that match all filters`);
 
       // Import XLSX dynamically
       const XLSX = await import("xlsx");
