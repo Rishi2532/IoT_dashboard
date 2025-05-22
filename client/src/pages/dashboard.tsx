@@ -211,6 +211,39 @@ export default function Dashboard() {
       if (statusFilter !== "all") {
         params.append("status", statusFilter);
       }
+      
+      // Get the MJP filters from the SchemeTable component
+      const schemesTable = document.querySelector('div[role="table"]');
+      let mjpCommissionedFilter = "all";
+      let mjpFullyCompletedFilter = "all";
+      
+      // Find the MJP filter select elements
+      const selectElements = document.querySelectorAll('select, [role="combobox"]');
+      selectElements.forEach(select => {
+        const ariaLabel = select.getAttribute('aria-label') || '';
+        const labelText = select.previousElementSibling?.textContent || '';
+        const value = select.value;
+        
+        if (ariaLabel.includes('Commissioned') || labelText.includes('Commissioned')) {
+          if (value && value !== 'all') {
+            mjpCommissionedFilter = value;
+          }
+        }
+        
+        if (ariaLabel.includes('Fully Completed') || labelText.includes('Fully Completed')) {
+          if (value && value !== 'all') {
+            mjpFullyCompletedFilter = value;
+          }
+        }
+      });
+      
+      if (mjpCommissionedFilter !== "all") {
+        params.append("mjp_commissioned", mjpCommissionedFilter);
+      }
+      
+      if (mjpFullyCompletedFilter !== "all") {
+        params.append("mjp_fully_completed", mjpFullyCompletedFilter);
+      }
 
       if (params.toString()) {
         url += `?${params.toString()}`;
