@@ -6,6 +6,7 @@ import Reports from "./pages/reports";
 import Settings from "./pages/settings";
 import Admin from "./pages/admin";
 import AdminDashboard from "./pages/admin/dashboard";
+import ManageReports from "./pages/admin/manage-reports";
 import ImportDataPage from "./pages/import-data";
 import NotFound from "./pages/not-found";
 import LoginPage from "./pages/login";
@@ -167,7 +168,7 @@ function App() {
               
               <Route path="/admin/manage-reports">
                 <ProtectedRoute>
-                  <Admin.ManageReports />
+                  <ManageReports />
                 </ProtectedRoute>
               </Route>
               
