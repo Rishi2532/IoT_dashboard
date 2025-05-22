@@ -46,6 +46,7 @@ interface SchemeTableProps {
   onViewDetails: (scheme: SchemeStatus) => void;
   statusFilter?: string;
   onStatusFilterChange?: (status: string) => void;
+  onFilteredSchemesChange?: (filteredSchemes: SchemeStatus[]) => void;
 }
 
 export default function SchemeTable({
@@ -54,6 +55,7 @@ export default function SchemeTable({
   onViewDetails,
   statusFilter = "all",
   onStatusFilterChange,
+  onFilteredSchemesChange,
 }: SchemeTableProps) {
   const [searchTerm, setSearchTerm] = useState("");
   const [schemeIdSearch, setSchemeIdSearch] = useState("");
@@ -79,6 +81,13 @@ export default function SchemeTable({
       fullyCompletedFilter
     };
   }, [localStatusFilter, commissionedFilter, fullyCompletedFilter]);
+
+  // Notify parent component whenever filtered schemes change
+  useEffect(() => {
+    if (onFilteredSchemesChange) {
+      onFilteredSchemesChange(filteredSchemes);
+    }
+  }, [filteredSchemes, onFilteredSchemesChange]);
 
   // Ensure schemes is an array before filtering
   const schemesArray = Array.isArray(schemes) ? schemes : [];
