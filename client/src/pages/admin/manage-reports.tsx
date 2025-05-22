@@ -52,10 +52,20 @@ const ManageReports = () => {
   // Define mutation for file upload
   const uploadMutation = useMutation({
     mutationFn: async (formData: FormData) => {
-      return apiRequest('/api/reports/upload', {
+      // Using fetch directly instead of apiRequest to better control the request
+      const response = await fetch('/api/reports/upload', {
         method: 'POST',
         body: formData,
+        // Don't set Content-Type header - browser will set it with boundary for multipart/form-data
       });
+      
+      if (!response.ok) {
+        // Parse error details from response
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || `Upload failed with status: ${response.status}`);
+      }
+      
+      return response.json();
     },
     onSuccess: () => {
       toast({
@@ -67,6 +77,7 @@ const ManageReports = () => {
       setIsUploading(false);
     },
     onError: (error: any) => {
+      console.error('Upload error:', error);
       toast({
         title: 'Upload failed',
         description: error.message || 'Failed to upload report file',
