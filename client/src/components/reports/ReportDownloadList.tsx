@@ -162,14 +162,19 @@ export default function ReportDownloadList() {
                     </div>
                   </div>
                 </div>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2"
-                  onClick={() => window.location.href = `/api/reports/${report.id}`}
+                <a 
+                  href={`/api/reports/${report.id}`}
+                  download
+                  className="inline-block"
                 >
-                  <Download className="h-4 w-4" />
-                  Download
-                </Button>
+                  <Button
+                    variant="outline"
+                    className="flex items-center gap-2"
+                  >
+                    <Download className="h-4 w-4" />
+                    Download
+                  </Button>
+                </a>
               </div>
             ))}
           </div>
