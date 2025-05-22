@@ -133,8 +133,34 @@ router.get('/type/:reportType', async (req, res) => {
     
     // Send the file
     const filePath = latestFile.file_path;
+    console.log(`Attempting to download file from path: ${filePath}`);
+    
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'File not found on server' });
+      console.error(`File not found at path: ${filePath}`);
+      
+      // Try alternative location (handle both Replit and VS Code paths)
+      const fileName = path.basename(filePath);
+      const altPaths = [
+        path.join('/tmp/reports', fileName),
+        path.join(__dirname, '..', '..', 'uploads', 'reports', fileName),
+        path.join(process.cwd(), 'uploads', 'reports', fileName)
+      ];
+      
+      console.log(`Trying alternative paths: ${altPaths.join(', ')}`);
+      
+      // Find first existing alternative path
+      const existingPath = altPaths.find(p => fs.existsSync(p));
+      
+      if (existingPath) {
+        console.log(`Found file at alternative path: ${existingPath}`);
+        return res.download(existingPath, latestFile.original_name);
+      }
+      
+      return res.status(404).json({ 
+        error: 'File not found on server',
+        path: filePath,
+        tried: altPaths
+      });
     }
     
     res.download(filePath, latestFile.original_name);
@@ -163,8 +189,34 @@ router.get('/:id', async (req, res) => {
     
     // Send the file
     const filePath = file.file_path;
+    console.log(`Attempting to download file by ID from path: ${filePath}`);
+    
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: 'File not found on server' });
+      console.error(`File not found at path: ${filePath}`);
+      
+      // Try alternative location (handle both Replit and VS Code paths)
+      const fileName = path.basename(filePath);
+      const altPaths = [
+        path.join('/tmp/reports', fileName),
+        path.join(__dirname, '..', '..', 'uploads', 'reports', fileName),
+        path.join(process.cwd(), 'uploads', 'reports', fileName)
+      ];
+      
+      console.log(`Trying alternative paths: ${altPaths.join(', ')}`);
+      
+      // Find first existing alternative path
+      const existingPath = altPaths.find(p => fs.existsSync(p));
+      
+      if (existingPath) {
+        console.log(`Found file at alternative path: ${existingPath}`);
+        return res.download(existingPath, file.original_name);
+      }
+      
+      return res.status(404).json({ 
+        error: 'File not found on server',
+        path: filePath,
+        tried: altPaths
+      });
     }
     
     res.download(filePath, file.original_name);
