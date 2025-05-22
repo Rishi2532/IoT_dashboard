@@ -27,7 +27,7 @@ import { Link } from 'wouter';
 
 // Report File Types
 const REPORT_TYPES = [
-  { id: 'esr_datalink', name: 'ESR Level Datalink Report' },
+  { id: 'esr_level', name: 'ESR Level Datalink Report' },
   { id: 'water_consumption', name: 'Water Consumption Datalink Report' },
   { id: 'lpcd_village', name: 'LPCD Village Level Datalink Report' },
   { id: 'chlorine', name: 'Chlorine Datalink Report' },
