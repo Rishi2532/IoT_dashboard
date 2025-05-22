@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 // Report file types with friendly names and descriptions
 const REPORT_TYPES = [
   {
-    id: 'esr_datalink',
+    id: 'esr_level',
     name: 'ESR Level Datalink Report',
     description: 'Comprehensive data about ESR (Elevated Storage Reservoir) infrastructure and operations'
   },
@@ -55,8 +55,8 @@ function ReportsPage() {
     if (!reportFiles || !Array.isArray(reportFiles)) return null;
     
     const typeReports = reportFiles
-      .filter((file: any) => file.report_type === type && file.is_active)
-      .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      .filter((file: any) => file.report_type === type)
+      .sort((a: any, b: any) => new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime());
     
     return typeReports.length > 0 ? typeReports[0] : null;
   };
@@ -101,18 +101,17 @@ function ReportsPage() {
                         <div>
                           <div className="mb-4">
                             <p className="text-sm font-medium">Filename:</p>
-                            <p className="text-sm text-gray-500 truncate">{report.original_filename}</p>
+                            <p className="text-sm text-gray-500 truncate">{report.original_name}</p>
                           </div>
                           <div className="mb-4">
                             <p className="text-sm font-medium">Last Updated:</p>
                             <p className="text-sm text-gray-500">
-                              {new Date(report.created_at).toLocaleDateString()}
+                              {new Date(report.upload_date).toLocaleDateString()}
                             </p>
                           </div>
                           <a 
-                            href={`/api/reports/download/${report.id}`} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
+                            href={`/api/reports/${report.id}`} 
+                            download
                             className="w-full"
                           >
                             <Button className="w-full">
