@@ -69,6 +69,16 @@ export default function SchemeTable({
   useEffect(() => {
     setLocalStatusFilter(statusFilter);
   }, [statusFilter]);
+  
+  // Make filter states globally accessible for export function
+  useEffect(() => {
+    // Add filter states to the window object for the export function to use
+    (window as any).schemeTableFilters = {
+      statusFilter: localStatusFilter,
+      commissionedFilter,
+      fullyCompletedFilter
+    };
+  }, [localStatusFilter, commissionedFilter, fullyCompletedFilter]);
 
   // Ensure schemes is an array before filtering
   const schemesArray = Array.isArray(schemes) ? schemes : [];
