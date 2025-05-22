@@ -79,8 +79,10 @@ const requireAdmin = (req: any, res: any, next: any) => {
 // Get list of available report files
 router.get('/', async (req, res) => {
   try {
-    const files = await db.select().from(reportFiles).where(eq(reportFiles.is_active, true));
-    res.json(files);
+    const allFiles = await db.select().from(reportFiles);
+    // Filter active files in memory
+    const activeFiles = allFiles.filter(file => file.is_active === true);
+    res.json(activeFiles);
   } catch (error) {
     console.error('Error fetching report files:', error);
     res.status(500).json({ error: 'Failed to fetch report files' });
@@ -108,15 +110,22 @@ router.get('/type/:reportType', async (req, res) => {
     }
     
     // Get the latest active file of this type
-    const latestFiles = await db
-      .select()
-      .from(reportFiles)
-      .where(eq(reportFiles.report_type, reportType))
-      .where(eq(reportFiles.is_active, true))
-      .orderBy(reportFiles.upload_date, 'desc')
-      .limit(1);
+    const latestFiles = await db.select().from(reportFiles);
     
-    const [latestFile] = latestFiles;
+    // Filter files in memory
+    const typeFiles = latestFiles.filter(file => 
+      file.report_type === reportType && 
+      file.is_active === true
+    );
+    
+    // Find the latest file by sorting in memory
+    const sortedFiles = [...typeFiles].sort((a, b) => {
+      const dateA = a.upload_date ? new Date(a.upload_date as Date).getTime() : 0;
+      const dateB = b.upload_date ? new Date(b.upload_date as Date).getTime() : 0;
+      return dateB - dateA;
+    });
+    
+    const latestFile = sortedFiles.length > 0 ? sortedFiles[0] : null;
     
     if (!latestFile) {
       return res.status(404).json({ error: 'Report file not found' });
@@ -210,10 +219,18 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: any, res
     const parsedData = insertReportFileSchema.parse(fileData);
     
     // First, deactivate any previous files of this type
-    await db
-      .update(reportFiles)
-      .set({ is_active: false })
-      .where(eq(reportFiles.report_type, report_type));
+    const allFiles = await db.select().from(reportFiles);
+    const sameTypeFiles = allFiles.filter(f => f.report_type === report_type);
+    
+    // If there are existing files of the same type, deactivate them
+    if (sameTypeFiles.length > 0) {
+      for (const file of sameTypeFiles) {
+        await db
+          .update(reportFiles)
+          .set({ is_active: false })
+          .where(eq(reportFiles.id, file.id));
+      }
+    }
     
     // Insert the new file record
     const [insertedFile] = await db.insert(reportFiles).values(parsedData).returning();
