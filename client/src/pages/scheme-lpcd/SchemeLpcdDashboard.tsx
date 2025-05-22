@@ -493,13 +493,23 @@ const SchemeLpcdDashboard = () => {
     return filtered;
   };
 
-  // Calculate filter counts based on globally filtered data
+  // Calculate filter counts based on globally filtered data with unique scheme counting
   const getFilterCounts = () => {
     // Get data with global filters applied
     const globallyFilteredData = getGloballyFilteredSchemes();
     
+    // Create a map to count unique schemes by scheme_id
+    const uniqueSchemeIds = new Set();
+    const uniqueSchemes = globallyFilteredData.filter(scheme => {
+      if (!uniqueSchemeIds.has(scheme.scheme_id)) {
+        uniqueSchemeIds.add(scheme.scheme_id);
+        return true;
+      }
+      return false;
+    });
+    
     const counts = {
-      total: globallyFilteredData.length,
+      total: uniqueSchemes.length,
       above55: 0,
       below55: 0,
       totalPopulation: 0,
@@ -520,13 +530,10 @@ const SchemeLpcdDashboard = () => {
       },
     };
 
-    if (globallyFilteredData.length === 0) return counts;
+    if (uniqueSchemes.length === 0) return counts;
 
-    // Update total count
-    counts.total = globallyFilteredData.length;
-
-    // Count schemes in each category
-    globallyFilteredData.forEach((scheme) => {
+    // Count unique schemes in each category
+    uniqueSchemes.forEach((scheme) => {
       const lpcdValue = getLatestLpcdValue(scheme);
       const population = scheme.total_population ? Number(scheme.total_population) : 0;
 
