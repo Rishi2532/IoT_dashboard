@@ -222,8 +222,8 @@ const ManageReports = () => {
                     <TableCell className="font-medium">
                       {REPORT_TYPES.find(t => t.id === file.report_type)?.name || file.report_type}
                     </TableCell>
-                    <TableCell>{file.original_filename}</TableCell>
-                    <TableCell>{new Date(file.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell>{file.original_name}</TableCell>
+                    <TableCell>{new Date(file.upload_date).toLocaleDateString()}</TableCell>
                     <TableCell>
                       {file.is_active ? (
                         <Check className="h-4 w-4 text-green-500" />
@@ -234,9 +234,8 @@ const ManageReports = () => {
                     <TableCell className="text-right">
                       <div className="flex justify-end space-x-2">
                         <a 
-                          href={`/api/reports/download/${file.id}`} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
+                          href={`/api/reports/${file.id}`} 
+                          download
                         >
                           <Button size="sm" variant="outline">
                             <File className="h-4 w-4 mr-1" /> Download
