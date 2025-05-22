@@ -319,3 +319,24 @@ export const updatePressureDataSchema = createInsertSchema(pressureData).omit({
 export type InsertPressureData = z.infer<typeof insertPressureDataSchema>;
 export type UpdatePressureData = z.infer<typeof updatePressureDataSchema>;
 export type PressureData = typeof pressureData.$inferSelect;
+
+// Report Files table for managing uploaded Excel reports
+export const reportFiles = pgTable("report_files", {
+  id: serial("id").primaryKey(),
+  file_name: text("file_name").notNull(),
+  original_name: text("original_name").notNull(),
+  file_path: text("file_path").notNull(),
+  report_type: text("report_type").notNull(), // esr_level, water_consumption, lpcd_village, chlorine, pressure, village_level, scheme_level
+  upload_date: timestamp("upload_date").defaultNow(),
+  uploaded_by: integer("uploaded_by").references(() => users.id),
+  file_size: integer("file_size"),
+  is_active: boolean("is_active").default(true),
+});
+
+export const insertReportFileSchema = createInsertSchema(reportFiles).omit({
+  id: true,
+  upload_date: true,
+});
+
+export type InsertReportFile = z.infer<typeof insertReportFileSchema>;
+export type ReportFile = typeof reportFiles.$inferSelect;

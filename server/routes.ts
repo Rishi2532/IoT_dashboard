@@ -34,6 +34,7 @@ import chlorineRoutes from "./routes/chlorine-routes";
 import pressureRoutes from "./routes/pressure-routes";
 import translationRoutes from "./routes/translation";
 import schemeLpcdRoutes from "./routes/scheme-lpcd-routes";
+import reportsRoutes from "./routes/reports";
 
 const exec = promisify(cp.exec);
 
