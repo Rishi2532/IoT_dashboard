@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import fs from 'fs';
 import path from 'path';
-import { regions, schemeStatuses, users, waterSchemeData, chlorineData, pressureData } from "@shared/schema";
+import { regions, schemeStatuses, users, waterSchemeData, chlorineData, pressureData, reportFiles } from "@shared/schema";
 
 const { Pool } = pg;
 
@@ -149,7 +149,7 @@ export async function initializeTables(db: any) {
         WHERE table_name = 'scheme_status' AND column_name IN ('mjp_commissioned', 'mjp_fully_completed');
       `);
       
-      const existingColumns = result.rows.map(row => row.column_name);
+      const existingColumns = result.rows.map((row: any) => row.column_name);
       
       if (!existingColumns.includes('mjp_commissioned')) {
         console.log('Adding missing mjp_commissioned column to scheme_status table...');
@@ -372,6 +372,21 @@ export async function initializeTables(db: any) {
       console.error("Error checking/creating users:", error);
       // Continue despite error to allow other tables to be created
     }
+    
+    // Create report_files table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "report_files" (
+        "id" SERIAL PRIMARY KEY,
+        "file_name" TEXT NOT NULL,
+        "original_name" TEXT NOT NULL,
+        "file_path" TEXT NOT NULL,
+        "report_type" TEXT NOT NULL,
+        "upload_date" TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        "uploaded_by" INTEGER REFERENCES "users"("id"),
+        "file_size" INTEGER,
+        "is_active" BOOLEAN DEFAULT TRUE
+      );
+    `);
     
     console.log("Database tables initialized successfully");
   } catch (error) {
