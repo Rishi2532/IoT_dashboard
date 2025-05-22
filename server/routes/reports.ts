@@ -79,12 +79,15 @@ const requireAdmin = (req: any, res: any, next: any) => {
 // Get list of available report files
 router.get('/', async (req, res) => {
   try {
+    console.log('Attempting to fetch report files from database...');
     const allFiles = await db.select().from(reportFiles);
+    console.log('Database query successful, found files:', allFiles.length);
     // Filter active files in memory
     const activeFiles = allFiles.filter(file => file.is_active === true);
+    console.log('Active files after filtering:', activeFiles.length);
     res.json(activeFiles);
   } catch (error) {
-    console.error('Error fetching report files:', error);
+    console.error('Detailed error fetching report files:', error);
     res.status(500).json({ error: 'Failed to fetch report files' });
   }
 });
