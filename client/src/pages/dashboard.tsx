@@ -196,97 +196,38 @@ export default function Dashboard() {
     });
   };
 
+  // State to track the currently filtered schemes from SchemeTable
+  const [currentFilteredSchemes, setCurrentFilteredSchemes] = useState<SchemeStatus[]>([]);
+
+  // Callback to receive filtered schemes from SchemeTable
+  const handleFilteredSchemesChange = (filteredSchemes: SchemeStatus[]) => {
+    setCurrentFilteredSchemes(filteredSchemes);
+    console.log(`Received ${filteredSchemes.length} filtered schemes from SchemeTable`);
+  };
+
   // Export function 
   const handleExport = async () => {
     try {
-      // Get the currently filtered schemes from SchemeTable that are shown to the user
-      // This is the most direct way to ensure we export exactly what user sees
+      // Use the filtered schemes directly from SchemeTable
+      // This ensures we export exactly what the user sees in the table
+      const allFilteredSchemes = currentFilteredSchemes;
       
-      // We need to find out which schemes are currently showing in the table
-      // First, look at what's being passed to SchemeTable
-      let schemesToExport = isFiltering ? geoFilteredSchemes : schemes;
-      console.log(`Starting with ${schemesToExport.length} schemes that are passed to SchemeTable`);
+      console.log(`Exporting ${allFilteredSchemes.length} schemes that are currently displayed in the table`);
       
-      // Get the schemes that are currently visible based on other filter states
-      let tableSchemesFiltered = [...schemesToExport]; // Create a copy to work with
-      
-      // Get filters from SchemeTable component (integration_status, MJP filters)
-      let mjpCommissionedFilter = "all";
-      let mjpFullyCompletedFilter = "all";
-      let localStatusFilter = statusFilter;
-      
-      // Try to get the filters from our global object first
-      if ((window as any).schemeTableFilters) {
-        const filters = (window as any).schemeTableFilters;
-        console.log("Found SchemeTable filters:", filters);
-        
-        mjpCommissionedFilter = filters.commissionedFilter || "all";
-        mjpFullyCompletedFilter = filters.fullyCompletedFilter || "all";
-        localStatusFilter = filters.statusFilter || statusFilter;
-        
-        console.log("Using filters for export:", { 
-          region: selectedRegion,
-          status: localStatusFilter,
-          mjpCommissioned: mjpCommissionedFilter,
-          mjpFullyCompleted: mjpFullyCompletedFilter
+      if (allFilteredSchemes.length === 0) {
+        toast({
+          title: "No Data To Export",
+          description: "There are no water schemes matching your current filter criteria.",
+          variant: "destructive",
         });
-        
-        // Apply each filter to our list
-        if (localStatusFilter !== "all") {
-          tableSchemesFiltered = tableSchemesFiltered.filter(
-            scheme => scheme.integration_status === localStatusFilter
-          );
-          console.log(`After status filter (${localStatusFilter}): ${tableSchemesFiltered.length} schemes`);
-        }
-        
-        if (mjpCommissionedFilter !== "all") {
-          tableSchemesFiltered = tableSchemesFiltered.filter(
-            scheme => scheme.mjp_commissioned === mjpCommissionedFilter
-          );
-          console.log(`After MJP commissioned filter (${mjpCommissionedFilter}): ${tableSchemesFiltered.length} schemes`);
-        }
-        
-        if (mjpFullyCompletedFilter !== "all") {
-          tableSchemesFiltered = tableSchemesFiltered.filter(
-            scheme => scheme.mjp_fully_completed === mjpFullyCompletedFilter
-          );
-          console.log(`After MJP fully completed filter (${mjpFullyCompletedFilter}): ${tableSchemesFiltered.length} schemes`);
-        }
-      } else {
-        // If we can't get the filters directly, look at the count in the SchemeTable header
-        const countElement = document.querySelector('.scheme-item .text-blue-600 .font-medium');
-        if (countElement) {
-          const countText = countElement.textContent;
-          const count = parseInt(countText || '0');
-          
-          if (!isNaN(count) && count > 0 && count < schemesToExport.length) {
-            console.log(`Found count in UI: ${count} schemes to export`);
-            
-            // Try to match the count by applying filters based on UI elements
-            if (document.querySelector('.status-filter-pill')) {
-              const statusText = document.querySelector('.status-filter-pill')?.textContent || '';
-              const statusValue = statusText.split(':')[0]?.trim();
-              
-              if (statusValue && statusValue !== 'All') {
-                console.log(`Found status filter in UI: ${statusValue}`);
-                tableSchemesFiltered = tableSchemesFiltered.filter(
-                  scheme => scheme.integration_status === statusValue
-                );
-              }
-            }
-          }
-        }
+        return;
       }
       
       // Show loading toast
       toast({
         title: "Preparing Export",
-        description: "Gathering data for export...",
+        description: `Gathering ${allFilteredSchemes.length} schemes for export...`,
       });
-      
-      // Use the filtered schemes for export
-      const allFilteredSchemes = tableSchemesFiltered;
-      console.log(`Exporting ${allFilteredSchemes.length} schemes that match all filters`);
 
       // Import XLSX dynamically
       const XLSX = await import("xlsx");
@@ -692,6 +633,7 @@ export default function Dashboard() {
               onViewDetails={handleViewSchemeDetails}
               statusFilter={statusFilter}
               onStatusFilterChange={handleStatusFilterChange}
+              onFilteredSchemesChange={handleFilteredSchemesChange}
             />
           </div>
         </div>

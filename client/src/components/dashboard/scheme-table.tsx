@@ -82,13 +82,6 @@ export default function SchemeTable({
     };
   }, [localStatusFilter, commissionedFilter, fullyCompletedFilter]);
 
-  // Notify parent component whenever filtered schemes change
-  useEffect(() => {
-    if (onFilteredSchemesChange) {
-      onFilteredSchemesChange(filteredSchemes);
-    }
-  }, [filteredSchemes, onFilteredSchemesChange]);
-
   // Ensure schemes is an array before filtering
   const schemesArray = Array.isArray(schemes) ? schemes : [];
 
@@ -125,6 +118,13 @@ export default function SchemeTable({
       matchesFullyCompletedFilter
     );
   });
+
+  // Notify parent component whenever filtered schemes change
+  useEffect(() => {
+    if (onFilteredSchemesChange) {
+      onFilteredSchemesChange(filteredSchemes);
+    }
+  }, [filteredSchemes, onFilteredSchemesChange]);
 
   const totalPages = Math.ceil(filteredSchemes.length / itemsPerPage);
   const indexOfLastItem = currentPage * itemsPerPage;
