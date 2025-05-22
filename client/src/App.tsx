@@ -165,6 +165,12 @@ function App() {
                 </ProtectedRoute>
               </Route>
               
+              <Route path="/admin/manage-reports">
+                <ProtectedRoute>
+                  <Admin.ManageReports />
+                </ProtectedRoute>
+              </Route>
+              
               {/* Fallback route */}
               <Route component={NotFound} />
             </Switch>

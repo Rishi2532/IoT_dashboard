@@ -1,181 +1,101 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import DashboardLayout from "@/components/dashboard/dashboard-layout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "wouter";
+import ReportDownloadList from "@/components/reports/ReportDownloadList";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileSpreadsheet, Download, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Region } from "@/types";
-import { FileDown, AlertCircle } from "lucide-react";
-import { utils, writeFile } from "xlsx";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
-export default function Reports() {
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [exportError, setExportError] = useState("");
-
-  // Fetch region data - this is the only data source we need now
-  const { data: regions, isLoading, isError } = useQuery<Region[]>({
-    queryKey: ["/api/regions"],
-  });
-  
-  // Function to generate and download Excel report
-  const generateExcelReport = async () => {
-    if (!regions || regions.length === 0) return;
-    
-    try {
-      setIsGenerating(true);
-      setExportError("");
-
-      // Create worksheet data using only region table data
-      const worksheetData = regions.map(region => {
-        return {
-          "Region": region.region_name,
-          "Total Schemes Integrated": region.total_schemes_integrated || 0,
-          "Fully Completed Schemes": region.fully_completed_schemes || 0,
-          "Partially Completed Schemes": 
-            (region.total_schemes_integrated || 0) - (region.fully_completed_schemes || 0),
-          "Total Villages Integrated": region.total_villages_integrated || 0,
-          "Fully Completed Villages": region.fully_completed_villages || 0,
-          "Partially Completed Villages": 
-            (region.total_villages_integrated || 0) - (region.fully_completed_villages || 0),
-          "Total ESR Integrated": region.total_esr_integrated || 0,
-          "Fully Completed ESR": region.fully_completed_esr || 0,
-          "Partially Completed ESR": region.partial_esr || 0,
-          "Flow Meters Integrated": region.flow_meter_integrated || 0,
-          "RCA Integrated": region.rca_integrated || 0,
-          "Pressure Transmitters Integrated": region.pressure_transmitter_integrated || 0,
-          "Last Updated": new Date().toLocaleDateString("en-IN")
-        };
-      });
-
-      // Calculate totals for all columns directly from region data
-      const totalRow = {
-        "Region": "Total",
-        "Total Schemes Integrated": regions.reduce((sum, r) => sum + (r.total_schemes_integrated || 0), 0),
-        "Fully Completed Schemes": regions.reduce((sum, r) => sum + (r.fully_completed_schemes || 0), 0),
-        "Partially Completed Schemes": regions.reduce((sum, r) => 
-          sum + ((r.total_schemes_integrated || 0) - (r.fully_completed_schemes || 0)), 0),
-        "Total Villages Integrated": regions.reduce((sum, r) => sum + (r.total_villages_integrated || 0), 0),
-        "Fully Completed Villages": regions.reduce((sum, r) => sum + (r.fully_completed_villages || 0), 0),
-        "Partially Completed Villages": regions.reduce((sum, r) => 
-          sum + ((r.total_villages_integrated || 0) - (r.fully_completed_villages || 0)), 0),
-        "Total ESR Integrated": regions.reduce((sum, r) => sum + (r.total_esr_integrated || 0), 0),
-        "Fully Completed ESR": regions.reduce((sum, r) => sum + (r.fully_completed_esr || 0), 0),
-        "Partially Completed ESR": regions.reduce((sum, r) => sum + (r.partial_esr || 0), 0),
-        "Flow Meters Integrated": regions.reduce((sum, r) => sum + (r.flow_meter_integrated || 0), 0),
-        "RCA Integrated": regions.reduce((sum, r) => sum + (r.rca_integrated || 0), 0),
-        "Pressure Transmitters Integrated": regions.reduce((sum, r) => sum + (r.pressure_transmitter_integrated || 0), 0),
-        "Last Updated": new Date().toLocaleDateString("en-IN")
-      };
-      worksheetData.push(totalRow);
-
-      // Create workbook and worksheet
-      const wb = utils.book_new();
-      const ws = utils.json_to_sheet(worksheetData);
-
-      // Add worksheet to workbook
-      utils.book_append_sheet(wb, ws, "Regional Status");
-
-      // Generate current date for filename
-      const now = new Date();
-      const dateStr = `${now.getDate().toString().padStart(2, '0')}_${(now.getMonth() + 1).toString().padStart(2, '0')}_${now.getFullYear()}`;
-      
-      // Write to file and download
-      writeFile(wb, `Online_status_${dateStr}.xlsx`);
-      setIsGenerating(false);
-    } catch (error) {
-      console.error("Error generating Excel report:", error);
-      setExportError("Failed to generate report. Please try again.");
-      setIsGenerating(false);
-    }
-  };
+export default function ReportsPage() {
+  const [activeTab, setActiveTab] = useState("datalink");
 
   return (
-    <DashboardLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-neutral-900">Reports</h1>
-        <p className="mt-1 text-sm text-neutral-500">
-          Generate and view reports about scheme implementation
-        </p>
+    <div className="container py-6 space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Reports</h1>
+          <p className="text-muted-foreground">
+            Download the latest Excel reports from the Maharashtra Water Dashboard
+          </p>
+        </div>
       </div>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Regional Implementation Status Report</CardTitle>
-          <CardDescription>
-            Download a comprehensive Excel report of the current regional implementation status
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading ? (
-            <div className="space-y-2">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-3/4" />
-              <Skeleton className="h-4 w-1/2" />
-            </div>
-          ) : isError ? (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>
-                Failed to load region data. Please refresh the page and try again.
-              </AlertDescription>
-            </Alert>
-          ) : (
-            <>
-              <p className="text-neutral-700 mb-4">
-                The report includes the following data for each region:
-              </p>
-              <ul className="list-disc pl-5 mt-2 mb-6 space-y-1 text-neutral-600">
-                <li>Fully and partially completed schemes</li>
-                <li>Village integration status</li>
-                <li>ESR integration status</li>
-                <li>Component integration details (Flow meters, RCA, Pressure Transmitters)</li>
-              </ul>
-              
-              {exportError && (
-                <Alert variant="destructive" className="mb-4">
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Export Failed</AlertTitle>
-                  <AlertDescription>{exportError}</AlertDescription>
-                </Alert>
-              )}
-              
-              <Button 
-                onClick={generateExcelReport} 
-                disabled={isGenerating || !regions || regions.length === 0}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <FileDown className="mr-2 h-4 w-4" />
-                {isGenerating ? "Generating..." : "Download Excel Report"}
-              </Button>
-            </>
-          )}
-        </CardContent>
-      </Card>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="datalink">Datalink Reports</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics Reports</TabsTrigger>
+        </TabsList>
 
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <AlertCircle className="h-5 w-5 mr-2 text-yellow-500" />
-            Additional Reports Coming Soon
-          </CardTitle>
-          <CardDescription>
-            More report types are under development and will be available soon.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-neutral-700">
-            Future reports will include:
-          </p>
-          <ul className="list-disc pl-5 mt-2 space-y-1 text-neutral-600">
-            <li>Scheme completion timelines</li>
-            <li>Historical completion rates</li>
-            <li>Performance metrics by region and agency</li>
-            <li>Detailed component status reports</li>
-          </ul>
-        </CardContent>
-      </Card>
-    </DashboardLayout>
+        <TabsContent value="datalink" className="space-y-4">
+          <div className="grid grid-cols-1 gap-6">
+            <ReportDownloadList />
+            
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl">Need Help?</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-50 p-2 rounded-full">
+                    <HelpCircle className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Report Information</h3>
+                    <p className="text-sm text-gray-500">
+                      These reports are updated regularly by administrators. Each report contains the latest data for various aspects of water infrastructure in Maharashtra.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-50 p-2 rounded-full">
+                    <FileSpreadsheet className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">Excel Format</h3>
+                    <p className="text-sm text-gray-500">
+                      All reports are provided in Excel format (.xlsx) with the original formatting, colors, and formulas intact.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-start gap-3">
+                  <div className="bg-blue-50 p-2 rounded-full">
+                    <Download className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-medium">How to Download</h3>
+                    <p className="text-sm text-gray-500">
+                      Click the "Download" button next to any report to save it to your computer. Reports can be opened with Microsoft Excel or other compatible spreadsheet software.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="analytics" className="space-y-4">
+          <Card className="p-8 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="bg-blue-50 p-4 rounded-full">
+                <FileSpreadsheet className="h-10 w-10 text-blue-600" />
+              </div>
+            </div>
+            <h2 className="text-xl font-bold mb-2">Analytics Reports Coming Soon</h2>
+            <p className="text-gray-500 mb-6 max-w-md mx-auto">
+              We're working on adding advanced analytics reports. These will provide deeper insights into water infrastructure trends and performance metrics.
+            </p>
+            <div className="flex justify-center">
+              <Link href="/dashboard">
+                <Button variant="outline">
+                  Go to Dashboard
+                </Button>
+              </Link>
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
