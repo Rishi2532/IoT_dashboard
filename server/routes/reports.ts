@@ -13,16 +13,9 @@ const router = Router();
 const isVSCode = process.env.VSCODE_CLI === '1' || process.env.VSCODE_PID;
 
 // Set the upload directory path based on environment
-const localPath = 'C:\\Users\\HP\\OneDrive\\Desktop\\startproject\\IoT_dashboard42\\IoTdashboard (12)\\IoTdashboard\\uploads\\reports';
-
-// Check if the user's custom path exists
-const customPathExists = fs.existsSync(localPath);
-
 const uploadDir = isVSCode 
-  ? customPathExists
-     ? localPath  // Use the user's specific path if it exists
-     : path.join(__dirname, '..', '..', 'uploads', 'reports')  // Fallback
-  : '/tmp/reports';
+  ? path.join(process.cwd(), 'uploads', 'reports')  // Use project directory for VS Code
+  : '/tmp/reports';  // Use tmp for Replit
 
 // Ensure the upload directory exists with proper permissions
 if (!fs.existsSync(uploadDir)) {
