@@ -44,7 +44,7 @@ const ManageReports = () => {
   const queryClient = useQueryClient();
 
   // Fetch all report files from the API
-  const { data: reportFiles, isLoading, error } = useQuery({
+  const { data: reportFiles = [], isLoading, error } = useQuery<any[]>({
     queryKey: ['/api/reports'],
     retry: 1,
   });
@@ -117,15 +117,51 @@ const ManageReports = () => {
 
   // Handle file selection and upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>, reportType: string) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append('file', file);
-    formData.append('report_type', reportType);
-    
-    setIsUploading(true);
-    await uploadMutation.mutate(formData);
+    try {
+      const file = event.target.files?.[0];
+      if (!file) {
+        toast({
+          title: 'Error',
+          description: 'Please select a file to upload',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      console.log(`Uploading file: ${file.name}, type: ${file.type}, size: ${file.size} bytes`);
+      
+      // Validate file type
+      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
+        toast({
+          title: 'Invalid file type',
+          description: 'Please select an Excel file (.xlsx or .xls)',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Create a new FormData instance
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('report_type', reportType);
+      
+      setIsUploading(true);
+      await uploadMutation.mutate(formData);
+      
+      // Reset the file input
+      event.target.value = '';
+    } catch (error) {
+      console.error('Error in file upload handler:', error);
+      toast({
+        title: 'Upload error',
+        description: error instanceof Error ? error.message : 'Unknown error occurred',
+        variant: 'destructive',
+      });
+      setIsUploading(false);
+      
+      // Reset the file input
+      event.target.value = '';
+    }
   };
 
   // Handle delete confirmation
@@ -169,7 +205,7 @@ const ManageReports = () => {
                 <div className="flex-grow">
                   <p className="font-medium">{type.name}</p>
                   <p className="text-sm text-gray-500">
-                    {reportFiles?.some((file: any) => file.report_type === type.id)
+                    {Array.isArray(reportFiles) && reportFiles.some((file: any) => file.report_type === type.id)
                       ? 'File uploaded'
                       : 'No file uploaded'}
                   </p>
@@ -212,7 +248,7 @@ const ManageReports = () => {
             <div className="text-center py-8 text-red-500">
               Failed to load report files
             </div>
-          ) : reportFiles?.length === 0 ? (
+          ) : Array.isArray(reportFiles) && reportFiles.length === 0 ? (
             <div className="text-center py-8 text-gray-500">
               No report files have been uploaded yet
             </div>
@@ -228,7 +264,7 @@ const ManageReports = () => {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {reportFiles?.map((file: any) => (
+                {Array.isArray(reportFiles) && reportFiles.map((file: any) => (
                   <TableRow key={file.id}>
                     <TableCell className="font-medium">
                       {REPORT_TYPES.find(t => t.id === file.report_type)?.name || file.report_type}
