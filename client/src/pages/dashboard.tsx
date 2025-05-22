@@ -212,30 +212,68 @@ export default function Dashboard() {
         params.append("status", statusFilter);
       }
       
-      // Get the MJP filters from the SchemeTable component
-      const schemesTable = document.querySelector('div[role="table"]');
+      // Get MJP filters from the active filters shown in the UI
       let mjpCommissionedFilter = "all";
       let mjpFullyCompletedFilter = "all";
       
-      // Find the MJP filter select elements
-      const selectElements = document.querySelectorAll('select, [role="combobox"]');
-      selectElements.forEach(select => {
-        const ariaLabel = select.getAttribute('aria-label') || '';
-        const labelText = select.previousElementSibling?.textContent || '';
-        const value = select.value;
+      // Use a simplified approach by directly looking for filter badge/pill elements 
+      // that would indicate active filters
+      const activeFilters = document.querySelectorAll('.bg-green-50, .bg-sky-50, .filter-pill, .status-badge');
+      
+      // Convert to array and check text content
+      Array.from(activeFilters).forEach(element => {
+        const text = element.textContent || '';
         
-        if (ariaLabel.includes('Commissioned') || labelText.includes('Commissioned')) {
-          if (value && value !== 'all') {
-            mjpCommissionedFilter = value;
-          }
+        // Check for commissioned status
+        if (text.includes('Yes:') || text.includes('Commissioned:')) {
+          mjpCommissionedFilter = 'Yes';
+        } else if (text.includes('No:') || text.includes('Not Commissioned:')) {
+          mjpCommissionedFilter = 'No';
         }
         
-        if (ariaLabel.includes('Fully Completed') || labelText.includes('Fully Completed')) {
-          if (value && value !== 'all') {
-            mjpFullyCompletedFilter = value;
-          }
+        // Check for completion status
+        if (text.includes('Fully Completed:')) {
+          mjpFullyCompletedFilter = 'Fully Completed';
+        } else if (text.includes('In Progress:')) {
+          mjpFullyCompletedFilter = 'In Progress';
         }
       });
+      
+      // If we still don't have values, try to get them from select elements
+      if (mjpCommissionedFilter === "all" && mjpFullyCompletedFilter === "all") {
+        // This will be more reliable in getting current filter state
+        // We'll instead create a communication channel between SchemeTable and Dashboard
+        // by adding the filters to the dashboard component state directly
+        
+        // For now, let's use the SchemeTable props that are passed from the parent
+        // Get from the schemes that are filtered in the table
+        const filteredSchemes = schemes.filter(scheme => {
+          // Filter by commissioned status if it's in the UI
+          const commissionedMatch = document.querySelector('.filter-badge-commissioned') ? 
+            scheme.mjp_commissioned === (document.querySelector('.filter-badge-commissioned')?.textContent?.includes('Yes') ? 'Yes' : 'No') : 
+            true;
+            
+          // Filter by completion status if it's in the UI
+          const completionMatch = document.querySelector('.filter-badge-completed') ?
+            scheme.mjp_fully_completed === (document.querySelector('.filter-badge-completed')?.textContent?.includes('Fully') ? 'Fully Completed' : 'In Progress') :
+            true;
+            
+          return commissionedMatch && completionMatch;
+        });
+        
+        // If we have filtered schemes and they all have the same value, use that
+        if (filteredSchemes.length > 0) {
+          const allCommissioned = filteredSchemes.every(s => s.mjp_commissioned === filteredSchemes[0].mjp_commissioned);
+          if (allCommissioned && filteredSchemes[0].mjp_commissioned) {
+            mjpCommissionedFilter = filteredSchemes[0].mjp_commissioned;
+          }
+          
+          const allCompleted = filteredSchemes.every(s => s.mjp_fully_completed === filteredSchemes[0].mjp_fully_completed);
+          if (allCompleted && filteredSchemes[0].mjp_fully_completed) {
+            mjpFullyCompletedFilter = filteredSchemes[0].mjp_fully_completed;
+          }
+        }
+      }
       
       if (mjpCommissionedFilter !== "all") {
         params.append("mjp_commissioned", mjpCommissionedFilter);

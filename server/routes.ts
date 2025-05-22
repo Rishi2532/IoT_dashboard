@@ -321,13 +321,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const regionName = req.query.region as string;
       const status = req.query.status as string;
       const schemeId = req.query.scheme_id as string;
+      const mjpCommissioned = req.query.mjp_commissioned as string;
+      const mjpFullyCompleted = req.query.mjp_fully_completed as string;
       const viewType = req.query.view_type as string || 'summary';
       // Default to consolidated view (true) for summary, non-consolidated (false) for detailed
       const consolidated = req.query.consolidated === 'true' || 
                            (req.query.consolidated === undefined && viewType === 'summary');
 
       console.log(
-        `Request params: region=${regionName}, status=${status}, schemeId=${schemeId}, consolidated=${consolidated}, viewType=${viewType}`,
+        `Request params: region=${regionName}, status=${status}, schemeId=${schemeId}, mjpCommissioned=${mjpCommissioned}, mjpFullyCompleted=${mjpFullyCompleted}, consolidated=${consolidated}, viewType=${viewType}`,
       );
 
       let schemes;
@@ -369,6 +371,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         schemes = schemes.filter((scheme) => scheme.region === regionName);
         console.log(
           `After filtering: ${schemes.length} schemes for region ${regionName}`,
+        );
+      }
+      
+      // Apply MJP commissioned filter if specified
+      if (mjpCommissioned && mjpCommissioned !== "all") {
+        schemes = schemes.filter((scheme) => scheme.mjp_commissioned === mjpCommissioned);
+        console.log(
+          `After MJP commissioned filtering: ${schemes.length} schemes with mjp_commissioned=${mjpCommissioned}`,
+        );
+      }
+      
+      // Apply MJP fully completed filter if specified
+      if (mjpFullyCompleted && mjpFullyCompleted !== "all") {
+        schemes = schemes.filter((scheme) => scheme.mjp_fully_completed === mjpFullyCompleted);
+        console.log(
+          `After MJP fully completed filtering: ${schemes.length} schemes with mjp_fully_completed=${mjpFullyCompleted}`,
         );
       }
 
