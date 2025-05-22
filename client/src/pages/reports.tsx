@@ -43,7 +43,7 @@ const REPORT_TYPES = [
 ];
 
 // Reports page for users to download Excel reports
-const ReportsPage = () => {
+function ReportsPage() {
   // Fetch all available report files
   const { data: reportFiles, isLoading, error } = useQuery({
     queryKey: ['/api/reports'],
