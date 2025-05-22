@@ -88,6 +88,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Mount scheme LPCD routes
   app.use("/api/scheme-lpcd-data", schemeLpcdRoutes);
   
+  // Mount reports routes for Excel file uploads/downloads
+  app.use("/api/reports", reportsRoutes);
+  
   // Mount LPCD import routes (admin-only)
   app.use("/api/admin", requireAdmin, lpcdImportRoutes);
   

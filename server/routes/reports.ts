@@ -56,7 +56,10 @@ const requireAdmin = (req: any, res: any, next: any) => {
 // Get list of available report files
 router.get('/', async (req, res) => {
   try {
-    const files = await db.select().from(reportFiles).where(eq(reportFiles.is_active, true));
+    const files = await db
+      .select()
+      .from(reportFiles)
+      .where(eq(reportFiles.is_active, true));
     res.json(files);
   } catch (error) {
     console.error('Error fetching report files:', error);
