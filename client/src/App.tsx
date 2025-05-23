@@ -25,6 +25,7 @@ import ChatbotComponent from "./components/chatbot/ChatbotComponent";
 import { TranslationProvider } from "./contexts/TranslationContext";
 import { ThemeProvider } from "./components/theme/theme-provider";
 import { GeoFilterProvider } from "./contexts/GeoFilterContext";
+import VillageWaterIcon from "./components/village-water-icon";
 
 function App() {
   const [location] = useLocation();
@@ -175,6 +176,9 @@ function App() {
               {/* Fallback route */}
               <Route component={NotFound} />
             </Switch>
+            
+            {/* Animated Village Water Icon */}
+            {!shouldHideChatbot && <VillageWaterIcon onClick={() => window.open('/lpcd', '_self')} />}
             
             {/* JJM Assistant Chatbot (conditionally rendered based on route) */}
             {!shouldHideChatbot && (
