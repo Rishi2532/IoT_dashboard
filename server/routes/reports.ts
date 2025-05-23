@@ -3,9 +3,9 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { storage } from '../database-storage';
-import { insertReportFileSchema } from '../../shared/schema';
-import { and, eq } from 'drizzle-orm';
+import { db } from '../db-storage';
+import { reportFiles, insertReportFileSchema } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
 const router = Router();
 
@@ -33,7 +33,7 @@ if (!fs.existsSync(uploadDir)) {
 console.log("Report files upload directory:", uploadDir);
 
 // Set up multer storage configuration for Excel files
-const multerStorage = multer.diskStorage({
+const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadDir);
   },
@@ -47,7 +47,7 @@ const multerStorage = multer.diskStorage({
 
 // Configure multer upload middleware
 const upload = multer({
-  storage: multerStorage,
+  storage,
   fileFilter: (req, file, cb) => {
     // Only allow Excel files
     const allowedMimes = [
@@ -79,20 +79,16 @@ const requireAdmin = (req: any, res: any, next: any) => {
 // Get list of available report files
 router.get('/', async (req, res) => {
   try {
-    console.log('Attempting to fetch report files using storage interface...');
-    
-    // Use the storage interface to get all report files
-    // This handles error cases and returns an empty array if the table doesn't exist
-    const activeFiles = await storage.getAllReportFiles();
-    console.log('Active files found:', activeFiles.length);
-    
+    console.log('Attempting to fetch report files from database...');
+    const allFiles = await db.select().from(reportFiles);
+    console.log('Database query successful, found files:', allFiles.length);
+    // Filter active files in memory
+    const activeFiles = allFiles.filter(file => file.is_active === true);
+    console.log('Active files after filtering:', activeFiles.length);
     res.json(activeFiles);
   } catch (error) {
     console.error('Detailed error fetching report files:', error);
-    
-    // Return empty array instead of error for better UX
-    console.log('Returning empty array due to database error');
-    res.json([]);
+    res.status(500).json({ error: 'Failed to fetch report files' });
   }
 });
 
@@ -116,21 +112,23 @@ router.get('/type/:reportType', async (req, res) => {
       return res.status(400).json({ error: 'Invalid report type' });
     }
     
-    // Get all files of this type using the storage interface
-    const typeFiles = await storage.getReportFilesByType(reportType);
+    // Get the latest active file of this type
+    const latestFiles = await db.select().from(reportFiles);
     
-    if (!typeFiles || typeFiles.length === 0) {
-      return res.status(404).json({ error: 'Report file not found' });
-    }
+    // Filter files in memory
+    const typeFiles = latestFiles.filter(file => 
+      file.report_type === reportType && 
+      file.is_active === true
+    );
     
     // Find the latest file by sorting in memory
     const sortedFiles = [...typeFiles].sort((a, b) => {
-      const dateA = a.upload_date ? new Date(a.upload_date).getTime() : 0;
-      const dateB = b.upload_date ? new Date(b.upload_date).getTime() : 0;
+      const dateA = a.upload_date ? new Date(a.upload_date as Date).getTime() : 0;
+      const dateB = b.upload_date ? new Date(b.upload_date as Date).getTime() : 0;
       return dateB - dateA;
     });
     
-    const latestFile = sortedFiles[0];
+    const latestFile = sortedFiles.length > 0 ? sortedFiles[0] : null;
     
     if (!latestFile) {
       return res.status(404).json({ error: 'Report file not found' });
@@ -179,9 +177,14 @@ router.get('/type/:reportType', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
+    const fileId = parseInt(id);
     
-    // Use the storage interface to get the file
-    const file = await storage.getReportFileById(id);
+    if (isNaN(fileId)) {
+      return res.status(400).json({ error: 'Invalid file ID' });
+    }
+    
+    // Get the file record
+    const [file] = await db.select().from(reportFiles).where(eq(reportFiles.id, fileId));
     
     if (!file || !file.is_active) {
       return res.status(404).json({ error: 'Report file not found' });
@@ -267,23 +270,25 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: any, res
       is_active: true
     };
     
-    // Add better VS Code environment handling
-    if (isVSCode && !fileData.uploaded_by) {
-      fileData.uploaded_by = 1; // Default to admin user in VS Code environment
-    }
-    
-    console.log("Processing file upload data:", fileData);
-    
     // Validate data with zod schema
     const parsedData = insertReportFileSchema.parse(fileData);
     
-    // First, deactivate any previous files of this type using the storage interface
-    await storage.deactivateReportFilesByType(report_type);
+    // First, deactivate any previous files of this type
+    const allFiles = await db.select().from(reportFiles);
+    const sameTypeFiles = allFiles.filter(f => f.report_type === report_type);
+    
+    // If there are existing files of the same type, deactivate them
+    if (sameTypeFiles.length > 0) {
+      for (const file of sameTypeFiles) {
+        await db
+          .update(reportFiles)
+          .set({ is_active: false })
+          .where(eq(reportFiles.id, file.id));
+      }
+    }
     
     // Insert the new file record
-    const insertedFile = await storage.createReportFile(parsedData);
-    
-    console.log("Report file record created:", insertedFile);
+    const [insertedFile] = await db.insert(reportFiles).values(parsedData).returning();
     
     res.status(201).json({
       message: 'Report file uploaded successfully',
@@ -312,13 +317,24 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: any, res
 router.delete('/:id', requireAdmin, async (req: any, res) => {
   try {
     const { id } = req.params;
+    const fileId = parseInt(id);
     
-    // Use the storage interface to delete the file
-    const success = await storage.deleteReportFile(id);
+    if (isNaN(fileId)) {
+      return res.status(400).json({ error: 'Invalid file ID' });
+    }
     
-    if (!success) {
+    // Get the file record first to get the file path
+    const [file] = await db.select().from(reportFiles).where(eq(reportFiles.id, fileId));
+    
+    if (!file) {
       return res.status(404).json({ error: 'Report file not found' });
     }
+    
+    // Deactivate the file (soft delete)
+    await db
+      .update(reportFiles)
+      .set({ is_active: false })
+      .where(eq(reportFiles.id, fileId));
     
     res.json({ message: 'Report file deleted successfully' });
   } catch (error) {
