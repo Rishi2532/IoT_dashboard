@@ -3,9 +3,9 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { db } from '../db-storage';
-import { reportFiles, insertReportFileSchema } from '../../shared/schema';
-import { eq } from 'drizzle-orm';
+import { storage } from '../database-storage';
+import { insertReportFileSchema } from '../../shared/schema';
+import { sql } from 'drizzle-orm';
 
 const router = Router();
 
@@ -33,7 +33,7 @@ if (!fs.existsSync(uploadDir)) {
 console.log("Report files upload directory:", uploadDir);
 
 // Set up multer storage configuration for Excel files
-const storage = multer.diskStorage({
+const multerStorage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadDir);
   },
@@ -79,33 +79,12 @@ const requireAdmin = (req: any, res: any, next: any) => {
 // Get list of available report files
 router.get('/', async (req, res) => {
   try {
-    console.log('Attempting to fetch report files from database...');
+    console.log('Attempting to fetch report files using storage interface...');
     
-    // Add a simpler approach to check if the table exists
-    let tableExists = true;
-    try {
-      // Simple approach - try to do a count query
-      await db.execute(`SELECT COUNT(*) FROM report_files LIMIT 1`);
-    } catch (e) {
-      if (e.message && e.message.includes('does not exist')) {
-        console.log('report_files table does not exist');
-        tableExists = false;
-      }
-    }
-    
-    // If table doesn't exist, don't try to query it
-    if (!tableExists) {
-      console.log('report_files table does not exist, returning empty array');
-      return res.json([]);
-    }
-    
-    // If we got here, the table exists, so try the full query
-    const allFiles = await db.select().from(reportFiles);
-    console.log('Database query successful, found files:', allFiles.length);
-    
-    // Filter active files in memory
-    const activeFiles = allFiles.filter(file => file.is_active === true);
-    console.log('Active files after filtering:', activeFiles.length);
+    // Use the storage interface to get all report files
+    // This handles error cases and returns an empty array if the table doesn't exist
+    const activeFiles = await storage.getAllReportFiles();
+    console.log('Active files found:', activeFiles.length);
     
     res.json(activeFiles);
   } catch (error) {
@@ -137,23 +116,21 @@ router.get('/type/:reportType', async (req, res) => {
       return res.status(400).json({ error: 'Invalid report type' });
     }
     
-    // Get the latest active file of this type
-    const latestFiles = await db.select().from(reportFiles);
+    // Get all files of this type using the storage interface
+    const typeFiles = await storage.getReportFilesByType(reportType);
     
-    // Filter files in memory
-    const typeFiles = latestFiles.filter(file => 
-      file.report_type === reportType && 
-      file.is_active === true
-    );
+    if (!typeFiles || typeFiles.length === 0) {
+      return res.status(404).json({ error: 'Report file not found' });
+    }
     
     // Find the latest file by sorting in memory
     const sortedFiles = [...typeFiles].sort((a, b) => {
-      const dateA = a.upload_date ? new Date(a.upload_date as Date).getTime() : 0;
-      const dateB = b.upload_date ? new Date(b.upload_date as Date).getTime() : 0;
+      const dateA = a.upload_date ? new Date(a.upload_date).getTime() : 0;
+      const dateB = b.upload_date ? new Date(b.upload_date).getTime() : 0;
       return dateB - dateA;
     });
     
-    const latestFile = sortedFiles.length > 0 ? sortedFiles[0] : null;
+    const latestFile = sortedFiles[0];
     
     if (!latestFile) {
       return res.status(404).json({ error: 'Report file not found' });
@@ -202,14 +179,9 @@ router.get('/type/:reportType', async (req, res) => {
 router.get('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const fileId = parseInt(id);
     
-    if (isNaN(fileId)) {
-      return res.status(400).json({ error: 'Invalid file ID' });
-    }
-    
-    // Get the file record
-    const [file] = await db.select().from(reportFiles).where(eq(reportFiles.id, fileId));
+    // Use the storage interface to get the file
+    const file = await storage.getReportFileById(id);
     
     if (!file || !file.is_active) {
       return res.status(404).json({ error: 'Report file not found' });
@@ -298,22 +270,11 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: any, res
     // Validate data with zod schema
     const parsedData = insertReportFileSchema.parse(fileData);
     
-    // First, deactivate any previous files of this type
-    const allFiles = await db.select().from(reportFiles);
-    const sameTypeFiles = allFiles.filter(f => f.report_type === report_type);
-    
-    // If there are existing files of the same type, deactivate them
-    if (sameTypeFiles.length > 0) {
-      for (const file of sameTypeFiles) {
-        await db
-          .update(reportFiles)
-          .set({ is_active: false })
-          .where(eq(reportFiles.id, file.id));
-      }
-    }
+    // First, deactivate any previous files of this type using the storage interface
+    await storage.deactivateReportFilesByType(report_type);
     
     // Insert the new file record
-    const [insertedFile] = await db.insert(reportFiles).values(parsedData).returning();
+    const insertedFile = await storage.createReportFile(parsedData);
     
     res.status(201).json({
       message: 'Report file uploaded successfully',
@@ -342,24 +303,13 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: any, res
 router.delete('/:id', requireAdmin, async (req: any, res) => {
   try {
     const { id } = req.params;
-    const fileId = parseInt(id);
     
-    if (isNaN(fileId)) {
-      return res.status(400).json({ error: 'Invalid file ID' });
-    }
+    // Use the storage interface to delete the file
+    const success = await storage.deleteReportFile(id);
     
-    // Get the file record first to get the file path
-    const [file] = await db.select().from(reportFiles).where(eq(reportFiles.id, fileId));
-    
-    if (!file) {
+    if (!success) {
       return res.status(404).json({ error: 'Report file not found' });
     }
-    
-    // Deactivate the file (soft delete)
-    await db
-      .update(reportFiles)
-      .set({ is_active: false })
-      .where(eq(reportFiles.id, fileId));
     
     res.json({ message: 'Report file deleted successfully' });
   } catch (error) {
