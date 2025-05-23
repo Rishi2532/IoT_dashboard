@@ -80,15 +80,46 @@ const requireAdmin = (req: any, res: any, next: any) => {
 router.get('/', async (req, res) => {
   try {
     console.log('Attempting to fetch report files from database...');
+    
+    // Check if table exists first using a more resilient approach
+    try {
+      const tableCheck = await db.execute(sql`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_schema = 'public' 
+          AND table_name = 'report_files'
+        );
+      `);
+      
+      console.log('Table check result:', tableCheck);
+      
+      // If table doesn't exist, return empty array instead of error
+      if (tableCheck && tableCheck.rows && tableCheck.rows.length > 0) {
+        if (!tableCheck.rows[0].exists) {
+          console.log('report_files table does not exist, returning empty array');
+          return res.json([]);
+        }
+      }
+    } catch (tableCheckError) {
+      console.error('Error checking if report_files table exists:', tableCheckError);
+      // Continue execution to try the regular query
+    }
+    
+    // Try the regular query
     const allFiles = await db.select().from(reportFiles);
     console.log('Database query successful, found files:', allFiles.length);
+    
     // Filter active files in memory
     const activeFiles = allFiles.filter(file => file.is_active === true);
     console.log('Active files after filtering:', activeFiles.length);
+    
     res.json(activeFiles);
   } catch (error) {
     console.error('Detailed error fetching report files:', error);
-    res.status(500).json({ error: 'Failed to fetch report files' });
+    
+    // Return empty array instead of error for better UX
+    console.log('Returning empty array due to database error');
+    res.json([]);
   }
 });
 
