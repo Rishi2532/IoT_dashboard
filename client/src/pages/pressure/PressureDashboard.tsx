@@ -1673,8 +1673,17 @@ const PressureDashboard: React.FC = () => {
                                           Below Range Days
                                         </p>
                                         <p className="text-xl font-bold text-red-600">
-                                          {selectedESR.pressure_less_than_02_bar ||
-                                            0}
+                                          {(() => {
+                                            let count = 0;
+                                            for (let day = 1; day <= 7; day++) {
+                                              const value = selectedESR[`pressure_value_${day}` as keyof PressureData];
+                                              const numValue = value !== undefined && value !== null ? Number(value) : null;
+                                              if (numValue !== null && numValue >= 0 && numValue < 0.2) {
+                                                count++;
+                                              }
+                                            }
+                                            return count;
+                                          })()}
                                         </p>
                                       </div>
                                       <div className="bg-white p-3 rounded border border-green-100">
@@ -1682,8 +1691,17 @@ const PressureDashboard: React.FC = () => {
                                           Optimal Range Days
                                         </p>
                                         <p className="text-xl font-bold text-green-600">
-                                          {selectedESR.pressure_between_02_07_bar ||
-                                            0}
+                                          {(() => {
+                                            let count = 0;
+                                            for (let day = 1; day <= 7; day++) {
+                                              const value = selectedESR[`pressure_value_${day}` as keyof PressureData];
+                                              const numValue = value !== undefined && value !== null ? Number(value) : null;
+                                              if (numValue !== null && numValue >= 0.2 && numValue <= 0.7) {
+                                                count++;
+                                              }
+                                            }
+                                            return count;
+                                          })()}
                                         </p>
                                       </div>
                                       <div className="bg-white p-3 rounded border border-orange-100">
@@ -1691,8 +1709,17 @@ const PressureDashboard: React.FC = () => {
                                           Above Range Days
                                         </p>
                                         <p className="text-xl font-bold text-orange-600">
-                                          {selectedESR.pressure_greater_than_07_bar ||
-                                            0}
+                                          {(() => {
+                                            let count = 0;
+                                            for (let day = 1; day <= 7; day++) {
+                                              const value = selectedESR[`pressure_value_${day}` as keyof PressureData];
+                                              const numValue = value !== undefined && value !== null ? Number(value) : null;
+                                              if (numValue !== null && numValue > 0.7) {
+                                                count++;
+                                              }
+                                            }
+                                            return count;
+                                          })()}
                                         </p>
                                       </div>
                                       <div className="bg-white p-3 rounded border border-gray-200">
@@ -1700,8 +1727,17 @@ const PressureDashboard: React.FC = () => {
                                           Zero Pressure Days
                                         </p>
                                         <p className="text-xl font-bold text-gray-600">
-                                          {selectedESR.number_of_consistent_zero_value_in_pressure ||
-                                            0}
+                                          {(() => {
+                                            let count = 0;
+                                            for (let day = 1; day <= 7; day++) {
+                                              const value = selectedESR[`pressure_value_${day}` as keyof PressureData];
+                                              const numValue = value !== undefined && value !== null ? Number(value) : null;
+                                              if (numValue === 0) {
+                                                count++;
+                                              }
+                                            }
+                                            return count;
+                                          })()}
                                         </p>
                                       </div>
                                     </div>

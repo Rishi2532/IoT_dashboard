@@ -1738,7 +1738,7 @@ const ChlorineDashboard: React.FC = () => {
                                                 for (let day = 1; day <= 7; day++) {
                                                   const value = selectedESR[`chlorine_value_${day}` as keyof ChlorineData];
                                                   const numValue = value !== undefined && value !== null ? Number(value) : null;
-                                                  if (numValue !== null && numValue > 0 && numValue < 0.2) {
+                                                  if (numValue !== null && numValue >= 0 && numValue < 0.2) {
                                                     count++;
                                                   }
                                                 }
