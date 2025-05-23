@@ -1363,14 +1363,27 @@ const EnhancedLpcdDashboard = () => {
                       </Card>
                       <Card
                         className="border-green-100"
-                        onClick={() => handleFilterChange("above70")}
+                        onClick={() => handleFilterChange("70to80")}
                       >
                         <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
                           <span className="text-sm text-green-700">
-                            LPCD &gt; 70L
+                            LPCD 70-80L
                           </span>
                           <span className="font-medium text-green-700">
-                            {filterCounts.ranges["above70"]}
+                            {filterCounts.ranges["70to80"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        className="border-green-100"
+                        onClick={() => handleFilterChange("above80")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
+                          <span className="text-sm text-green-700">
+                            LPCD &gt; 80L
+                          </span>
+                          <span className="font-medium text-green-700">
+                            {filterCounts.ranges["above80"]}
                           </span>
                         </CardContent>
                       </Card>
