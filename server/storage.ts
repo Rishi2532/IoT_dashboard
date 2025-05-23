@@ -194,6 +194,7 @@ export interface IStorage {
   createReportFile(data: InsertReportFile): Promise<ReportFile>;
   updateReportFile(id: string, data: Partial<ReportFile>): Promise<ReportFile>;
   deleteReportFile(id: string): Promise<boolean>;
+  deactivateReportFilesByType(reportType: string): Promise<boolean>;
 }
 
 // PostgreSQL implementation

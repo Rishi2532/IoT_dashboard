@@ -6,6 +6,7 @@ import {
   waterSchemeData,
   chlorineData,
   pressureData,
+  reportFiles,
   type User,
   type InsertUser,
   type Region,
@@ -21,6 +22,8 @@ import {
   type PressureData,
   type InsertPressureData,
   type UpdatePressureData,
+  type ReportFile,
+  type InsertReportFile,
 } from "@shared/schema";
 import { db } from "./db-storage";
 import { eq, and, like } from "drizzle-orm";
@@ -28,6 +31,113 @@ import { IStorage, WaterSchemeDataFilter, ChlorineDataFilter, PressureDataFilter
 
 // Implementation of IStorage interface using Drizzle ORM with PostgreSQL
 export class DatabaseStorage implements IStorage {
+  // Report File operations
+  async getAllReportFiles(): Promise<ReportFile[]> {
+    try {
+      console.log("DatabaseStorage: Getting all active report files");
+      const allFiles = await db.select().from(reportFiles);
+      // Filter active files in memory
+      return allFiles.filter(file => file.is_active === true);
+    } catch (error) {
+      console.error("Error getting report files:", error);
+      // Return empty array on error for better fault tolerance
+      return [];
+    }
+  }
+
+  async getReportFileById(id: string): Promise<ReportFile | undefined> {
+    try {
+      const fileId = parseInt(id);
+      if (isNaN(fileId)) {
+        return undefined;
+      }
+      
+      const [file] = await db.select().from(reportFiles).where(eq(reportFiles.id, fileId));
+      return file;
+    } catch (error) {
+      console.error("Error getting report file by ID:", error);
+      return undefined;
+    }
+  }
+
+  async getReportFilesByType(reportType: string): Promise<ReportFile[]> {
+    try {
+      const files = await db.select().from(reportFiles)
+        .where(and(
+          eq(reportFiles.report_type, reportType),
+          eq(reportFiles.is_active, true)
+        ));
+      return files;
+    } catch (error) {
+      console.error("Error getting report files by type:", error);
+      return [];
+    }
+  }
+
+  async createReportFile(data: InsertReportFile): Promise<ReportFile> {
+    try {
+      const [file] = await db.insert(reportFiles).values(data).returning();
+      return file;
+    } catch (error) {
+      console.error("Error creating report file:", error);
+      throw error;
+    }
+  }
+
+  async updateReportFile(id: string, data: Partial<ReportFile>): Promise<ReportFile> {
+    try {
+      const fileId = parseInt(id);
+      if (isNaN(fileId)) {
+        throw new Error("Invalid file ID");
+      }
+      
+      const [file] = await db
+        .update(reportFiles)
+        .set(data)
+        .where(eq(reportFiles.id, fileId))
+        .returning();
+      return file;
+    } catch (error) {
+      console.error("Error updating report file:", error);
+      throw error;
+    }
+  }
+
+  async deleteReportFile(id: string): Promise<boolean> {
+    try {
+      const fileId = parseInt(id);
+      if (isNaN(fileId)) {
+        return false;
+      }
+      
+      // Soft delete (set is_active to false)
+      await db
+        .update(reportFiles)
+        .set({ is_active: false })
+        .where(eq(reportFiles.id, fileId));
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting report file:", error);
+      return false;
+    }
+  }
+
+  async deactivateReportFilesByType(reportType: string): Promise<boolean> {
+    try {
+      // Deactivate all files of a specific type
+      await db
+        .update(reportFiles)
+        .set({ is_active: false })
+        .where(eq(reportFiles.report_type, reportType));
+      
+      return true;
+    } catch (error) {
+      console.error("Error deactivating report files by type:", error);
+      return false;
+    }
+  }
+
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
@@ -451,4 +561,112 @@ export class DatabaseStorage implements IStorage {
 }
 
 // Export a singleton instance
+  // Report File operations
+  async getAllReportFiles(): Promise<ReportFile[]> {
+    try {
+      console.log("DatabaseStorage: Getting all active report files");
+      const allFiles = await db.select().from(reportFiles);
+      // Filter active files in memory
+      return allFiles.filter(file => file.is_active === true);
+    } catch (error) {
+      console.error("Error getting report files:", error);
+      // Return empty array on error for better fault tolerance
+      return [];
+    }
+  }
+
+  async getReportFileById(id: string): Promise<ReportFile | undefined> {
+    try {
+      const fileId = parseInt(id);
+      if (isNaN(fileId)) {
+        return undefined;
+      }
+      
+      const [file] = await db.select().from(reportFiles).where(eq(reportFiles.id, fileId));
+      return file;
+    } catch (error) {
+      console.error("Error getting report file by ID:", error);
+      return undefined;
+    }
+  }
+
+  async getReportFilesByType(reportType: string): Promise<ReportFile[]> {
+    try {
+      const files = await db.select().from(reportFiles)
+        .where(and(
+          eq(reportFiles.report_type, reportType),
+          eq(reportFiles.is_active, true)
+        ));
+      return files;
+    } catch (error) {
+      console.error("Error getting report files by type:", error);
+      return [];
+    }
+  }
+
+  async createReportFile(data: InsertReportFile): Promise<ReportFile> {
+    try {
+      const [file] = await db.insert(reportFiles).values(data).returning();
+      return file;
+    } catch (error) {
+      console.error("Error creating report file:", error);
+      throw error;
+    }
+  }
+
+  async updateReportFile(id: string, data: Partial<ReportFile>): Promise<ReportFile> {
+    try {
+      const fileId = parseInt(id);
+      if (isNaN(fileId)) {
+        throw new Error("Invalid file ID");
+      }
+      
+      const [file] = await db
+        .update(reportFiles)
+        .set(data)
+        .where(eq(reportFiles.id, fileId))
+        .returning();
+      return file;
+    } catch (error) {
+      console.error("Error updating report file:", error);
+      throw error;
+    }
+  }
+
+  async deleteReportFile(id: string): Promise<boolean> {
+    try {
+      const fileId = parseInt(id);
+      if (isNaN(fileId)) {
+        return false;
+      }
+      
+      // Soft delete (set is_active to false)
+      await db
+        .update(reportFiles)
+        .set({ is_active: false })
+        .where(eq(reportFiles.id, fileId));
+      
+      return true;
+    } catch (error) {
+      console.error("Error deleting report file:", error);
+      return false;
+    }
+  }
+
+  async deactivateReportFilesByType(reportType: string): Promise<boolean> {
+    try {
+      // Deactivate all files of a specific type
+      await db
+        .update(reportFiles)
+        .set({ is_active: false })
+        .where(eq(reportFiles.report_type, reportType));
+      
+      return true;
+    } catch (error) {
+      console.error("Error deactivating report files by type:", error);
+      return false;
+    }
+  }
+}
+
 export const storage = new DatabaseStorage();
