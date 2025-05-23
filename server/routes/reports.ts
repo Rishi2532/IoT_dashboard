@@ -81,31 +81,25 @@ router.get('/', async (req, res) => {
   try {
     console.log('Attempting to fetch report files from database...');
     
-    // Check if table exists first using a more resilient approach
+    // Add a simpler approach to check if the table exists
+    let tableExists = true;
     try {
-      const tableCheck = await db.execute(sql`
-        SELECT EXISTS (
-          SELECT FROM information_schema.tables 
-          WHERE table_schema = 'public' 
-          AND table_name = 'report_files'
-        );
-      `);
-      
-      console.log('Table check result:', tableCheck);
-      
-      // If table doesn't exist, return empty array instead of error
-      if (tableCheck && tableCheck.rows && tableCheck.rows.length > 0) {
-        if (!tableCheck.rows[0].exists) {
-          console.log('report_files table does not exist, returning empty array');
-          return res.json([]);
-        }
+      // Simple approach - try to do a count query
+      await db.execute(`SELECT COUNT(*) FROM report_files LIMIT 1`);
+    } catch (e) {
+      if (e.message && e.message.includes('does not exist')) {
+        console.log('report_files table does not exist');
+        tableExists = false;
       }
-    } catch (tableCheckError) {
-      console.error('Error checking if report_files table exists:', tableCheckError);
-      // Continue execution to try the regular query
     }
     
-    // Try the regular query
+    // If table doesn't exist, don't try to query it
+    if (!tableExists) {
+      console.log('report_files table does not exist, returning empty array');
+      return res.json([]);
+    }
+    
+    // If we got here, the table exists, so try the full query
     const allFiles = await db.select().from(reportFiles);
     console.log('Database query successful, found files:', allFiles.length);
     
