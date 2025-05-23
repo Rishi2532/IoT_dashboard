@@ -3,8 +3,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { pool } from '../db-storage';
-import { reportFiles, insertReportFileSchema } from '../../shared/schema';
+import { storage } from '../database-storage';
+import { insertReportFileSchema } from '../../shared/schema';
 
 const router = Router();
 
@@ -79,14 +79,9 @@ const requireAdmin = (req: any, res: any, next: any) => {
 router.get('/', async (req, res) => {
   try {
     console.log('Attempting to fetch report files from database...');
-    const client = await pool.getClient();
-    try {
-      const result = await client.query('SELECT * FROM report_files WHERE is_active = true ORDER BY upload_date DESC');
-      console.log('Database query successful, found files:', result.rows.length);
-      res.json(result.rows);
-    } finally {
-      client.release();
-    }
+    const files = await storage.getAllReportFiles();
+    console.log('Database query successful, found files:', files.length);
+    res.json(files);
   } catch (error) {
     console.error('Detailed error fetching report files:', error);
     res.status(500).json({ error: 'Failed to fetch report files' });
