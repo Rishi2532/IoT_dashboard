@@ -160,7 +160,14 @@ export default function LoginPage() {
               <p className="text-gray-600 text-center mt-3 mb-5 flex-grow">
                 Access admin controls, upload data and manage system
               </p>
-              <Button className="w-full bg-blue-900 hover:bg-blue-800 py-5 text-lg">
+              <Button 
+                className="w-full bg-blue-900 hover:bg-blue-800 py-5 text-lg"
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent event bubbling
+                  setLocation("/admin");
+                }}
+                type="button"
+              >
                 Admin Access
               </Button>
             </div>
