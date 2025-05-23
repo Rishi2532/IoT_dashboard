@@ -72,13 +72,21 @@ function ReportsPage() {
             Download the latest Excel report files with all formatting preserved
           </p>
         </div>
-        {/* Admin-only link to manage reports */}
-        <Link href="/admin/manage-reports">
-          <Button variant="outline" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            Manage Reports
-          </Button>
-        </Link>
+        {/* Admin-only link to manage reports - Only show for admins */}
+        {(() => {
+          const { data: authData } = useQuery<{isAdmin?: boolean}>({
+            queryKey: ['/api/auth/status'],
+            retry: 1
+          });
+          return authData?.isAdmin ? (
+            <Link href="/admin/manage-reports">
+              <Button variant="outline" className="flex items-center gap-2">
+                <FileText className="h-4 w-4" />
+                Manage Reports
+              </Button>
+            </Link>
+          ) : null;
+        })()}
       </div>
 
       <div className="py-6">

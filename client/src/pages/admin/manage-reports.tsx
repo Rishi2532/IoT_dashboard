@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Loader2, Upload, Plus, File, FileX, Check, X, ArrowLeft } from 'lucide-react';
 import { apiRequest } from '../../lib/queryClient';
@@ -23,7 +23,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { toast } from '@/hooks/use-toast';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 
 // Report File Types
 const REPORT_TYPES = [
@@ -42,6 +42,25 @@ const ManageReports = () => {
   const [deleteFileId, setDeleteFileId] = useState<number | null>(null);
   const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
   const queryClient = useQueryClient();
+  const [, setLocation] = useLocation();
+  
+  // Check if user is admin
+  const { data: authData, isLoading: isAuthLoading } = useQuery({
+    queryKey: ['/api/auth/status'],
+    retry: 1,
+  });
+  
+  // Redirect non-admin users to login
+  useEffect(() => {
+    if (!isAuthLoading && authData && !authData.isAdmin) {
+      toast({
+        title: "Access Denied",
+        description: "You must be an administrator to access this page",
+        variant: "destructive",
+      });
+      setLocation("/login");
+    }
+  }, [authData, isAuthLoading, setLocation]);
 
   // Fetch all report files from the API
   const { data: reportFiles = [], isLoading, error } = useQuery<any[]>({
