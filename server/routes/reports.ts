@@ -3,8 +3,9 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { storage } from '../database-storage';
-import { insertReportFileSchema } from '../../shared/schema';
+import { db } from '../db-storage';
+import { reportFiles, insertReportFileSchema } from '../../shared/schema';
+import { eq } from 'drizzle-orm';
 
 const router = Router();
 
@@ -79,9 +80,12 @@ const requireAdmin = (req: any, res: any, next: any) => {
 router.get('/', async (req, res) => {
   try {
     console.log('Attempting to fetch report files from database...');
-    const files = await storage.getAllReportFiles();
-    console.log('Database query successful, found files:', files.length);
-    res.json(files);
+    const allFiles = await db.select().from(reportFiles);
+    console.log('Database query successful, found files:', allFiles.length);
+    // Filter active files in memory
+    const activeFiles = allFiles.filter(file => file.is_active === true);
+    console.log('Active files after filtering:', activeFiles.length);
+    res.json(activeFiles);
   } catch (error) {
     console.error('Detailed error fetching report files:', error);
     res.status(500).json({ error: 'Failed to fetch report files' });
