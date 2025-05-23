@@ -5,7 +5,7 @@ import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
 import { storage } from '../database-storage';
 import { insertReportFileSchema } from '../../shared/schema';
-import { sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 
 const router = Router();
 
@@ -47,7 +47,7 @@ const multerStorage = multer.diskStorage({
 
 // Configure multer upload middleware
 const upload = multer({
-  storage,
+  storage: multerStorage,
   fileFilter: (req, file, cb) => {
     // Only allow Excel files
     const allowedMimes = [
