@@ -3,7 +3,17 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-import { db } from '../db-storage';
+// Use local database for VS Code development, cloud database for Replit
+const isLocalDatabase = process.env.DATABASE_URL?.includes('localhost') || process.env.DATABASE_URL?.includes('127.0.0.1');
+
+let db: any;
+if (isLocalDatabase) {
+  const localDb = await import('../db-local');
+  db = localDb.db;
+} else {
+  const cloudDb = await import('../db-storage');
+  db = cloudDb.db;
+}
 import { reportFiles, insertReportFileSchema } from '../../shared/schema';
 import { eq } from 'drizzle-orm';
 
