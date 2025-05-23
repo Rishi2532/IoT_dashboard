@@ -6,6 +6,7 @@ import {
   waterSchemeData,
   chlorineData,
   pressureData,
+  reportFiles,
   type User,
   type InsertUser,
   type Region,
@@ -21,6 +22,8 @@ import {
   type PressureData,
   type InsertPressureData,
   type UpdatePressureData,
+  type ReportFile,
+  type InsertReportFile,
 } from "@shared/schema";
 import { getDB, initializeDatabase } from "./db";
 import { eq, sql, and } from "drizzle-orm";
@@ -183,6 +186,14 @@ export interface IStorage {
     consistentOptimalSensors: number;
     consistentAboveRangeSensors: number;
   }>;
+
+  // Report File operations
+  getAllReportFiles(): Promise<ReportFile[]>;
+  getReportFileById(id: string): Promise<ReportFile | undefined>;
+  getReportFilesByType(reportType: string): Promise<ReportFile[]>;
+  createReportFile(data: InsertReportFile): Promise<ReportFile>;
+  updateReportFile(id: string, data: Partial<ReportFile>): Promise<ReportFile>;
+  deleteReportFile(id: string): Promise<boolean>;
 }
 
 // PostgreSQL implementation
