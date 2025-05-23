@@ -132,7 +132,7 @@ export default function LoginPage() {
 
         <div className="flex gap-8 items-stretch">
           {/* Admin Login Card */}
-          <div className="w-72 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all">
+          <div className="w-80 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all">
             <div className="p-6 flex flex-col items-center h-full">
               <div className="w-24 h-24 rounded-full bg-blue-900 flex items-center justify-center mb-4">
                 <svg
@@ -158,7 +158,7 @@ export default function LoginPage() {
                 Access admin controls, upload data and manage system
               </p>
               <Button 
-                  className="w-full bg-blue-900 hover:bg-blue-800 py-5 text-lg"
+                  className="w-full bg-blue-900 hover:bg-blue-800 py-5 text-lg min-w-[200px]"
                   type="button"
                   onClick={() => window.location.href = "/admin"}
                 >
@@ -168,7 +168,7 @@ export default function LoginPage() {
           </div>
 
           {/* User Login Card */}
-          <div className="w-72 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all">
+          <div className="w-80 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all">
             <div className="p-6 flex flex-col items-center h-full">
               <div className="w-24 h-24 rounded-full bg-blue-700 flex items-center justify-center mb-4">
                 <svg
@@ -191,14 +191,13 @@ export default function LoginPage() {
               <p className="text-gray-600 text-center mt-3 mb-5 flex-grow">
                 Access data visualization and analytics dashboard
               </p>
-              <Link href="/user-login">
-                <Button 
-                  className="w-full bg-blue-700 hover:bg-blue-600 py-5 text-lg"
+              <Button 
+                  className="w-full bg-blue-700 hover:bg-blue-600 py-5 text-lg min-w-[200px]"
                   type="button"
+                  onClick={() => window.location.href = "/user-login"}
                 >
                   User Access
                 </Button>
-              </Link>
             </div>
           </div>
         </div>
