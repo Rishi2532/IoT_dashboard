@@ -45,7 +45,7 @@ const ManageReports = () => {
   const [, setLocation] = useLocation();
   
   // Check if user is admin
-  const { data: authData, isLoading: isAuthLoading } = useQuery({
+  const { data: authData, isLoading: isAuthLoading } = useQuery<{isAdmin?: boolean; isLoggedIn?: boolean}>({
     queryKey: ['/api/auth/status'],
     retry: 1,
   });

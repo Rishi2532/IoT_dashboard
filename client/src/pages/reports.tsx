@@ -5,6 +5,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Link } from 'wouter';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
 
+// Admin-only button that only shows for admin users
+function AdminOnlyButton() {
+  // Get authentication status 
+  const { data } = useQuery<{isAdmin?: boolean; isLoggedIn?: boolean}>({
+    queryKey: ['/api/auth/status'],
+    retry: 1
+  });
+  
+  // Only render the button if user is an admin
+  if (!data?.isAdmin) return null;
+  
+  return (
+    <Link href="/admin/manage-reports">
+      <Button variant="outline" className="flex items-center gap-2">
+        <FileText className="h-4 w-4" />
+        Manage Reports
+      </Button>
+    </Link>
+  );
+};
+
 // Report file types with friendly names and descriptions
 const REPORT_TYPES = [
   {
@@ -73,20 +94,7 @@ function ReportsPage() {
           </p>
         </div>
         {/* Admin-only link to manage reports - Only show for admins */}
-        {(() => {
-          const { data: authData } = useQuery<{isAdmin?: boolean}>({
-            queryKey: ['/api/auth/status'],
-            retry: 1
-          });
-          return authData?.isAdmin ? (
-            <Link href="/admin/manage-reports">
-              <Button variant="outline" className="flex items-center gap-2">
-                <FileText className="h-4 w-4" />
-                Manage Reports
-              </Button>
-            </Link>
-          ) : null;
-        })()}
+        <AdminOnlyButton />
       </div>
 
       <div className="py-6">
