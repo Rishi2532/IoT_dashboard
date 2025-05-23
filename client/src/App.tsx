@@ -4,9 +4,9 @@ import Schemes from "./pages/schemes";
 import Regions from "./pages/regions";
 import Reports from "./pages/reports";
 import Settings from "./pages/settings";
-import Admin from "./pages/admin";
 import AdminDashboard from "./pages/admin/dashboard";
 import ManageReports from "./pages/admin/manage-reports";
+import AdminLoginPage from "./pages/admin";
 import ImportDataPage from "./pages/import-data";
 import NotFound from "./pages/not-found";
 import LoginPage from "./pages/login";
@@ -83,11 +83,7 @@ function App() {
               <Route path="/user-login" component={UserLoginPage} />
               <Route path="/register" component={RegisterPage} />
               <Route path="/forgot-password" component={ForgotPasswordPage} />
-              <Route path="/admin">
-                <ProtectedRoute requireAdmin={true}>
-                  <Admin />
-                </ProtectedRoute>
-              </Route>
+              <Route path="/admin" component={AdminLoginPage} />
               
               {/* User protected routes */}
               <Route path="/dashboard">

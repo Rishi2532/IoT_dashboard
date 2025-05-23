@@ -157,14 +157,13 @@ export default function LoginPage() {
               <p className="text-gray-600 text-center mt-3 mb-5 flex-grow">
                 Access admin controls, upload data and manage system
               </p>
-              <Link href="/admin">
-                <Button 
+              <Button 
                   className="w-full bg-blue-900 hover:bg-blue-800 py-5 text-lg"
                   type="button"
+                  onClick={() => window.location.href = "/admin"}
                 >
                   Admin Access
                 </Button>
-              </Link>
             </div>
           </div>
 
