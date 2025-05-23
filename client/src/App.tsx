@@ -83,7 +83,11 @@ function App() {
               <Route path="/user-login" component={UserLoginPage} />
               <Route path="/register" component={RegisterPage} />
               <Route path="/forgot-password" component={ForgotPasswordPage} />
-              <Route path="/admin" component={Admin} />
+              <Route path="/admin">
+                <ProtectedRoute requireAdmin={true}>
+                  <Admin />
+                </ProtectedRoute>
+              </Route>
               
               {/* User protected routes */}
               <Route path="/dashboard">
@@ -149,25 +153,25 @@ function App() {
               
               {/* Admin protected routes */}
               <Route path="/admin/dashboard">
-                <ProtectedRoute>
+                <ProtectedRoute requireAdmin={true}>
                   <AdminDashboard />
                 </ProtectedRoute>
               </Route>
               
               <Route path="/admin/import-data">
-                <ProtectedRoute>
+                <ProtectedRoute requireAdmin={true}>
                   <ImportDataPage />
                 </ProtectedRoute>
               </Route>
               
               <Route path="/admin/chlorine-import">
-                <ProtectedRoute>
+                <ProtectedRoute requireAdmin={true}>
                   <ChlorineImport />
                 </ProtectedRoute>
               </Route>
               
               <Route path="/admin/manage-reports">
-                <ProtectedRoute>
+                <ProtectedRoute requireAdmin={true}>
                   <ManageReports />
                 </ProtectedRoute>
               </Route>
