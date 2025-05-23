@@ -132,10 +132,7 @@ export default function LoginPage() {
 
         <div className="flex gap-8 items-stretch">
           {/* Admin Login Card */}
-          <Card
-            className="w-72 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer"
-            onClick={() => setLocation("/admin")}
-          >
+          <div className="w-72 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all">
             <div className="p-6 flex flex-col items-center h-full">
               <div className="w-24 h-24 rounded-full bg-blue-900 flex items-center justify-center mb-4">
                 <svg
@@ -160,27 +157,19 @@ export default function LoginPage() {
               <p className="text-gray-600 text-center mt-3 mb-5 flex-grow">
                 Access admin controls, upload data and manage system
               </p>
-              <Button 
-                className="w-full bg-blue-900 hover:bg-blue-800 py-5 text-lg"
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent event bubbling
-                  setLocation("/admin");
-                }}
-                type="button"
-              >
-                Admin Access
-              </Button>
+              <Link href="/admin">
+                <Button 
+                  className="w-full bg-blue-900 hover:bg-blue-800 py-5 text-lg"
+                  type="button"
+                >
+                  Admin Access
+                </Button>
+              </Link>
             </div>
-          </Card>
+          </div>
 
           {/* User Login Card */}
-          <Card
-            className="w-72 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all cursor-pointer"
-            onClick={() => {
-              if (loginMutation.isPending) return;
-              setLocation("/user-login");
-            }}
-          >
+          <div className="w-72 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all">
             <div className="p-6 flex flex-col items-center h-full">
               <div className="w-24 h-24 rounded-full bg-blue-700 flex items-center justify-center mb-4">
                 <svg
@@ -203,11 +192,16 @@ export default function LoginPage() {
               <p className="text-gray-600 text-center mt-3 mb-5 flex-grow">
                 Access data visualization and analytics dashboard
               </p>
-              <Button className="w-full bg-blue-700 hover:bg-blue-600 py-5 text-lg">
-                User Access
-              </Button>
+              <Link href="/user-login">
+                <Button 
+                  className="w-full bg-blue-700 hover:bg-blue-600 py-5 text-lg"
+                  type="button"
+                >
+                  User Access
+                </Button>
+              </Link>
             </div>
-          </Card>
+          </div>
         </div>
 
         {loginError && (
