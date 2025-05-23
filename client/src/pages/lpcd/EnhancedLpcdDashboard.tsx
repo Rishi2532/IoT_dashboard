@@ -123,6 +123,8 @@ type LpcdRange =
   | "55to60"
   | "60to65"
   | "65to70"
+  | "70to80"  // New range for LPCD between 70-80
+  | "above80"  // New range for LPCD above 80
   | "above70"
   | "consistentlyAbove55"
   | "consistentlyBelow55";
@@ -417,6 +419,18 @@ const EnhancedLpcdDashboard = () => {
           return lpcdValue !== null && lpcdValue >= 65 && lpcdValue < 70;
         });
         break;
+      case "70to80":
+        filtered = filtered.filter((scheme) => {
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue !== null && lpcdValue >= 70 && lpcdValue < 80;
+        });
+        break;
+      case "above80":
+        filtered = filtered.filter((scheme) => {
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue !== null && lpcdValue >= 80;
+        });
+        break;
       case "above70":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
@@ -459,6 +473,8 @@ const EnhancedLpcdDashboard = () => {
         "55to60": 0,
         "60to65": 0,
         "65to70": 0,
+        "70to80": 0,
+        "above80": 0,
         above70: 0,
       },
       consistentlyAbove55: 0,
@@ -508,7 +524,14 @@ const EnhancedLpcdDashboard = () => {
         counts.ranges["60to65"]++;
       } else if (lpcdValue >= 65 && lpcdValue < 70) {
         counts.ranges["65to70"]++;
-      } else if (lpcdValue >= 70) {
+      } else if (lpcdValue >= 70 && lpcdValue < 80) {
+        counts.ranges["70to80"]++;
+      } else if (lpcdValue >= 80) {
+        counts.ranges["above80"]++;
+      }
+      
+      // Keep the above70 count for backward compatibility
+      if (lpcdValue >= 70) {
         counts.ranges["above70"]++;
       }
 
