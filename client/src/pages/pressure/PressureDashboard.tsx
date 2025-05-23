@@ -1598,7 +1598,7 @@ const PressureDashboard: React.FC = () => {
                                       7-Day Pressure History
                                     </h3>
                                     <div className="grid grid-cols-7 gap-3">
-                                      {[7, 6, 5, 4, 3, 2, 1].map((day) => {
+                                      {[1, 2, 3, 4, 5, 6, 7].map((day) => {
                                         const value =
                                           selectedESR[
                                             `pressure_value_${day}` as keyof PressureData
@@ -1644,11 +1644,7 @@ const PressureDashboard: React.FC = () => {
                                           >
                                             <div className="relative">
                                               <p className="text-xs text-gray-700 font-medium">
-                                                {day === 1
-                                                  ? "Today"
-                                                  : day === 2
-                                                    ? "Yesterday"
-                                                    : `Day ${day}`}
+                                                Day {day}
                                               </p>
                                               <p
                                                 className={`text-xl font-bold ${valueTextClass}`}
