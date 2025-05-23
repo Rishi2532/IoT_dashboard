@@ -465,28 +465,6 @@ input, select, textarea {
   }
 }
 
-/* Village icon with water connection */
-.village-water-icon {
-  position: fixed;
-  bottom: 50px;
-  left: 50px;
-  font-size: 40px;
-  animation: villageGlow 5s ease-in-out infinite;
-  filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.7));
-  z-index: 1000;
-}
-
-@keyframes villageGlow {
-  0%, 100% {
-    transform: scale(1);
-    filter: drop-shadow(0 0 15px rgba(16, 185, 129, 0.7));
-  }
-  50% {
-    transform: scale(1.1);
-    filter: drop-shadow(0 0 25px rgba(16, 185, 129, 1));
-  }
-}
-
 /* Loading animations */
 @keyframes shimmer {
   0% {
