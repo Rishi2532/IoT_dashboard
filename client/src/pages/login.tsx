@@ -132,7 +132,7 @@ export default function LoginPage() {
 
         <div className="flex gap-8 items-stretch">
           {/* Admin Login Card */}
-          <div className="w-80 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all">
+          <div className="w-72 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all">
             <div className="p-6 flex flex-col items-center h-full">
               <div className="w-24 h-24 rounded-full bg-blue-900 flex items-center justify-center mb-4">
                 <svg
@@ -168,7 +168,7 @@ export default function LoginPage() {
           </div>
 
           {/* User Login Card */}
-          <div className="w-80 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all">
+          <div className="w-72 shadow-lg border border-blue-100 bg-white rounded-lg overflow-hidden hover:shadow-xl transition-all">
             <div className="p-6 flex flex-col items-center h-full">
               <div className="w-24 h-24 rounded-full bg-blue-700 flex items-center justify-center mb-4">
                 <svg
