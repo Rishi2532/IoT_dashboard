@@ -3,19 +3,8 @@ import multer from 'multer';
 import path from 'path';
 import fs from 'fs';
 import { v4 as uuidv4 } from 'uuid';
-// Use local database for VS Code development, cloud database for Replit
-const isLocalDatabase = process.env.DATABASE_URL?.includes('localhost') || process.env.DATABASE_URL?.includes('127.0.0.1');
-
-let db: any;
-if (isLocalDatabase) {
-  const localDb = await import('../db-local');
-  db = localDb.db;
-} else {
-  const cloudDb = await import('../db-storage');
-  db = cloudDb.db;
-}
+import { pool } from '../db-storage';
 import { reportFiles, insertReportFileSchema } from '../../shared/schema';
-import { eq } from 'drizzle-orm';
 
 const router = Router();
 
@@ -90,12 +79,14 @@ const requireAdmin = (req: any, res: any, next: any) => {
 router.get('/', async (req, res) => {
   try {
     console.log('Attempting to fetch report files from database...');
-    const allFiles = await db.select().from(reportFiles);
-    console.log('Database query successful, found files:', allFiles.length);
-    // Filter active files in memory
-    const activeFiles = allFiles.filter(file => file.is_active === true);
-    console.log('Active files after filtering:', activeFiles.length);
-    res.json(activeFiles);
+    const client = await pool.getClient();
+    try {
+      const result = await client.query('SELECT * FROM report_files WHERE is_active = true ORDER BY upload_date DESC');
+      console.log('Database query successful, found files:', result.rows.length);
+      res.json(result.rows);
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error('Detailed error fetching report files:', error);
     res.status(500).json({ error: 'Failed to fetch report files' });
