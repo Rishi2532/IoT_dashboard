@@ -1645,7 +1645,7 @@ const ChlorineDashboard: React.FC = () => {
                                           7-Day Chlorine History
                                         </h3>
                                         <div className="grid grid-cols-7 gap-3">
-                                          {[7, 6, 5, 4, 3, 2, 1].map((day) => {
+                                          {[1, 2, 3, 4, 5, 6, 7].map((day) => {
                                             const value =
                                               selectedESR[
                                                 `chlorine_value_${day}` as keyof ChlorineData
@@ -1698,11 +1698,7 @@ const ChlorineDashboard: React.FC = () => {
                                               >
                                                 <div className="relative">
                                                   <p className="text-xs text-gray-700 font-medium">
-                                                    {day === 1
-                                                      ? "Today"
-                                                      : day === 2
-                                                        ? "Yesterday"
-                                                        : `Day ${day}`}
+                                                    Day {day}
                                                   </p>
                                                   <p
                                                     className={`text-xl font-bold ${valueTextClass}`}
@@ -1720,6 +1716,116 @@ const ChlorineDashboard: React.FC = () => {
                                           })}
                                         </div>
                                       </div>
+                                      
+                                      {/* Add 7-Day Analysis section */}
+                                      <div className="border-t border-gray-200 pt-6 mt-6">
+                                        <h3 className="font-medium text-lg mb-4 text-teal-800 flex items-center gap-2">
+                                          <div className="w-6 h-6 rounded-full bg-teal-100 flex items-center justify-center">
+                                            <div className="h-3 w-3 text-teal-600 text-[10px] font-bold">
+                                              Cl
+                                            </div>
+                                          </div>
+                                          7-Day Analysis
+                                        </h3>
+                                        <div className="grid grid-cols-4 gap-4">
+                                          <div className="bg-red-50 p-4 rounded-md border border-red-100 text-center">
+                                            <div className="text-sm text-red-700 mb-1">
+                                              Below Range Days
+                                            </div>
+                                            <div className="font-semibold text-2xl text-red-600">
+                                              {(() => {
+                                                let count = 0;
+                                                for (let day = 1; day <= 7; day++) {
+                                                  const value = selectedESR[`chlorine_value_${day}` as keyof ChlorineData];
+                                                  const numValue = value !== undefined && value !== null ? Number(value) : null;
+                                                  if (numValue !== null && numValue > 0 && numValue < 0.2) {
+                                                    count++;
+                                                  }
+                                                }
+                                                return count;
+                                              })()}
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="bg-green-50 p-4 rounded-md border border-green-100 text-center">
+                                            <div className="text-sm text-green-700 mb-1">
+                                              Optimal Range Days
+                                            </div>
+                                            <div className="font-semibold text-2xl text-green-600">
+                                              {(() => {
+                                                let count = 0;
+                                                for (let day = 1; day <= 7; day++) {
+                                                  const value = selectedESR[`chlorine_value_${day}` as keyof ChlorineData];
+                                                  const numValue = value !== undefined && value !== null ? Number(value) : null;
+                                                  if (numValue !== null && numValue >= 0.2 && numValue <= 0.5) {
+                                                    count++;
+                                                  }
+                                                }
+                                                return count;
+                                              })()}
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="bg-orange-50 p-4 rounded-md border border-orange-100 text-center">
+                                            <div className="text-sm text-orange-700 mb-1">
+                                              Above Range Days
+                                            </div>
+                                            <div className="font-semibold text-2xl text-orange-600">
+                                              {(() => {
+                                                let count = 0;
+                                                for (let day = 1; day <= 7; day++) {
+                                                  const value = selectedESR[`chlorine_value_${day}` as keyof ChlorineData];
+                                                  const numValue = value !== undefined && value !== null ? Number(value) : null;
+                                                  if (numValue !== null && numValue > 0.5) {
+                                                    count++;
+                                                  }
+                                                }
+                                                return count;
+                                              })()}
+                                            </div>
+                                          </div>
+                                          
+                                          <div className="bg-gray-50 p-4 rounded-md border border-gray-200 text-center">
+                                            <div className="text-sm text-gray-700 mb-1">
+                                              Zero Chlorine Days
+                                            </div>
+                                            <div className="font-semibold text-2xl text-gray-600">
+                                              {(() => {
+                                                let count = 0;
+                                                for (let day = 1; day <= 7; day++) {
+                                                  const value = selectedESR[`chlorine_value_${day}` as keyof ChlorineData];
+                                                  const numValue = value !== undefined && value !== null ? Number(value) : null;
+                                                  if (numValue === 0) {
+                                                    count++;
+                                                  }
+                                                }
+                                                return count;
+                                              })()}
+                                            </div>
+                                          </div>
+                                        </div>
+                                      </div>
+                                      
+                                      {/* Add PI Vision Dashboard section */}
+                                      {selectedESR.dashboard_url && (
+                                        <div className="border-t border-gray-200 pt-6 mt-6">
+                                          <h3 className="font-medium text-lg mb-4 text-blue-800 flex items-center gap-2">
+                                            <BarChart className="h-5 w-5 text-blue-600" />
+                                            PI Vision Dashboard
+                                          </h3>
+                                          <p className="text-sm text-gray-600 mb-4">
+                                            View detailed historical chlorine data in PI Vision
+                                          </p>
+                                          <Button 
+                                            variant="outline" 
+                                            onClick={() => window.open(selectedESR.dashboard_url, '_blank')}
+                                            className="bg-white text-blue-600 border-blue-200 hover:bg-blue-50"
+                                          >
+                                            <ExternalLink className="h-4 w-4 mr-2" />
+                                            Open Dashboard
+                                          </Button>
+                                        </div>
+                                      )}
                                     </div>
                                   </>
                                 )}
