@@ -267,6 +267,13 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: any, res
       is_active: true
     };
     
+    // Add better VS Code environment handling
+    if (isVSCode && !fileData.uploaded_by) {
+      fileData.uploaded_by = 1; // Default to admin user in VS Code environment
+    }
+    
+    console.log("Processing file upload data:", fileData);
+    
     // Validate data with zod schema
     const parsedData = insertReportFileSchema.parse(fileData);
     
@@ -275,6 +282,8 @@ router.post('/upload', requireAdmin, upload.single('file'), async (req: any, res
     
     // Insert the new file record
     const insertedFile = await storage.createReportFile(parsedData);
+    
+    console.log("Report file record created:", insertedFile);
     
     res.status(201).json({
       message: 'Report file uploaded successfully',
