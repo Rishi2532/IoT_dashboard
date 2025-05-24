@@ -123,8 +123,9 @@ type LpcdRange =
   | "55to60"
   | "60to65"
   | "65to70"
-  | "70to80"  // New range for LPCD between 70-80
-  | "above80"  // New range for LPCD above 80
+  | "70to75"  // Range for LPCD between 70-75
+  | "75to80"  // Range for LPCD between 75-80
+  | "above80"  // Range for LPCD above 80
   | "above70"
   | "consistentlyAbove55"
   | "consistentlyBelow55";
@@ -419,10 +420,16 @@ const EnhancedLpcdDashboard = () => {
           return lpcdValue !== null && lpcdValue >= 65 && lpcdValue < 70;
         });
         break;
-      case "70to80":
+      case "70to75":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
-          return lpcdValue !== null && lpcdValue >= 70 && lpcdValue < 80;
+          return lpcdValue !== null && lpcdValue >= 70 && lpcdValue < 75;
+        });
+        break;
+      case "75to80":
+        filtered = filtered.filter((scheme) => {
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue !== null && lpcdValue >= 75 && lpcdValue < 80;
         });
         break;
       case "above80":
@@ -473,7 +480,8 @@ const EnhancedLpcdDashboard = () => {
         "55to60": 0,
         "60to65": 0,
         "65to70": 0,
-        "70to80": 0,
+        "70to75": 0,
+        "75to80": 0,
         "above80": 0,
         above70: 0,
       },
@@ -524,8 +532,10 @@ const EnhancedLpcdDashboard = () => {
         counts.ranges["60to65"]++;
       } else if (lpcdValue >= 65 && lpcdValue < 70) {
         counts.ranges["65to70"]++;
-      } else if (lpcdValue >= 70 && lpcdValue < 80) {
-        counts.ranges["70to80"]++;
+      } else if (lpcdValue >= 70 && lpcdValue < 75) {
+        counts.ranges["70to75"]++;
+      } else if (lpcdValue >= 75 && lpcdValue < 80) {
+        counts.ranges["75to80"]++;
       } else if (lpcdValue >= 80) {
         counts.ranges["above80"]++;
       }
@@ -1363,14 +1373,27 @@ const EnhancedLpcdDashboard = () => {
                       </Card>
                       <Card
                         className="border-green-100"
-                        onClick={() => handleFilterChange("70to80")}
+                        onClick={() => handleFilterChange("70to75")}
                       >
                         <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
                           <span className="text-sm text-green-700">
-                            LPCD 70-80L
+                            LPCD 70-75L
                           </span>
                           <span className="font-medium text-green-700">
-                            {filterCounts.ranges["70to80"]}
+                            {filterCounts.ranges["70to75"]}
+                          </span>
+                        </CardContent>
+                      </Card>
+                      <Card
+                        className="border-green-100"
+                        onClick={() => handleFilterChange("75to80")}
+                      >
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
+                          <span className="text-sm text-green-700">
+                            LPCD 75-80L
+                          </span>
+                          <span className="font-medium text-green-700">
+                            {filterCounts.ranges["75to80"]}
                           </span>
                         </CardContent>
                       </Card>
