@@ -4254,11 +4254,11 @@ export class PostgresStorage implements IStorage {
       const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10086/CEREBULB_JJM_MAHARASHTRA_ESR_LEVEL_DASHBOARD';
       const STANDARD_PARAMS = 'mode=kiosk&hidetoolbar&hidesidebar';
       
-      // Special scheme path with non-breaking space
-      const schemePath = '\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-Nashik\\\\Circle-Nashik\\\\Division-Nashik\\\\Sub Division-Sinnar\\\\Block-Sinnar\\\\Scheme-20019176 - Retro. Bargaonpimpri & 6 VRWSS' + String.fromCharCode(160) + ' Tal Sinnar';
+      // Special scheme path with non-breaking space and double backslashes
+      const schemePath = '\\\\\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-Nashik\\Circle-Nashik\\Division-Nashik\\Sub Division-Sinnar\\Block-Sinnar\\Scheme-20019176 - Retro. Bargaonpimpri & 6 VRWSS' + String.fromCharCode(160) + ' Tal Sinnar';
       
       // Append village and ESR name to path
-      const path = `${schemePath}\\\\\\\\${esr.village_name}\\\\\\\\${esr.esr_name}`;
+      const path = `${schemePath}\\${esr.village_name}\\${esr.esr_name}`;
       
       // URL encode the path
       const encodedPath = encodeURIComponent(path);
@@ -4302,11 +4302,11 @@ export class PostgresStorage implements IStorage {
     
     // Different format for Pune region
     if (esr.region === 'Pune') {
-      // Format for Pune region (no space between scheme_id and hyphen)
-      path = `\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-${regionDisplay}\\\\Circle-${esr.circle}\\\\Division-${esr.division}\\\\Sub Division-${esr.sub_division}\\\\Block-${esr.block}\\\\Scheme-${esr.scheme_id}-${esr.scheme_name}\\\\${esr.village_name}\\\\${esr.esr_name}`;
+      // Format for Pune region (no space between scheme_id and hyphen) with double backslashes
+      path = `\\\\\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${esr.circle}\\Division-${esr.division}\\Sub Division-${esr.sub_division}\\Block-${esr.block}\\Scheme-${esr.scheme_id}-${esr.scheme_name}\\${esr.village_name}\\${esr.esr_name}`;
     } else {
-      // Standard format for other regions (space between scheme_id and hyphen)
-      path = `\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-${regionDisplay}\\\\Circle-${esr.circle}\\\\Division-${esr.division}\\\\Sub Division-${esr.sub_division}\\\\Block-${esr.block}\\\\Scheme-${esr.scheme_id} - ${esr.scheme_name}\\\\${esr.village_name}\\\\${esr.esr_name}`;
+      // Standard format for other regions (space between scheme_id and hyphen) with double backslashes
+      path = `\\\\\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${esr.circle}\\Division-${esr.division}\\Sub Division-${esr.sub_division}\\Block-${esr.block}\\Scheme-${esr.scheme_id} - ${esr.scheme_name}\\${esr.village_name}\\${esr.esr_name}`;
     }
     
     // Encode the path for use in URL

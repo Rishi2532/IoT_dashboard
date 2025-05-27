@@ -140,8 +140,8 @@ function generateSpecialCaseEsrUrl(esr: any): string | null {
   
   // Bargaonpimpri scheme in Nashik region (includes non-breaking space character)
   if (scheme_id === '20019176' && scheme_name && scheme_name.includes('Bargaonpimpri')) {
-    // Insert the non-breaking space character (\u00A0) in the right position
-    const path = `\\\\DemoAF\\\\JJM\\\\JJM\\\\Maharashtra\\\\Region-Nashik\\\\Circle-Nashik\\\\Division-Nashik\\\\Sub Division-Sinnar\\\\Block-Sinnar\\\\Scheme-20019176 - Retro. Bargaonpimpri & 6 VRWSS${String.fromCharCode(160)} Tal Sinnar\\\\${village_name}\\\\${esr_name}`;
+    // Insert the non-breaking space character (\u00A0) in the right position with double backslashes
+    const path = `\\\\\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-Nashik\\Circle-Nashik\\Division-Nashik\\Sub Division-Sinnar\\Block-Sinnar\\Scheme-20019176 - Retro. Bargaonpimpri & 6 VRWSS${String.fromCharCode(160)} Tal Sinnar\\${village_name}\\${esr_name}`;
     const encodedPath = encodeURIComponent(path);
     const BASE_URL = 'https://14.99.99.166:18099/PIVision/#/Displays/10086/CEREBULB_JJM_MAHARASHTRA_ESR_LEVEL_DASHBOARD';
     const STANDARD_PARAMS = 'mode=kiosk&hidetoolbar&hidesidebar';
@@ -180,11 +180,11 @@ export function generateEsrDashboardUrl(esr: any): string | null {
   
   // Different format for Pune region
   if (esr.region === 'Pune') {
-    // Format for Pune region (no space between scheme_id and hyphen)
-    path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${esr.circle}\\Division-${esr.division}\\Sub Division-${esr.sub_division}\\Block-${esr.block}\\Scheme-${esr.scheme_id}-${esr.scheme_name}\\${esr.village_name}\\${esr.esr_name}`;
+    // Format for Pune region (no space between scheme_id and hyphen) with double backslashes
+    path = `\\\\\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${esr.circle}\\Division-${esr.division}\\Sub Division-${esr.sub_division}\\Block-${esr.block}\\Scheme-${esr.scheme_id}-${esr.scheme_name}\\${esr.village_name}\\${esr.esr_name}`;
   } else {
-    // Standard format for other regions (space between scheme_id and hyphen)
-    path = `\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${esr.circle}\\Division-${esr.division}\\Sub Division-${esr.sub_division}\\Block-${esr.block}\\Scheme-${esr.scheme_id} - ${esr.scheme_name}\\${esr.village_name}\\${esr.esr_name}`;
+    // Standard format for other regions (space between scheme_id and hyphen) with double backslashes
+    path = `\\\\\\\\DemoAF\\JJM\\JJM\\Maharashtra\\Region-${regionDisplay}\\Circle-${esr.circle}\\Division-${esr.division}\\Sub Division-${esr.sub_division}\\Block-${esr.block}\\Scheme-${esr.scheme_id} - ${esr.scheme_name}\\${esr.village_name}\\${esr.esr_name}`;
   }
   
   // Encode the path for use in URL
