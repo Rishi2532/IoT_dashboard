@@ -3216,6 +3216,16 @@ export class PostgresStorage implements IStorage {
           entry.blocks.push(scheme.block);
         }
         
+        // For mjp_commissioned, prioritize "Yes" over other values
+        if (scheme.mjp_commissioned === 'Yes' && entry.scheme.mjp_commissioned !== 'Yes') {
+          entry.scheme.mjp_commissioned = 'Yes';
+        }
+        
+        // For mjp_fully_completed, prioritize "Completed" over other values
+        if (scheme.mjp_fully_completed === 'Completed' && entry.scheme.mjp_fully_completed !== 'Completed') {
+          entry.scheme.mjp_fully_completed = 'Completed';
+        }
+        
         // Fields to aggregate
         const numericFields = [
           'number_of_village',
