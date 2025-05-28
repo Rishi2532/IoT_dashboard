@@ -19,21 +19,18 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </main>
 
       {/* Company footer */}
-      <footer className="bg-gradient-to-r from-blue-50 to-blue-100 border-t border-blue-200 py-4 relative z-10">
-        <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 max-w-full lg:max-w-[90rem] 2xl:max-w-[120rem]">
+      <footer className="bg-gradient-to-r from-blue-50 to-blue-100 border-t border-blue-200 py-2 relative z-10">
+        <div className="w-full mx-auto px-2 sm:px-3 md:px-4 lg:px-6 xl:px-8 2xl:px-10 max-w-full lg:max-w-[90rem] 2xl:max-w-[120rem]">
           <div className="flex flex-col sm:flex-row justify-between items-center">
-            <div className="flex items-center mb-3 sm:mb-0">
+            <div className="flex items-center mb-1 sm:mb-0">
               <img
-                src="https://www.ceinsys.com/wp-content/uploads/2024/12/Final-logo-bw_reverse-02-1536x449.png"
+                src="https://cstech.ai/img/logo.avif"
                 alt="CS Tech AI"
-                className="h-16 sm:h-20"
-                style={{
-                  background: "linear-gradient(to right, violet, blue)",
-                }}
+                className="h-10 sm:h-12"
               />
             </div>
-            <div className="text-center sm:text-right text-sm text-blue-800">
-              <p className="font-medium text-lg sm:text-xl">
+            <div className="text-center sm:text-right text-xs text-blue-800">
+              <p className="font-medium text-base sm:text-lg">
                 Powered by CSTECH AI
               </p>
             </div>

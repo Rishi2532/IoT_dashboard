@@ -373,6 +373,17 @@ const SimpleLpcdDashboard: React.FC = () => {
         <CardHeader>
           <CardTitle>LPCD Dashboard</CardTitle>
           <CardDescription>View and analyze LPCD (Liters Per Capita per Day) metrics for water schemes</CardDescription>
+          <p className="text-sm text-blue-600 font-medium mt-2">
+            Dashboard Updated: {new Date().toLocaleDateString('en-IN', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })} at {new Date().toLocaleTimeString('en-IN', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            })}
+          </p>
         </CardHeader>
         <CardContent>
           {/* LPCD Statistics Overview */}
