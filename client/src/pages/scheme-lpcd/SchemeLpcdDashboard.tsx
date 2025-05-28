@@ -956,6 +956,17 @@ const SchemeLpcdDashboard = () => {
           <p className="text-blue-700 font-medium mt-1">
             Monitor water supply at scheme level (Litres Per Capita per Day)
           </p>
+          <p className="text-sm text-blue-600 font-medium mt-2">
+            Dashboard Updated: {new Date().toLocaleDateString('en-IN', { 
+              weekday: 'long', 
+              year: 'numeric', 
+              month: 'long', 
+              day: 'numeric' 
+            })} at {new Date().toLocaleTimeString('en-IN', { 
+              hour: '2-digit', 
+              minute: '2-digit' 
+            })}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative w-64">

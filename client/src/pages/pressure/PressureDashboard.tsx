@@ -884,6 +884,27 @@ const PressureDashboard: React.FC = () => {
 
   return (
     <div className="container mx-auto p-4">
+      {/* Header with Date */}
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          Pressure Dashboard
+        </h1>
+        <p className="text-gray-500 mt-1">
+          Monitor water pressure levels across water schemes and ESRs
+        </p>
+        <p className="text-sm text-blue-600 font-medium mt-2">
+          Dashboard Updated: {new Date().toLocaleDateString('en-IN', { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+          })} at {new Date().toLocaleTimeString('en-IN', { 
+            hour: '2-digit', 
+            minute: '2-digit' 
+          })}
+        </p>
+      </div>
+
       <div className="bg-white rounded-xl shadow-sm mb-6 p-4 border border-blue-100">
         <div className="flex flex-col md:flex-row md:flex-wrap gap-4 items-start md:items-end">
           {/* Select Region */}
