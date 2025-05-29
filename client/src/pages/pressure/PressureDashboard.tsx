@@ -37,6 +37,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
+import { TranslatedText } from "@/components/ui/translated-text";
 import {
   Search,
   AlertTriangle,
@@ -887,18 +888,18 @@ const PressureDashboard: React.FC = () => {
       {/* Header with Date */}
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight text-gray-900">
-          Pressure Dashboard
+          <TranslatedText>Pressure Dashboard</TranslatedText>
         </h1>
         <p className="text-gray-500 mt-1">
-          Monitor water pressure levels across water schemes and ESRs
+          <TranslatedText>Monitor water pressure levels across water schemes and ESRs</TranslatedText>
         </p>
         <p className="text-sm text-blue-600 font-medium mt-2">
-          Dashboard Updated: {new Date().toLocaleDateString('en-IN', { 
+          <TranslatedText>Dashboard Updated</TranslatedText>: {new Date().toLocaleDateString('en-IN', { 
             weekday: 'long', 
             year: 'numeric', 
             month: 'long', 
             day: 'numeric' 
-          })} at {new Date().toLocaleTimeString('en-IN', { 
+          })} <TranslatedText>at</TranslatedText> {new Date().toLocaleTimeString('en-IN', { 
             hour: '2-digit', 
             minute: '2-digit' 
           })}

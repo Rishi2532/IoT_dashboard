@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { TranslatedText } from "@/components/ui/translated-text";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -952,17 +953,17 @@ const SchemeLpcdDashboard = () => {
     <div className="w-full py-6 container mx-auto px-4">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
         <div className="bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border-l-4 border-blue-600 shadow-sm">
-          <h1 className="text-3xl font-bold text-blue-900">Scheme LPCD Dashboard</h1>
+          <h1 className="text-3xl font-bold text-blue-900"><TranslatedText>Scheme LPCD Dashboard</TranslatedText></h1>
           <p className="text-blue-700 font-medium mt-1">
-            Monitor water supply at scheme level (Litres Per Capita per Day)
+            <TranslatedText>Monitor water supply at scheme level (Litres Per Capita per Day)</TranslatedText>
           </p>
           <p className="text-sm text-blue-600 font-medium mt-2">
-            Dashboard Updated: {new Date().toLocaleDateString('en-IN', { 
+            <TranslatedText>Dashboard Updated</TranslatedText>: {new Date().toLocaleDateString('en-IN', { 
               weekday: 'long', 
               year: 'numeric', 
               month: 'long', 
               day: 'numeric' 
-            })} at {new Date().toLocaleTimeString('en-IN', { 
+            })} <TranslatedText>at</TranslatedText> {new Date().toLocaleTimeString('en-IN', { 
               hour: '2-digit', 
               minute: '2-digit' 
             })}

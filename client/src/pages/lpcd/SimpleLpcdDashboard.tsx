@@ -35,6 +35,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { TranslatedText } from '@/components/ui/translated-text';
 import { Separator } from '@/components/ui/separator';
 import { Filter, Download, FileSpreadsheet, MoreHorizontal, ChevronDown } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -371,15 +372,15 @@ const SimpleLpcdDashboard: React.FC = () => {
     <div className="w-full py-6">
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle>LPCD Dashboard</CardTitle>
-          <CardDescription>View and analyze LPCD (Liters Per Capita per Day) metrics for water schemes</CardDescription>
+          <CardTitle><TranslatedText>LPCD Dashboard</TranslatedText></CardTitle>
+          <CardDescription><TranslatedText>View and analyze LPCD (Liters Per Capita per Day) metrics for water schemes</TranslatedText></CardDescription>
           <p className="text-sm text-blue-600 font-medium mt-2">
-            Dashboard Updated: {new Date().toLocaleDateString('en-IN', { 
+            <TranslatedText>Dashboard Updated</TranslatedText>: {new Date().toLocaleDateString('en-IN', { 
               weekday: 'long', 
               year: 'numeric', 
               month: 'long', 
               day: 'numeric' 
-            })} at {new Date().toLocaleTimeString('en-IN', { 
+            })} <TranslatedText>at</TranslatedText> {new Date().toLocaleTimeString('en-IN', { 
               hour: '2-digit', 
               minute: '2-digit' 
             })}
