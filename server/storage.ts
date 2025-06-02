@@ -5337,13 +5337,13 @@ export class PostgresStorage implements IStorage {
 
   async logUserLogout(sessionId: string): Promise<void> {
     const db = await this.ensureInitialized();
-    const logoutTime = new Date();
     
     // Find the most recent active login for this session and update it
+    // Use PostgreSQL's CURRENT_TIMESTAMP to ensure consistent timezone handling
     await db.execute(sql`
       UPDATE user_login_logs 
-      SET logout_time = ${logoutTime.toISOString()},
-          session_duration = EXTRACT(EPOCH FROM (${logoutTime.toISOString()}::timestamp - login_time)),
+      SET logout_time = CURRENT_TIMESTAMP,
+          session_duration = EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - login_time))::integer,
           is_active = FALSE
       WHERE session_id = ${sessionId} 
         AND is_active = TRUE
@@ -5388,7 +5388,7 @@ export class PostgresStorage implements IStorage {
   async getUserLoginLogsByUserId(userId: number, limit: number = 20): Promise<any[]> {
     const db = await this.ensureInitialized();
     
-    // Ensure the user_login_logs table exists
+    // Ensure the user_login_logs table exists with all necessary columns
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "user_login_logs" (
         "id" SERIAL PRIMARY KEY,
@@ -5396,9 +5396,12 @@ export class PostgresStorage implements IStorage {
         "username" VARCHAR(255) NOT NULL,
         "user_name" VARCHAR(255),
         "login_time" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        "logout_time" TIMESTAMP WITH TIME ZONE,
+        "session_duration" INTEGER,
         "ip_address" VARCHAR(45),
         "user_agent" TEXT,
-        "session_id" VARCHAR(255)
+        "session_id" VARCHAR(255),
+        "is_active" BOOLEAN DEFAULT TRUE
       );
     `);
 
