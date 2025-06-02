@@ -5359,7 +5359,7 @@ export class PostgresStorage implements IStorage {
   async getUserLoginLogs(limit: number = 50): Promise<any[]> {
     const db = await this.ensureInitialized();
     
-    // Ensure the user_login_logs table exists
+    // Ensure the user_login_logs table exists with all necessary columns
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "user_login_logs" (
         "id" SERIAL PRIMARY KEY,
@@ -5367,9 +5367,12 @@ export class PostgresStorage implements IStorage {
         "username" VARCHAR(255) NOT NULL,
         "user_name" VARCHAR(255),
         "login_time" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        "logout_time" TIMESTAMP WITH TIME ZONE,
+        "session_duration" INTEGER,
         "ip_address" VARCHAR(45),
         "user_agent" TEXT,
-        "session_id" VARCHAR(255)
+        "session_id" VARCHAR(255),
+        "is_active" BOOLEAN DEFAULT TRUE
       );
     `);
 
