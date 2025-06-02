@@ -225,12 +225,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Logout endpoint
   app.post("/api/auth/logout", async (req, res) => {
-    if (req.session && req.session.sessionId) {
-      const sessionId = req.session.sessionId;
+    if (req.session && req.session.userId) {
+      const sessionId = req.sessionID; // Use req.sessionID instead of req.session.sessionId
       
       try {
         // Log the logout time in the database
         await storage.logUserLogout(sessionId);
+        console.log(`User logout logged for session: ${sessionId}`);
       } catch (error) {
         console.error("Error logging logout:", error);
         // Continue with logout even if logging fails
