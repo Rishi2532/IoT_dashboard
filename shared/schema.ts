@@ -347,8 +347,8 @@ export const userLoginLogs = pgTable("user_login_logs", {
   user_id: integer("user_id").references(() => users.id).notNull(),
   username: text("username").notNull(),
   user_name: text("user_name"), // The actual name of the user
-  login_time: timestamp("login_time").defaultNow().notNull(),
-  logout_time: timestamp("logout_time"), // When the user logged out
+  login_time: timestamp("login_time", { withTimezone: true }).defaultNow().notNull(),
+  logout_time: timestamp("logout_time", { withTimezone: true }), // When the user logged out
   session_duration: integer("session_duration"), // Duration in seconds
   ip_address: text("ip_address"),
   user_agent: text("user_agent"),
@@ -358,7 +358,6 @@ export const userLoginLogs = pgTable("user_login_logs", {
 
 export const insertUserLoginLogSchema = createInsertSchema(userLoginLogs).omit({
   id: true,
-  login_time: true,
 });
 
 export type InsertUserLoginLog = z.infer<typeof insertUserLoginLogSchema>;

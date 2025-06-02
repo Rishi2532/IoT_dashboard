@@ -68,6 +68,7 @@ export class DatabaseStorage implements IStorage {
       user_id: user.id,
       username: user.username,
       user_name: user.name,
+      login_time: new Date().toISOString(), // Force UTC timestamp
       ip_address: ipAddress || null,
       user_agent: userAgent || null,
       session_id: sessionId || null,
@@ -79,6 +80,7 @@ export class DatabaseStorage implements IStorage {
 
   async logUserLogout(sessionId: string): Promise<void> {
     const logoutTime = new Date();
+    const logoutTimeUTC = logoutTime.toISOString(); // Force UTC timestamp
     
     // Find the most recent active login for this session
     const [activeLog] = await db
@@ -94,13 +96,14 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
 
     if (activeLog) {
+      // Ensure both timestamps are treated as UTC for accurate duration calculation
       const loginTime = new Date(activeLog.login_time);
       const sessionDuration = Math.floor((logoutTime.getTime() - loginTime.getTime()) / 1000); // Duration in seconds
 
       await db
         .update(userLoginLogs)
         .set({
-          logout_time: logoutTime,
+          logout_time: logoutTimeUTC,
           session_duration: sessionDuration,
           is_active: false,
         })
