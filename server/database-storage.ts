@@ -6,6 +6,7 @@ import {
   waterSchemeData,
   chlorineData,
   pressureData,
+  userLoginLogs,
   type User,
   type InsertUser,
   type Region,
@@ -21,6 +22,8 @@ import {
   type PressureData,
   type InsertPressureData,
   type UpdatePressureData,
+  type UserLoginLog,
+  type InsertUserLoginLog,
 } from "@shared/schema";
 import { db } from "./db-storage";
 import { eq, and, like } from "drizzle-orm";
@@ -52,6 +55,43 @@ export class DatabaseStorage implements IStorage {
       return user;
     }
     return null;
+  }
+
+  // User login logging methods
+  async logUserLogin(
+    user: User,
+    ipAddress?: string,
+    userAgent?: string,
+    sessionId?: string
+  ): Promise<UserLoginLog> {
+    const loginLog: InsertUserLoginLog = {
+      user_id: user.id,
+      username: user.username,
+      user_name: user.name,
+      ip_address: ipAddress || null,
+      user_agent: userAgent || null,
+      session_id: sessionId || null,
+    };
+
+    const [log] = await db.insert(userLoginLogs).values(loginLog).returning();
+    return log;
+  }
+
+  async getUserLoginLogs(limit: number = 50): Promise<UserLoginLog[]> {
+    return await db
+      .select()
+      .from(userLoginLogs)
+      .orderBy(userLoginLogs.login_time)
+      .limit(limit);
+  }
+
+  async getUserLoginLogsByUserId(userId: number, limit: number = 20): Promise<UserLoginLog[]> {
+    return await db
+      .select()
+      .from(userLoginLogs)
+      .where(eq(userLoginLogs.user_id, userId))
+      .orderBy(userLoginLogs.login_time)
+      .limit(limit);
   }
 
   async getAllRegions(): Promise<Region[]> {

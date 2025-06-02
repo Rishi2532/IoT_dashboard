@@ -7,6 +7,7 @@ import {
   chlorineData,
   pressureData,
   reportFiles,
+  userLoginLogs,
   type User,
   type InsertUser,
   type Region,
@@ -24,6 +25,8 @@ import {
   type UpdatePressureData,
   type ReportFile,
   type InsertReportFile,
+  type UserLoginLog,
+  type InsertUserLoginLog,
 } from "@shared/schema";
 import { getDB, initializeDatabase } from "./db";
 import { eq, sql, and } from "drizzle-orm";
@@ -77,6 +80,16 @@ export interface IStorage {
     username: string,
     password: string,
   ): Promise<User | null>;
+  
+  // User login logging operations
+  logUserLogin(
+    user: User,
+    ipAddress?: string,
+    userAgent?: string,
+    sessionId?: string
+  ): Promise<UserLoginLog>;
+  getUserLoginLogs(limit?: number): Promise<UserLoginLog[]>;
+  getUserLoginLogsByUserId(userId: number, limit?: number): Promise<UserLoginLog[]>;
 
   // Region operations
   getAllRegions(): Promise<Region[]>;

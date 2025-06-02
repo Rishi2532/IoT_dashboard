@@ -340,3 +340,23 @@ export const insertReportFileSchema = createInsertSchema(reportFiles).omit({
 
 export type InsertReportFile = z.infer<typeof insertReportFileSchema>;
 export type ReportFile = typeof reportFiles.$inferSelect;
+
+// User Login Logs table for tracking user login activity
+export const userLoginLogs = pgTable("user_login_logs", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  username: text("username").notNull(),
+  user_name: text("user_name"), // The actual name of the user
+  login_time: timestamp("login_time").defaultNow().notNull(),
+  ip_address: text("ip_address"),
+  user_agent: text("user_agent"),
+  session_id: text("session_id"),
+});
+
+export const insertUserLoginLogSchema = createInsertSchema(userLoginLogs).omit({
+  id: true,
+  login_time: true,
+});
+
+export type InsertUserLoginLog = z.infer<typeof insertUserLoginLogSchema>;
+export type UserLoginLog = typeof userLoginLogs.$inferSelect;
