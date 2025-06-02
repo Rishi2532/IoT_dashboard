@@ -164,6 +164,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
         req.session.isAdmin = user.role === "admin";
       }
 
+      // Log the user login with IP address and user agent
+      try {
+        const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
+        const userAgent = req.get('User-Agent') || 'unknown';
+        const sessionId = req.sessionID;
+        
+        await storage.logUserLogin(user, ipAddress, userAgent, sessionId);
+        console.log(`User login logged: ${user.username} (${user.name}) at ${new Date().toISOString()}`);
+      } catch (logError) {
+        console.error("Error logging user login:", logError);
+        // Don't fail the login if logging fails
+      }
+
       res.json({
         id: user.id,
         username: user.username,
@@ -188,6 +201,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const isLoggedIn = req.session && req.session.userId;
     const isAdmin = req.session && req.session.isAdmin === true;
     res.json({ isLoggedIn, isAdmin });
+  });
+
+  // Get user login logs (admin only)
+  app.get("/api/auth/login-logs", requireAdmin, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      
+      let logs;
+      if (userId) {
+        logs = await storage.getUserLoginLogsByUserId(userId, limit);
+      } else {
+        logs = await storage.getUserLoginLogs(limit);
+      }
+      
+      res.json(logs);
+    } catch (error) {
+      console.error("Error fetching login logs:", error);
+      res.status(500).json({ message: "Failed to fetch login logs" });
+    }
   });
 
   // Logout endpoint
