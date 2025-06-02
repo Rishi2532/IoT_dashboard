@@ -116,13 +116,13 @@ export default function Header() {
 
           <div className="flex items-center space-x-1 sm:space-x-2">
             {/* Language selector */}
-            <div className="flex items-center mr-2 px-2 py-1 bg-blue-700/30 backdrop-blur-sm rounded-md border border-white/10">
+            {/* <div className="flex items-center mr-2 px-2 py-1 bg-blue-700/30 backdrop-blur-sm rounded-md border border-white/10">
               <Globe className="h-4 w-4 text-blue-100 mr-2" />
               <LanguageSelectorMinimal />
             </div>
-
+ */}
             {/* Theme toggle button */}
-            <Button
+            {/* <Button
               variant="ghost"
               size="sm"
               onClick={toggleTheme}
@@ -138,7 +138,7 @@ export default function Header() {
               ) : (
                 <Sun className="h-4 w-4 transition-all duration-300" />
               )}
-            </Button>
+            </Button> */}
 
             {/* Only show Admin button if user is admin */}
             {authData?.isAdmin && (
