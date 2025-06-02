@@ -224,8 +224,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Logout endpoint
-  app.post("/api/auth/logout", (req, res) => {
-    if (req.session) {
+  app.post("/api/auth/logout", async (req, res) => {
+    if (req.session && req.session.sessionId) {
+      const sessionId = req.session.sessionId;
+      
+      try {
+        // Log the logout time in the database
+        await storage.logUserLogout(sessionId);
+      } catch (error) {
+        console.error("Error logging logout:", error);
+        // Continue with logout even if logging fails
+      }
+      
       req.session.destroy((err: Error | null) => {
         if (err) {
           return res.status(500).json({ message: "Logout failed" });

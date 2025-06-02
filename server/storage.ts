@@ -88,6 +88,7 @@ export interface IStorage {
     userAgent?: string,
     sessionId?: string
   ): Promise<UserLoginLog>;
+  logUserLogout(sessionId: string): Promise<void>;
   getUserLoginLogs(limit?: number): Promise<UserLoginLog[]>;
   getUserLoginLogsByUserId(userId: number, limit?: number): Promise<UserLoginLog[]>;
 
