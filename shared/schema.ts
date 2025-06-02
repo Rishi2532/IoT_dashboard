@@ -348,9 +348,12 @@ export const userLoginLogs = pgTable("user_login_logs", {
   username: text("username").notNull(),
   user_name: text("user_name"), // The actual name of the user
   login_time: timestamp("login_time").defaultNow().notNull(),
+  logout_time: timestamp("logout_time"), // When the user logged out
+  session_duration: integer("session_duration"), // Duration in seconds
   ip_address: text("ip_address"),
   user_agent: text("user_agent"),
-  session_id: text("session_id"),
+  session_id: text("session_id"), // Unique identifier for this login session
+  is_active: boolean("is_active").default(true), // Whether session is still active
 });
 
 export const insertUserLoginLogSchema = createInsertSchema(userLoginLogs).omit({

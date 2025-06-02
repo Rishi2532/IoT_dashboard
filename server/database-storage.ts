@@ -77,6 +77,37 @@ export class DatabaseStorage implements IStorage {
     return log;
   }
 
+  async logUserLogout(sessionId: string): Promise<void> {
+    const logoutTime = new Date();
+    
+    // Find the most recent active login for this session
+    const [activeLog] = await db
+      .select()
+      .from(userLoginLogs)
+      .where(
+        and(
+          eq(userLoginLogs.session_id, sessionId),
+          eq(userLoginLogs.is_active, true)
+        )
+      )
+      .orderBy(desc(userLoginLogs.login_time))
+      .limit(1);
+
+    if (activeLog) {
+      const loginTime = new Date(activeLog.login_time);
+      const sessionDuration = Math.floor((logoutTime.getTime() - loginTime.getTime()) / 1000); // Duration in seconds
+
+      await db
+        .update(userLoginLogs)
+        .set({
+          logout_time: logoutTime,
+          session_duration: sessionDuration,
+          is_active: false,
+        })
+        .where(eq(userLoginLogs.id, activeLog.id));
+    }
+  }
+
   async getUserLoginLogs(limit: number = 50): Promise<UserLoginLog[]> {
     return await db
       .select()
