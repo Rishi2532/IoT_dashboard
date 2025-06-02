@@ -68,7 +68,7 @@ export class DatabaseStorage implements IStorage {
       user_id: user.id,
       username: user.username,
       user_name: user.name,
-      login_time: new Date().toISOString(), // Force UTC timestamp
+      login_time: new Date(), // Use Date object for proper timezone handling
       ip_address: ipAddress || null,
       user_agent: userAgent || null,
       session_id: sessionId || null,
@@ -80,7 +80,6 @@ export class DatabaseStorage implements IStorage {
 
   async logUserLogout(sessionId: string): Promise<void> {
     const logoutTime = new Date();
-    const logoutTimeUTC = logoutTime.toISOString(); // Force UTC timestamp
     
     // Find the most recent active login for this session
     const [activeLog] = await db
@@ -103,7 +102,7 @@ export class DatabaseStorage implements IStorage {
       await db
         .update(userLoginLogs)
         .set({
-          logout_time: logoutTimeUTC,
+          logout_time: logoutTime, // Use Date object instead of string
           session_duration: sessionDuration,
           is_active: false,
         })
