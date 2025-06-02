@@ -14,9 +14,12 @@ interface UserLoginLog {
   username: string;
   user_name: string | null;
   login_time: string;
+  logout_time: string | null;
+  session_duration: number | null;
   ip_address: string | null;
   user_agent: string | null;
   session_id: string | null;
+  is_active: boolean | null;
 }
 
 export default function LoginLogsPage() {
@@ -127,6 +130,9 @@ export default function LoginLogsPage() {
                   <TableRow>
                     <TableHead>User</TableHead>
                     <TableHead>Login Time</TableHead>
+                    <TableHead>Logout Time</TableHead>
+                    <TableHead>Duration</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>IP Address</TableHead>
                     <TableHead>Browser</TableHead>
                     <TableHead>Session</TableHead>
@@ -152,6 +158,38 @@ export default function LoginLogsPage() {
                             {format(new Date(log.login_time), 'hh:mm:ss a')}
                           </div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        {log.logout_time ? (
+                          <div className="space-y-1">
+                            <div className="font-medium">
+                              {format(new Date(log.logout_time), 'MMM dd, yyyy')}
+                            </div>
+                            <div className="text-sm text-muted-foreground">
+                              {format(new Date(log.logout_time), 'hh:mm:ss a')}
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-sm text-muted-foreground">
+                            Still active
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {log.session_duration ? (
+                          <div className="text-sm">
+                            {Math.floor(log.session_duration / 60)}m {log.session_duration % 60}s
+                          </div>
+                        ) : (
+                          <div className="text-sm text-muted-foreground">
+                            -
+                          </div>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={log.is_active ? "default" : "secondary"}>
+                          {log.is_active ? "Active" : "Ended"}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-2">
