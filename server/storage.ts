@@ -5301,6 +5301,88 @@ export class PostgresStorage implements IStorage {
       throw error;
     }
   }
+
+  // User login logging methods
+  async logUserLogin(
+    user: any,
+    ipAddress: string,
+    userAgent: string,
+    sessionId: string
+  ): Promise<void> {
+    const db = await this.ensureInitialized();
+    
+    // Ensure the user_login_logs table exists
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "user_login_logs" (
+        "id" SERIAL PRIMARY KEY,
+        "user_id" INTEGER NOT NULL,
+        "username" VARCHAR(255) NOT NULL,
+        "user_name" VARCHAR(255),
+        "login_time" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        "ip_address" VARCHAR(45),
+        "user_agent" TEXT,
+        "session_id" VARCHAR(255)
+      );
+    `);
+
+    await db.execute(sql`
+      INSERT INTO user_login_logs (user_id, username, user_name, login_time, ip_address, user_agent, session_id)
+      VALUES (${user.id}, ${user.username}, ${user.name}, CURRENT_TIMESTAMP, ${ipAddress}, ${userAgent}, ${sessionId});
+    `);
+  }
+
+  async getUserLoginLogs(limit: number = 50): Promise<any[]> {
+    const db = await this.ensureInitialized();
+    
+    // Ensure the user_login_logs table exists
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "user_login_logs" (
+        "id" SERIAL PRIMARY KEY,
+        "user_id" INTEGER NOT NULL,
+        "username" VARCHAR(255) NOT NULL,
+        "user_name" VARCHAR(255),
+        "login_time" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        "ip_address" VARCHAR(45),
+        "user_agent" TEXT,
+        "session_id" VARCHAR(255)
+      );
+    `);
+
+    const result = await db.execute(sql`
+      SELECT * FROM user_login_logs 
+      ORDER BY login_time DESC 
+      LIMIT ${limit};
+    `);
+
+    return result.rows;
+  }
+
+  async getUserLoginLogsByUserId(userId: number, limit: number = 20): Promise<any[]> {
+    const db = await this.ensureInitialized();
+    
+    // Ensure the user_login_logs table exists
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "user_login_logs" (
+        "id" SERIAL PRIMARY KEY,
+        "user_id" INTEGER NOT NULL,
+        "username" VARCHAR(255) NOT NULL,
+        "user_name" VARCHAR(255),
+        "login_time" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        "ip_address" VARCHAR(45),
+        "user_agent" TEXT,
+        "session_id" VARCHAR(255)
+      );
+    `);
+
+    const result = await db.execute(sql`
+      SELECT * FROM user_login_logs 
+      WHERE user_id = ${userId}
+      ORDER BY login_time DESC 
+      LIMIT ${limit};
+    `);
+
+    return result.rows;
+  }
 }
 
 export const storage = new PostgresStorage();
