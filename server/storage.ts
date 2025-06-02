@@ -5312,7 +5312,7 @@ export class PostgresStorage implements IStorage {
   ): Promise<void> {
     const db = await this.ensureInitialized();
     
-    // Ensure the user_login_logs table exists
+    // Ensure the user_login_logs table exists with new columns
     await db.execute(sql`
       CREATE TABLE IF NOT EXISTS "user_login_logs" (
         "id" SERIAL PRIMARY KEY,
@@ -5320,15 +5320,39 @@ export class PostgresStorage implements IStorage {
         "username" VARCHAR(255) NOT NULL,
         "user_name" VARCHAR(255),
         "login_time" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        "logout_time" TIMESTAMP WITH TIME ZONE,
+        "session_duration" INTEGER,
         "ip_address" VARCHAR(45),
         "user_agent" TEXT,
-        "session_id" VARCHAR(255)
+        "session_id" VARCHAR(255),
+        "is_active" BOOLEAN DEFAULT TRUE
       );
     `);
 
     await db.execute(sql`
-      INSERT INTO user_login_logs (user_id, username, user_name, login_time, ip_address, user_agent, session_id)
-      VALUES (${user.id}, ${user.username}, ${user.name}, CURRENT_TIMESTAMP, ${ipAddress}, ${userAgent}, ${sessionId});
+      INSERT INTO user_login_logs (user_id, username, user_name, login_time, ip_address, user_agent, session_id, is_active)
+      VALUES (${user.id}, ${user.username}, ${user.name}, CURRENT_TIMESTAMP, ${ipAddress}, ${userAgent}, ${sessionId}, TRUE);
+    `);
+  }
+
+  async logUserLogout(sessionId: string): Promise<void> {
+    const db = await this.ensureInitialized();
+    const logoutTime = new Date();
+    
+    // Find the most recent active login for this session and update it
+    await db.execute(sql`
+      UPDATE user_login_logs 
+      SET logout_time = ${logoutTime.toISOString()},
+          session_duration = EXTRACT(EPOCH FROM (${logoutTime.toISOString()}::timestamp - login_time)),
+          is_active = FALSE
+      WHERE session_id = ${sessionId} 
+        AND is_active = TRUE
+        AND id = (
+          SELECT id FROM user_login_logs 
+          WHERE session_id = ${sessionId} AND is_active = TRUE 
+          ORDER BY login_time DESC 
+          LIMIT 1
+        );
     `);
   }
 
