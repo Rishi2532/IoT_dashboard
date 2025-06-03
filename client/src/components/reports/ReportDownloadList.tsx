@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEnhancedActivityTracker } from "@/hooks/use-enhanced-activity-tracker";
 
 type ReportFile = {
   id: number;
@@ -26,6 +27,7 @@ type ReportFile = {
 
 export default function ReportDownloadList() {
   const [searchTerm, setSearchTerm] = useState("");
+  const { logFileDownload } = useEnhancedActivityTracker();
   
   // Fetch report files
   const { data: reports, isLoading, error } = useQuery({
@@ -166,6 +168,19 @@ export default function ReportDownloadList() {
                   href={`/api/reports/${report.id}`}
                   download
                   className="inline-block"
+                  onClick={() => {
+                    logFileDownload(
+                      report.original_name,
+                      'xlsx',
+                      {
+                        report_type: report.report_type,
+                        report_type_name: getReportTypeName(report.report_type),
+                        file_size: report.file_size,
+                        upload_date: report.upload_date,
+                        report_id: report.id
+                      }
+                    );
+                  }}
                 >
                   <Button
                     variant="outline"

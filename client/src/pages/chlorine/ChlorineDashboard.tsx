@@ -288,6 +288,11 @@ const ChlorineDashboard: React.FC = () => {
   const handleCommissionedFilterChange = (value: string) => {
     setCommissionedFilter(value);
 
+    // Track filter usage
+    if (value !== "all") {
+      trackFilterUsage("commissioned_status", value, filteredData.length, "chlorine_dashboard");
+    }
+
     // If "Not Commissioned", maintain the fully completed filter value
     // We'll handle the filtering logic differently
 
