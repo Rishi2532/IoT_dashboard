@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { useComprehensiveActivityTracker } from "@/hooks/use-comprehensive-activity-tracker";
 import {
   Card,
   CardContent,
@@ -132,6 +133,7 @@ type LpcdRange =
 
 const EnhancedLpcdDashboard = () => {
   const { toast } = useToast();
+  const { trackPageVisit, trackDataExport, trackFilterUsage, trackDashboardAccess } = useComprehensiveActivityTracker();
 
   // Filter state
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -786,6 +788,21 @@ const EnhancedLpcdDashboard = () => {
         // Save file
         XLSX.writeFile(wb, filename);
 
+        // Track export activity
+        trackDataExport(
+          "LPCD Dashboard Export",
+          filename,
+          dataToExport.length,
+          {
+            region: selectedRegion,
+            filter: currentFilter,
+            searchQuery: searchQuery,
+            commissionedFilter: commissionedFilter,
+            fullyCompletedFilter: fullyCompletedFilter,
+            schemeStatusFilter: schemeStatusFilter
+          }
+        );
+
         toast({
           title: "Export Successful",
           description: `${dataToExport.length} records exported to Excel`,
@@ -836,6 +853,11 @@ const EnhancedLpcdDashboard = () => {
       });
     }
   }, [schemesError, toast]);
+
+  // Track page visit on component mount
+  useEffect(() => {
+    trackPageVisit("Village LPCD Dashboard", "village_lpcd_dashboard");
+  }, [trackPageVisit]);
 
   // State for village details dialog
   const [selectedVillage, setSelectedVillage] =
