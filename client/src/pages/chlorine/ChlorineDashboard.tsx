@@ -120,7 +120,7 @@ type ChlorineRange =
 
 const ChlorineDashboard: React.FC = () => {
   const { toast } = useToast();
-  const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
+  const { trackPageVisit, trackDataExport, trackFilterUsage, trackDashboardAccess } = useComprehensiveActivityTracker();
 
   // Global filter state (affects both cards and table)
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -1570,12 +1570,13 @@ const ChlorineDashboard: React.FC = () => {
                                               variant="outline"
                                               size="sm"
                                               className="ml-2 text-xs"
-                                              onClick={() =>
+                                              onClick={() => {
+                                                trackDashboardAccess(selectedESR.dashboard_url!, "PI Vision Chlorine Dashboard Detail");
                                                 window.open(
                                                   selectedESR.dashboard_url,
                                                   "_blank",
-                                                )
-                                              }
+                                                );
+                                              }}
                                             >
                                               <BarChart className="h-4 w-4 mr-1" />{" "}
                                               PI Vision Dashboard

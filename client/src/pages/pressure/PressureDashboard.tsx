@@ -128,7 +128,7 @@ type PressureRange =
 
 const PressureDashboard: React.FC = () => {
   const { toast } = useToast();
-  const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
+  const { trackPageVisit, trackDataExport, trackFilterUsage, trackDashboardAccess } = useComprehensiveActivityTracker();
 
   // Global filter state (affects both cards and table data)
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
