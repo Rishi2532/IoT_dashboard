@@ -34,6 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { useComprehensiveActivityTracker } from '@/hooks/use-comprehensive-activity-tracker';
 import { MoreHorizontal, ChevronDown, Filter, Info } from 'lucide-react';
 
 // Define TypeScript interfaces
@@ -73,6 +74,12 @@ interface RegionData {
 
 const LpcdDashboard: React.FC = () => {
   const { toast } = useToast();
+  const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
+  
+  // Track page visit on component mount
+  useEffect(() => {
+    trackPageVisit("Village LPCD Dashboard");
+  }, [trackPageVisit]);
   
   // Filter state
   const [filters, setFilters] = useState({

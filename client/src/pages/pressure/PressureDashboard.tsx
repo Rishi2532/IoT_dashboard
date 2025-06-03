@@ -130,6 +130,11 @@ const PressureDashboard: React.FC = () => {
   const { toast } = useToast();
   const { trackPageVisit, trackDataExport, trackFilterUsage, trackDashboardAccess } = useComprehensiveActivityTracker();
 
+  // Track page visit on component mount
+  useEffect(() => {
+    trackPageVisit("Pressure Dashboard");
+  }, [trackPageVisit]);
+
   // Global filter state (affects both cards and table data)
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");

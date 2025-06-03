@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useComprehensiveActivityTracker } from "@/hooks/use-comprehensive-activity-tracker";
 import { TranslatedText } from "@/components/ui/translated-text";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -129,6 +130,12 @@ type LpcdRange =
 
 const SchemeLpcdDashboard = () => {
   const { toast } = useToast();
+  const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
+
+  // Track page visit on component mount
+  useEffect(() => {
+    trackPageVisit("Scheme LPCD Dashboard");
+  }, [trackPageVisit]);
 
   // Filter state
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
