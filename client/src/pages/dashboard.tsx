@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Download, RefreshCw, Map, Filter } from "lucide-react";
 import { Region, RegionSummary, SchemeStatus } from "@/types";
 import { useToast } from "@/hooks/use-toast";
+import { useComprehensiveActivityTracker } from "@/hooks/use-comprehensive-activity-tracker";
 import * as XLSX from "xlsx";
 // Import our map components
 import { GitHubStyleMapPreview } from "@/components/maps";
@@ -39,6 +40,7 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showEnhancedMap, setShowEnhancedMap] = useState(false);
   const { toast } = useToast();
+  const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
 
   // Map configuration
   const mapRef = useRef(null);

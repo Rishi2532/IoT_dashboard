@@ -1,10 +1,11 @@
+import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { File, FileDown, Loader2, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'wouter';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
-import { useActivityTracker } from '@/hooks/use-activity-tracker';
+import { useComprehensiveActivityTracker } from '@/hooks/use-comprehensive-activity-tracker';
 
 // Admin-only button that only shows for admin users
 function AdminOnlyButton() {
@@ -68,7 +69,7 @@ const REPORT_TYPES = [
 
 // Reports page for users to download Excel reports
 function ReportsPage() {
-  const { trackFileDownload } = useActivityTracker();
+  const { trackFileDownload, trackPageVisit } = useComprehensiveActivityTracker();
 
   // Fetch all available report files
   const { data: reportFiles, isLoading, error } = useQuery({
@@ -87,14 +88,26 @@ function ReportsPage() {
     return typeReports.length > 0 ? typeReports[0] : null;
   };
 
-  // Handle download with activity tracking
+  // Handle download with enhanced activity tracking
   const handleDownload = (report: any, typeName: string) => {
     trackFileDownload(
       report.original_name,
       'excel',
-      `Downloaded ${typeName} report: ${report.original_name}`
+      'reports_page',
+      {
+        reportType: report.report_type,
+        reportId: report.id,
+        uploadDate: report.upload_date,
+        fileSize: report.file_size,
+        reportCategory: typeName
+      }
     );
   };
+
+  // Track page visit on component mount
+  React.useEffect(() => {
+    trackPageVisit("Reports Page");
+  }, [trackPageVisit]);
 
   return (
     <DashboardLayout>
