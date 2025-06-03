@@ -7,6 +7,7 @@ import {
   chlorineData,
   pressureData,
   userLoginLogs,
+  userActivityLogs,
   type User,
   type InsertUser,
   type Region,
@@ -24,6 +25,8 @@ import {
   type UpdatePressureData,
   type UserLoginLog,
   type InsertUserLoginLog,
+  type UserActivityLog,
+  type InsertUserActivityLog,
 } from "@shared/schema";
 import { db } from "./db-storage";
 import { eq, and, like, desc } from "drizzle-orm";
