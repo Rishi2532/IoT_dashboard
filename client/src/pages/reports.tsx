@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'wouter';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
+import { useActivityTracker } from '@/hooks/use-activity-tracker';
 
 // Admin-only button that only shows for admin users
 function AdminOnlyButton() {
@@ -67,6 +68,8 @@ const REPORT_TYPES = [
 
 // Reports page for users to download Excel reports
 function ReportsPage() {
+  const { trackFileDownload } = useActivityTracker();
+
   // Fetch all available report files
   const { data: reportFiles, isLoading, error } = useQuery({
     queryKey: ['/api/reports'],
@@ -82,6 +85,15 @@ function ReportsPage() {
       .sort((a: any, b: any) => new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime());
     
     return typeReports.length > 0 ? typeReports[0] : null;
+  };
+
+  // Handle download with activity tracking
+  const handleDownload = (report: any, typeName: string) => {
+    trackFileDownload(
+      report.original_name,
+      'excel',
+      `Downloaded ${typeName} report: ${report.original_name}`
+    );
   };
 
   return (

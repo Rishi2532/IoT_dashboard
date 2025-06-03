@@ -5,9 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { RefreshCw, User, Clock, Globe, Monitor, ChevronDown, ChevronRight, Download, Eye, FileText } from "lucide-react";
 import { format } from "date-fns";
+import { useActivityTracker } from "@/hooks/use-activity-tracker";
 
 interface UserLoginLog {
   id: number;
@@ -43,6 +43,38 @@ interface UserActivity {
 export default function LoginLogsPage() {
   const [limit, setLimit] = useState(50);
   const [userIdFilter, setUserIdFilter] = useState("");
+  const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
+
+  // Auto session closure on window/tab close
+  useEffect(() => {
+    const handleBeforeUnload = async () => {
+      // Send logout request when user closes window/tab without logging out
+      navigator.sendBeacon('/api/auth/logout', new FormData());
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        // Log activity when user switches away from the page
+        fetch('/api/auth/log-activity', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            activity_type: 'page_visibility',
+            activity_description: 'User switched away from page or minimized window',
+            page_url: window.location.href
+          })
+        }).catch(() => {}); // Silent fail
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
 
   const { data: logs = [], isLoading, refetch } = useQuery({
     queryKey: ['/api/auth/login-logs', limit, userIdFilter],
@@ -60,6 +92,16 @@ export default function LoginLogsPage() {
       return response.json();
     },
   });
+
+  const toggleSessionExpansion = (sessionId: string) => {
+    const newExpanded = new Set(expandedSessions);
+    if (newExpanded.has(sessionId)) {
+      newExpanded.delete(sessionId);
+    } else {
+      newExpanded.add(sessionId);
+    }
+    setExpandedSessions(newExpanded);
+  };
 
   const formatUserAgent = (userAgent: string | null) => {
     if (!userAgent) return 'Unknown';
@@ -158,79 +200,156 @@ export default function LoginLogsPage() {
                 </TableHeader>
                 <TableBody>
                   {logs.map((log: UserLoginLog) => (
-                    <TableRow key={log.id}>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium">{log.user_name || log.username}</div>
-                          <div className="text-sm text-muted-foreground">
-                            @{log.username} (ID: {log.user_id})
+                    <>
+                      <TableRow key={log.id} className="group">
+                        <TableCell>
+                          <div className="space-y-1">
+                            <div className="font-medium">{log.user_name || log.username}</div>
+                            <div className="text-sm text-muted-foreground">
+                              @{log.username} (ID: {log.user_id})
+                            </div>
+                            {log.activities && log.activities.length > 0 && (
+                              <div className="flex items-center gap-2 mt-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => log.session_id && toggleSessionExpansion(log.session_id)}
+                                  className="h-6 px-2 text-xs"
+                                >
+                                  {expandedSessions.has(log.session_id || '') ? (
+                                    <ChevronDown className="h-3 w-3 mr-1" />
+                                  ) : (
+                                    <ChevronRight className="h-3 w-3 mr-1" />
+                                  )}
+                                  {log.activities.length} activities
+                                </Button>
+                              </div>
+                            )}
                           </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium">
-                            {format(new Date(log.login_time), 'MMM dd, yyyy')}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {format(new Date(log.login_time), 'hh:mm:ss a')}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        {log.logout_time ? (
+                        </TableCell>
+                        <TableCell>
                           <div className="space-y-1">
                             <div className="font-medium">
-                              {format(new Date(log.logout_time), 'MMM dd, yyyy')}
+                              {format(new Date(log.login_time), 'MMM dd, yyyy')}
                             </div>
                             <div className="text-sm text-muted-foreground">
-                              {format(new Date(log.logout_time), 'hh:mm:ss a')}
+                              {format(new Date(log.login_time), 'hh:mm:ss a')}
                             </div>
                           </div>
-                        ) : (
-                          <div className="text-sm text-muted-foreground">
-                            Still active
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {log.session_duration ? (
-                          <div className="text-sm">
-                            {Math.floor(log.session_duration / 60)}m {log.session_duration % 60}s
-                          </div>
-                        ) : (
-                          <div className="text-sm text-muted-foreground">
-                            -
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={log.is_active ? "default" : "secondary"}>
-                          {log.is_active ? "Active" : "Ended"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Globe className="h-4 w-4 text-muted-foreground" />
-                          <span className="font-mono text-sm">
-                            {log.ip_address || 'Unknown'}
-                          </span>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Monitor className="h-4 w-4 text-muted-foreground" />
-                          <Badge variant="secondary">
-                            {formatUserAgent(log.user_agent)}
+                        </TableCell>
+                        <TableCell>
+                          {log.logout_time ? (
+                            <div className="space-y-1">
+                              <div className="font-medium">
+                                {format(new Date(log.logout_time), 'MMM dd, yyyy')}
+                              </div>
+                              <div className="text-sm text-muted-foreground">
+                                {format(new Date(log.logout_time), 'hh:mm:ss a')}
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">
+                              Still active
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {log.session_duration ? (
+                            <div className="text-sm">
+                              {Math.floor(log.session_duration / 60)}m {log.session_duration % 60}s
+                            </div>
+                          ) : (
+                            <div className="text-sm text-muted-foreground">
+                              -
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant={log.is_active ? "default" : "secondary"}>
+                            {log.is_active ? "Active" : "Ended"}
                           </Badge>
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <div className="font-mono text-xs text-muted-foreground max-w-20 truncate">
-                          {log.session_id ? log.session_id.substring(0, 8) + '...' : 'N/A'}
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-muted-foreground" />
+                            <span className="font-mono text-sm">
+                              {log.ip_address || 'Unknown'}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Monitor className="h-4 w-4 text-muted-foreground" />
+                            <Badge variant="secondary">
+                              {formatUserAgent(log.user_agent)}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="font-mono text-xs text-muted-foreground max-w-20 truncate">
+                            {log.session_id ? log.session_id.substring(0, 8) + '...' : 'N/A'}
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                      
+                      {/* User Activities Collapsible Row */}
+                      {log.session_id && expandedSessions.has(log.session_id) && log.activities && log.activities.length > 0 && (
+                        <TableRow>
+                          <TableCell colSpan={8} className="bg-muted/30 p-0">
+                            <div className="p-4 space-y-3">
+                              <h4 className="font-medium text-sm flex items-center gap-2">
+                                <FileText className="h-4 w-4" />
+                                User Activities During This Session
+                              </h4>
+                              <div className="space-y-2">
+                                {log.activities.map((activity) => (
+                                  <div key={activity.id} className="flex items-start gap-3 p-3 bg-background rounded-lg border">
+                                    <div className="flex-shrink-0 mt-0.5">
+                                      {activity.activity_type === 'file_download' ? (
+                                        <Download className="h-4 w-4 text-blue-500" />
+                                      ) : activity.activity_type === 'page_visit' ? (
+                                        <Eye className="h-4 w-4 text-green-500" />
+                                      ) : (
+                                        <FileText className="h-4 w-4 text-gray-500" />
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                          <p className="font-medium text-sm">
+                                            {activity.activity_description}
+                                          </p>
+                                          {activity.file_name && (
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                              <strong>File:</strong> {activity.file_name}
+                                              {activity.file_type && ` (${activity.file_type})`}
+                                            </p>
+                                          )}
+                                          {activity.page_url && (
+                                            <p className="text-sm text-muted-foreground mt-1">
+                                              <strong>Page:</strong> {activity.page_url}
+                                            </p>
+                                          )}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground ml-4">
+                                          {format(new Date(activity.timestamp), 'HH:mm:ss')}
+                                        </div>
+                                      </div>
+                                      <Badge 
+                                        variant="outline" 
+                                        className="mt-2 text-xs"
+                                      >
+                                        {activity.activity_type.replace('_', ' ')}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </>
                   ))}
                 </TableBody>
               </Table>
