@@ -308,6 +308,11 @@ const PressureDashboard: React.FC = () => {
   const handleFullyCompletedFilterChange = (value: string) => {
     setFullyCompletedFilter(value);
 
+    // Track filter usage
+    if (value !== "all") {
+      trackFilterUsage("fullyCompleted", value, undefined, "pressure_dashboard");
+    }
+
     // If "Fully Completed", set "Commissioned" to "Yes"
     if (value === "Fully Completed") {
       setCommissionedFilter("Yes");
@@ -321,9 +326,19 @@ const PressureDashboard: React.FC = () => {
   const handleSchemeStatusFilterChange = (value: string) => {
     setSchemeStatusFilter(value);
 
+    // Track filter usage
+    if (value !== "all") {
+      trackFilterUsage("schemeStatus", value, undefined, "pressure_dashboard");
+    }
+
     // Reset page to 1 when filter changes
     setPage(1);
   };
+
+  // Track page visit on component mount
+  useEffect(() => {
+    trackPageVisit("Pressure Dashboard");
+  }, [trackPageVisit]);
 
   // Create scheme status map
   const schemeStatusMap = useMemo(() => {
