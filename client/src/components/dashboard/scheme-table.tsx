@@ -21,7 +21,8 @@ import {
 } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { SchemeStatus } from "@/types";
-import { Search } from "lucide-react";
+import { Search, ExternalLink } from "lucide-react";
+import { useDashboardTracking } from "@/hooks/use-dashboard-tracking";
 import {
   Table,
   TableBody,
@@ -57,6 +58,7 @@ export default function SchemeTable({
   onStatusFilterChange,
   onFilteredSchemesChange,
 }: SchemeTableProps) {
+  const { trackSchemeDataLinkClick } = useDashboardTracking();
   const [searchTerm, setSearchTerm] = useState("");
   const [schemeIdSearch, setSchemeIdSearch] = useState("");
   const [localStatusFilter, setLocalStatusFilter] =

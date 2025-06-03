@@ -71,6 +71,11 @@ const REPORT_TYPES = [
 function ReportsPage() {
   const { trackFileDownload, trackPageVisit } = useComprehensiveActivityTracker();
 
+  // Track page visit on component mount
+  React.useEffect(() => {
+    trackPageVisit("Reports Page");
+  }, [trackPageVisit]);
+
   // Fetch all available report files
   const { data: reportFiles, isLoading, error } = useQuery({
     queryKey: ['/api/reports'],

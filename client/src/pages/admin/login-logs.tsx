@@ -41,9 +41,15 @@ interface UserActivity {
 }
 
 export default function LoginLogsPage() {
+  const { logPageVisit } = useEnhancedActivityTracker();
   const [limit, setLimit] = useState(50);
   const [userIdFilter, setUserIdFilter] = useState("");
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
+
+  // Track page visit on component mount
+  useEffect(() => {
+    logPageVisit("Admin User Activity Logs");
+  }, [logPageVisit]);
 
   // Auto session closure on window/tab close
   useEffect(() => {
