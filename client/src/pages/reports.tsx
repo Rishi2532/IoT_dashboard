@@ -151,6 +151,7 @@ function ReportsPage() {
                           href={`/api/reports/${report.id}`} 
                           download
                           className="w-full"
+                          onClick={() => handleDownload(report, type.name)}
                         >
                           <Button className="w-full">
                             <FileDown className="h-4 w-4 mr-2" />
