@@ -241,12 +241,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const { activity_type, activity_description, file_name, file_type, page_url, metadata } = req.body;
+      const { 
+        activity_type, 
+        activity_description, 
+        file_name, 
+        file_type, 
+        page_url, 
+        metadata,
+        filter_applied,
+        export_format,
+        data_count,
+        scheme_filter,
+        region_filter
+      } = req.body;
+      
+      if (!activity_type || !activity_description) {
+        return res.status(400).json({ message: "Activity type and description are required" });
+      }
       
       const user = await storage.getUser(req.session.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
       }
+
+      // Enhanced metadata for comprehensive tracking
+      const enhancedMetadata = {
+        ...metadata,
+        filter_applied,
+        export_format,
+        data_count,
+        scheme_filter,
+        region_filter,
+        timestamp: new Date().toISOString(),
+        referer: req.get('Referer'),
+        user_role: user.role
+      };
 
       const activity = await storage.logUserActivity({
         user_id: user.id,
@@ -256,10 +285,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activity_description,
         file_name: file_name || null,
         file_type: file_type || null,
-        page_url: page_url || null,
+        page_url: page_url || req.get('Referer') || null,
         ip_address: req.ip || req.connection.remoteAddress || null,
         user_agent: req.get('User-Agent') || null,
-        metadata: metadata || null
+        metadata: enhancedMetadata
       });
 
       res.json(activity);

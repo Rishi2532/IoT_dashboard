@@ -5,9 +5,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, User, Clock, Globe, Monitor, ChevronDown, ChevronRight, Download, Eye, FileText } from "lucide-react";
+import { RefreshCw, User, Clock, Globe, Monitor, ChevronDown, ChevronRight, Download, Eye, FileText, Filter, Database, Map } from "lucide-react";
 import { format } from "date-fns";
-import { useActivityTracker } from "@/hooks/use-activity-tracker";
+import { useEnhancedActivityTracker } from "@/hooks/use-enhanced-activity-tracker";
 
 interface UserLoginLog {
   id: number;

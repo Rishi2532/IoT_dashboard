@@ -388,6 +388,25 @@ export async function initializeTables(db: any) {
       );
     `);
     
+    // Create user_activity_logs table for comprehensive activity tracking
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "user_activity_logs" (
+        "id" SERIAL PRIMARY KEY,
+        "user_id" INTEGER NOT NULL REFERENCES "users"("id"),
+        "username" TEXT NOT NULL,
+        "session_id" TEXT NOT NULL,
+        "activity_type" TEXT NOT NULL,
+        "activity_description" TEXT NOT NULL,
+        "file_name" TEXT,
+        "file_type" TEXT,
+        "page_url" TEXT,
+        "ip_address" TEXT,
+        "user_agent" TEXT,
+        "timestamp" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        "metadata" JSONB
+      );
+    `);
+    
     console.log("Database tables initialized successfully");
   } catch (error) {
     console.error("Error initializing database tables:", error);
