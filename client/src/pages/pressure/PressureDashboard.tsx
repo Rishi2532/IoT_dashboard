@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useComprehensiveActivityTracker } from "@/hooks/use-comprehensive-activity-tracker";
 import {
   Table,
   TableBody,
@@ -127,6 +128,7 @@ type PressureRange =
 
 const PressureDashboard: React.FC = () => {
   const { toast } = useToast();
+  const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
 
   // Global filter state (affects both cards and table data)
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -287,6 +289,11 @@ const PressureDashboard: React.FC = () => {
   // Handler for commissioned filter changes
   const handleCommissionedFilterChange = (value: string) => {
     setCommissionedFilter(value);
+
+    // Track filter usage
+    if (value !== "all") {
+      trackFilterUsage("commissioned", value, undefined, "pressure_dashboard");
+    }
 
     // If "Not Commissioned", reset and disable "Fully Completed" filter
     if (value === "No") {
@@ -833,7 +840,35 @@ const PressureDashboard: React.FC = () => {
       }
 
       // Generate Excel file and trigger download
-      XLSX.writeFile(workbook, `${enhancedFilename}.xlsx`);
+      const finalFilename = `${enhancedFilename}.xlsx`;
+      XLSX.writeFile(workbook, finalFilename);
+
+      // Track the data export activity with detailed filter information
+      const appliedFilters = {
+        region: selectedRegion !== "all" ? selectedRegion : undefined,
+        commissioned: commissionedFilter !== "all" ? commissionedFilter : undefined,
+        fullyCompleted: fullyCompletedFilter !== "all" ? fullyCompletedFilter : undefined,
+        schemeStatus: schemeStatusFilter !== "all" ? schemeStatusFilter : undefined,
+        cardFilter: selectedCardFilter !== "all" ? getFilterTitle(selectedCardFilter) : undefined,
+        searchQuery: searchQuery.trim() ? searchQuery : undefined
+      };
+
+      // Clean up undefined values for tracking
+      const cleanedFilters = Object.fromEntries(
+        Object.entries(appliedFilters).filter(([_, value]) => value !== undefined)
+      );
+
+      trackDataExport(
+        "Pressure Data",
+        finalFilename,
+        worksheetData.length,
+        cleanedFilters,
+        {
+          exportSource: "pressure_dashboard",
+          totalSensorsAvailable: allPressureData.length,
+          filteredSensors: worksheetData.length
+        }
+      );
 
       toast({
         title: "Export Successful",
