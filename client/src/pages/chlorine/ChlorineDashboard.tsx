@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,6 +38,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { TranslatedText } from "@/components/ui/translated-text";
+import { useComprehensiveActivityTracker } from "@/hooks/use-comprehensive-activity-tracker";
 import {
   Search,
   AlertTriangle,
@@ -119,6 +120,7 @@ type ChlorineRange =
 
 const ChlorineDashboard: React.FC = () => {
   const { toast } = useToast();
+  const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
 
   // Global filter state (affects both cards and table)
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -139,6 +141,11 @@ const ChlorineDashboard: React.FC = () => {
 
   // Selected ESR for detailed view
   const [selectedESR, setSelectedESR] = useState<ChlorineData | null>(null);
+
+  // Track page visit on component mount
+  useEffect(() => {
+    trackPageVisit("Chlorine Dashboard");
+  }, [trackPageVisit]);
 
   // Fetch all chlorine data
   const {
@@ -645,7 +652,35 @@ const ChlorineDashboard: React.FC = () => {
       XLSX.utils.book_append_sheet(workbook, worksheet, "Chlorine Data");
 
       // Generate Excel file and trigger download
-      XLSX.writeFile(workbook, `${filename}.xlsx`);
+      const finalFilename = `${filename}.xlsx`;
+      XLSX.writeFile(workbook, finalFilename);
+
+      // Track the data export activity with detailed filter information
+      const appliedFilters = {
+        region: selectedRegion !== "all" ? selectedRegion : undefined,
+        cardFilter: selectedCardFilter !== "all" ? selectedCardFilter : undefined,
+        searchTerm: searchQuery || undefined,
+        commissionedStatus: commissionedFilter !== "all" ? commissionedFilter : undefined,
+        completionStatus: fullyCompletedFilter !== "all" ? fullyCompletedFilter : undefined,
+        iotStatus: schemeStatusFilter !== "all" ? schemeStatusFilter : undefined
+      };
+
+      // Clean up undefined values for tracking
+      const cleanedFilters = Object.fromEntries(
+        Object.entries(appliedFilters).filter(([_, value]) => value !== undefined)
+      );
+
+      trackDataExport(
+        "Chlorine Data",
+        finalFilename,
+        worksheetData.length,
+        cleanedFilters,
+        {
+          exportSource: "chlorine_dashboard",
+          totalRecordsAvailable: allChlorineData.length,
+          filteredRecords: data.length
+        }
+      );
 
       toast({
         title: "Export Successful",
@@ -730,6 +765,10 @@ const ChlorineDashboard: React.FC = () => {
               onValueChange={(value) => {
                 setSelectedRegion(value);
                 setPage(1);
+                // Track filter usage
+                if (value !== "all") {
+                  trackFilterUsage("region", value, undefined, "chlorine_dashboard");
+                }
               }}
             >
               <SelectTrigger className="bg-white border border-blue-200 shadow-sm focus:ring-blue-500 focus:border-blue-500">
