@@ -362,3 +362,27 @@ export const insertUserLoginLogSchema = createInsertSchema(userLoginLogs).omit({
 
 export type InsertUserLoginLog = z.infer<typeof insertUserLoginLogSchema>;
 export type UserLoginLog = typeof userLoginLogs.$inferSelect;
+
+// User Activity Logs table for tracking user actions like file downloads
+export const userActivityLogs = pgTable("user_activity_logs", {
+  id: serial("id").primaryKey(),
+  user_id: integer("user_id").references(() => users.id).notNull(),
+  username: text("username").notNull(),
+  session_id: text("session_id").notNull(),
+  activity_type: text("activity_type").notNull(), // 'file_download', 'page_visit', 'data_export', etc.
+  activity_description: text("activity_description").notNull(), // Detailed description of the activity
+  file_name: text("file_name"), // Name of downloaded file (if applicable)
+  file_type: text("file_type"), // Type of file downloaded (if applicable)
+  page_url: text("page_url"), // URL of page visited (if applicable)
+  ip_address: text("ip_address"),
+  user_agent: text("user_agent"),
+  timestamp: timestamp("timestamp", { withTimezone: true }).defaultNow().notNull(),
+  metadata: jsonb("metadata"), // Additional data about the activity
+});
+
+export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs).omit({
+  id: true,
+});
+
+export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
+export type UserActivityLog = typeof userActivityLogs.$inferSelect;
