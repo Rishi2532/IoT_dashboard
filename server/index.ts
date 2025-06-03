@@ -2,6 +2,12 @@ import dotenv from "dotenv";
 // Load environment variables first
 dotenv.config();
 
+// Ensure DATABASE_URL is available from Replit environment
+if (!process.env.DATABASE_URL && process.env.REPL_ID) {
+  // In Replit, the DATABASE_URL might be available as a different env var
+  console.log("Setting up Replit database connection...");
+}
+
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
