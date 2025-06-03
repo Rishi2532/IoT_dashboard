@@ -420,6 +420,30 @@ export default function Dashboard() {
       // Generate and download file
       XLSX.writeFile(wb, filename);
 
+      // Track the data export activity with detailed filter information
+      const appliedFilters = {
+        region: selectedRegion !== "all" ? selectedRegion : undefined,
+        statusFilter: statusFilter !== "all" ? statusFilter : undefined,
+        geoFilter: isFiltering ? "Geographic Filter Applied" : undefined
+      };
+
+      // Clean up undefined values for tracking
+      const cleanedFilters = Object.fromEntries(
+        Object.entries(appliedFilters).filter(([_, value]) => value !== undefined)
+      );
+
+      trackDataExport(
+        "Schemes Data",
+        filename,
+        allFilteredSchemes.length,
+        cleanedFilters,
+        {
+          exportSource: "main_dashboard",
+          totalSchemesAvailable: schemes.length,
+          filteredSchemes: allFilteredSchemes.length
+        }
+      );
+
       toast({
         title: "Export Complete",
         description: `Exported ${allFilteredSchemes.length} schemes to Excel with your current filters applied.`,
@@ -446,7 +470,16 @@ export default function Dashboard() {
   // Handler for status filter changes
   const handleStatusFilterChange = (status: string) => {
     setStatusFilter(status);
+    // Track filter usage
+    if (status !== "all") {
+      trackFilterUsage("status", status, undefined, "main_dashboard");
+    }
   };
+
+  // Track page visit on component mount
+  useEffect(() => {
+    trackPageVisit("Main Dashboard");
+  }, [trackPageVisit]);
 
   // Make export function globally accessible
   useEffect(() => {
