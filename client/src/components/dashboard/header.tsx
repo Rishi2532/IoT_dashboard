@@ -57,7 +57,8 @@ export default function Header() {
   };
 
   return (
-    <header className="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 shadow-2xl sticky top-0 z-[9999]">
+    <header className="bg-[#05529c] shadow-2xl sticky top-0 z-[9999]">
+
       <div className="absolute inset-0 bg-[url('/images/water-pattern.svg')] opacity-10 bg-repeat"></div>
       <div
         className="absolute inset-0 bg-gradient-to-b from-transparent to-blue-900/20"
@@ -105,8 +106,8 @@ export default function Header() {
                     <TranslatedText>
                       Water Supply & Sanitation Dept.,Govt. of Maharashtra
                     </TranslatedText>
-                    <span className="ml-1 bg-blue-500/30 px-1.5 py-0.5 rounded text-[10px] border border-blue-400/30 font-bold">
-                      POWERED BY CSTECH AI
+                    <span className="ml-1 bg-pink-800/30 px-1.5 py-0.5 rounded text-[10px] border border-blue-400/30 font-bold">
+                     Developed by CSTECH<sup>Ai</sup>
                     </span>
                   </span>
                 </p>

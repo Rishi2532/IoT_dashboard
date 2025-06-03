@@ -31,7 +31,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </div>
             <div className="text-center sm:text-right text-xs text-blue-800">
               <p className="font-medium text-base sm:text-lg">
-                Powered by CSTECH AI
+                Designed & Developed by CSTECH<sup>Ai</sup>
               </p>
             </div>
           </div>

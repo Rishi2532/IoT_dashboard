@@ -10,7 +10,9 @@ import DailyUpdates from "@/components/dashboard/daily-updates";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";
-import ChatbotComponent, { FilterContextProvider } from "@/components/chatbot/ChatbotComponent";
+import ChatbotComponent, {
+  FilterContextProvider,
+} from "@/components/chatbot/ChatbotComponent";
 import { Button } from "@/components/ui/button";
 import { Download, RefreshCw, Map, Filter } from "lucide-react";
 import { Region, RegionSummary, SchemeStatus } from "@/types";
@@ -19,7 +21,9 @@ import * as XLSX from "xlsx";
 // Import our map components
 import { GitHubStyleMapPreview } from "@/components/maps";
 // Import Enhanced GeoFilter Map
-import EnhancedGeoFilterMap, { MapLocation } from "@/components/maps/EnhancedGeoFilterMap";
+import EnhancedGeoFilterMap, {
+  MapLocation,
+} from "@/components/maps/EnhancedGeoFilterMap";
 // Import GeoFilter context
 import { useGeoFilter } from "@/contexts/GeoFilterContext";
 // Import data hooks for geographic filtering
@@ -35,19 +39,19 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showEnhancedMap, setShowEnhancedMap] = useState(false);
   const { toast } = useToast();
-  
+
   // Map configuration
   const mapRef = useRef(null);
-  
+
   // Get geographic filter context
   const { filter, isFiltering, clearFilter } = useGeoFilter();
-  
+
   // Use our geographic filtered schemes
   const {
     data: geoFilteredSchemes = [],
     isLoading: isGeoFilteredSchemesLoading,
   } = useGeographicFilteredSchemes();
-  
+
   // Maharashtra major 6 regions with verified accurate coordinates - names exactly match database
   const [sampleLocations, setSampleLocations] = useState<MapLocation[]>([
     // Pune Region
@@ -57,25 +61,25 @@ export default function Dashboard() {
       longitude: 73.85,
       type: "scheme",
       details: {
-        "Schemes": "36",
-        "Villages": "426",
-        "ESRs": "156"
-      }
+        Schemes: "36",
+        Villages: "426",
+        ESRs: "156",
+      },
     },
-    
+
     // Nashik Region
     {
       name: "Nashik",
-      latitude: 20.00,
+      latitude: 20.0,
       longitude: 73.78,
       type: "scheme",
       details: {
-        "Schemes": "29",
-        "Villages": "342",
-        "ESRs": "124"
-      }
+        Schemes: "29",
+        Villages: "342",
+        ESRs: "124",
+      },
     },
-    
+
     // Amravati Region
     {
       name: "Amravati",
@@ -83,12 +87,12 @@ export default function Dashboard() {
       longitude: 77.75,
       type: "scheme",
       details: {
-        "Schemes": "21",
-        "Villages": "197",
-        "ESRs": "86"
-      }
+        Schemes: "21",
+        Villages: "197",
+        ESRs: "86",
+      },
     },
-    
+
     // Chhatrapati Sambhajinagar Region
     {
       name: "Chhatrapati Sambhajinagar",
@@ -96,12 +100,12 @@ export default function Dashboard() {
       longitude: 75.34,
       type: "scheme",
       details: {
-        "Schemes": "26",
-        "Villages": "280",
-        "ESRs": "102"
-      }
+        Schemes: "26",
+        Villages: "280",
+        ESRs: "102",
+      },
     },
-    
+
     // Nagpur Region
     {
       name: "Nagpur",
@@ -109,24 +113,24 @@ export default function Dashboard() {
       longitude: 79.09,
       type: "scheme",
       details: {
-        "Schemes": "30",
-        "Villages": "364",
-        "ESRs": "146"
-      }
+        Schemes: "30",
+        Villages: "364",
+        ESRs: "146",
+      },
     },
-    
+
     // Konkan Region - adjusted position for better visibility
     {
       name: "Konkan",
-      latitude: 18.10,
-      longitude: 73.10,
+      latitude: 18.1,
+      longitude: 73.1,
       type: "scheme",
       details: {
-        "Schemes": "18",
-        "Villages": "163",
-        "ESRs": "76"
-      }
-    }
+        Schemes: "18",
+        Villages: "163",
+        ESRs: "76",
+      },
+    },
   ]);
 
   // Fetch regions data
@@ -153,7 +157,9 @@ export default function Dashboard() {
 
   // State for status filter
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [mapMetric, setMapMetric] = useState<'completion' | 'esr' | 'villages' | 'flow_meter'>('completion');
+  const [mapMetric, setMapMetric] = useState<
+    "completion" | "esr" | "villages" | "flow_meter"
+  >("completion");
 
   // Fetch schemes data with region and status filters
   const {
@@ -197,32 +203,39 @@ export default function Dashboard() {
   };
 
   // State to track the currently filtered schemes from SchemeTable
-  const [currentFilteredSchemes, setCurrentFilteredSchemes] = useState<SchemeStatus[]>([]);
+  const [currentFilteredSchemes, setCurrentFilteredSchemes] = useState<
+    SchemeStatus[]
+  >([]);
 
   // Callback to receive filtered schemes from SchemeTable
   const handleFilteredSchemesChange = (filteredSchemes: SchemeStatus[]) => {
     setCurrentFilteredSchemes(filteredSchemes);
-    console.log(`Received ${filteredSchemes.length} filtered schemes from SchemeTable`);
+    console.log(
+      `Received ${filteredSchemes.length} filtered schemes from SchemeTable`,
+    );
   };
 
-  // Export function 
+  // Export function
   const handleExport = async () => {
     try {
       // Use the filtered schemes directly from SchemeTable
       // This ensures we export exactly what the user sees in the table
       const allFilteredSchemes = currentFilteredSchemes;
-      
-      console.log(`Exporting ${allFilteredSchemes.length} schemes that are currently displayed in the table`);
-      
+
+      console.log(
+        `Exporting ${allFilteredSchemes.length} schemes that are currently displayed in the table`,
+      );
+
       if (allFilteredSchemes.length === 0) {
         toast({
           title: "No Data To Export",
-          description: "There are no water schemes matching your current filter criteria.",
+          description:
+            "There are no water schemes matching your current filter criteria.",
           variant: "destructive",
         });
         return;
       }
-      
+
       // Show loading toast
       toast({
         title: "Preparing Export",
@@ -235,25 +248,29 @@ export default function Dashboard() {
       // Helper function to get appropriate agency based on region
       const getAgencyByRegion = (regionName: string): string => {
         const regionAgencyMap: Record<string, string> = {
-          'Nagpur': 'M/s Rite Water',
-          'Amravati': 'M/s Ceinsys',
-          'Nashik': 'M/s Ceinsys',
-          'Pune': 'M/s Indo/Chetas',
-          'Konkan': 'M/s Indo/Chetas',
-          'Chhatrapati Sambhajinagar': 'M/s Rite Water'
+          Nagpur: "M/s Rite Water",
+          Amravati: "M/s Ceinsys",
+          Nashik: "M/s Ceinsys",
+          Pune: "M/s Indo/Chetas",
+          Konkan: "M/s Indo/Chetas",
+          "Chhatrapati Sambhajinagar": "M/s Rite Water",
         };
-        return regionAgencyMap[regionName] || 'Not Specified';
+        return regionAgencyMap[regionName] || "Not Specified";
       };
-      
+
       // Create workbook and worksheet
       const wb = XLSX.utils.book_new();
       const ws = XLSX.utils.json_to_sheet(
         allFilteredSchemes.map((scheme: SchemeStatus) => ({
           "Scheme ID": scheme.scheme_id,
           "Scheme Name": scheme.scheme_name,
-          "Region": scheme.region,
+          Region: scheme.region,
           // Use agency from scheme data if available, otherwise determine from region
-          "Agency": scheme.agency || (scheme.region ? getAgencyByRegion(scheme.region) : 'Not Specified'),
+          Agency:
+            scheme.agency ||
+            (scheme.region
+              ? getAgencyByRegion(scheme.region)
+              : "Not Specified"),
           "Total Villages": scheme.number_of_village,
           "Villages Integrated": scheme.total_villages_integrated,
           "Villages Completed": scheme.fully_completed_villages,
@@ -262,14 +279,18 @@ export default function Dashboard() {
           "ESR Completed": scheme.no_fully_completed_esr,
           "Flow Meters": scheme.flow_meters_connected,
           "Pressure Transmitters": scheme.pressure_transmitter_connected,
-          "Residual Chlorine Analyzers": scheme.residual_chlorine_analyzer_connected,
+          "Residual Chlorine Analyzers":
+            scheme.residual_chlorine_analyzer_connected,
           // Add MJP columns
-          "MJP Commissioned": scheme.mjp_commissioned || 'No',
-          "MJP Fully Completed": scheme.mjp_fully_completed || 'In Progress',
-          "Status": scheme.fully_completion_scheme_status || scheme.scheme_functional_status || 'Not-Connected',
+          "MJP Commissioned": scheme.mjp_commissioned || "No",
+          "MJP Fully Completed": scheme.mjp_fully_completed || "In Progress",
+          Status:
+            scheme.fully_completion_scheme_status ||
+            scheme.scheme_functional_status ||
+            "Not-Connected",
         })),
       );
-      
+
       // Format the headers with blue background and white text to match the image
       const headerStyle = {
         fill: { fgColor: { rgb: "0000FF" } }, // Bright blue background
@@ -279,57 +300,74 @@ export default function Dashboard() {
           top: { style: "thin" },
           bottom: { style: "thin" },
           left: { style: "thin" },
-          right: { style: "thin" }
-        }
+          right: { style: "thin" },
+        },
       };
-      
+
       // Get all header cells (first row)
-      const headerRange = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+      const headerRange = XLSX.utils.decode_range(ws["!ref"] || "A1");
       for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
         const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
         if (!ws[cellAddress]) continue;
-        
+
         // Apply header styling
         ws[cellAddress].s = headerStyle;
       }
-      
+
       // Apply conditional formatting for MJP status cells with bright colors to match the image
-      const greenStyle = { fill: { fgColor: { rgb: "00FF00" } }, font: { color: { rgb: "000000" }, bold: true } }; // Bright green
-      const yellowStyle = { fill: { fgColor: { rgb: "FFFF00" } }, font: { color: { rgb: "000000" }, bold: true } }; // Bright yellow
-      
+      const greenStyle = {
+        fill: { fgColor: { rgb: "00FF00" } },
+        font: { color: { rgb: "000000" }, bold: true },
+      }; // Bright green
+      const yellowStyle = {
+        fill: { fgColor: { rgb: "FFFF00" } },
+        font: { color: { rgb: "000000" }, bold: true },
+      }; // Bright yellow
+
       // Find the indexes of the MJP columns and Status column
       let mjpCommissionedCol = -1;
       let mjpFullyCompletedCol = -1;
       let statusCol = -1;
-      
+
       // Get the first row keys to find column indexes
       const firstRow = Object.keys(XLSX.utils.sheet_to_json(ws)[0] || {});
-      mjpCommissionedCol = firstRow.findIndex(key => key === "MJP Commissioned");
-      mjpFullyCompletedCol = firstRow.findIndex(key => key === "MJP Fully Completed");
-      statusCol = firstRow.findIndex(key => key === "Status");
-      
+      mjpCommissionedCol = firstRow.findIndex(
+        (key) => key === "MJP Commissioned",
+      );
+      mjpFullyCompletedCol = firstRow.findIndex(
+        (key) => key === "MJP Fully Completed",
+      );
+      statusCol = firstRow.findIndex((key) => key === "Status");
+
       // Apply styles to MJP cells based on their values
-      for (let row = 1; row <= headerRange.e.r; row++) { // Start from row 1 (skip header)
+      for (let row = 1; row <= headerRange.e.r; row++) {
+        // Start from row 1 (skip header)
         // Style MJP Commissioned column
         if (mjpCommissionedCol !== -1) {
-          const cellAddress = XLSX.utils.encode_cell({ r: row, c: mjpCommissionedCol });
+          const cellAddress = XLSX.utils.encode_cell({
+            r: row,
+            c: mjpCommissionedCol,
+          });
           if (ws[cellAddress] && ws[cellAddress].v === "Yes") {
             ws[cellAddress].s = greenStyle;
           } else if (ws[cellAddress]) {
             ws[cellAddress].s = yellowStyle;
           }
         }
-        
+
         // Style MJP Fully Completed column
         if (mjpFullyCompletedCol !== -1) {
-          const cellAddress = XLSX.utils.encode_cell({ r: row, c: mjpFullyCompletedCol });
+          const cellAddress = XLSX.utils.encode_cell({
+            r: row,
+            c: mjpFullyCompletedCol,
+          });
           if (ws[cellAddress] && ws[cellAddress].v === "Fully Completed") {
             ws[cellAddress].s = greenStyle;
           } else if (ws[cellAddress]) {
             ws[cellAddress].s = yellowStyle;
           }
         }
-        
+
         // Style Status column
         if (statusCol !== -1) {
           const cellAddress = XLSX.utils.encode_cell({ r: row, c: statusCol });
@@ -340,7 +378,7 @@ export default function Dashboard() {
           }
         }
       }
-      
+
       // Set column widths for better readability
       const colWidths = [
         { wch: 12 }, // Scheme ID
@@ -358,11 +396,11 @@ export default function Dashboard() {
         { wch: 12 }, // Residual Chlorine Analyzers
         { wch: 15 }, // MJP Commissioned
         { wch: 15 }, // MJP Fully Completed
-        { wch: 18 }  // Status
+        { wch: 18 }, // Status
       ];
-      
+
       // Apply column widths
-      ws['!cols'] = colWidths;
+      ws["!cols"] = colWidths;
 
       // Add worksheet to workbook
       XLSX.utils.book_append_sheet(wb, ws, "Schemes Data");
@@ -407,41 +445,43 @@ export default function Dashboard() {
   const handleStatusFilterChange = (status: string) => {
     setStatusFilter(status);
   };
-  
+
   // Make export function globally accessible
   useEffect(() => {
     // Expose the export function to window for the chatbot to use
     // We need to make sure the function is properly bound to the component
     // and its filters, so we create a new function that calls our export
     (window as any).triggerDashboardExport = () => {
-      console.log('Global Excel export triggered with filters:', {
-        region: selectedRegion, 
-        status: statusFilter
+      console.log("Global Excel export triggered with filters:", {
+        region: selectedRegion,
+        status: statusFilter,
       });
-      
+
       // Execute the export function directly (not as a Promise)
       handleExport();
-      
+
       // Return a resolved promise for API consistency
       return Promise.resolve();
     };
-    
+
     // Clean up when component unmounts
     return () => {
       (window as any).triggerDashboardExport = undefined;
     };
   }, [selectedRegion, statusFilter, handleExport]); // Re-bind when filters or the handler changes
-  
+
   return (
     <DashboardLayout>
       {/* Add ComponentTypeFilter for highlighting components when asked about through chatbot */}
-      <ComponentTypeFilter 
+      <ComponentTypeFilter
         onFilterChange={(componentType) => {
-          console.log(`Dashboard received component filter change: ${componentType}`);
+          console.log(
+            `Dashboard received component filter change: ${componentType}`,
+          );
           // You can add additional logic here if needed
         }}
       />
-      
+
       {/* Enhanced Dashboard Header with water-themed gradient */}
       <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-600/20 via-blue-400/15 to-blue-700/10 rounded-lg mb-4 sm:mb-6 shadow-md border border-blue-200">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
@@ -451,8 +491,10 @@ export default function Dashboard() {
             </h1>
             <p className="mt-1 sm:mt-2 text-sm text-blue-700/80 font-medium flex items-center">
               <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2"></span>
-              Integration Dashboard for Jal Jeevan Mission 
-              <span className="ml-3 py-0.5 px-2 text-xs bg-blue-100 text-blue-700 rounded-full">Live Data</span>
+              Integration Dashboard for Jal Jeevan Mission
+              <span className="ml-3 py-0.5 px-2 text-xs bg-blue-100 text-blue-700 rounded-full">
+                Live Data
+              </span>
             </p>
           </div>
           <div className="mt-4 flex sm:mt-0 sm:ml-4 space-x-3">
@@ -468,7 +510,7 @@ export default function Dashboard() {
             <Button
               size="sm"
               onClick={handleRefresh}
-              className="bg-blue-600 hover:bg-blue-700 transition-all text-xs sm:text-sm shadow-sm"
+              className="bg-[#05529c] hover:bg-blue-700 transition-all text-xs sm:text-sm shadow-sm"
             >
               <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" />
               Refresh
@@ -491,8 +533,9 @@ export default function Dashboard() {
           onChange={handleRegionChange}
         />
         {/* Add global styling to ensure dropdown is always visible */}
-        <style dangerouslySetInnerHTML={{
-          __html: `
+        <style
+          dangerouslySetInnerHTML={{
+            __html: `
             .region-select-dropdown {
               z-index: 9999 !important;
               position: absolute !important;
@@ -503,8 +546,9 @@ export default function Dashboard() {
             [data-radix-popper-content-wrapper] {
               z-index: 9999 !important;
             }
-          `
-        }} />
+          `,
+          }}
+        />
       </div>
 
       {/* Map and Stats Cards Layout (stacked on mobile, side-by-side on desktop) */}
@@ -519,9 +563,13 @@ export default function Dashboard() {
           <div className="w-full overflow-x-auto flex-1 min-h-[480px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
               {/* Enhanced Geographic Filter Map */}
-              <div className="map-container" id="maharashtra-map-preview" style={{ height: '480px' }}>
+              <div
+                className="map-container"
+                id="maharashtra-map-preview"
+                style={{ height: "480px" }}
+              >
                 {/* Add the enhanced map with GeoJSON data */}
-                <EnhancedGeoFilterMap 
+                <EnhancedGeoFilterMap
                   mapHeight="480px"
                   className="h-full w-full"
                   locations={sampleLocations}
@@ -530,30 +578,32 @@ export default function Dashboard() {
                   }}
                 />
               </div>
-              
+
               {/* Remove error modal if it appears */}
-              <style dangerouslySetInnerHTML={{
-                __html: `
+              <style
+                dangerouslySetInnerHTML={{
+                  __html: `
                   /* Hide runtime error popup for map */
                   #maharashtra-map-preview + div[data-plugin-id="runtime-errors"] {
                     display: none !important;
                   }
-                `
-              }} />
+                `,
+                }}
+              />
             </div>
           </div>
         </div>
-        
+
         {/* Stats Cards Area - Full width on mobile, 7/12 on desktop */}
         <div className="lg:col-span-7">
-          <StatsCards 
-            data={regionSummary} 
-            isLoading={isSummaryLoading} 
-            layout="compact" 
+          <StatsCards
+            data={regionSummary}
+            isLoading={isSummaryLoading}
+            layout="compact"
           />
         </div>
       </div>
-      
+
       {/* Enhanced Region Comparison Chart (Full Width) */}
       <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all flex flex-col mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4">
@@ -606,30 +656,40 @@ export default function Dashboard() {
                 <span className="ml-2 text-sm bg-green-100 text-green-700 px-2 py-0.5 rounded-full geo-filter-badge flex items-center">
                   <Filter className="h-3 w-3 mr-1" />
                   Geographic Filter: {filter.level}
-                  {filter.block && <span className="ml-1">- {filter.block}</span>}
+                  {filter.block && (
+                    <span className="ml-1">- {filter.block}</span>
+                  )}
                 </span>
               )}
             </h2>
             <p className="text-xs sm:text-sm text-neutral-500 mt-1 sm:mt-2">
-              {isFiltering 
+              {isFiltering
                 ? `Showing schemes filtered by ${filter.level} level geographic filter`
-                : (selectedRegion === "all" 
+                : selectedRegion === "all"
                   ? "Click on any scheme to view detailed integration status and progress information"
-                  : `Showing water schemes in ${selectedRegion} region. Use the chatbot to filter other regions.`
-                )
-              }
+                  : `Showing water schemes in ${selectedRegion} region. Use the chatbot to filter other regions.`}
             </p>
           </div>
           <span className="hidden sm:flex items-center text-xs text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-            <span className="font-medium">{isFiltering ? geoFilteredSchemes.length : schemes.length}</span>
-            <span className="ml-1">scheme{(isFiltering ? geoFilteredSchemes.length : schemes.length) !== 1 ? 's' : ''} found</span>
+            <span className="font-medium">
+              {isFiltering ? geoFilteredSchemes.length : schemes.length}
+            </span>
+            <span className="ml-1">
+              scheme
+              {(isFiltering ? geoFilteredSchemes.length : schemes.length) !== 1
+                ? "s"
+                : ""}{" "}
+              found
+            </span>
           </span>
         </div>
         <div className="w-full overflow-x-auto bg-gradient-to-r from-blue-50/30 via-white to-blue-50/30 rounded-lg p-2">
           <div className="min-w-[650px]">
             <SchemeTable
               schemes={isFiltering ? geoFilteredSchemes : schemes || []}
-              isLoading={isFiltering ? isGeoFilteredSchemesLoading : isSchemesLoading}
+              isLoading={
+                isFiltering ? isGeoFilteredSchemesLoading : isSchemesLoading
+              }
               onViewDetails={handleViewSchemeDetails}
               statusFilter={statusFilter}
               onStatusFilterChange={handleStatusFilterChange}
@@ -645,7 +705,7 @@ export default function Dashboard() {
         isOpen={isModalOpen}
         onClose={handleCloseModal}
       />
-      
+
       {/* AI Assistant Chatbot is now managed globally in App.tsx */}
     </DashboardLayout>
   );

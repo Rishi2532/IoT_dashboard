@@ -263,17 +263,14 @@ export default function AdminPage() {
           <div className="flex flex-col sm:flex-row justify-between items-center">
             <div className="flex items-center mb-3 sm:mb-0">
               <img
-                src="https://www.ceinsys.com/wp-content/uploads/2024/12/Final-logo-bw_reverse-02-1536x449.png"
+                src="https://cstech.ai/img/logo.avif"
                 alt="CS Tech AI"
-                className="h-16 sm:h-20"
-                style={{
-                  background: "linear-gradient(to right, violet, blue)",
-                }}
+                className="h-10 sm:h-12"
               />
             </div>
             <div className="text-center sm:text-right text-sm text-blue-800">
               <p className="font-medium text-lg sm:text-xl">
-                Powered by CSTECH AI
+                Designed & Developed by CSTECH<sup>Ai</sup>
               </p>
             </div>
           </div>
