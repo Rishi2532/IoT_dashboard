@@ -8,6 +8,7 @@ import {
   pressureData,
   reportFiles,
   userLoginLogs,
+  userActivityLogs,
   type User,
   type InsertUser,
   type Region,
@@ -27,6 +28,8 @@ import {
   type InsertReportFile,
   type UserLoginLog,
   type InsertUserLoginLog,
+  type UserActivityLog,
+  type InsertUserActivityLog,
 } from "@shared/schema";
 import { getDB, initializeDatabase } from "./db";
 import { eq, sql, and } from "drizzle-orm";
@@ -91,6 +94,11 @@ export interface IStorage {
   logUserLogout(sessionId: string): Promise<void>;
   getUserLoginLogs(limit?: number): Promise<UserLoginLog[]>;
   getUserLoginLogsByUserId(userId: number, limit?: number): Promise<UserLoginLog[]>;
+  
+  // User activity tracking operations
+  logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog>;
+  getUserActivityLogs(userId?: number, limit?: number): Promise<UserActivityLog[]>;
+  getUserActivityLogsBySession(sessionId: string, limit?: number): Promise<UserActivityLog[]>;
 
   // Region operations
   getAllRegions(): Promise<Region[]>;
@@ -5413,6 +5421,84 @@ export class PostgresStorage implements IStorage {
     `);
 
     return result.rows;
+  }
+
+  // User activity tracking methods
+  async logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog> {
+    const db = await this.ensureInitialized();
+    
+    // Ensure the user_activity_logs table exists
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "user_activity_logs" (
+        "id" SERIAL PRIMARY KEY,
+        "user_id" INTEGER NOT NULL,
+        "username" VARCHAR(255) NOT NULL,
+        "session_id" VARCHAR(255) NOT NULL,
+        "activity_type" VARCHAR(100) NOT NULL,
+        "activity_description" TEXT NOT NULL,
+        "file_name" VARCHAR(255),
+        "file_type" VARCHAR(50),
+        "page_url" TEXT,
+        "ip_address" VARCHAR(45),
+        "user_agent" TEXT,
+        "timestamp" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        "metadata" JSONB
+      );
+    `);
+
+    const result = await db.execute(sql`
+      INSERT INTO user_activity_logs (
+        user_id, username, session_id, activity_type, activity_description, 
+        file_name, file_type, page_url, ip_address, user_agent, metadata
+      )
+      VALUES (
+        ${activity.user_id}, ${activity.username}, ${activity.session_id}, 
+        ${activity.activity_type}, ${activity.activity_description}, 
+        ${activity.file_name || null}, ${activity.file_type || null}, 
+        ${activity.page_url || null}, ${activity.ip_address || null}, 
+        ${activity.user_agent || null}, ${activity.metadata ? JSON.stringify(activity.metadata) : null}::jsonb
+      )
+      RETURNING *;
+    `);
+
+    return result.rows[0] as UserActivityLog;
+  }
+
+  async getUserActivityLogs(userId?: number, limit: number = 100): Promise<UserActivityLog[]> {
+    const db = await this.ensureInitialized();
+    
+    let query = sql`
+      SELECT * FROM user_activity_logs 
+    `;
+    
+    if (userId) {
+      query = sql`
+        SELECT * FROM user_activity_logs 
+        WHERE user_id = ${userId}
+      `;
+    }
+    
+    query = sql`
+      ${query}
+      ORDER BY timestamp DESC 
+      LIMIT ${limit}
+    `;
+
+    const result = await db.execute(query);
+    return result.rows as UserActivityLog[];
+  }
+
+  async getUserActivityLogsBySession(sessionId: string, limit: number = 50): Promise<UserActivityLog[]> {
+    const db = await this.ensureInitialized();
+    
+    const result = await db.execute(sql`
+      SELECT * FROM user_activity_logs 
+      WHERE session_id = ${sessionId}
+      ORDER BY timestamp DESC 
+      LIMIT ${limit}
+    `);
+
+    return result.rows as UserActivityLog[];
   }
 }
 

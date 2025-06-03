@@ -203,7 +203,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ isLoggedIn, isAdmin });
   });
 
-  // Get user login logs (admin only)
+  // Get user login logs with activities (admin only)
   app.get("/api/auth/login-logs", requireAdmin, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
@@ -216,10 +216,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
         logs = await storage.getUserLoginLogs(limit);
       }
       
-      res.json(logs);
+      // Fetch activities for each session
+      const logsWithActivities = await Promise.all(
+        logs.map(async (log: any) => {
+          if (log.session_id) {
+            const activities = await storage.getUserActivityLogsBySession(log.session_id, 20);
+            return { ...log, activities };
+          }
+          return { ...log, activities: [] };
+        })
+      );
+      
+      res.json(logsWithActivities);
     } catch (error) {
       console.error("Error fetching login logs:", error);
       res.status(500).json({ message: "Failed to fetch login logs" });
+    }
+  });
+
+  // Log user activity (for authenticated users)
+  app.post("/api/auth/log-activity", async (req, res) => {
+    try {
+      if (!req.session || !req.session.userId) {
+        return res.status(401).json({ message: "Not authenticated" });
+      }
+
+      const { activity_type, activity_description, file_name, file_type, page_url, metadata } = req.body;
+      
+      const user = await storage.getUser(req.session.userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+
+      const activity = await storage.logUserActivity({
+        user_id: user.id,
+        username: user.username,
+        session_id: req.sessionID,
+        activity_type,
+        activity_description,
+        file_name: file_name || null,
+        file_type: file_type || null,
+        page_url: page_url || null,
+        ip_address: req.ip || req.connection.remoteAddress || null,
+        user_agent: req.get('User-Agent') || null,
+        metadata: metadata || null
+      });
+
+      res.json(activity);
+    } catch (error) {
+      console.error("Error logging user activity:", error);
+      res.status(500).json({ message: "Failed to log activity" });
+    }
+  });
+
+  // Get user activities (admin only)
+  app.get("/api/auth/activities", requireAdmin, async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
+      
+      const activities = await storage.getUserActivityLogs(userId, limit);
+      res.json(activities);
+    } catch (error) {
+      console.error("Error fetching user activities:", error);
+      res.status(500).json({ message: "Failed to fetch activities" });
     }
   });
 

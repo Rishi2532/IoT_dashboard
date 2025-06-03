@@ -1,11 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, User, Clock, Globe, Monitor } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { RefreshCw, User, Clock, Globe, Monitor, ChevronDown, ChevronRight, Download, Eye, FileText } from "lucide-react";
 import { format } from "date-fns";
 
 interface UserLoginLog {
@@ -20,6 +21,23 @@ interface UserLoginLog {
   user_agent: string | null;
   session_id: string | null;
   is_active: boolean | null;
+  activities?: UserActivity[];
+}
+
+interface UserActivity {
+  id: number;
+  user_id: number;
+  username: string;
+  session_id: string;
+  activity_type: string;
+  activity_description: string;
+  file_name: string | null;
+  file_type: string | null;
+  page_url: string | null;
+  ip_address: string | null;
+  user_agent: string | null;
+  timestamp: string;
+  metadata: any;
 }
 
 export default function LoginLogsPage() {
