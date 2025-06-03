@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useComprehensiveActivityTracker } from "@/hooks/use-comprehensive-activity-tracker";
 import {
   Card,
   CardContent,
@@ -124,16 +123,15 @@ type LpcdRange =
   | "55to60"
   | "60to65"
   | "65to70"
-  | "70to75"  // Range for LPCD between 70-75
-  | "75to80"  // Range for LPCD between 75-80
-  | "above80"  // Range for LPCD above 80
+  | "70to75" // Range for LPCD between 70-75
+  | "75to80" // Range for LPCD between 75-80
+  | "above80" // Range for LPCD above 80
   | "above70"
   | "consistentlyAbove55"
   | "consistentlyBelow55";
 
 const EnhancedLpcdDashboard = () => {
   const { toast } = useToast();
-  const { trackPageVisit, trackDataExport, trackFilterUsage, trackDashboardAccess } = useComprehensiveActivityTracker();
 
   // Filter state
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -164,7 +162,9 @@ const EnhancedLpcdDashboard = () => {
       }
 
       const queryString = params.toString();
-      const url = `/api/water-scheme-data${queryString ? `?${queryString}` : ""}`;
+      const url = `/api/water-scheme-data${
+        queryString ? `?${queryString}` : ""
+      }`;
 
       console.log("Fetching LPCD data with URL:", url);
       const response = await fetch(url);
@@ -465,7 +465,7 @@ const EnhancedLpcdDashboard = () => {
   const getFilterCounts = () => {
     // Get the globally filtered data for calculating card statistics
     const globallyFilteredData = getGloballyFilteredSchemes();
-    
+
     const counts = {
       total: globallyFilteredData.length,
       above55: 0,
@@ -484,7 +484,7 @@ const EnhancedLpcdDashboard = () => {
         "65to70": 0,
         "70to75": 0,
         "75to80": 0,
-        "above80": 0,
+        above80: 0,
         above70: 0,
       },
       consistentlyAbove55: 0,
@@ -541,7 +541,7 @@ const EnhancedLpcdDashboard = () => {
       } else if (lpcdValue >= 80) {
         counts.ranges["above80"]++;
       }
-      
+
       // Keep the above70 count for backward compatibility
       if (lpcdValue >= 70) {
         counts.ranges["above70"]++;
@@ -613,6 +613,7 @@ const EnhancedLpcdDashboard = () => {
   // Get LPCD status badge color
   const getLpcdStatusColor = (lpcdValue: number | null): string => {
     if (lpcdValue === null) return "bg-gray-200 text-gray-700";
+    if (lpcdValue > 80) return "bg-orange-500 text-white"; // High status (> 80L)
     if (lpcdValue > 70) return "bg-green-600 text-white"; // High status (> 70L)
     if (lpcdValue >= 55) return "bg-green-500 text-white"; // Good status (55-70L)
     if (lpcdValue >= 40) return "bg-yellow-500 text-black"; // Low but not critical
@@ -634,7 +635,9 @@ const EnhancedLpcdDashboard = () => {
   const LpcdBadge = ({ value }: { value: number | null }) => {
     return (
       <span
-        className={`px-2 py-1 rounded-full text-xs font-medium ${getLpcdStatusColor(value)}`}
+        className={`px-2 py-1 rounded-full text-xs font-medium ${getLpcdStatusColor(
+          value,
+        )}`}
       >
         {value !== null ? `${value.toFixed(2)}L` : "N/A"}
       </span>
@@ -651,7 +654,10 @@ const EnhancedLpcdDashboard = () => {
           if (!dateStr) return "N/A";
           try {
             const date = new Date(dateStr);
-            return date.toLocaleDateString('en-IN', { day: '2-digit', month: 'short' });
+            return date.toLocaleDateString("en-IN", {
+              day: "2-digit",
+              month: "short",
+            });
           } catch {
             return dateStr || "N/A";
           }
@@ -660,7 +666,7 @@ const EnhancedLpcdDashboard = () => {
         // Filter data based on current filters
         const dataToExport = filteredSchemes.map((scheme, index) => {
           const lpcdValue = getLatestLpcdValue(scheme);
-          
+
           // Format dates for headers
           const date1 = formatDateForHeader(scheme.lpcd_date_day1);
           const date2 = formatDateForHeader(scheme.lpcd_date_day2);
@@ -669,76 +675,89 @@ const EnhancedLpcdDashboard = () => {
           const date5 = formatDateForHeader(scheme.lpcd_date_day5);
           const date6 = formatDateForHeader(scheme.lpcd_date_day6);
           const date7 = formatDateForHeader(scheme.lpcd_date_day7);
-          
+
           return {
             "No.": index + 1,
-            "Region": scheme.region,
-            "Circle": scheme.circle,
-            "Division": scheme.division,
+            Region: scheme.region,
+            Circle: scheme.circle,
+            Division: scheme.division,
             "Sub Division": scheme.sub_division,
-            "Block": scheme.block,
+            Block: scheme.block,
             "Scheme ID": scheme.scheme_id,
             "Scheme Name": scheme.scheme_name,
             "Village Name": scheme.village_name,
-            "Population": scheme.population,
+            Population: scheme.population,
             "Current LPCD": lpcdValue !== null ? lpcdValue.toFixed(2) : "N/A",
-            "Status": getLpcdStatusText(lpcdValue),
+            Status: getLpcdStatusText(lpcdValue),
             "Days Above 55L": scheme.above_55_lpcd_count || 0,
             "Days Below 55L": scheme.below_55_lpcd_count || 0,
-            
+
             // Water consumption values with dates as headers (only 6 days available)
-            [`Water (${date1})`]: 
-              scheme.water_value_day1 !== null && scheme.water_value_day1 !== undefined
+            [`Water (${date1})`]:
+              scheme.water_value_day1 !== null &&
+              scheme.water_value_day1 !== undefined
                 ? Number(scheme.water_value_day1).toFixed(4)
                 : "N/A",
-            [`Water (${date2})`]: 
-              scheme.water_value_day2 !== null && scheme.water_value_day2 !== undefined
+            [`Water (${date2})`]:
+              scheme.water_value_day2 !== null &&
+              scheme.water_value_day2 !== undefined
                 ? Number(scheme.water_value_day2).toFixed(4)
                 : "N/A",
-            [`Water (${date3})`]: 
-              scheme.water_value_day3 !== null && scheme.water_value_day3 !== undefined
+            [`Water (${date3})`]:
+              scheme.water_value_day3 !== null &&
+              scheme.water_value_day3 !== undefined
                 ? Number(scheme.water_value_day3).toFixed(4)
                 : "N/A",
-            [`Water (${date4})`]: 
-              scheme.water_value_day4 !== null && scheme.water_value_day4 !== undefined
+            [`Water (${date4})`]:
+              scheme.water_value_day4 !== null &&
+              scheme.water_value_day4 !== undefined
                 ? Number(scheme.water_value_day4).toFixed(4)
                 : "N/A",
-            [`Water (${date5})`]: 
-              scheme.water_value_day5 !== null && scheme.water_value_day5 !== undefined
+            [`Water (${date5})`]:
+              scheme.water_value_day5 !== null &&
+              scheme.water_value_day5 !== undefined
                 ? Number(scheme.water_value_day5).toFixed(4)
                 : "N/A",
-            [`Water (${date6})`]: 
-              scheme.water_value_day6 !== null && scheme.water_value_day6 !== undefined
+            [`Water (${date6})`]:
+              scheme.water_value_day6 !== null &&
+              scheme.water_value_day6 !== undefined
                 ? Number(scheme.water_value_day6).toFixed(4)
                 : "N/A",
-            
+
             // LPCD values with dates as headers
             [`LPCD (${date1})`]:
-              scheme.lpcd_value_day1 !== null && scheme.lpcd_value_day1 !== undefined
+              scheme.lpcd_value_day1 !== null &&
+              scheme.lpcd_value_day1 !== undefined
                 ? Number(scheme.lpcd_value_day1).toFixed(2)
                 : "N/A",
             [`LPCD (${date2})`]:
-              scheme.lpcd_value_day2 !== null && scheme.lpcd_value_day2 !== undefined
+              scheme.lpcd_value_day2 !== null &&
+              scheme.lpcd_value_day2 !== undefined
                 ? Number(scheme.lpcd_value_day2).toFixed(2)
                 : "N/A",
             [`LPCD (${date3})`]:
-              scheme.lpcd_value_day3 !== null && scheme.lpcd_value_day3 !== undefined
+              scheme.lpcd_value_day3 !== null &&
+              scheme.lpcd_value_day3 !== undefined
                 ? Number(scheme.lpcd_value_day3).toFixed(2)
                 : "N/A",
             [`LPCD (${date4})`]:
-              scheme.lpcd_value_day4 !== null && scheme.lpcd_value_day4 !== undefined
+              scheme.lpcd_value_day4 !== null &&
+              scheme.lpcd_value_day4 !== undefined
                 ? Number(scheme.lpcd_value_day4).toFixed(2)
                 : "N/A",
             [`LPCD (${date5})`]:
-              scheme.lpcd_value_day5 !== null && scheme.lpcd_value_day5 !== undefined
+              scheme.lpcd_value_day5 !== null &&
+              scheme.lpcd_value_day5 !== undefined
                 ? Number(scheme.lpcd_value_day5).toFixed(2)
                 : "N/A",
             [`LPCD (${date6})`]:
-              scheme.lpcd_value_day6 !== null && scheme.lpcd_value_day6 !== undefined
+              scheme.lpcd_value_day6 !== null &&
+              scheme.lpcd_value_day6 !== undefined
                 ? Number(scheme.lpcd_value_day6).toFixed(2)
                 : "N/A",
             [`LPCD (${date7})`]:
-              scheme.lpcd_value_day7 !== null && scheme.lpcd_value_day7 !== undefined
+              scheme.lpcd_value_day7 !== null &&
+              scheme.lpcd_value_day7 !== undefined
                 ? Number(scheme.lpcd_value_day7).toFixed(2)
                 : "N/A",
           };
@@ -787,21 +806,6 @@ const EnhancedLpcdDashboard = () => {
 
         // Save file
         XLSX.writeFile(wb, filename);
-
-        // Track export activity
-        trackDataExport(
-          "LPCD Dashboard Export",
-          filename,
-          dataToExport.length,
-          {
-            region: selectedRegion,
-            filter: currentFilter,
-            searchQuery: searchQuery,
-            commissionedFilter: commissionedFilter,
-            fullyCompletedFilter: fullyCompletedFilter,
-            schemeStatusFilter: schemeStatusFilter
-          }
-        );
 
         toast({
           title: "Export Successful",
@@ -853,11 +857,6 @@ const EnhancedLpcdDashboard = () => {
       });
     }
   }, [schemesError, toast]);
-
-  // Track page visit on component mount
-  useEffect(() => {
-    trackPageVisit("Village LPCD Dashboard", "village_lpcd_dashboard");
-  }, [trackPageVisit]);
 
   // State for village details dialog
   const [selectedVillage, setSelectedVillage] =
@@ -1031,7 +1030,11 @@ const EnhancedLpcdDashboard = () => {
                     return (
                       <div
                         key={`lpcd-day-${index + 1}`}
-                        className={`p-3 rounded-md text-center ${value !== null ? getLpcdStatusColor(value) : "bg-gray-100"}`}
+                        className={`p-3 rounded-md text-center ${
+                          value !== null
+                            ? getLpcdStatusColor(value)
+                            : "bg-gray-100"
+                        }`}
                       >
                         <p className="text-xs opacity-80">Day {item.day}</p>
                         <p className="text-lg font-semibold">
@@ -1085,12 +1088,16 @@ const EnhancedLpcdDashboard = () => {
               {/* Stats */}
               <div className="grid grid-cols-3 gap-4">
                 <Card
-                  className={`${daysBelowCount > 0 ? "bg-red-50" : "bg-gray-50"} border border-red-100`}
+                  className={`${
+                    daysBelowCount > 0 ? "bg-red-50" : "bg-gray-50"
+                  } border border-red-100`}
                 >
                   <CardContent className="p-4 text-center">
                     <p className="text-sm text-gray-600">Days Below 55L LPCD</p>
                     <p
-                      className={`text-2xl font-bold ${daysBelowCount > 0 ? "text-red-600" : "text-gray-600"}`}
+                      className={`text-2xl font-bold ${
+                        daysBelowCount > 0 ? "text-red-600" : "text-gray-600"
+                      }`}
                     >
                       {daysBelowCount}
                     </p>
@@ -1098,12 +1105,16 @@ const EnhancedLpcdDashboard = () => {
                 </Card>
 
                 <Card
-                  className={`${daysAboveCount > 0 ? "bg-green-50" : "bg-gray-50"} border border-green-100`}
+                  className={`${
+                    daysAboveCount > 0 ? "bg-green-50" : "bg-gray-50"
+                  } border border-green-100`}
                 >
                   <CardContent className="p-4 text-center">
                     <p className="text-sm text-gray-600">Days Above 55L LPCD</p>
                     <p
-                      className={`text-2xl font-bold ${daysAboveCount > 0 ? "text-green-600" : "text-gray-600"}`}
+                      className={`text-2xl font-bold ${
+                        daysAboveCount > 0 ? "text-green-600" : "text-gray-600"
+                      }`}
                     >
                       {daysAboveCount}
                     </p>
@@ -1111,16 +1122,26 @@ const EnhancedLpcdDashboard = () => {
                 </Card>
 
                 <Card
-                  className={`${consistentZeroLpcd === 1 ? "bg-gray-800" : "bg-gray-50"}`}
+                  className={`${
+                    consistentZeroLpcd === 1 ? "bg-gray-800" : "bg-gray-50"
+                  }`}
                 >
                   <CardContent className="p-4 text-center">
                     <p
-                      className={`text-sm ${consistentZeroLpcd === 1 ? "text-gray-300" : "text-gray-600"}`}
+                      className={`text-sm ${
+                        consistentZeroLpcd === 1
+                          ? "text-gray-300"
+                          : "text-gray-600"
+                      }`}
                     >
                       Zero Water for Week
                     </p>
                     <p
-                      className={`text-2xl font-bold ${consistentZeroLpcd === 1 ? "text-white" : "text-gray-600"}`}
+                      className={`text-2xl font-bold ${
+                        consistentZeroLpcd === 1
+                          ? "text-white"
+                          : "text-gray-600"
+                      }`}
                     >
                       {consistentZeroLpcd === 1 ? "Yes" : "No"}
                     </p>
@@ -1135,151 +1156,152 @@ const EnhancedLpcdDashboard = () => {
   };
 
   return (
-      <div className="w-full py-6 container mx-auto px-4">
-        <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
-          {/* Header Card */}
-          <div className="bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border-l-4 border-blue-600 shadow-sm">
-            <h1 className="text-3xl font-bold text-blue-900">LPCD Dashboard</h1>
-            <p className="text-blue-700 font-medium mt-1">
-              Monitor water supply across villages (Litres Per Capita per Day)
-            </p>
-          </div>
-
-          {/* Filters and Actions */}
-          <div className="flex flex-wrap items-center gap-3">
-
-            {/* Search Input */}
-            <div className="relative w-64">
-              <Input
-                type="search"
-                placeholder="Search scheme or village name..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPage(1);
-                }}
-                className="pr-8 border-blue-200 shadow-sm"
-              />
-              {searchQuery && (
-                <button
-                  onClick={() => setSearchQuery("")}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              )}
-            </div>
-
-            {/* Region Filter */}
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
-                <SelectValue placeholder="All Regions" />
-              </SelectTrigger>
-              <SelectContent className="border border-blue-100">
-                <SelectItem value="all">All Regions</SelectItem>
-                {regionsData.map((region) => (
-                  <SelectItem key={region.region_id} value={region.region_name}>
-                    {region.region_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* MJP Civil Status Filter Box */}
-            <div className="border border-blue-200 p-3 rounded-lg shadow-sm bg-white flex flex-col items-center">
-              <span className="text-blue-700 font-semibold mb-2">MJP Civil Status</span>
-              <div className="flex gap-2">
-                {/* Commissioned Status Filter */}
-                <Select
-                  value={commissionedFilter}
-                  onValueChange={handleCommissionedFilterChange}
-                >
-                  <SelectTrigger className="w-[160px] bg-white border border-blue-200 shadow-sm">
-                    <SelectValue placeholder="Commissioned Status" />
-                  </SelectTrigger>
-                  <SelectContent className="border border-blue-100">
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="Yes">Commissioned</SelectItem>
-                    <SelectItem value="No">Not Commissioned</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* MJP Fully Completed Filter */}
-                <Select
-                  value={fullyCompletedFilter}
-                  onValueChange={handleFullyCompletedFilterChange}
-                  disabled={commissionedFilter === "No"}
-                >
-                  <SelectTrigger className="w-[160px] bg-white border border-blue-200 shadow-sm">
-                    <SelectValue placeholder="Completion Status" />
-                  </SelectTrigger>
-                  <SelectContent className="border border-blue-100">
-                    <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="Fully Completed" disabled={commissionedFilter === "No"}>
-                      Fully Completed
-                    </SelectItem>
-                    <SelectItem value="In Progress">In Progress</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {/* IoT Status Filter */}
-            <Select
-              value={schemeStatusFilter}
-              onValueChange={handleSchemeStatusFilterChange}
-            >
-              <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
-                <SelectValue placeholder="IoT Status" />
-              </SelectTrigger>
-              <SelectContent className="border border-blue-100">
-                <SelectItem value="all">All IoT Status</SelectItem>
-                <SelectItem value="Connected">Connected</SelectItem>
-                <SelectItem value="Fully Completed">Fully Completed</SelectItem>
-                <SelectItem value="In Progress">In Progress</SelectItem>
-                <SelectItem value="Not-Connected">Not Connected</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Action Buttons */}
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => refetch()}
-              title="Refresh data"
-              className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
-            >
-              <RefreshCw className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={exportToExcel}
-              title="Export to Excel"
-              className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
-            >
-              <FileSpreadsheet className="h-4 w-4" />
-            </Button>
-            <Button
-              variant="outline"
-              onClick={() => setShowCharts(!showCharts)}
-              className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
-            >
-              {showCharts ? (
-                <>
-                  <ChartBarOff className="h-4 w-4 mr-2" /> Hide Charts
-                </>
-              ) : (
-                <>
-                  <BarChart3 className="h-4 w-4 mr-2" /> Show Charts
-                </>
-              )}
-            </Button>
-          </div>
+    <div className="w-full py-6 container mx-auto px-4">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-8 gap-4">
+        {/* Header Card */}
+        <div className="bg-gradient-to-r from-blue-50 to-white p-4 rounded-lg border-l-4 border-blue-600 shadow-sm">
+          <h1 className="text-3xl font-bold text-blue-900">LPCD Dashboard</h1>
+          <p className="text-blue-700 font-medium mt-1">
+            Monitor water supply across villages (Litres Per Capita per Day)
+          </p>
         </div>
-      
 
+        {/* Filters and Actions */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Search Input */}
+          <div className="relative w-64">
+            <Input
+              type="search"
+              placeholder="Search scheme or village name..."
+              value={searchQuery}
+              onChange={(e) => {
+                setSearchQuery(e.target.value);
+                setPage(1);
+              }}
+              className="pr-8 border-blue-200 shadow-sm"
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
+          {/* Region Filter */}
+          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+            <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
+              <SelectValue placeholder="All Regions" />
+            </SelectTrigger>
+            <SelectContent className="border border-blue-100">
+              <SelectItem value="all">All Regions</SelectItem>
+              {regionsData.map((region) => (
+                <SelectItem key={region.region_id} value={region.region_name}>
+                  {region.region_name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* MJP Civil Status Filter Box */}
+          <div className="border border-blue-200 p-3 rounded-lg shadow-sm bg-white flex flex-col items-center">
+            <span className="text-blue-700 font-semibold mb-2">
+              MJP Civil Status
+            </span>
+            <div className="flex gap-2">
+              {/* Commissioned Status Filter */}
+              <Select
+                value={commissionedFilter}
+                onValueChange={handleCommissionedFilterChange}
+              >
+                <SelectTrigger className="w-[160px] bg-white border border-blue-200 shadow-sm">
+                  <SelectValue placeholder="Commissioned Status" />
+                </SelectTrigger>
+                <SelectContent className="border border-blue-100">
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="Yes">Commissioned</SelectItem>
+                  <SelectItem value="No">Not Commissioned</SelectItem>
+                </SelectContent>
+              </Select>
+
+              {/* MJP Fully Completed Filter */}
+              <Select
+                value={fullyCompletedFilter}
+                onValueChange={handleFullyCompletedFilterChange}
+                disabled={commissionedFilter === "No"}
+              >
+                <SelectTrigger className="w-[160px] bg-white border border-blue-200 shadow-sm">
+                  <SelectValue placeholder="Completion Status" />
+                </SelectTrigger>
+                <SelectContent className="border border-blue-100">
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem
+                    value="Fully Completed"
+                    disabled={commissionedFilter === "No"}
+                  >
+                    Fully Completed
+                  </SelectItem>
+                  <SelectItem value="In Progress">In Progress</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* IoT Status Filter */}
+          <Select
+            value={schemeStatusFilter}
+            onValueChange={handleSchemeStatusFilterChange}
+          >
+            <SelectTrigger className="w-[180px] bg-white border border-blue-200 shadow-sm">
+              <SelectValue placeholder="IoT Status" />
+            </SelectTrigger>
+            <SelectContent className="border border-blue-100">
+              <SelectItem value="all">All IoT Status</SelectItem>
+              <SelectItem value="Connected">Connected</SelectItem>
+              <SelectItem value="Fully Completed">Fully Completed</SelectItem>
+              <SelectItem value="In Progress">In Progress</SelectItem>
+              <SelectItem value="Not-Connected">Not Connected</SelectItem>
+            </SelectContent>
+          </Select>
+
+          {/* Action Buttons */}
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => refetch()}
+            title="Refresh data"
+            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={exportToExcel}
+            title="Export to Excel"
+            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
+          >
+            <FileSpreadsheet className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => setShowCharts(!showCharts)}
+            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
+          >
+            {showCharts ? (
+              <>
+                <ChartBarOff className="h-4 w-4 mr-2" /> Hide Charts
+              </>
+            ) : (
+              <>
+                <BarChart3 className="h-4 w-4 mr-2" /> Show Charts
+              </>
+            )}
+          </Button>
+        </div>
+      </div>
 
       {/* Village details dialog */}
       <VillageDetailsDialog />
@@ -1294,28 +1316,55 @@ const EnhancedLpcdDashboard = () => {
           <div className="space-y-6">
             {/* Top Card - Total Villages */}
             <Card
-              className="w-full max-w-md mx-auto cursor-pointer transition-all duration-300 dashboard-card card-shadow bg-gradient-to-b from-white to-blue-50 border border-blue-200"
+              className="w-full max-w-md mx-auto cursor-pointer transition-all duration-300 transform hover:scale-[1.02] dashboard-card bg-gradient-to-b from-white to-blue-50 border border-blue-200 rounded-2xl shadow-lg"
               onClick={() => {
                 setCurrentFilter("all");
                 setSearchQuery("");
               }}
             >
-              <CardHeader className="bg-gradient-to-r from-blue-100 to-blue-50 border-b border-blue-200 pb-2">
-                <CardTitle className="text-center text-xl font-semibold text-blue-800">
+              <CardHeader className="bg-gradient-to-r from-blue-100 to-blue-50 border-b border-blue-200 rounded-t-2xl pb-3">
+                <CardTitle className="text-center text-2xl font-bold text-blue-900 tracking-wide">
                   Total Villages Covered Under LPCD
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-6 pb-4">
-                <p className="text-6xl font-bold text-center text-blue-700 drop-shadow-sm">
+
+              <CardContent className="pt-8 pb-6">
+                <p className="text-6xl font-extrabold text-center text-blue-700 drop-shadow-sm">
                   {filterCounts.total}
                 </p>
-                <div className="flex justify-center mt-4">
-                  <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-4 py-2 rounded-lg shadow-sm">
-                    <span className="font-medium">Total Population:</span>{" "}
+
+                <div className="flex justify-center mt-6">
+                  <div className="bg-gradient-to-r from-blue-600 to-blue-500 text-white px-5 py-2.5 rounded-full shadow-md">
+                    <span className="font-medium">Total Population: </span>
                     <span className="font-bold">
-                      {filterCounts.totalPopulation.toLocaleString()}
+                      {filterCounts.totalPopulation.toLocaleString("en-IN")}
                     </span>
                   </div>
+                </div>
+
+                <div className="text-center mt-6 text-blue-800">
+                  <span className="font-medium">
+                    Population Receiving Water Supply:
+                  </span>{" "}
+                  <span className="font-bold">
+                    {(() => {
+                      const noSupplyVillages =
+                        getGloballyFilteredSchemes().filter((scheme) =>
+                          hasNoCurrentWaterSupply(scheme),
+                        );
+                      const suppliedPopulation =
+                        filterCounts.totalPopulation -
+                        noSupplyVillages.reduce(
+                          (sum, village) =>
+                            sum +
+                            (village.population
+                              ? Number(village.population)
+                              : 0),
+                          0,
+                        );
+                      return suppliedPopulation.toLocaleString("en-IN");
+                    })()}
+                  </span>
                 </div>
               </CardContent>
             </Card>
@@ -1337,7 +1386,7 @@ const EnhancedLpcdDashboard = () => {
                     <div className="bg-green-100 text-green-800 px-4 py-2 rounded-lg shadow-sm border border-green-200">
                       <span className="font-medium">Population:</span>{" "}
                       <span className="font-bold">
-                        {filterCounts.above55Population.toLocaleString()}
+                        {filterCounts.above55Population.toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>
@@ -1420,10 +1469,10 @@ const EnhancedLpcdDashboard = () => {
                         </CardContent>
                       </Card>
                       <Card
-                        className="border-green-100"
+                        className="border-orange-100 rounded-lg overflow-hidden"
                         onClick={() => handleFilterChange("above80")}
                       >
-                        <CardContent className="p-3 flex justify-between items-center cursor-pointer hover:bg-green-50">
+                        <CardContent className="p-3 flex justify-between items-center cursor-pointer bg-orange-500">
                           <span className="text-sm text-green-700">
                             LPCD &gt; 80L
                           </span>
@@ -1452,7 +1501,7 @@ const EnhancedLpcdDashboard = () => {
                     <div className="bg-red-100 text-red-800 px-4 py-2 rounded-lg shadow-sm border border-red-200">
                       <span className="font-medium">Population:</span>{" "}
                       <span className="font-bold">
-                        {filterCounts.below55Population.toLocaleString()}
+                        {filterCounts.below55Population.toLocaleString("en-IN")}
                       </span>
                     </div>
                   </div>
@@ -1480,14 +1529,23 @@ const EnhancedLpcdDashboard = () => {
 
                           <span className="font-medium text-red-900">
                             {(() => {
-                              const noSupplyVillages = getGloballyFilteredSchemes().filter(scheme => 
-                                hasNoCurrentWaterSupply(scheme)
-                              );
+                              const noSupplyVillages =
+                                getGloballyFilteredSchemes().filter((scheme) =>
+                                  hasNoCurrentWaterSupply(scheme),
+                                );
                               const totalPopulation = noSupplyVillages.reduce(
-                                (sum, village) => sum + (village.population ? Number(village.population) : 0), 
-                                0
+                                (sum, village) =>
+                                  sum +
+                                  (village.population
+                                    ? Number(village.population)
+                                    : 0),
+                                0,
                               );
-                              return `${noSupplyVillages.length} (Pop: ${totalPopulation.toLocaleString()})`;
+                              return `${
+                                noSupplyVillages.length
+                              } (Pop: ${totalPopulation.toLocaleString(
+                                "en-IN",
+                              )})`;
                             })()}
                           </span>
                         </CardContent>
@@ -1687,15 +1745,17 @@ const EnhancedLpcdDashboard = () => {
                             return (
                               <TableRow
                                 key={`${scheme.scheme_id}-${scheme.village_name}`}
-                                className={`village-item ${isEven ? "bg-blue-50" : "bg-white"} hover:bg-blue-100 transition-all`}
+                                className={`village-item ${
+                                  isEven ? "bg-blue-50" : "bg-white"
+                                } hover:bg-blue-100 transition-all`}
                               >
-                                <TableCell className="font-medium border-b border-blue-200">
+                                <TableCell className="font-medium border-b border-blue-200 text-center align-middle">
                                   {(page - 1) * itemsPerPage + index + 1}
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200 font-medium">
+                                <TableCell className="border-b border-blue-200 font-medium text-left align-middle">
                                   {scheme.region}
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200">
+                                <TableCell className="border-b border-blue-200 text-left align-middle">
                                   <div className="font-medium text-blue-800">
                                     {scheme.scheme_name}
                                   </div>
@@ -1703,25 +1763,28 @@ const EnhancedLpcdDashboard = () => {
                                     ID: {scheme.scheme_id}
                                   </div>
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200 font-medium text-gray-800">
+                                <TableCell className="border-b border-blue-200 font-medium text-gray-800 text-left align-middle">
                                   {scheme.village_name}
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200 text-center font-mono font-medium">
-                                  {scheme.population?.toLocaleString() || "N/A"}
+                                <TableCell className="border-b border-blue-200 text-center font-mono font-medium align-middle">
+                                  {scheme.population?.toLocaleString("en-IN") ||
+                                    "N/A"}
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200">
+                                <TableCell className="border-b border-blue-200 text-center align-middle">
                                   <LpcdBadge value={lpcdValue} />
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200">
+                                <TableCell className="border-b border-blue-200 text-center align-middle">
                                   <Badge
                                     variant="outline"
-                                    className={`${getLpcdStatusColor(lpcdValue)} border-0`}
+                                    className={`${getLpcdStatusColor(
+                                      lpcdValue,
+                                    )} border-0`}
                                   >
                                     {getLpcdStatusText(lpcdValue)}
                                   </Badge>
                                 </TableCell>
-                                <TableCell className="border-b border-blue-200">
-                                  <div className="flex space-x-2">
+                                <TableCell className="border-b border-blue-200 text-center align-middle">
+                                  <div className="flex space-x-2 justify-center">
                                     <Button
                                       variant="outline"
                                       size="sm"
