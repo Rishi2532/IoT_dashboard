@@ -304,6 +304,11 @@ const ChlorineDashboard: React.FC = () => {
   const handleFullyCompletedFilterChange = (value: string) => {
     setFullyCompletedFilter(value);
 
+    // Track filter usage
+    if (value !== "all") {
+      trackFilterUsage("completion_status", value, filteredData.length, "chlorine_dashboard");
+    }
+
     // If "Fully Completed", set "Commissioned" to "Yes" if not already set
     if (value === "Fully Completed" && commissionedFilter === "No") {
       // Automatically adjust the commissioned filter to allow the selection
@@ -317,6 +322,11 @@ const ChlorineDashboard: React.FC = () => {
   // Handler for scheme status filter changes
   const handleSchemeStatusFilterChange = (value: string) => {
     setSchemeStatusFilter(value);
+
+    // Track filter usage
+    if (value !== "all") {
+      trackFilterUsage("iot_status", value, filteredData.length, "chlorine_dashboard");
+    }
 
     // Reset page to 1 when filter changes
     setPage(1);
@@ -553,6 +563,12 @@ const ChlorineDashboard: React.FC = () => {
   // Handler for dashboard card clicks
   const handleCardClick = (range: ChlorineRange) => {
     setSelectedCardFilter(range);
+    
+    // Track card filter usage
+    if (range !== "all") {
+      trackFilterUsage("chlorine_range", getFilterTitle(range), filteredData.length, "chlorine_dashboard");
+    }
+    
     setPage(1); // Reset to first page when filter changes
   };
 
@@ -867,8 +883,18 @@ const ChlorineDashboard: React.FC = () => {
                 className="pl-9 pr-4 py-2 border-blue-200 focus:ring-blue-500 focus:border-blue-500"
                 value={searchQuery}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value);
+                  const newValue = e.target.value;
+                  setSearchQuery(newValue);
                   setPage(1); // Reset to first page on search
+                  
+                  // Track search activity after user stops typing (debounced)
+                  if (newValue.trim().length > 2) {
+                    setTimeout(() => {
+                      if (searchQuery === newValue) { // Only track if value hasn't changed
+                        trackFilterUsage("search", newValue, filteredData.length, "chlorine_dashboard");
+                      }
+                    }, 1000);
+                  }
                 }}
               />
               {searchQuery && (
@@ -1498,9 +1524,11 @@ const ChlorineDashboard: React.FC = () => {
                                 variant="outline"
                                 size="sm"
                                 className="py-1 px-2 h-8 text-xs"
-                                onClick={() =>
-                                  window.open(item.dashboard_url, "_blank")
-                                }
+                                onClick={() => {
+                                  // Track external dashboard access
+                                  trackDashboardAccess(item.dashboard_url!, "PI Vision Chlorine Dashboard");
+                                  window.open(item.dashboard_url, "_blank");
+                                }}
                               >
                                 <BarChart className="h-3.5 w-3.5 mr-1" /> View
                               </Button>

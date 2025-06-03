@@ -1505,9 +1505,11 @@ const PressureDashboard: React.FC = () => {
                             variant="outline"
                             size="sm"
                             className="py-1 px-2 h-8 text-xs"
-                            onClick={() =>
-                              window.open(item.dashboard_url, "_blank")
-                            }
+                            onClick={() => {
+                              // Track external dashboard access
+                              trackDashboardAccess(item.dashboard_url!, "PI Vision Pressure Dashboard");
+                              window.open(item.dashboard_url, "_blank");
+                            }}
                           >
                             <Gauge className="h-3.5 w-3.5 mr-1" /> View
                           </Button>
