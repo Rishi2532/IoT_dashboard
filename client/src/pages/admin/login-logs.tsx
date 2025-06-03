@@ -307,8 +307,14 @@ export default function LoginLogsPage() {
                                     <div className="flex-shrink-0 mt-0.5">
                                       {activity.activity_type === 'file_download' ? (
                                         <Download className="h-4 w-4 text-blue-500" />
+                                      ) : activity.activity_type === 'data_export' ? (
+                                        <Database className="h-4 w-4 text-purple-500" />
                                       ) : activity.activity_type === 'page_visit' ? (
                                         <Eye className="h-4 w-4 text-green-500" />
+                                      ) : activity.activity_type === 'filter_applied' || activity.activity_type === 'scheme_filter' || activity.activity_type === 'region_filter' ? (
+                                        <Filter className="h-4 w-4 text-orange-500" />
+                                      ) : activity.activity_type === 'dashboard_access' ? (
+                                        <Map className="h-4 w-4 text-indigo-500" />
                                       ) : (
                                         <FileText className="h-4 w-4 text-gray-500" />
                                       )}
@@ -330,17 +336,49 @@ export default function LoginLogsPage() {
                                               <strong>Page:</strong> {activity.page_url}
                                             </p>
                                           )}
+                                          {activity.metadata && (
+                                            <div className="text-sm text-muted-foreground mt-1 space-y-1">
+                                              {activity.metadata.filter_applied && (
+                                                <p><strong>Filter:</strong> {activity.metadata.filter_applied}</p>
+                                              )}
+                                              {activity.metadata.export_format && (
+                                                <p><strong>Format:</strong> {activity.metadata.export_format}</p>
+                                              )}
+                                              {activity.metadata.data_count && (
+                                                <p><strong>Records:</strong> {activity.metadata.data_count}</p>
+                                              )}
+                                              {activity.metadata.scheme_filter && (
+                                                <p><strong>Scheme:</strong> {activity.metadata.scheme_filter}</p>
+                                              )}
+                                              {activity.metadata.region_filter && (
+                                                <p><strong>Region:</strong> {activity.metadata.region_filter}</p>
+                                              )}
+                                            </div>
+                                          )}
                                         </div>
                                         <div className="text-xs text-muted-foreground ml-4">
                                           {format(new Date(activity.timestamp), 'HH:mm:ss')}
                                         </div>
                                       </div>
-                                      <Badge 
-                                        variant="outline" 
-                                        className="mt-2 text-xs"
-                                      >
-                                        {activity.activity_type.replace('_', ' ')}
-                                      </Badge>
+                                      <div className="flex gap-2 mt-2">
+                                        <Badge 
+                                          variant={
+                                            activity.activity_type === 'file_download' ? "default" :
+                                            activity.activity_type === 'data_export' ? "secondary" :
+                                            activity.activity_type === 'page_visit' ? "outline" :
+                                            activity.activity_type.includes('filter') ? "destructive" :
+                                            "outline"
+                                          }
+                                          className="text-xs"
+                                        >
+                                          {activity.activity_type.replace('_', ' ')}
+                                        </Badge>
+                                        {activity.activity_type === 'data_export' && activity.metadata?.record_count && (
+                                          <Badge variant="outline" className="text-xs">
+                                            {activity.metadata.record_count} records
+                                          </Badge>
+                                        )}
+                                      </div>
                                     </div>
                                   </div>
                                 ))}
