@@ -99,6 +99,7 @@ export interface IStorage {
   logUserActivity(activity: InsertUserActivityLog): Promise<UserActivityLog>;
   getUserActivityLogs(userId?: number, limit?: number): Promise<UserActivityLog[]>;
   getUserActivityLogsBySession(sessionId: string, limit?: number): Promise<UserActivityLog[]>;
+  getAllUserActivities(limit?: number): Promise<UserActivityLog[]>;
 
   // Region operations
   getAllRegions(): Promise<Region[]>;

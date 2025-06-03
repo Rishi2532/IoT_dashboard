@@ -6,6 +6,7 @@ import {
   waterSchemeData,
   chlorineData,
   pressureData,
+  reportFiles,
   userLoginLogs,
   userActivityLogs,
   type User,
@@ -23,6 +24,8 @@ import {
   type PressureData,
   type InsertPressureData,
   type UpdatePressureData,
+  type ReportFile,
+  type InsertReportFile,
   type UserLoginLog,
   type InsertUserLoginLog,
   type UserActivityLog,
@@ -128,6 +131,78 @@ export class DatabaseStorage implements IStorage {
       .where(eq(userLoginLogs.user_id, userId))
       .orderBy(userLoginLogs.login_time)
       .limit(limit);
+  }
+
+  // User Activity Logging Methods
+  async logUserActivity(activityLog: InsertUserActivityLog): Promise<UserActivityLog> {
+    const [log] = await db.insert(userActivityLogs).values(activityLog).returning();
+    return log;
+  }
+
+  async getUserActivityLogsBySession(sessionId: string, limit: number = 50): Promise<UserActivityLog[]> {
+    return await db
+      .select()
+      .from(userActivityLogs)
+      .where(eq(userActivityLogs.session_id, sessionId))
+      .orderBy(desc(userActivityLogs.timestamp))
+      .limit(limit);
+  }
+
+  async getUserActivityLogsByUserId(userId: number, limit: number = 100): Promise<UserActivityLog[]> {
+    return await db
+      .select()
+      .from(userActivityLogs)
+      .where(eq(userActivityLogs.user_id, userId))
+      .orderBy(desc(userActivityLogs.timestamp))
+      .limit(limit);
+  }
+
+  async getAllUserActivities(limit: number = 200): Promise<UserActivityLog[]> {
+    return await db
+      .select()
+      .from(userActivityLogs)
+      .orderBy(desc(userActivityLogs.timestamp))
+      .limit(limit);
+  }
+
+  async getUserActivityLogs(userId?: number, limit: number = 100): Promise<UserActivityLog[]> {
+    if (userId) {
+      return await this.getUserActivityLogsByUserId(userId, limit);
+    }
+    return await this.getAllUserActivities(limit);
+  }
+
+  // Report File Methods
+  async getAllReportFiles(): Promise<ReportFile[]> {
+    return await db.select().from(reportFiles).orderBy(desc(reportFiles.upload_date));
+  }
+
+  async getReportFileById(id: string): Promise<ReportFile | undefined> {
+    const [file] = await db.select().from(reportFiles).where(eq(reportFiles.id, parseInt(id)));
+    return file;
+  }
+
+  async getReportFilesByType(reportType: string): Promise<ReportFile[]> {
+    return await db.select().from(reportFiles).where(eq(reportFiles.report_type, reportType));
+  }
+
+  async createReportFile(data: InsertReportFile): Promise<ReportFile> {
+    const [file] = await db.insert(reportFiles).values(data).returning();
+    return file;
+  }
+
+  async updateReportFile(id: string, data: Partial<ReportFile>): Promise<ReportFile> {
+    const [updatedFile] = await db
+      .update(reportFiles)
+      .set(data)
+      .where(eq(reportFiles.id, parseInt(id)))
+      .returning();
+    return updatedFile;
+  }
+
+  async deleteReportFile(id: string): Promise<boolean> {
+    const result = await db.delete(reportFiles).where(eq(reportFiles.id, parseInt(id)));
+    return result.rowCount !== undefined && result.rowCount > 0;
   }
 
   async getAllRegions(): Promise<Region[]> {
