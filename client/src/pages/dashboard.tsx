@@ -42,6 +42,11 @@ export default function Dashboard() {
   const { toast } = useToast();
   const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
 
+  // Track page visit on component mount
+  useEffect(() => {
+    trackPageVisit("Main Dashboard", window.location.href);
+  }, [trackPageVisit]);
+
   // Map configuration
   const mapRef = useRef(null);
 
