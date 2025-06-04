@@ -133,7 +133,7 @@ type LpcdRange =
 
 const EnhancedLpcdDashboard = () => {
   const { toast } = useToast();
-  const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
+  const { trackPageVisit, trackDataExport, trackFilterUsage, trackFileDownload } = useComprehensiveActivityTracker();
 
   // Filter state
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -814,12 +814,11 @@ const EnhancedLpcdDashboard = () => {
         // Save file
         XLSX.writeFile(wb, filename);
 
-        // Track the file download activity
-        trackFileDownload(filename, "xlsx", "village_lpcd_dashboard", {
-          record_count: dataToExport.length,
+        // Track the data export activity
+        trackDataExport("village_lpcd_data", "xlsx", dataToExport.length, {
           region_filter: selectedRegion !== "all" ? selectedRegion : null,
           lpcd_filter: currentFilter !== "all" ? currentFilter : null,
-          export_type: "village_lpcd_data"
+          filename: filename
         });
 
         toast({
