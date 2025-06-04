@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { useQuery } from "@tanstack/react-query";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { useComprehensiveActivityTracker } from "@/hooks/use-comprehensive-activity-tracker";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -132,6 +133,7 @@ type LpcdRange =
 
 const EnhancedLpcdDashboard = () => {
   const { toast } = useToast();
+  const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
 
   // Filter state
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -145,6 +147,11 @@ const EnhancedLpcdDashboard = () => {
   // Pagination state
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Track page visit on component mount
+  useEffect(() => {
+    trackPageVisit("Village LPCD Dashboard");
+  }, [trackPageVisit]);
 
   // Fetch all water scheme data
   const {
