@@ -4,9 +4,28 @@
  */
 
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
-// Load environment variables from .env file if present
-dotenv.config();
+// Load environment variables with priority for local configurations
+// 1. Check for .env.vscode (VS Code development)
+// 2. Check for .env.local (general local development)
+// 3. Fall back to .env
+
+const envVscodePath = path.join(process.cwd(), '.env.vscode');
+const envLocalPath = path.join(process.cwd(), '.env.local');
+const envPath = path.join(process.cwd(), '.env');
+
+if (fs.existsSync(envVscodePath)) {
+  console.log('Loading VS Code environment configuration (.env.vscode)');
+  dotenv.config({ path: envVscodePath });
+} else if (fs.existsSync(envLocalPath)) {
+  console.log('Loading local environment configuration (.env.local)');
+  dotenv.config({ path: envLocalPath });
+} else {
+  console.log('Loading default environment configuration (.env)');
+  dotenv.config({ path: envPath });
+}
 
 /**
  * Server environment configuration

@@ -2,7 +2,21 @@ import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
 import fs from 'fs';
 import path from 'path';
+import dotenv from 'dotenv';
 import { regions, schemeStatuses, users, waterSchemeData, chlorineData, pressureData, reportFiles } from "@shared/schema";
+
+// Load environment variables with priority for local configurations
+const envVscodePath = path.join(process.cwd(), '.env.vscode');
+const envLocalPath = path.join(process.cwd(), '.env.local');
+const envPath = path.join(process.cwd(), '.env');
+
+if (fs.existsSync(envVscodePath)) {
+  dotenv.config({ path: envVscodePath });
+} else if (fs.existsSync(envLocalPath)) {
+  dotenv.config({ path: envLocalPath });
+} else {
+  dotenv.config({ path: envPath });
+}
 
 const { Pool } = pg;
 
