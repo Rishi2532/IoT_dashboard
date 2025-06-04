@@ -814,6 +814,14 @@ const EnhancedLpcdDashboard = () => {
         // Save file
         XLSX.writeFile(wb, filename);
 
+        // Track the file download activity
+        trackFileDownload(filename, "xlsx", "village_lpcd_dashboard", {
+          record_count: dataToExport.length,
+          region_filter: selectedRegion !== "all" ? selectedRegion : null,
+          lpcd_filter: currentFilter !== "all" ? currentFilter : null,
+          export_type: "village_lpcd_data"
+        });
+
         toast({
           title: "Export Successful",
           description: `${dataToExport.length} records exported to Excel`,
