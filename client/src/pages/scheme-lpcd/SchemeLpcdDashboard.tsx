@@ -780,13 +780,12 @@ const SchemeLpcdDashboard = () => {
         // Save the file
         XLSX.writeFile(wb, filename);
 
-        // Track the file download activity
-        trackFileDownload(filename, "xlsx", "scheme_lpcd_dashboard", {
-          record_count: dataToExport.length,
+        // Track the data export activity
+        trackDataExport("scheme_lpcd_data", "xlsx", dataToExport.length, {
           region_filter: selectedRegion !== "all" ? selectedRegion : null,
           lpcd_filter: currentFilter !== "all" ? currentFilter : null,
           commissioned_filter: commissionedFilter !== "all" ? commissionedFilter : null,
-          export_type: "scheme_lpcd_data"
+          filename: filename
         });
 
         toast({
