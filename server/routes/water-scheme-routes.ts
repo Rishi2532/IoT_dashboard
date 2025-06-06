@@ -132,7 +132,11 @@ router.get('/population-stats', async (req, res) => {
           
           -- LPCD analysis based on latest lpcd_date_day7
           COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) as villages_lpcd_above_55,
-          COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_lpcd_below_55
+          COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_lpcd_below_55,
+          
+          -- Population analysis for LPCD categories
+          SUM(CASE WHEN lpcd_value_day7 > 55 THEN population ELSE 0 END) as population_lpcd_above_55,
+          SUM(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) as population_lpcd_below_55
           
         FROM water_scheme_data 
         WHERE population IS NOT NULL AND population > 0
