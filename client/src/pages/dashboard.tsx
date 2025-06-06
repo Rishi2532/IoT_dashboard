@@ -7,7 +7,7 @@ import RegionComparisonChart from "@/components/dashboard/region-comparison-char
 import SimpleMaharashtraMap from "@/components/dashboard/simple-maharashtra-map";
 import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
-import PopulationCards from "@/components/dashboard/population-cards";
+import CompactPopulationCards from "@/components/dashboard/compact-population-cards";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";
@@ -566,11 +566,6 @@ export default function Dashboard() {
       {/* Daily Updates */}
       <DailyUpdates isLoading={false} />
 
-      {/* Population Cards Layout */}
-      <div className="mb-6">
-        <PopulationCards selectedRegion={selectedRegion} />
-      </div>
-
       {/* Region Filter in card */}
       <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-lg border shadow-sm relative z-10">
         <h2 className="text-base sm:text-lg font-medium mb-2 sm:mb-3 text-blue-800">
@@ -653,35 +648,43 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Enhanced Region Comparison Chart (50% Width) */}
-      <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all flex flex-col mb-4 sm:mb-6 w-1/2">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4">
-          <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center mb-2 sm:mb-0">
-            <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
-            Region Wise Project Status
-          </h2>
-          <div className="flex flex-wrap space-x-2 sm:space-x-4 items-center text-[9px] sm:text-xs">
-            <span className="flex items-center">
-              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-green-500 mr-1"></span>
-              <span className="text-green-700">Completed ESR</span>
-            </span>
-            <span className="flex items-center">
-              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-pink-500 mr-1"></span>
-              <span className="text-pink-700">Completed Villages</span>
-            </span>
-            <span className="flex items-center">
-              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-red-500 mr-1"></span>
-              <span className="text-red-700">Completed Schemes</span>
-            </span>
+      {/* Side-by-side layout: Region Chart (50%) + Population Cards (50%) */}
+      <div className="flex flex-col lg:flex-row gap-4 mb-4 sm:mb-6">
+        {/* Enhanced Region Comparison Chart (50% Width) */}
+        <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 p-3 sm:p-4 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all flex flex-col w-full lg:w-1/2">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3">
+            <h2 className="text-sm sm:text-base font-semibold text-blue-800 flex items-center mb-2 sm:mb-0">
+              <span className="w-1.5 h-5 bg-blue-500 rounded-sm mr-2"></span>
+              Region Wise Project Status
+            </h2>
+            <div className="flex flex-wrap space-x-2 items-center text-[8px] sm:text-[10px]">
+              <span className="flex items-center">
+                <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-sm bg-green-500 mr-1"></span>
+                <span className="text-green-700">ESR</span>
+              </span>
+              <span className="flex items-center">
+                <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-sm bg-pink-500 mr-1"></span>
+                <span className="text-pink-700">Villages</span>
+              </span>
+              <span className="flex items-center">
+                <span className="h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-sm bg-red-500 mr-1"></span>
+                <span className="text-red-700">Schemes</span>
+              </span>
+            </div>
+          </div>
+          <div className="w-full overflow-hidden flex-1 flex flex-col bg-white rounded-lg p-2">
+            <div className="w-full flex-1 flex flex-col h-[50vh]">
+              <RegionComparisonChart
+                regions={regions || []}
+                isLoading={isRegionsLoading}
+              />
+            </div>
           </div>
         </div>
-        <div className="w-full overflow-hidden flex-1 flex flex-col bg-white rounded-lg p-2 sm:p-3">
-          <div className="w-full flex-1 flex flex-col h-[50vh]">
-            <RegionComparisonChart
-              regions={regions || []}
-              isLoading={isRegionsLoading}
-            />
-          </div>
+
+        {/* Population Cards (50% Width) */}
+        <div className="w-full lg:w-1/2 h-[50vh] overflow-y-auto">
+          <CompactPopulationCards selectedRegion={selectedRegion} />
         </div>
       </div>
 
