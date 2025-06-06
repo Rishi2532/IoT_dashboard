@@ -40,7 +40,8 @@ export default function Dashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showEnhancedMap, setShowEnhancedMap] = useState(false);
   const { toast } = useToast();
-  const { trackPageVisit, trackDataExport, trackFilterUsage } = useComprehensiveActivityTracker();
+  const { trackPageVisit, trackDataExport, trackFilterUsage } =
+    useComprehensiveActivityTracker();
 
   // Track page visit on component mount
   useEffect(() => {
@@ -429,12 +430,14 @@ export default function Dashboard() {
       const appliedFilters = {
         region: selectedRegion !== "all" ? selectedRegion : undefined,
         statusFilter: statusFilter !== "all" ? statusFilter : undefined,
-        geoFilter: isFiltering ? "Geographic Filter Applied" : undefined
+        geoFilter: isFiltering ? "Geographic Filter Applied" : undefined,
       };
 
       // Clean up undefined values for tracking
       const cleanedFilters = Object.fromEntries(
-        Object.entries(appliedFilters).filter(([_, value]) => value !== undefined)
+        Object.entries(appliedFilters).filter(
+          ([_, value]) => value !== undefined,
+        ),
       );
 
       trackDataExport(
@@ -445,8 +448,8 @@ export default function Dashboard() {
         {
           exportSource: "main_dashboard",
           totalSchemesAvailable: schemes.length,
-          filteredSchemes: allFilteredSchemes.length
-        }
+          filteredSchemes: allFilteredSchemes.length,
+        },
       );
 
       toast({
@@ -644,8 +647,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Enhanced Region Comparison Chart (Full Width) */}
-      <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all flex flex-col mb-4 sm:mb-6">
+      {/* Enhanced Region Comparison Chart (50% Width) */}
+      <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all flex flex-col mb-4 sm:mb-6 w-1/2">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3 sm:mb-4">
           <h2 className="text-base sm:text-lg font-semibold text-blue-800 flex items-center mb-2 sm:mb-0">
             <span className="w-1.5 h-6 bg-blue-500 rounded-sm mr-2"></span>
@@ -653,25 +656,21 @@ export default function Dashboard() {
           </h2>
           <div className="flex flex-wrap space-x-2 sm:space-x-4 items-center text-[9px] sm:text-xs">
             <span className="flex items-center">
-              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-blue-500 mr-1"></span>
-              <span className="text-blue-700">ESR</span>
-            </span>
-            <span className="flex items-center">
               <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-green-500 mr-1"></span>
               <span className="text-green-700">Completed ESR</span>
             </span>
             <span className="flex items-center">
-              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-amber-500 mr-1"></span>
-              <span className="text-amber-700">Villages</span>
+              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-pink-500 mr-1"></span>
+              <span className="text-pink-700">Completed Villages</span>
             </span>
             <span className="flex items-center">
-              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-purple-500 mr-1"></span>
-              <span className="text-purple-700">Schemes</span>
+              <span className="h-2 w-2 sm:h-3 sm:w-3 rounded-sm bg-red-500 mr-1"></span>
+              <span className="text-red-700">Completed Schemes</span>
             </span>
           </div>
         </div>
         <div className="w-full overflow-hidden flex-1 flex flex-col bg-white rounded-lg p-2 sm:p-3">
-          <div className="w-full flex-1 flex flex-col h-[400px] sm:h-[550px]">
+          <div className="w-full flex-1 flex flex-col h-[50vh]">
             <RegionComparisonChart
               regions={regions || []}
               isLoading={isRegionsLoading}

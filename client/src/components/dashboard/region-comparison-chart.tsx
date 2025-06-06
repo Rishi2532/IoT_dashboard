@@ -24,9 +24,9 @@ export default function RegionComparisonChart({
     const handleResize = () => {
       setScreenWidth(window.innerWidth);
     };
-    
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Generate datasets from region data
@@ -49,8 +49,8 @@ export default function RegionComparisonChart({
       } else if (screenWidth < 768) {
         // Small screens - use shorter abbreviations
         if (region.region_name === "Chhatrapati Sambhajinagar") return "C. Sbj";
-        return region.region_name.length > 6 
-          ? region.region_name.substring(0, 6) + "." 
+        return region.region_name.length > 6
+          ? region.region_name.substring(0, 6) + "."
           : region.region_name;
       } else {
         // Regular abbreviation for larger screens
@@ -60,57 +60,37 @@ export default function RegionComparisonChart({
       }
     });
 
-    // Extract all required data from regions
+    // Extract only fully completed data from regions
     return {
       labels,
       datasets: [
-        {
-          label: "Total ESR Integrated",
-          data: sortedRegions.map((region) => region.total_esr_integrated || 0),
-          backgroundColor: "rgba(59, 130, 246, 0.6)",
-          borderColor: "rgba(59, 130, 246, 1)",
-          borderWidth: 1,
-          hidden: selectedDatasets.length > 0 && !selectedDatasets.includes(0),
-        },
         {
           label: "Fully Completed ESR",
           data: sortedRegions.map((region) => region.fully_completed_esr || 0),
           backgroundColor: "rgba(16, 185, 129, 0.6)",
           borderColor: "rgba(16, 185, 129, 1)",
           borderWidth: 1,
-          hidden: selectedDatasets.length > 0 && !selectedDatasets.includes(1),
-        },
-        {
-          label: "Total Villages Integrated",
-          data: sortedRegions.map((region) => region.total_villages_integrated || 0),
-          backgroundColor: "rgba(245, 158, 11, 0.6)",
-          borderColor: "rgba(245, 158, 11, 1)",
-          borderWidth: 1,
-          hidden: selectedDatasets.length > 0 && !selectedDatasets.includes(2),
+          hidden: selectedDatasets.length > 0 && !selectedDatasets.includes(0),
         },
         {
           label: "Fully Completed Villages",
-          data: sortedRegions.map((region) => region.fully_completed_villages || 0),
+          data: sortedRegions.map(
+            (region) => region.fully_completed_villages || 0,
+          ),
           backgroundColor: "rgba(236, 72, 153, 0.6)",
           borderColor: "rgba(236, 72, 153, 1)",
           borderWidth: 1,
-          hidden: selectedDatasets.length > 0 && !selectedDatasets.includes(3),
-        },
-        {
-          label: "Total Schemes Integrated",
-          data: sortedRegions.map((region) => region.total_schemes_integrated || 0),
-          backgroundColor: "rgba(124, 58, 237, 0.6)",
-          borderColor: "rgba(124, 58, 237, 1)",
-          borderWidth: 1,
-          hidden: selectedDatasets.length > 0 && !selectedDatasets.includes(4),
+          hidden: selectedDatasets.length > 0 && !selectedDatasets.includes(1),
         },
         {
           label: "Fully Completed Schemes",
-          data: sortedRegions.map((region) => region.fully_completed_schemes || 0),
+          data: sortedRegions.map(
+            (region) => region.fully_completed_schemes || 0,
+          ),
           backgroundColor: "rgba(239, 68, 68, 0.6)",
           borderColor: "rgba(239, 68, 68, 1)",
           borderWidth: 1,
-          hidden: selectedDatasets.length > 0 && !selectedDatasets.includes(5),
+          hidden: selectedDatasets.length > 0 && !selectedDatasets.includes(2),
         },
       ],
     };
@@ -120,9 +100,11 @@ export default function RegionComparisonChart({
   const handleLegendClick = (datasetIndex: number) => {
     if (selectedDatasets.includes(datasetIndex)) {
       // If already selected, remove it
-      const newSelected = selectedDatasets.filter(idx => idx !== datasetIndex);
+      const newSelected = selectedDatasets.filter(
+        (idx) => idx !== datasetIndex,
+      );
       setSelectedDatasets(newSelected);
-      
+
       // If nothing is selected now, hide the reset button
       if (newSelected.length === 0) {
         setShowResetButton(false);
@@ -159,7 +141,7 @@ export default function RegionComparisonChart({
     // Adjust chart configuration based on screen size
     const isMobile = screenWidth < 640;
     const isTablet = screenWidth >= 640 && screenWidth < 1024;
-    
+
     chartInstance.current = new Chart(ctx, {
       type: "bar",
       data: chartData,
@@ -197,11 +179,19 @@ export default function RegionComparisonChart({
               // Show fewer ticks on mobile
               maxTicksLimit: isMobile ? 5 : 10,
             },
-            suggestedMax: function(context: any) {
+            suggestedMax: function (context: any) {
               let maxValue = 0;
-              if (context.chart && context.chart.data && context.chart.data.datasets) {
-                const allData = context.chart.data.datasets.flatMap((d: any) => d.data || []);
-                maxValue = Math.max(...allData.filter((v: any) => typeof v === 'number'));
+              if (
+                context.chart &&
+                context.chart.data &&
+                context.chart.data.datasets
+              ) {
+                const allData = context.chart.data.datasets.flatMap(
+                  (d: any) => d.data || [],
+                );
+                maxValue = Math.max(
+                  ...allData.filter((v: any) => typeof v === "number"),
+                );
               }
               return maxValue * 1.2;
             },
@@ -223,7 +213,7 @@ export default function RegionComparisonChart({
         plugins: {
           legend: {
             position: "top",
-            onClick: function(e, legendItem) {
+            onClick: function (e, legendItem) {
               const index = legendItem.datasetIndex;
               if (index !== undefined) {
                 handleLegendClick(index);
@@ -237,8 +227,9 @@ export default function RegionComparisonChart({
                 weight: "bold",
               },
               usePointStyle: true,
-              generateLabels: function(chart) {
-                const labels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+              generateLabels: function (chart) {
+                const labels =
+                  Chart.defaults.plugins.legend.labels.generateLabels(chart);
                 // Add visual indicator for selected items
                 labels.forEach((label, i) => {
                   if (selectedDatasets.includes(i)) {
@@ -253,13 +244,15 @@ export default function RegionComparisonChart({
                   }
                 });
                 return labels;
-              }
+              },
             },
             // Change legend display on mobile to save space
             display: !isMobile || selectedDatasets.length > 0,
             title: {
               display: !isMobile, // Hide on mobile
-              text: isMobile ? "Tap to filter" : "Region Wise Project Status (Click to Toggle)",
+              text: isMobile
+                ? "Tap to filter"
+                : "Region Wise Project Status (Click to Toggle)",
               font: {
                 size: isMobile ? 12 : isTablet ? 14 : 18,
                 weight: "bold",
@@ -290,47 +283,53 @@ export default function RegionComparisonChart({
               size: isMobile ? 8 : 12,
             },
             formatter: (value: any) => {
-              if (value === 0 || value === '0' || !value) {
-                return '0';
+              if (value === 0 || value === "0" || !value) {
+                return "0";
               }
               // On mobile, abbreviate large numbers
               if (isMobile && value > 999) {
-                return (value / 1000).toFixed(1) + 'k';
+                return (value / 1000).toFixed(1) + "k";
               }
               return value.toString();
             },
             display: (context: any) => {
               // On mobile, only show labels for larger values to avoid clutter
               if (isMobile) {
-                const value = Number(context.dataset.data[context.dataIndex] || 0);
+                const value = Number(
+                  context.dataset.data[context.dataIndex] || 0,
+                );
                 return value > 20; // Only show labels for values > 20 on mobile
               }
               return true;
             },
             anchor: "end",
-            align: function(context: any) {
+            align: function (context: any) {
               const datasetIndex = context.datasetIndex || 0;
-              const value = Number(context.dataset.data[context.dataIndex] || 0);
-              
+              const value = Number(
+                context.dataset.data[context.dataIndex] || 0,
+              );
+
               if (isMobile) {
-                return value > 100 ? 'end' : 'start';
+                return value > 100 ? "end" : "start";
               }
-              
+
               if (datasetIndex === 0 && value > 300) {
-                return 'end';
+                return "end";
               } else if (value > 150) {
-                return 'start';
+                return "start";
               }
-              return 'top';
+              return "top";
             },
-            offset: function(context: any) {
+            offset: function (context: any) {
               const datasetIndex = context.datasetIndex || 0;
-              const value = Number(context.dataset.data[context.dataIndex] || 0);
-              
+              const value = Number(
+                context.dataset.data[context.dataIndex] || 0,
+              );
+
               if (isMobile) {
                 return value > 100 ? 8 : 2;
               }
-              
+
               if (datasetIndex === 0 && value > 300) {
                 return 15;
               } else if (value > 150) {
@@ -338,7 +337,7 @@ export default function RegionComparisonChart({
               } else if (value > 100) {
                 return 5;
               }
-              
+
               return 2;
             },
           },
@@ -356,7 +355,7 @@ export default function RegionComparisonChart({
   return (
     <div
       className="h-full flex flex-col"
-      style={{ height: "550px", maxHeight: "600px" }}
+      style={{ height: "50vh", maxHeight: "50vh" }}
     >
       {showResetButton && (
         <div className="flex justify-end mb-2">
