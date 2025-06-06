@@ -114,20 +114,32 @@ router.get('/population-stats', async (req, res) => {
     
     try {
       let baseQuery = `
+        WITH unique_villages AS (
+          SELECT DISTINCT
+            village_name,
+            scheme_id,
+            region,
+            population,
+            water_value_day6,
+            water_value_day5,
+            lpcd_value_day7
+          FROM water_scheme_data 
+          WHERE population IS NOT NULL AND population > 0
+        )
         SELECT 
-          COUNT(*) as total_villages,
+          COUNT(DISTINCT CONCAT(village_name, '|', scheme_id)) as total_villages,
           SUM(population) as total_population,
           
           -- Villages and population receiving water (water_value_day6 > 0)
           COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) as villages_with_water,
           SUM(CASE WHEN water_value_day6 > 0 THEN population ELSE 0 END) as population_with_water,
-          ROUND((COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) * 100.0 / COUNT(*)), 2) as percent_villages_with_water,
+          ROUND((COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_with_water,
           ROUND((SUM(CASE WHEN water_value_day6 > 0 THEN population ELSE 0 END) * 100.0 / SUM(population)), 2) as percent_population_with_water,
           
           -- Villages and population with no water (water_value_day6 = 0 or NULL)
           COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) as villages_no_water,
           SUM(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN population ELSE 0 END) as population_no_water,
-          ROUND((COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) * 100.0 / COUNT(*)), 2) as percent_villages_no_water,
+          ROUND((COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_no_water,
           ROUND((SUM(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN population ELSE 0 END) * 100.0 / SUM(population)), 2) as percent_population_no_water,
           
           -- LPCD analysis based on latest lpcd_date_day7
@@ -139,21 +151,23 @@ router.get('/population-stats', async (req, res) => {
           SUM(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) as population_lpcd_below_55,
           
           -- Population change analysis (day6 vs day5)
-          SUM(CASE WHEN water_value_day6 > 0 AND water_value_day5 = 0 THEN population ELSE 0 END) as population_gained_water,
-          SUM(CASE WHEN water_value_day6 = 0 AND water_value_day5 > 0 THEN population ELSE 0 END) as population_lost_water,
+          SUM(CASE WHEN water_value_day6 > 0 AND (water_value_day5 = 0 OR water_value_day5 IS NULL) THEN population ELSE 0 END) as population_gained_water,
+          SUM(CASE WHEN (water_value_day6 = 0 OR water_value_day6 IS NULL) AND water_value_day5 > 0 THEN population ELSE 0 END) as population_lost_water,
           
           -- Day 5 baseline for comparison
           SUM(CASE WHEN water_value_day5 > 0 THEN population ELSE 0 END) as population_with_water_day5,
           SUM(CASE WHEN water_value_day5 = 0 OR water_value_day5 IS NULL THEN population ELSE 0 END) as population_no_water_day5
           
-        FROM water_scheme_data 
-        WHERE population IS NOT NULL AND population > 0
+        FROM unique_villages
       `;
       
-      // Add WHERE clause for region filtering
+      // Add WHERE clause for region filtering in the CTE
       const queryParams: any[] = [];
       if (region && region !== 'all') {
-        baseQuery += ' AND region = $1';
+        baseQuery = baseQuery.replace(
+          'WHERE population IS NOT NULL AND population > 0',
+          'WHERE population IS NOT NULL AND population > 0 AND region = $1'
+        );
         queryParams.push(region);
       }
       
