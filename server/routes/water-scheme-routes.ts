@@ -136,7 +136,15 @@ router.get('/population-stats', async (req, res) => {
           
           -- Population analysis for LPCD categories
           SUM(CASE WHEN lpcd_value_day7 > 55 THEN population ELSE 0 END) as population_lpcd_above_55,
-          SUM(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) as population_lpcd_below_55
+          SUM(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) as population_lpcd_below_55,
+          
+          -- Population change analysis (day6 vs day5)
+          SUM(CASE WHEN water_value_day6 > 0 AND water_value_day5 = 0 THEN population ELSE 0 END) as population_gained_water,
+          SUM(CASE WHEN water_value_day6 = 0 AND water_value_day5 > 0 THEN population ELSE 0 END) as population_lost_water,
+          
+          -- Day 5 baseline for comparison
+          SUM(CASE WHEN water_value_day5 > 0 THEN population ELSE 0 END) as population_with_water_day5,
+          SUM(CASE WHEN water_value_day5 = 0 OR water_value_day5 IS NULL THEN population ELSE 0 END) as population_no_water_day5
           
         FROM water_scheme_data 
         WHERE population IS NOT NULL AND population > 0
