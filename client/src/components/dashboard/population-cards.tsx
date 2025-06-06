@@ -59,8 +59,16 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
     );
   }
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-IN').format(num);
+  const formatNumber = (num: number | string | null | undefined) => {
+    const numValue = Number(num);
+    if (isNaN(numValue)) return '0';
+    return new Intl.NumberFormat('en-IN').format(numValue);
+  };
+
+  const formatPercentage = (num: number | string | null | undefined) => {
+    const numValue = Number(num);
+    if (isNaN(numValue)) return '0.0';
+    return numValue.toFixed(1);
   };
 
   return (
@@ -101,7 +109,7 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
                 {formatNumber(populationStats.population_with_water)}
               </p>
               <p className="text-sm text-gray-600">
-                ({populationStats.percent_population_with_water.toFixed(1)}% of total population)
+                ({formatPercentage(populationStats.percent_population_with_water)}% of total population)
               </p>
             </div>
             
@@ -143,7 +151,7 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
                 {formatNumber(populationStats.population_no_water)}
               </p>
               <p className="text-sm text-gray-600">
-                ({populationStats.percent_population_no_water.toFixed(1)}% of total population)
+                ({formatPercentage(populationStats.percent_population_no_water)}% of total population)
               </p>
             </div>
             
