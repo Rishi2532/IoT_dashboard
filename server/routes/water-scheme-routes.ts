@@ -194,23 +194,40 @@ router.get('/lpcd-stats', async (req, res) => {
     const client = await pool.connect();
     
     try {
-      // Get statistics for the most recent LPCD day (day1)
-      // We count villages in different LPCD ranges
+      // Get statistics using deduplicated data to match population cards
       let baseQuery = `
+        WITH unique_villages AS (
+          SELECT DISTINCT
+            village_name,
+            scheme_id,
+            region,
+            population,
+            lpcd_value_day1,
+            lpcd_value_day7,
+            consistent_zero_lpcd_for_a_week
+          FROM water_scheme_data 
+          WHERE population IS NOT NULL AND population > 0
+        )
         SELECT 
-          COUNT(*) FILTER (WHERE lpcd_value_day1 > 55) AS above_55_count,
-          COUNT(*) FILTER (WHERE lpcd_value_day1 < 40 AND lpcd_value_day1 > 0) AS below_40_count,
-          COUNT(*) FILTER (WHERE lpcd_value_day1 >= 40 AND lpcd_value_day1 <= 55) AS between_40_55_count,
-          COUNT(*) FILTER (WHERE lpcd_value_day1 = 0 OR lpcd_value_day1 IS NULL) AS zero_lpcd_count,
+          COUNT(*) FILTER (WHERE lpcd_value_day7 > 55) AS above_55_count,
+          COUNT(*) FILTER (WHERE lpcd_value_day7 < 40 AND lpcd_value_day7 > 0) AS below_40_count,
+          COUNT(*) FILTER (WHERE lpcd_value_day7 >= 40 AND lpcd_value_day7 <= 55) AS between_40_55_count,
+          COUNT(*) FILTER (WHERE lpcd_value_day7 = 0 OR lpcd_value_day7 IS NULL) AS zero_lpcd_count,
           COUNT(*) FILTER (WHERE consistent_zero_lpcd_for_a_week = 1) AS consistent_zero_count,
-          COUNT(*) AS total_villages
-        FROM water_scheme_data
+          COUNT(DISTINCT CONCAT(village_name, '|', scheme_id)) AS total_villages,
+          SUM(population) AS total_population,
+          SUM(CASE WHEN lpcd_value_day7 > 55 THEN population ELSE 0 END) AS above_55_population,
+          SUM(CASE WHEN lpcd_value_day7 < 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) AS below_55_population
+        FROM unique_villages
       `;
       
-      // Add WHERE clause for region filtering
+      // Add WHERE clause for region filtering in the CTE
       const queryParams: any[] = [];
       if (region && region !== 'all') {
-        baseQuery += ' WHERE region = $1';
+        baseQuery = baseQuery.replace(
+          'WHERE population IS NOT NULL AND population > 0',
+          'WHERE population IS NOT NULL AND population > 0 AND region = $1'
+        );
         queryParams.push(region);
       }
       
