@@ -648,10 +648,27 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Side-by-side layout: Region Chart (50%) + Population Cards (50%) */}
-      <div className="flex flex-col lg:flex-row gap-4 mb-4 sm:mb-6">
-        {/* Enhanced Region Comparison Chart (50% Width) */}
-        <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 p-3 sm:p-4 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all flex flex-col w-full lg:w-1/2">
+      {/* Full-width Population Cards Section */}
+      <div className="mb-4 sm:mb-6">
+        <div className="bg-gradient-to-r from-slate-50 via-white to-slate-50 p-4 sm:p-6 rounded-lg border border-slate-200 shadow-md">
+          <div className="flex items-center mb-4">
+            <h2 className="text-lg sm:text-xl font-semibold text-slate-800 flex items-center">
+              <span className="w-2 h-6 bg-blue-500 rounded-sm mr-3"></span>
+              Population Water Coverage Overview
+            </h2>
+            {selectedRegion !== "all" && (
+              <span className="ml-3 text-sm bg-blue-100 text-blue-700 px-3 py-1 rounded-full">
+                {selectedRegion} Region
+              </span>
+            )}
+          </div>
+          <CompactPopulationCards selectedRegion={selectedRegion} />
+        </div>
+      </div>
+
+      {/* Region Comparison Chart - Full Width */}
+      <div className="mb-4 sm:mb-6">
+        <div className="bg-gradient-to-r from-blue-50 via-white to-blue-50 p-3 sm:p-4 rounded-lg border border-blue-100 shadow-md hover:shadow-lg transition-all">
           <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-3">
             <h2 className="text-sm sm:text-base font-semibold text-blue-800 flex items-center mb-2 sm:mb-0">
               <span className="w-1.5 h-5 bg-blue-500 rounded-sm mr-2"></span>
@@ -673,18 +690,13 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="w-full overflow-hidden flex-1 flex flex-col bg-white rounded-lg p-2">
-            <div className="w-full flex-1 flex flex-col h-[50vh]">
+            <div className="w-full flex-1 flex flex-col h-[40vh]">
               <RegionComparisonChart
                 regions={regions || []}
                 isLoading={isRegionsLoading}
               />
             </div>
           </div>
-        </div>
-
-        {/* Population Cards (50% Width) */}
-        <div className="w-full lg:w-1/2 h-[50vh] overflow-y-auto">
-          <CompactPopulationCards selectedRegion={selectedRegion} />
         </div>
       </div>
 

@@ -15,6 +15,8 @@ interface PopulationStats {
   percent_population_no_water: number;
   villages_lpcd_above_55: number;
   villages_lpcd_below_55: number;
+  population_lpcd_above_55: number;
+  population_lpcd_below_55: number;
 }
 
 interface CompactPopulationCardsProps {
@@ -72,100 +74,83 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
   };
 
   return (
-    <div className="space-y-3 h-full overflow-y-auto">
-      {/* Compact Top Card - Total Population */}
-      <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200 shadow-sm">
-        <CardHeader className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b border-blue-200 rounded-t-lg py-2 px-3">
-          <CardTitle className="text-center text-sm font-bold text-blue-900 flex items-center justify-center gap-1">
-            <Users className="h-3 w-3" />
-            Total Population Covered
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="py-3 px-3">
-          <div className="text-center">
-            <p className="text-xl font-extrabold text-blue-700 mb-1">
-              {formatNumber(populationStats.total_population)}
-            </p>
-            <p className="text-xs text-gray-600">
-              {formatNumber(populationStats.total_villages)} villages
+    <div className="h-full">
+      {/* First Row - Connected Population Cards */}
+      <div className="flex mb-4">
+        {/* Total Population Covered */}
+        <div className="flex-1 bg-gradient-to-br from-blue-500 to-indigo-600 text-white relative shadow-lg overflow-hidden">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full translate-y-8 -translate-x-8"></div>
+          <div className="relative p-6 text-center">
+            <Users className="h-8 w-8 mx-auto mb-3 text-blue-100" />
+            <h3 className="text-sm font-semibold mb-2 text-blue-100">Total Population Covered</h3>
+            <p className="text-3xl font-bold mb-1">{formatNumber(populationStats.total_population)}</p>
+            <p className="text-xs text-blue-200">{formatNumber(populationStats.total_villages)} villages</p>
+          </div>
+        </div>
+
+        {/* Population With Water */}
+        <div className="flex-1 bg-gradient-to-br from-emerald-500 to-green-600 text-white relative shadow-lg overflow-hidden border-l-4 border-white/20">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full translate-y-8 -translate-x-8"></div>
+          <div className="relative p-6 text-center">
+            <Droplets className="h-8 w-8 mx-auto mb-3 text-green-100" />
+            <h3 className="text-sm font-semibold mb-2 text-green-100">Population With Water</h3>
+            <p className="text-3xl font-bold mb-1">{formatNumber(populationStats.population_with_water)}</p>
+            <p className="text-xs text-green-200">
+              {formatPercentage(populationStats.percent_population_with_water)}% • {formatNumber(populationStats.villages_with_water)} villages
             </p>
           </div>
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Two Compact Cards */}
-      <div className="grid grid-cols-1 gap-3">
-        {/* Water Supply Card */}
-        <Card className="bg-gradient-to-br from-green-50 to-emerald-50 border-green-200 shadow-sm">
-          <CardHeader className="bg-gradient-to-r from-green-100 to-emerald-100 border-b border-green-200 rounded-t-lg py-2 px-3">
-            <CardTitle className="text-center text-xs font-bold text-green-900 flex items-center justify-center gap-1">
-              <Droplets className="h-3 w-3" />
-              Population With Water
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="py-2 px-3">
-            <div className="text-center mb-2">
-              <p className="text-lg font-extrabold text-green-700">
-                {formatNumber(populationStats.population_with_water)}
-              </p>
-              <p className="text-xs text-gray-600">
-                ({formatPercentage(populationStats.percent_population_with_water)}%)
-              </p>
-            </div>
-            
-            {/* Compact Village Stats */}
-            <div className="space-y-1 border-t border-green-200 pt-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-700">Villages:</span>
-                <span className="font-bold text-green-700">
-                  {formatNumber(populationStats.villages_with_water)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-700">LPCD {'>'}55:</span>
-                <span className="font-bold text-green-600">
-                  {formatNumber(populationStats.villages_lpcd_above_55)}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-700">LPCD ≤55:</span>
-                <span className="font-bold text-orange-600">
-                  {formatNumber(populationStats.villages_lpcd_below_55)}
-                </span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Population No Water */}
+        <div className="flex-1 bg-gradient-to-br from-red-500 to-orange-600 text-white relative shadow-lg overflow-hidden border-l-4 border-white/20">
+          <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-full -translate-y-10 translate-x-10"></div>
+          <div className="absolute bottom-0 left-0 w-16 h-16 bg-white/5 rounded-full translate-y-8 -translate-x-8"></div>
+          <div className="relative p-6 text-center">
+            <AlertTriangle className="h-8 w-8 mx-auto mb-3 text-red-100" />
+            <h3 className="text-sm font-semibold mb-2 text-red-100">Population No Water</h3>
+            <p className="text-3xl font-bold mb-1">{formatNumber(populationStats.population_no_water)}</p>
+            <p className="text-xs text-red-200">
+              {formatPercentage(populationStats.percent_population_no_water)}% • {formatNumber(populationStats.villages_no_water)} villages
+            </p>
+          </div>
+        </div>
+      </div>
 
-        {/* No Water Card */}
-        <Card className="bg-gradient-to-br from-red-50 to-orange-50 border-red-200 shadow-sm">
-          <CardHeader className="bg-gradient-to-r from-red-100 to-orange-100 border-b border-red-200 rounded-t-lg py-2 px-3">
-            <CardTitle className="text-center text-xs font-bold text-red-900 flex items-center justify-center gap-1">
-              <AlertTriangle className="h-3 w-3" />
-              Population No Water
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="py-2 px-3">
-            <div className="text-center mb-2">
-              <p className="text-lg font-extrabold text-red-700">
-                {formatNumber(populationStats.population_no_water)}
-              </p>
-              <p className="text-xs text-gray-600">
-                ({formatPercentage(populationStats.percent_population_no_water)}%)
-              </p>
+      {/* Second Row - LPCD Categories */}
+      <div className="flex gap-4">
+        {/* Villages with LPCD > 55 */}
+        <div className="flex-1 bg-gradient-to-br from-teal-500 to-cyan-600 text-white relative shadow-lg overflow-hidden rounded-lg">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
+          <div className="absolute bottom-0 left-0 w-12 h-12 bg-white/5 rounded-full translate-y-6 -translate-x-6"></div>
+          <div className="relative p-6 text-center">
+            <div className="w-12 h-12 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center">
+              <span className="text-xl font-bold">✓</span>
             </div>
-            
-            {/* Village Count */}
-            <div className="border-t border-red-200 pt-2">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-gray-700">Villages No Water:</span>
-                <span className="font-bold text-red-700">
-                  {formatNumber(populationStats.villages_no_water)}
-                </span>
-              </div>
+            <h3 className="text-sm font-semibold mb-2 text-teal-100">Villages LPCD {'>'} 55</h3>
+            <p className="text-2xl font-bold mb-1">{formatNumber(populationStats.villages_lpcd_above_55)}</p>
+            <p className="text-xs text-teal-200">
+              Population: {formatNumber(populationStats.population_lpcd_above_55)}
+            </p>
+          </div>
+        </div>
+
+        {/* Villages with LPCD ≤ 55 */}
+        <div className="flex-1 bg-gradient-to-br from-amber-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg">
+          <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -translate-y-8 translate-x-8"></div>
+          <div className="absolute bottom-0 left-0 w-12 h-12 bg-white/5 rounded-full translate-y-6 -translate-x-6"></div>
+          <div className="relative p-6 text-center">
+            <div className="w-12 h-12 mx-auto mb-3 bg-white/20 rounded-full flex items-center justify-center">
+              <span className="text-xl font-bold">!</span>
             </div>
-          </CardContent>
-        </Card>
+            <h3 className="text-sm font-semibold mb-2 text-amber-100">Villages LPCD ≤ 55</h3>
+            <p className="text-2xl font-bold mb-1">{formatNumber(populationStats.villages_lpcd_below_55)}</p>
+            <p className="text-xs text-amber-200">
+              Population: {formatNumber(populationStats.population_lpcd_below_55)}
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
