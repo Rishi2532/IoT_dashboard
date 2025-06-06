@@ -7,6 +7,7 @@ import RegionComparisonChart from "@/components/dashboard/region-comparison-char
 import SimpleMaharashtraMap from "@/components/dashboard/simple-maharashtra-map";
 import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
+import PopulationCards from "@/components/dashboard/population-cards";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";
@@ -564,6 +565,11 @@ export default function Dashboard() {
 
       {/* Daily Updates */}
       <DailyUpdates isLoading={false} />
+
+      {/* Population Cards Layout */}
+      <div className="mb-6">
+        <PopulationCards selectedRegion={selectedRegion} />
+      </div>
 
       {/* Region Filter in card */}
       <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-lg border shadow-sm relative z-10">

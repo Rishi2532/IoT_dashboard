@@ -102,6 +102,61 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get population statistics from water_scheme_data
+router.get('/population-stats', async (req, res) => {
+  try {
+    const { region } = req.query;
+    
+    // Use pg directly for this route
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      let baseQuery = `
+        SELECT 
+          COUNT(*) as total_villages,
+          SUM(population) as total_population,
+          
+          -- Villages and population receiving water (water_value_day6 > 0)
+          COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) as villages_with_water,
+          SUM(CASE WHEN water_value_day6 > 0 THEN population ELSE 0 END) as population_with_water,
+          ROUND((COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) * 100.0 / COUNT(*)), 2) as percent_villages_with_water,
+          ROUND((SUM(CASE WHEN water_value_day6 > 0 THEN population ELSE 0 END) * 100.0 / SUM(population)), 2) as percent_population_with_water,
+          
+          -- Villages and population with no water (water_value_day6 = 0 or NULL)
+          COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) as villages_no_water,
+          SUM(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN population ELSE 0 END) as population_no_water,
+          ROUND((COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) * 100.0 / COUNT(*)), 2) as percent_villages_no_water,
+          ROUND((SUM(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN population ELSE 0 END) * 100.0 / SUM(population)), 2) as percent_population_no_water,
+          
+          -- LPCD analysis based on latest lpcd_date_day7
+          COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) as villages_lpcd_above_55,
+          COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_lpcd_below_55
+          
+        FROM water_scheme_data 
+        WHERE population IS NOT NULL AND population > 0
+      `;
+      
+      // Add WHERE clause for region filtering
+      const queryParams: any[] = [];
+      if (region && region !== 'all') {
+        baseQuery += ' AND region = $1';
+        queryParams.push(region);
+      }
+      
+      // Execute query
+      const result = await client.query(baseQuery, queryParams);
+      res.json(result.rows[0]);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching population statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch population statistics' });
+  }
+});
+
 // Get LPCD statistics - counts villages with different LPCD ranges
 router.get('/lpcd-stats', async (req, res) => {
   try {
