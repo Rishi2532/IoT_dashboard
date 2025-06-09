@@ -468,13 +468,13 @@ const EnhancedLpcdDashboard = () => {
     return filtered;
   };
 
-  // Calculate filter counts using globally filtered data
+  // Calculate filter counts using globally filtered data with proper deduplication
   const getFilterCounts = () => {
     // Get the globally filtered data for calculating card statistics
     const globallyFilteredData = getGloballyFilteredSchemes();
 
     const counts = {
-      total: globallyFilteredData.length,
+      total: 0,
       above55: 0,
       below55: 0,
       totalPopulation: 0,
@@ -500,8 +500,24 @@ const EnhancedLpcdDashboard = () => {
 
     if (globallyFilteredData.length === 0) return counts;
 
-    // Count schemes in each category using the globally filtered data
+    // Create a map to track unique villages by name+region to avoid double counting
+    const uniqueVillages = new Map();
+    
+    // First pass: deduplicate villages and collect unique entries
     globallyFilteredData.forEach((scheme) => {
+      const villageKey = `${scheme.village_name}|${scheme.region}`;
+      
+      // Only keep the first occurrence of each unique village
+      if (!uniqueVillages.has(villageKey)) {
+        uniqueVillages.set(villageKey, scheme);
+      }
+    });
+
+    // Set total to unique village count
+    counts.total = uniqueVillages.size;
+
+    // Count unique villages in each category
+    uniqueVillages.forEach((scheme) => {
       const lpcdValue = getLatestLpcdValue(scheme);
       const population = scheme.population ? Number(scheme.population) : 0;
 
