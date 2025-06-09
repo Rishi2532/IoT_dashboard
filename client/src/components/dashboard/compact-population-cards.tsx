@@ -83,18 +83,18 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
   };
 
   // Calculate change percentages
-  const calculateChangePercentage = (current: number, previous: number) => {
-    if (previous === 0) return current > 0 ? 100 : 0;
-    return ((current - previous) / previous * 100);
+  const calculateDiffPercentage = (change: number, previous: number) => {
+    if (previous === 0) return change > 0 ? 100 : 0;
+    return (Math.abs(change) / previous * 100);
   };
 
-  const waterGainedPercent = calculateChangePercentage(
-    populationStats.population_with_water, 
+  const waterGainedPercent = calculateDiffPercentage(
+    populationStats.population_gained_water, 
     populationStats.population_with_water_day5
   );
   
-  const waterLostPercent = calculateChangePercentage(
-    populationStats.population_no_water, 
+  const waterLostPercent = calculateDiffPercentage(
+    populationStats.population_lost_water, 
     populationStats.population_no_water_day5
   );
 
@@ -103,6 +103,24 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
   // Calculate LPCD population changes (day 7 vs day 6)
   const lpcdAbove55Change = (populationStats.population_lpcd_above_55_day7 || 0) - (populationStats.population_lpcd_above_55_day6 || 0);
   const lpcdBelow55Change = (populationStats.population_lpcd_below_55_day7 || 0) - (populationStats.population_lpcd_below_55_day6 || 0);
+
+  // Calculate percentages for each card
+  const calculatePopulationPercentage = (population: number, total: number) => {
+    if (total === 0) return 0;
+    return (population / total * 100);
+  };
+
+  // Card percentages
+  const withWaterPercentage = calculatePopulationPercentage(populationStats.population_with_water, populationStats.total_population);
+  const noWaterPercentage = calculatePopulationPercentage(populationStats.population_no_water, populationStats.total_population);
+  const lpcdAbove55Percentage = calculatePopulationPercentage(populationStats.population_lpcd_above_55, populationStats.total_population);
+  const lpcdBelow55Percentage = calculatePopulationPercentage(populationStats.population_lpcd_below_55, populationStats.total_population);
+
+  // Change percentages
+  const withWaterChangePercentage = calculateDiffPercentage(populationStats.population_gained_water, populationStats.population_with_water_day5);
+  const noWaterChangePercentage = calculateDiffPercentage(populationStats.population_lost_water, populationStats.population_no_water_day5);
+  const lpcdAbove55ChangePercentage = calculateDiffPercentage(lpcdAbove55Change, populationStats.population_lpcd_above_55_day6);
+  const lpcdBelow55ChangePercentage = calculateDiffPercentage(lpcdBelow55Change, populationStats.population_lpcd_below_55_day6);
   
   // Determine arrow directions and formatting
   const getArrowIcon = (change: number) => {
@@ -176,10 +194,13 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
             </div>
           </div>
           
-          {/* Change number only - center */}
+          {/* Change number and percentages - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               {formatChangeWithArrow(populationStats.population_gained_water, "text-green-300")}
+              <div className="text-green-200 text-xs mt-1">
+                {formatPercentage(withWaterChangePercentage)}% • {formatPercentage(withWaterPercentage)}% of total
+              </div>
             </div>
           </div>
           
@@ -206,10 +227,13 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
             </div>
           </div>
           
-          {/* Change number only - center */}
+          {/* Change number and percentages - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               {formatChangeWithArrow(-populationStats.population_lost_water, "text-yellow-300")}
+              <div className="text-yellow-200 text-xs mt-1">
+                {formatPercentage(noWaterChangePercentage)}% • {formatPercentage(noWaterPercentage)}% of total
+              </div>
             </div>
           </div>
           
