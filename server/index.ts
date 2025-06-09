@@ -1,6 +1,16 @@
 import dotenv from "dotenv";
+import path from "path";
+import fs from "fs";
+
 // Load environment variables first
 dotenv.config();
+
+// Also try to load .env.vscode if it exists
+const envVscodePath = path.join(process.cwd(), '.env.vscode');
+if (fs.existsSync(envVscodePath)) {
+  console.log("Loading .env.vscode file...");
+  dotenv.config({ path: envVscodePath });
+}
 
 // Ensure DATABASE_URL is available from Replit environment
 if (!process.env.DATABASE_URL && process.env.REPL_ID) {

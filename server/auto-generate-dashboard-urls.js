@@ -8,11 +8,20 @@
 
 import pg from 'pg';
 import dotenv from 'dotenv';
+import path from 'path';
+import fs from 'fs';
 
 const { Pool } = pg;
 
 // Load environment variables
 dotenv.config();
+
+// Also try to load .env.vscode if it exists
+const envVscodePath = path.join(process.cwd(), '.env.vscode');
+if (fs.existsSync(envVscodePath)) {
+  console.log("Loading .env.vscode file in dashboard URL generator...");
+  dotenv.config({ path: envVscodePath });
+}
 
 // Special case for Bargaonpimpri scheme in Nashik region
 function generateSpecialCaseUrl(scheme) {
