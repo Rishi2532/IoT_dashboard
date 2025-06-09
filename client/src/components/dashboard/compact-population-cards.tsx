@@ -124,89 +124,101 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
         </div>
 
         {/* Population With Water */}
-        <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white relative shadow-lg overflow-hidden rounded-lg">
+        <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white relative shadow-lg overflow-hidden rounded-lg h-24">
+          {/* Population number - top left */}
           <div className="absolute top-2 left-2">
-            <div className="text-2xl font-bold">{formatNumber(populationStats.population_with_water)}</div>
+            <div className="text-xl font-bold">{formatNumber(populationStats.population_with_water)}</div>
           </div>
-          <div className="absolute top-2 right-2">
-            <div className="text-green-300 text-lg font-bold">
-              {populationStats.population_gained_water > populationStats.population_lost_water ? '+' : '±'}
+          
+          {/* Percentage and change - center */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-green-300 text-sm font-bold">+{formatNumber(populationStats.population_gained_water)}</div>
+              <div className="text-green-200 text-xs">{formatPercentage(populationStats.percent_population_with_water)}%</div>
             </div>
           </div>
-          <div className="pt-16 pb-4 px-4">
-            <div className="text-center">
-              <Droplets className="h-6 w-6 mx-auto mb-2 text-green-100" />
-              <h3 className="text-xs font-semibold mb-1 text-green-100">With Water</h3>
-              <p className="text-xs text-green-200">{formatPercentage(populationStats.percent_population_with_water)}%</p>
-              <div className="mt-2 text-xs">
-                <div className="text-green-300">+{formatNumber(populationStats.population_gained_water)}</div>
-                <div className="text-green-200">{formatPercentage(Math.abs(waterGainedPercent))}%</div>
-              </div>
+          
+          {/* Description - bottom left */}
+          <div className="absolute bottom-2 left-2">
+            <div className="flex items-center gap-1">
+              <Droplets className="h-3 w-3 text-green-100" />
+              <span className="text-xs font-medium text-green-100">With Water</span>
             </div>
           </div>
         </div>
 
         {/* Population No Water */}
-        <div className="bg-gradient-to-br from-red-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg">
+        <div className="bg-gradient-to-br from-red-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg h-24">
+          {/* Population number - top left */}
           <div className="absolute top-2 left-2">
-            <div className="text-2xl font-bold">{formatNumber(populationStats.population_no_water)}</div>
+            <div className="text-xl font-bold">{formatNumber(populationStats.population_no_water)}</div>
           </div>
-          <div className="absolute top-2 right-2">
-            <div className="text-yellow-300 text-lg font-bold">
-              {populationStats.population_lost_water > populationStats.population_gained_water ? '-' : '±'}
+          
+          {/* Percentage and change - center */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-yellow-300 text-sm font-bold">-{formatNumber(populationStats.population_lost_water)}</div>
+              <div className="text-yellow-200 text-xs">{formatPercentage(populationStats.percent_population_no_water)}%</div>
             </div>
           </div>
-          <div className="pt-16 pb-4 px-4">
-            <div className="text-center">
-              <AlertTriangle className="h-6 w-6 mx-auto mb-2 text-red-100" />
-              <h3 className="text-xs font-semibold mb-1 text-red-100">No Water</h3>
-              <p className="text-xs text-red-200">{formatPercentage(populationStats.percent_population_no_water)}%</p>
-              <div className="mt-2 text-xs">
-                <div className="text-yellow-300">-{formatNumber(populationStats.population_lost_water)}</div>
-                <div className="text-yellow-200">{formatPercentage(Math.abs(waterLostPercent))}%</div>
-              </div>
+          
+          {/* Description - bottom left */}
+          <div className="absolute bottom-2 left-2">
+            <div className="flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3 text-red-100" />
+              <span className="text-xs font-medium text-red-100">No Water</span>
             </div>
           </div>
         </div>
 
         {/* Villages with LPCD > 55 */}
-        <div className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white relative shadow-lg overflow-hidden rounded-lg">
+        <div className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white relative shadow-lg overflow-hidden rounded-lg h-24">
+          {/* Population number - top left */}
           <div className="absolute top-2 left-2">
-            <div className="text-2xl font-bold">{formatNumber(populationStats.population_lpcd_above_55)}</div>
+            <div className="text-xl font-bold">{formatNumber(populationStats.population_lpcd_above_55)}</div>
           </div>
-          <div className="absolute top-2 right-2">
-            <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-sm font-bold">✓</span>
+          
+          {/* Percentage and villages count - center */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-teal-200 text-sm font-bold">{formatNumber(populationStats.villages_lpcd_above_55)}</div>
+              <div className="text-teal-100 text-xs">villages</div>
             </div>
           </div>
-          <div className="pt-16 pb-4 px-4">
-            <div className="text-center">
-              <div className="w-6 h-6 mx-auto mb-2 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold">55+</span>
+          
+          {/* Description - bottom left */}
+          <div className="absolute bottom-2 left-2">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-white/30 rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold">55+</span>
               </div>
-              <h3 className="text-xs font-semibold mb-1 text-teal-100">LPCD {'>'} 55</h3>
-              <p className="text-xs text-teal-200">{formatNumber(populationStats.villages_lpcd_above_55)} villages</p>
+              <span className="text-xs font-medium text-teal-100">LPCD &gt; 55</span>
             </div>
           </div>
         </div>
 
         {/* Villages with LPCD ≤ 55 */}
-        <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg">
+        <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg h-24">
+          {/* Population number - top left */}
           <div className="absolute top-2 left-2">
-            <div className="text-2xl font-bold">{formatNumber(populationStats.population_lpcd_below_55)}</div>
+            <div className="text-xl font-bold">{formatNumber(populationStats.population_lpcd_below_55)}</div>
           </div>
-          <div className="absolute top-2 right-2">
-            <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-sm font-bold">!</span>
+          
+          {/* Percentage and villages count - center */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
+              <div className="text-amber-200 text-sm font-bold">{formatNumber(populationStats.villages_lpcd_below_55)}</div>
+              <div className="text-amber-100 text-xs">villages</div>
             </div>
           </div>
-          <div className="pt-16 pb-4 px-4">
-            <div className="text-center">
-              <div className="w-6 h-6 mx-auto mb-2 bg-white/20 rounded-full flex items-center justify-center">
-                <span className="text-sm font-bold">≤55</span>
+          
+          {/* Description - bottom left */}
+          <div className="absolute bottom-2 left-2">
+            <div className="flex items-center gap-1">
+              <div className="w-3 h-3 bg-white/30 rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold">≤55</span>
               </div>
-              <h3 className="text-xs font-semibold mb-1 text-amber-100">LPCD ≤ 55</h3>
-              <p className="text-xs text-amber-200">{formatNumber(populationStats.villages_lpcd_below_55)} villages</p>
+              <span className="text-xs font-medium text-amber-100">LPCD ≤ 55</span>
             </div>
           </div>
         </div>
