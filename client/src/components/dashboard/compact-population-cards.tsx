@@ -34,6 +34,19 @@ interface PopulationStats {
   population_lpcd_below_55_day6: number;
 }
 
+interface PopulationChangeData {
+  currentPopulation: number;
+  previousPopulation: number;
+  change: number;
+  changePercent: number;
+}
+
+interface PopulationTrackingResponse {
+  totalPopulation: number;
+  date: string;
+  change: PopulationChangeData | null;
+}
+
 interface CompactPopulationCardsProps {
   selectedRegion?: string;
 }
@@ -55,6 +68,19 @@ export default function CompactPopulationCards({
       }
       return response.json();
     },
+  });
+
+  // Fetch population tracking data for daily changes (only for "all" regions)
+  const { data: populationTracking } = useQuery<PopulationTrackingResponse>({
+    queryKey: ["/api/population/total"],
+    queryFn: async () => {
+      const response = await fetch("/api/population/total");
+      if (!response.ok) {
+        throw new Error("Failed to fetch population tracking data");
+      }
+      return response.json();
+    },
+    enabled: selectedRegion === "all", // Only fetch for total population
   });
 
   if (isLoading) {
@@ -201,10 +227,23 @@ export default function CompactPopulationCards({
             </div>
           </div>
 
-          {/* Center: Net population change and percentage */}
+          {/* Center: Daily population change and percentage */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              {netPopulationChange !== 0 && (
+              {populationTracking?.change && populationTracking.change.change !== 0 ? (
+                <div className="flex items-center justify-center gap-1">
+                  {populationTracking.change.change > 0 ? (
+                    <ArrowUp className="h-4 w-4 text-green-300" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4 text-red-300" />
+                  )}
+                  <div className="text-green-300 text-sm font-bold">
+                    {formatNumber(Math.abs(populationTracking.change.change))}
+                  </div>
+                </div>
+              ) : selectedRegion === "all" ? (
+                <div className="text-green-200 text-xs">No change</div>
+              ) : (
                 <div className="flex items-center justify-center gap-1 text-green-300">
                   {netPopulationChange > 0 ? (
                     <ArrowUp className="h-4 w-4" />
@@ -214,10 +253,20 @@ export default function CompactPopulationCards({
                   <span>{Math.abs(netPopulationChange)}</span>
                 </div>
               )}
-              <div className="text-green-200 text-sm mt-1 leading-tight">
-                {formatPercentage(Math.abs(waterGainedPercent))}%
-                <br />
-                <span className="text-xs text-blue-100">of total</span>
+              <div className="text-green-200 text-xs mt-1">
+                {populationTracking?.change && selectedRegion === "all" ? (
+                  <>
+                    {formatPercentage(Math.abs(populationTracking.change.changePercent))}%
+                    <br />
+                    <span className="text-xs text-blue-100">from yesterday</span>
+                  </>
+                ) : (
+                  <>
+                    {formatPercentage(Math.abs(waterGainedPercent))}%
+                    <br />
+                    <span className="text-xs text-blue-100">of total</span>
+                  </>
+                )}
               </div>
             </div>
           </div>
