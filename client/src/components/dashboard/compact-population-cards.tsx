@@ -193,7 +193,7 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
         </div>
 
         {/* Population No Water */}
-        <div className="bg-gradient-to-br from-red-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
+        <div className="bg-gradient-to-br from-red-500 via-red-600 to-orange-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-red-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_no_water)}</div>
@@ -223,7 +223,7 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
         </div>
 
         {/* Population with LPCD > 55 */}
-        <div className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
+        <div className="bg-gradient-to-br from-teal-500 via-cyan-600 to-teal-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-teal-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_lpcd_above_55)}</div>
@@ -255,7 +255,7 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
         </div>
 
         {/* Population with LPCD ≤ 55 */}
-        <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
+        <div className="bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-amber-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_lpcd_below_55)}</div>
