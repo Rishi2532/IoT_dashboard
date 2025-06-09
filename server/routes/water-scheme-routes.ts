@@ -102,6 +102,77 @@ router.get('/', async (req, res) => {
   }
 });
 
+// Get village counts with proper MJP filtering and deduplication
+router.get('/village-counts', async (req, res) => {
+  try {
+    const { region, mjpCommissioned } = req.query;
+    
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      let baseQuery = `
+        WITH deduplicated_villages AS (
+          SELECT DISTINCT ON (wsd.village_name, wsd.region)
+            wsd.village_name,
+            wsd.region,
+            wsd.scheme_id,
+            wsd.population,
+            wsd.lpcd_value_day7,
+            wsd.lpcd_value_day6,
+            wsd.lpcd_value_day5,
+            wsd.lpcd_value_day4,
+            wsd.lpcd_value_day3,
+            wsd.lpcd_value_day2,
+            wsd.lpcd_value_day1,
+            COALESCE(ss.mjp_commissioned, 'No') as mjp_commissioned
+          FROM water_scheme_data wsd
+          LEFT JOIN scheme_status ss ON wsd.scheme_id = ss.scheme_id
+          WHERE wsd.village_name IS NOT NULL AND wsd.village_name != ''
+          ORDER BY wsd.village_name, wsd.region, wsd.scheme_id
+        )
+        SELECT 
+          COUNT(*) as total_villages,
+          COUNT(CASE WHEN mjp_commissioned = 'Yes' THEN 1 END) as mjp_commissioned_villages,
+          COUNT(CASE WHEN mjp_commissioned != 'Yes' THEN 1 END) as mjp_not_commissioned_villages,
+          COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) as villages_above_55_lpcd,
+          COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_below_55_lpcd,
+          COUNT(CASE WHEN lpcd_value_day7 = 0 OR lpcd_value_day7 IS NULL THEN 1 END) as villages_zero_lpcd
+        FROM deduplicated_villages
+      `;
+      
+      const queryParams: any[] = [];
+      const conditions: string[] = [];
+      
+      if (region && region !== 'all') {
+        conditions.push('region = $' + (queryParams.length + 1));
+        queryParams.push(region);
+      }
+      
+      if (mjpCommissioned) {
+        if (mjpCommissioned === 'yes') {
+          conditions.push("mjp_commissioned = 'Yes'");
+        } else if (mjpCommissioned === 'no') {
+          conditions.push("mjp_commissioned != 'Yes'");
+        }
+      }
+      
+      if (conditions.length > 0) {
+        baseQuery = baseQuery.replace('FROM deduplicated_villages', 'FROM deduplicated_villages WHERE ' + conditions.join(' AND '));
+      }
+      
+      const result = await client.query(baseQuery, queryParams);
+      res.json(result.rows[0]);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching village counts:', error);
+    res.status(500).json({ error: 'Failed to fetch village counts' });
+  }
+});
+
 // Get population statistics from water_scheme_data
 router.get('/population-stats', async (req, res) => {
   try {
