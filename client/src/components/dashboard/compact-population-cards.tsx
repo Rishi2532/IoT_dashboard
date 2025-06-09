@@ -100,22 +100,25 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
       {/* Single Row - All Five Cards */}
       <div className="grid grid-cols-5 gap-2">
         {/* Total Population Covered */}
-        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white relative shadow-lg overflow-hidden rounded-lg">
+        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white relative shadow-lg overflow-hidden rounded-lg h-24">
+          {/* Population number - top left */}
           <div className="absolute top-2 left-2">
-            <div className="text-2xl font-bold">{formatNumber(populationStats.total_population)}</div>
+            <div className="text-xl font-bold">{formatNumber(populationStats.total_population)}</div>
           </div>
-          <div className="absolute top-2 right-2">
-            <div className="text-green-300 text-lg font-bold">+</div>
-          </div>
-          <div className="pt-16 pb-4 px-4">
+          
+          {/* Percentage and change - center */}
+          <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <Users className="h-6 w-6 mx-auto mb-2 text-blue-100" />
-              <h3 className="text-xs font-semibold mb-1 text-blue-100">Total Population</h3>
-              <p className="text-xs text-blue-200">{formatNumber(populationStats.total_villages)} villages</p>
-              <div className="mt-2 text-xs">
-                <div className="text-green-300">+{formatNumber(Math.abs(netPopulationChange))}</div>
-                <div className="text-green-200">{formatPercentage(Math.abs(waterGainedPercent))}%</div>
-              </div>
+              <div className="text-green-300 text-sm font-bold">+{formatNumber(Math.abs(netPopulationChange))}</div>
+              <div className="text-green-200 text-xs">{formatPercentage(Math.abs(waterGainedPercent))}%</div>
+            </div>
+          </div>
+          
+          {/* Description - bottom left */}
+          <div className="absolute bottom-2 left-2">
+            <div className="flex items-center gap-1">
+              <Users className="h-3 w-3 text-blue-100" />
+              <span className="text-xs font-medium text-blue-100">Total Population</span>
             </div>
           </div>
         </div>
