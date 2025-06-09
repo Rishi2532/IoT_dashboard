@@ -3493,6 +3493,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   );
 
+  // Population tracking API endpoints
+  app.post("/api/population/snapshot", async (req, res) => {
+    try {
+      const { date, totalPopulation } = req.body;
+      
+      if (!date || typeof totalPopulation !== 'number') {
+        return res.status(400).json({ 
+          message: "Date and totalPopulation are required" 
+        });
+      }
+
+      const snapshot = await storage.savePopulationSnapshot(date, totalPopulation);
+      res.json(snapshot);
+    } catch (error) {
+      console.error("Error saving population snapshot:", error);
+      res.status(500).json({ message: "Failed to save population snapshot" });
+    }
+  });
+
+  app.get("/api/population/change/:date", async (req, res) => {
+    try {
+      const { date } = req.params;
+      const changeData = await storage.calculatePopulationChange(date);
+      
+      if (!changeData) {
+        return res.status(404).json({ 
+          message: "No population data found for the specified date" 
+        });
+      }
+
+      res.json(changeData);
+    } catch (error) {
+      console.error("Error calculating population change:", error);
+      res.status(500).json({ message: "Failed to calculate population change" });
+    }
+  });
+
+  app.get("/api/population/latest", async (req, res) => {
+    try {
+      const latest = await storage.getLatestPopulation();
+      res.json(latest);
+    } catch (error) {
+      console.error("Error fetching latest population:", error);
+      res.status(500).json({ message: "Failed to fetch latest population" });
+    }
+  });
+
+  app.get("/api/population/total", async (req, res) => {
+    try {
+      // Calculate current total population from water scheme data
+      const waterSchemeDataList = await storage.getAllWaterSchemeData();
+      const totalPopulation = waterSchemeDataList.reduce((sum, scheme) => {
+        return sum + (scheme.population || 0);
+      }, 0);
+
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Save today's population snapshot
+      await storage.savePopulationSnapshot(today, totalPopulation);
+      
+      // Calculate population change from previous day
+      const changeData = await storage.calculatePopulationChange(today);
+      
+      res.json({
+        totalPopulation,
+        date: today,
+        change: changeData
+      });
+    } catch (error) {
+      console.error("Error calculating total population:", error);
+      res.status(500).json({ message: "Failed to calculate total population" });
+    }
+  });
+
   // For Replit, we need to listen on port 5000 
   // as this is the port Replit expects
   let server: Server = createHttpServer(app);

@@ -9,6 +9,7 @@ import {
   reportFiles,
   userLoginLogs,
   userActivityLogs,
+  populationTracking,
   type User,
   type InsertUser,
   type Region,
@@ -30,6 +31,8 @@ import {
   type InsertUserLoginLog,
   type UserActivityLog,
   type InsertUserActivityLog,
+  type PopulationTracking,
+  type InsertPopulationTracking,
 } from "@shared/schema";
 import { getDB, initializeDatabase } from "./db";
 import { eq, sql, and } from "drizzle-orm";
@@ -217,6 +220,18 @@ export interface IStorage {
   createReportFile(data: InsertReportFile): Promise<ReportFile>;
   updateReportFile(id: string, data: Partial<ReportFile>): Promise<ReportFile>;
   deleteReportFile(id: string): Promise<boolean>;
+  
+  // Population tracking operations
+  savePopulationSnapshot(date: string, totalPopulation: number): Promise<PopulationTracking>;
+  getPopulationByDate(date: string): Promise<PopulationTracking | undefined>;
+  getLatestPopulation(): Promise<PopulationTracking | undefined>;
+  getPreviousPopulation(currentDate: string): Promise<PopulationTracking | undefined>;
+  calculatePopulationChange(currentDate: string): Promise<{
+    currentPopulation: number;
+    previousPopulation: number;
+    change: number;
+    changePercent: number;
+  } | null>;
 }
 
 // PostgreSQL implementation
@@ -5500,6 +5515,108 @@ export class PostgresStorage implements IStorage {
     `);
 
     return result.rows as UserActivityLog[];
+  }
+
+  // Population tracking methods
+  async savePopulationSnapshot(date: string, totalPopulation: number): Promise<PopulationTracking> {
+    const db = await this.ensureInitialized();
+    
+    // Ensure the population_tracking table exists
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "population_tracking" (
+        "id" SERIAL PRIMARY KEY,
+        "date" TEXT NOT NULL UNIQUE,
+        "total_population" INTEGER NOT NULL,
+        "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    // Use INSERT ... ON CONFLICT to update if date already exists
+    const result = await db.execute(sql`
+      INSERT INTO population_tracking (date, total_population)
+      VALUES (${date}, ${totalPopulation})
+      ON CONFLICT (date) 
+      DO UPDATE SET 
+        total_population = ${totalPopulation},
+        created_at = CURRENT_TIMESTAMP
+      RETURNING *;
+    `);
+
+    return result.rows[0] as PopulationTracking;
+  }
+
+  async getPopulationByDate(date: string): Promise<PopulationTracking | undefined> {
+    const db = await this.ensureInitialized();
+    
+    const result = await db.execute(sql`
+      SELECT * FROM population_tracking 
+      WHERE date = ${date}
+    `);
+
+    return result.rows[0] as PopulationTracking | undefined;
+  }
+
+  async getLatestPopulation(): Promise<PopulationTracking | undefined> {
+    const db = await this.ensureInitialized();
+    
+    const result = await db.execute(sql`
+      SELECT * FROM population_tracking 
+      ORDER BY date DESC 
+      LIMIT 1
+    `);
+
+    return result.rows[0] as PopulationTracking | undefined;
+  }
+
+  async getPreviousPopulation(currentDate: string): Promise<PopulationTracking | undefined> {
+    const db = await this.ensureInitialized();
+    
+    const result = await db.execute(sql`
+      SELECT * FROM population_tracking 
+      WHERE date < ${currentDate}
+      ORDER BY date DESC 
+      LIMIT 1
+    `);
+
+    return result.rows[0] as PopulationTracking | undefined;
+  }
+
+  async calculatePopulationChange(currentDate: string): Promise<{
+    currentPopulation: number;
+    previousPopulation: number;
+    change: number;
+    changePercent: number;
+  } | null> {
+    const db = await this.ensureInitialized();
+    
+    // Get current population
+    const current = await this.getPopulationByDate(currentDate);
+    if (!current) {
+      return null;
+    }
+
+    // Get previous population
+    const previous = await this.getPreviousPopulation(currentDate);
+    if (!previous) {
+      return {
+        currentPopulation: current.total_population,
+        previousPopulation: 0,
+        change: current.total_population,
+        changePercent: 0
+      };
+    }
+
+    const change = current.total_population - previous.total_population;
+    const changePercent = previous.total_population > 0 
+      ? (change / previous.total_population) * 100 
+      : 0;
+
+    return {
+      currentPopulation: current.total_population,
+      previousPopulation: previous.total_population,
+      change,
+      changePercent
+    };
   }
 }
 

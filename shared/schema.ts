@@ -128,6 +128,22 @@ export const insertAppStateSchema = createInsertSchema(appState);
 export type InsertAppState = z.infer<typeof insertAppStateSchema>;
 export type AppState = typeof appState.$inferSelect;
 
+// Population tracking table for daily totals
+export const populationTracking = pgTable("population_tracking", {
+  id: serial("id").primaryKey(),
+  date: text("date").notNull().unique(), // Format: YYYY-MM-DD
+  total_population: integer("total_population").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+});
+
+export const insertPopulationTrackingSchema = createInsertSchema(populationTracking).omit({
+  id: true,
+  created_at: true,
+});
+
+export type InsertPopulationTracking = z.infer<typeof insertPopulationTrackingSchema>;
+export type PopulationTracking = typeof populationTracking.$inferSelect;
+
 // Water Scheme Data table for LPCD tracking
 export const waterSchemeData = pgTable("water_scheme_data", {
   // Region information
