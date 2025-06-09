@@ -21,6 +21,11 @@ interface PopulationStats {
   population_lost_water: number;
   population_with_water_day5: number;
   population_no_water_day5: number;
+  // New LPCD comparison fields
+  population_lpcd_above_55_day7: number;
+  population_lpcd_below_55_day7: number;
+  population_lpcd_above_55_day6: number;
+  population_lpcd_below_55_day6: number;
 }
 
 interface CompactPopulationCardsProps {
@@ -94,6 +99,23 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
   );
 
   const netPopulationChange = populationStats.population_gained_water - populationStats.population_lost_water;
+
+  // Calculate LPCD population changes (day 7 vs day 6)
+  const lpcdAbove55Change = (populationStats.population_lpcd_above_55_day7 || 0) - (populationStats.population_lpcd_above_55_day6 || 0);
+  const lpcdBelow55Change = (populationStats.population_lpcd_below_55_day7 || 0) - (populationStats.population_lpcd_below_55_day6 || 0);
+  
+  // Determine arrow directions
+  const getArrowIcon = (change: number) => {
+    if (change > 0) return "↗";
+    if (change < 0) return "↘";
+    return "→";
+  };
+  
+  const getArrowColor = (change: number, isGoodIncrease: boolean = true) => {
+    if (change > 0) return isGoodIncrease ? "text-green-300" : "text-red-300";
+    if (change < 0) return isGoodIncrease ? "text-red-300" : "text-green-300";
+    return "text-yellow-300";
+  };
 
   return (
     <div className="w-full">
@@ -191,25 +213,27 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
           </div>
         </div>
 
-        {/* Villages with LPCD > 55 */}
+        {/* Population with LPCD > 55 */}
         <div className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_lpcd_above_55)}</div>
           </div>
           
-          {/* +/- sign - top right */}
+          {/* Arrow indicator - top right */}
           <div className="absolute top-2 right-2">
-            <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-sm font-bold">✓</span>
+            <div className={`text-lg font-bold ${getArrowColor(lpcdAbove55Change, true)}`}>
+              {getArrowIcon(lpcdAbove55Change)}
             </div>
           </div>
           
-          {/* Percentage and villages count - center */}
+          {/* Population change - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-teal-200 text-sm font-bold">{formatNumber(populationStats.villages_lpcd_above_55)}</div>
-              <div className="text-teal-100 text-xs">villages</div>
+              <div className={`text-sm font-bold ${lpcdAbove55Change >= 0 ? 'text-teal-200' : 'text-orange-200'}`}>
+                {lpcdAbove55Change >= 0 ? '+' : ''}{formatNumber(Math.abs(lpcdAbove55Change))}
+              </div>
+              <div className="text-teal-100 text-xs">population change</div>
             </div>
           </div>
           
@@ -224,25 +248,27 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
           </div>
         </div>
 
-        {/* Villages with LPCD ≤ 55 */}
+        {/* Population with LPCD ≤ 55 */}
         <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_lpcd_below_55)}</div>
           </div>
           
-          {/* +/- sign - top right */}
+          {/* Arrow indicator - top right */}
           <div className="absolute top-2 right-2">
-            <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-              <span className="text-sm font-bold">!</span>
+            <div className={`text-lg font-bold ${getArrowColor(lpcdBelow55Change, false)}`}>
+              {getArrowIcon(lpcdBelow55Change)}
             </div>
           </div>
           
-          {/* Percentage and villages count - center */}
+          {/* Population change - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-amber-200 text-sm font-bold">{formatNumber(populationStats.villages_lpcd_below_55)}</div>
-              <div className="text-amber-100 text-xs">villages</div>
+              <div className={`text-sm font-bold ${lpcdBelow55Change <= 0 ? 'text-amber-200' : 'text-red-200'}`}>
+                {lpcdBelow55Change >= 0 ? '+' : ''}{formatNumber(Math.abs(lpcdBelow55Change))}
+              </div>
+              <div className="text-amber-100 text-xs">population change</div>
             </div>
           </div>
           

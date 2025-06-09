@@ -193,7 +193,8 @@ router.get('/population-stats', async (req, res) => {
             population,
             water_value_day6,
             water_value_day5,
-            lpcd_value_day7
+            lpcd_value_day7,
+            lpcd_value_day6
           FROM water_scheme_data 
           WHERE population IS NOT NULL AND population > 0
         )
@@ -227,7 +228,21 @@ router.get('/population-stats', async (req, res) => {
           
           -- Day 5 baseline for comparison
           SUM(CASE WHEN water_value_day5 > 0 THEN population ELSE 0 END) as population_with_water_day5,
-          SUM(CASE WHEN water_value_day5 = 0 OR water_value_day5 IS NULL THEN population ELSE 0 END) as population_no_water_day5
+          SUM(CASE WHEN water_value_day5 = 0 OR water_value_day5 IS NULL THEN population ELSE 0 END) as population_no_water_day5,
+          
+          -- LPCD statistics for day 7 and day 6 comparison
+          SUM(CASE WHEN lpcd_value_day7 > 55 THEN population ELSE 0 END) as population_lpcd_above_55_day7,
+          SUM(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) as population_lpcd_below_55_day7,
+          SUM(CASE WHEN lpcd_value_day6 > 55 THEN population ELSE 0 END) as population_lpcd_above_55_day6,
+          SUM(CASE WHEN lpcd_value_day6 <= 55 AND lpcd_value_day6 > 0 THEN population ELSE 0 END) as population_lpcd_below_55_day6,
+          
+          -- Village counts for LPCD (keep existing for compatibility)
+          COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) as villages_lpcd_above_55,
+          COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_lpcd_below_55,
+          
+          -- Current LPCD population totals (using day 7 as current)
+          SUM(CASE WHEN lpcd_value_day7 > 55 THEN population ELSE 0 END) as population_lpcd_above_55,
+          SUM(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) as population_lpcd_below_55
           
         FROM unique_villages
       `;
