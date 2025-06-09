@@ -100,7 +100,7 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
       {/* Single Row - All Five Cards */}
       <div className="grid grid-cols-5 gap-4">
         {/* Total Population Covered */}
-        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white relative shadow-lg overflow-hidden rounded-lg h-32">
+        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.total_population)}</div>
@@ -129,7 +129,7 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
         </div>
 
         {/* Population With Water */}
-        <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white relative shadow-lg overflow-hidden rounded-lg h-32">
+        <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_with_water)}</div>
@@ -137,8 +137,9 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
           
           {/* +/- sign - top right */}
           <div className="absolute top-2 right-2">
-            <div className="text-green-300 text-lg font-bold">
-              {populationStats.population_gained_water > populationStats.population_lost_water ? '+' : '±'}
+            <div className="flex flex-col items-center">
+              <div className="text-green-300 text-sm font-bold">+</div>
+              <div className="text-yellow-300 text-sm font-bold">-</div>
             </div>
           </div>
           
@@ -160,7 +161,7 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
         </div>
 
         {/* Population No Water */}
-        <div className="bg-gradient-to-br from-red-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg h-32">
+        <div className="bg-gradient-to-br from-red-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_no_water)}</div>
@@ -191,7 +192,7 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
         </div>
 
         {/* Villages with LPCD > 55 */}
-        <div className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white relative shadow-lg overflow-hidden rounded-lg h-32">
+        <div className="bg-gradient-to-br from-teal-500 to-cyan-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_lpcd_above_55)}</div>
@@ -224,7 +225,7 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
         </div>
 
         {/* Villages with LPCD ≤ 55 */}
-        <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg h-32">
+        <div className="bg-gradient-to-br from-amber-500 to-orange-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_lpcd_below_55)}</div>
