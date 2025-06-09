@@ -104,7 +104,7 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
   const lpcdAbove55Change = (populationStats.population_lpcd_above_55_day7 || 0) - (populationStats.population_lpcd_above_55_day6 || 0);
   const lpcdBelow55Change = (populationStats.population_lpcd_below_55_day7 || 0) - (populationStats.population_lpcd_below_55_day6 || 0);
   
-  // Determine arrow directions
+  // Determine arrow directions and formatting
   const getArrowIcon = (change: number) => {
     if (change > 0) return "↗";
     if (change < 0) return "↘";
@@ -117,12 +117,23 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
     return "text-yellow-300";
   };
 
+  const formatChangeWithArrow = (change: number, color: string = "text-white") => {
+    const arrow = getArrowIcon(change);
+    const value = formatNumber(Math.abs(change));
+    return (
+      <div className={`flex items-center gap-1 ${color}`}>
+        <span className="text-lg">{arrow}</span>
+        <span className="font-bold">{value}</span>
+      </div>
+    );
+  };
+
   return (
     <div className="w-full">
       {/* Single Row - All Five Cards */}
-      <div className="grid grid-cols-5 gap-4">
+      <div className="grid grid-cols-5 gap-6">
         {/* Total Population Covered */}
-        <div className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
+        <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-blue-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.total_population)}</div>
@@ -136,8 +147,8 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
           {/* Percentage and change - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-green-300 text-sm font-bold">+{formatNumber(Math.abs(netPopulationChange))}</div>
-              <div className="text-green-200 text-xs">{formatPercentage(Math.abs(waterGainedPercent))}%</div>
+              {formatChangeWithArrow(netPopulationChange, "text-green-300")}
+              <div className="text-green-200 text-xs mt-1">{formatPercentage(Math.abs(waterGainedPercent))}%</div>
             </div>
           </div>
           
@@ -151,7 +162,7 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
         </div>
 
         {/* Population With Water */}
-        <div className="bg-gradient-to-br from-emerald-500 to-green-600 text-white relative shadow-lg overflow-hidden rounded-lg h-40">
+        <div className="bg-gradient-to-br from-emerald-500 via-green-600 to-emerald-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-emerald-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_with_water)}</div>
@@ -165,11 +176,10 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
             </div>
           </div>
           
-          {/* Percentage and change - center */}
+          {/* Change number only - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-green-300 text-sm font-bold">+{formatNumber(populationStats.population_gained_water)}</div>
-              <div className="text-green-200 text-xs">{formatPercentage(populationStats.percent_population_with_water)}%</div>
+              {formatChangeWithArrow(populationStats.population_gained_water, "text-green-300")}
             </div>
           </div>
           
@@ -196,11 +206,10 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
             </div>
           </div>
           
-          {/* Percentage and change - center */}
+          {/* Change number only - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className="text-yellow-300 text-sm font-bold">-{formatNumber(populationStats.population_lost_water)}</div>
-              <div className="text-yellow-200 text-xs">{formatPercentage(populationStats.percent_population_no_water)}%</div>
+              {formatChangeWithArrow(-populationStats.population_lost_water, "text-yellow-300")}
             </div>
           </div>
           
@@ -220,20 +229,17 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_lpcd_above_55)}</div>
           </div>
           
-          {/* Arrow indicator - top right */}
+          {/* Original checkmark icon - top right */}
           <div className="absolute top-2 right-2">
-            <div className={`text-lg font-bold ${getArrowColor(lpcdAbove55Change, true)}`}>
-              {getArrowIcon(lpcdAbove55Change)}
+            <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+              <span className="text-sm font-bold">✓</span>
             </div>
           </div>
           
-          {/* Population change - center */}
+          {/* Population change with arrow - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className={`text-sm font-bold ${lpcdAbove55Change >= 0 ? 'text-teal-200' : 'text-orange-200'}`}>
-                {lpcdAbove55Change >= 0 ? '+' : ''}{formatNumber(Math.abs(lpcdAbove55Change))}
-              </div>
-              <div className="text-teal-100 text-xs">population change</div>
+              {formatChangeWithArrow(lpcdAbove55Change, lpcdAbove55Change >= 0 ? "text-teal-200" : "text-orange-200")}
             </div>
           </div>
           
@@ -255,20 +261,17 @@ export default function CompactPopulationCards({ selectedRegion = "all" }: Compa
             <div className="text-2xl font-bold">{formatNumber(populationStats.population_lpcd_below_55)}</div>
           </div>
           
-          {/* Arrow indicator - top right */}
+          {/* Original warning icon - top right */}
           <div className="absolute top-2 right-2">
-            <div className={`text-lg font-bold ${getArrowColor(lpcdBelow55Change, false)}`}>
-              {getArrowIcon(lpcdBelow55Change)}
+            <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+              <span className="text-sm font-bold">!</span>
             </div>
           </div>
           
-          {/* Population change - center */}
+          {/* Population change with arrow - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              <div className={`text-sm font-bold ${lpcdBelow55Change <= 0 ? 'text-amber-200' : 'text-red-200'}`}>
-                {lpcdBelow55Change >= 0 ? '+' : ''}{formatNumber(Math.abs(lpcdBelow55Change))}
-              </div>
-              <div className="text-amber-100 text-xs">population change</div>
+              {formatChangeWithArrow(lpcdBelow55Change, lpcdBelow55Change <= 0 ? "text-amber-200" : "text-red-200")}
             </div>
           </div>
           
