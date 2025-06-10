@@ -312,7 +312,7 @@ export default function CompactPopulationCards({
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               {populationStats.population_gained_water !== 0 && (
-                <div className="flex items-center justify-center gap-1 text-green-300">
+                <div className={`flex items-center justify-center gap-1 ${populationStats.population_gained_water > 0 ? 'text-green-300' : 'text-red-300'}`}>
                   {populationStats.population_gained_water > 0 ? (
                     <ArrowUp className="h-4 w-4" />
                   ) : (
@@ -324,7 +324,9 @@ export default function CompactPopulationCards({
                 </div>
               )}
               <div className="text-green-200 text-sm mt-1 leading-tight">
-                {formatPercentage(withWaterChangePercentage)}%
+                <span className={populationStats.population_gained_water > 0 ? 'text-green-200' : 'text-red-200'}>
+                  {formatPercentage(withWaterChangePercentage)}%
+                </span>
                 <br />
                 <span className="text-xs text-green-100">
                   {formatPercentage(withWaterPercentage)}% of total
@@ -357,15 +359,17 @@ export default function CompactPopulationCards({
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               {populationStats.population_lost_water > 0 && (
-                <div className="flex items-center justify-center gap-1 text-yellow-300">
+                <div className="flex items-center justify-center gap-1 text-red-300">
                   <ArrowDown className="h-4 w-4" />
                   <span>{populationStats.population_lost_water}</span>
                 </div>
               )}
               <div className="text-yellow-200 text-sm mt-1 leading-tight">
-                {formatPercentage(noWaterChangePercentage)}%
+                <span className={populationStats.population_lost_water > 0 ? 'text-red-200' : 'text-yellow-200'}>
+                  {formatPercentage(noWaterChangePercentage)}%
+                </span>
                 <br />
-                <span className="text-xl text-yellow-100">
+                <span className="text-xs text-yellow-100">
                   {formatPercentage(noWaterPercentage)}% of total
                 </span>
               </div>
@@ -399,20 +403,32 @@ export default function CompactPopulationCards({
 
           {/* Arrow and change number - center */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center flex items-center justify-center gap-1">
-              {lpcdAbove55Change > 0 && (
-                <ArrowUp className="h-4 w-4 text-teal-200" />
+            <div className="text-center">
+              {lpcdAbove55Change !== 0 && (
+                <div className="flex items-center justify-center gap-1">
+                  {lpcdAbove55Change > 0 ? (
+                    <ArrowUp className="h-4 w-4 text-teal-200" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4 text-red-300" />
+                  )}
+                  <span
+                    className={
+                      lpcdAbove55Change >= 0 ? "text-teal-200" : "text-red-300"
+                    }
+                  >
+                    {Math.abs(lpcdAbove55Change)}
+                  </span>
+                </div>
               )}
-              {lpcdAbove55Change < 0 && (
-                <ArrowDown className="h-4 w-4 text-orange-200" />
-              )}
-              <span
-                className={
-                  lpcdAbove55Change >= 0 ? "text-teal-200" : "text-orange-200"
-                }
-              >
-                {Math.abs(lpcdAbove55Change)}
-              </span>
+              <div className="text-teal-200 text-sm mt-1 leading-tight">
+                <span className={lpcdAbove55Change >= 0 ? 'text-teal-200' : 'text-red-200'}>
+                  {formatPercentage(lpcdAbove55ChangePercentage)}%
+                </span>
+                <br />
+                <span className="text-xs text-teal-100">
+                  {formatPercentage(lpcdAbove55Percentage)}% of total
+                </span>
+              </div>
             </div>
           </div>
 
@@ -447,20 +463,32 @@ export default function CompactPopulationCards({
 
           {/* Arrow and change number - center */}
           <div className="absolute inset-0 flex items-center justify-center">
-            <div className="text-center flex items-center justify-center gap-1">
-              {lpcdBelow55Change > 0 && (
-                <ArrowUp className="h-4 w-4 text-red-200" />
+            <div className="text-center">
+              {lpcdBelow55Change !== 0 && (
+                <div className="flex items-center justify-center gap-1">
+                  {lpcdBelow55Change > 0 ? (
+                    <ArrowUp className="h-4 w-4 text-red-300" />
+                  ) : (
+                    <ArrowDown className="h-4 w-4 text-green-300" />
+                  )}
+                  <span
+                    className={
+                      lpcdBelow55Change <= 0 ? "text-green-300" : "text-red-300"
+                    }
+                  >
+                    {Math.abs(lpcdBelow55Change)}
+                  </span>
+                </div>
               )}
-              {lpcdBelow55Change < 0 && (
-                <ArrowDown className="h-4 w-4 text-amber-200" />
-              )}
-              <span
-                className={
-                  lpcdBelow55Change <= 0 ? "text-amber-200" : "text-red-200"
-                }
-              >
-                {Math.abs(lpcdBelow55Change)}
-              </span>
+              <div className="text-amber-200 text-sm mt-1 leading-tight">
+                <span className={lpcdBelow55Change <= 0 ? 'text-green-200' : 'text-red-200'}>
+                  {formatPercentage(lpcdBelow55ChangePercentage)}%
+                </span>
+                <br />
+                <span className="text-xs text-amber-100">
+                  {formatPercentage(lpcdBelow55Percentage)}% of total
+                </span>
+              </div>
             </div>
           </div>
 
