@@ -239,26 +239,30 @@ export default function CompactPopulationCards({
                   ) : (
                     <ArrowDown className="h-4 w-4 text-red-300" />
                   )}
-                  <div className="text-green-300 text-sm font-bold">
+                  <div className={`text-sm font-bold ${populationTracking.change.change > 0 ? 'text-green-300' : 'text-red-300'}`}>
                     {formatNumber(Math.abs(populationTracking.change.change))}
                   </div>
                 </div>
               ) : selectedRegion === "all" ? (
                 <div className="text-green-200 text-xs">No change</div>
               ) : (
-                <div className="flex items-center justify-center gap-1 text-green-300">
+                <div className="flex items-center justify-center gap-1">
                   {netPopulationChange > 0 ? (
-                    <ArrowUp className="h-4 w-4" />
+                    <ArrowUp className="h-4 w-4 text-green-300" />
                   ) : (
                     <ArrowDown className="h-4 w-4 text-red-300" />
                   )}
-                  <span>{Math.abs(netPopulationChange)}</span>
+                  <span className={netPopulationChange > 0 ? 'text-green-300' : 'text-red-300'}>
+                    {Math.abs(netPopulationChange)}
+                  </span>
                 </div>
               )}
               <div className="text-green-200 text-xs mt-1">
                 {populationTracking?.change ? (
                   <>
-                    {formatPercentage(Math.abs(populationTracking.change.changePercent))}%
+                    <span className={populationTracking.change.change > 0 ? 'text-green-200' : 'text-red-200'}>
+                      {formatPercentage(Math.abs(populationTracking.change.changePercent))}%
+                    </span>
                     <br />
                     <span className="text-xs text-blue-100">
                       {selectedRegion === "all" ? "from yesterday" : `${selectedRegion} daily change`}
@@ -266,7 +270,9 @@ export default function CompactPopulationCards({
                   </>
                 ) : (
                   <>
-                    {formatPercentage(Math.abs(waterGainedPercent))}%
+                    <span className={netPopulationChange > 0 ? 'text-green-200' : 'text-red-200'}>
+                      {formatPercentage(Math.abs(waterGainedPercent))}%
+                    </span>
                     <br />
                     <span className="text-xs text-blue-100">of total</span>
                   </>
