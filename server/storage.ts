@@ -5910,7 +5910,8 @@ export class PostgresStorage implements IStorage {
   }
 
   async addRegionalPopulation(data: InsertRegionPopulationTracking): Promise<RegionPopulationTracking> {
-    return await this.saveRegionPopulationSnapshot(data.date, data.region, data.population);
+    const population = data.population || data.total_population || 0;
+    return await this.saveRegionPopulationSnapshot(data.date, data.region, population);
   }
 }
 
