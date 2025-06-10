@@ -8,6 +8,7 @@ import {
   timestamp,
   varchar,
   decimal,
+  unique,
   primaryKey,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
@@ -136,13 +137,31 @@ export const populationTracking = pgTable("population_tracking", {
   created_at: timestamp("created_at").defaultNow(),
 });
 
+// Region-specific population tracking table
+export const regionPopulationTracking = pgTable("region_population_tracking", {
+  id: serial("id").primaryKey(),
+  date: text("date").notNull(), // Format: YYYY-MM-DD
+  region: text("region").notNull(),
+  total_population: integer("total_population").notNull(),
+  created_at: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  uniqueDateRegion: unique("unique_date_region").on(table.date, table.region),
+}));
+
 export const insertPopulationTrackingSchema = createInsertSchema(populationTracking).omit({
+  id: true,
+  created_at: true,
+});
+
+export const insertRegionPopulationTrackingSchema = createInsertSchema(regionPopulationTracking).omit({
   id: true,
   created_at: true,
 });
 
 export type InsertPopulationTracking = z.infer<typeof insertPopulationTrackingSchema>;
 export type PopulationTracking = typeof populationTracking.$inferSelect;
+export type InsertRegionPopulationTracking = z.infer<typeof insertRegionPopulationTrackingSchema>;
+export type RegionPopulationTracking = typeof regionPopulationTracking.$inferSelect;
 
 // Water Scheme Data table for LPCD tracking
 export const waterSchemeData = pgTable("water_scheme_data", {

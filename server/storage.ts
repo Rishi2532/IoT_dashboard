@@ -10,6 +10,7 @@ import {
   userLoginLogs,
   userActivityLogs,
   populationTracking,
+  regionPopulationTracking,
   type User,
   type InsertUser,
   type Region,
@@ -33,6 +34,8 @@ import {
   type InsertUserActivityLog,
   type PopulationTracking,
   type InsertPopulationTracking,
+  type RegionPopulationTracking,
+  type InsertRegionPopulationTracking,
 } from "@shared/schema";
 import { getDB, initializeDatabase } from "./db";
 import { eq, sql, and } from "drizzle-orm";
@@ -232,6 +235,19 @@ export interface IStorage {
     change: number;
     changePercent: number;
   } | null>;
+  
+  // Region-specific population tracking operations
+  saveRegionPopulationSnapshot(date: string, region: string, totalPopulation: number): Promise<RegionPopulationTracking>;
+  getRegionPopulationByDate(date: string, region: string): Promise<RegionPopulationTracking | undefined>;
+  getLatestRegionPopulation(region: string): Promise<RegionPopulationTracking | undefined>;
+  getPreviousRegionPopulation(currentDate: string, region: string): Promise<RegionPopulationTracking | undefined>;
+  calculateRegionPopulationChange(currentDate: string, region: string): Promise<{
+    currentPopulation: number;
+    previousPopulation: number;
+    change: number;
+    changePercent: number;
+  } | null>;
+  saveAllRegionPopulationSnapshots(date: string): Promise<RegionPopulationTracking[]>;
 }
 
 // PostgreSQL implementation
