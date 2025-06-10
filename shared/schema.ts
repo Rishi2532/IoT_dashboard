@@ -129,39 +129,7 @@ export const insertAppStateSchema = createInsertSchema(appState);
 export type InsertAppState = z.infer<typeof insertAppStateSchema>;
 export type AppState = typeof appState.$inferSelect;
 
-// Population tracking table for daily totals
-export const populationTracking = pgTable("population_tracking", {
-  id: serial("id").primaryKey(),
-  date: text("date").notNull().unique(), // Format: YYYY-MM-DD
-  total_population: integer("total_population").notNull(),
-  created_at: timestamp("created_at").defaultNow(),
-});
 
-// Region-specific population tracking table
-export const regionPopulationTracking = pgTable("region_population_tracking", {
-  id: serial("id").primaryKey(),
-  date: text("date").notNull(), // Format: YYYY-MM-DD
-  region: text("region").notNull(),
-  total_population: integer("total_population").notNull(),
-  created_at: timestamp("created_at").defaultNow(),
-}, (table) => ({
-  uniqueDateRegion: unique("unique_date_region").on(table.date, table.region),
-}));
-
-export const insertPopulationTrackingSchema = createInsertSchema(populationTracking).omit({
-  id: true,
-  created_at: true,
-});
-
-export const insertRegionPopulationTrackingSchema = createInsertSchema(regionPopulationTracking).omit({
-  id: true,
-  created_at: true,
-});
-
-export type InsertPopulationTracking = z.infer<typeof insertPopulationTrackingSchema>;
-export type PopulationTracking = typeof populationTracking.$inferSelect;
-export type InsertRegionPopulationTracking = z.infer<typeof insertRegionPopulationTrackingSchema>;
-export type RegionPopulationTracking = typeof regionPopulationTracking.$inferSelect;
 
 // Water Scheme Data table for LPCD tracking
 export const waterSchemeData = pgTable("water_scheme_data", {
@@ -421,3 +389,40 @@ export const insertUserActivityLogSchema = createInsertSchema(userActivityLogs).
 
 export type InsertUserActivityLog = z.infer<typeof insertUserActivityLogSchema>;
 export type UserActivityLog = typeof userActivityLogs.$inferSelect;
+
+// Population Tracking table for daily total population storage
+export const populationTracking = pgTable("population_tracking", {
+  id: serial("id").primaryKey(),
+  date: text("date").notNull().unique(),
+  total_population: integer("total_population").notNull(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const insertPopulationTrackingSchema = createInsertSchema(populationTracking).omit({
+  id: true,
+  created_at: true,
+});
+
+export type InsertPopulationTracking = z.infer<typeof insertPopulationTrackingSchema>;
+export type PopulationTracking = typeof populationTracking.$inferSelect;
+
+// Region Population Tracking table for daily regional population storage
+export const regionPopulationTracking = pgTable("region_population_tracking", {
+  id: serial("id").primaryKey(),
+  date: text("date").notNull(),
+  region: text("region").notNull(),
+  population: integer("population").notNull(),
+  created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => {
+  return {
+    unique_date_region: unique().on(table.date, table.region),
+  };
+});
+
+export const insertRegionPopulationTrackingSchema = createInsertSchema(regionPopulationTracking).omit({
+  id: true,
+  created_at: true,
+});
+
+export type InsertRegionPopulationTracking = z.infer<typeof insertRegionPopulationTrackingSchema>;
+export type RegionPopulationTracking = typeof regionPopulationTracking.$inferSelect;

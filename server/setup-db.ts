@@ -407,6 +407,28 @@ export async function initializeTables(db: any) {
       );
     `);
     
+    // Create population_tracking table for daily total population storage
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "population_tracking" (
+        "id" SERIAL PRIMARY KEY,
+        "date" TEXT NOT NULL UNIQUE,
+        "total_population" INTEGER NOT NULL,
+        "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    
+    // Create region_population_tracking table for daily regional population storage
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "region_population_tracking" (
+        "id" SERIAL PRIMARY KEY,
+        "date" TEXT NOT NULL,
+        "region" TEXT NOT NULL,
+        "population" INTEGER NOT NULL,
+        "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE("date", "region")
+      );
+    `);
+    
     console.log("Database tables initialized successfully");
   } catch (error) {
     console.error("Error initializing database tables:", error);

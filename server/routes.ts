@@ -3640,6 +3640,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // --------------------- Population Tracking API Routes ---------------------
+
+  // Get total population for a specific date (latest if no date provided)
+  app.get("/api/population/total", async (req, res) => {
+    try {
+      const date = req.query.date as string;
+      const populationData = await storage.getTotalPopulation(date);
+      res.json(populationData);
+    } catch (error) {
+      console.error("Error fetching total population:", error);
+      res.status(500).json({ message: "Failed to fetch total population" });
+    }
+  });
+
+  // Get regional population for a specific date and region
+  app.get("/api/population/region/:region", async (req, res) => {
+    try {
+      const region = req.params.region;
+      const date = req.query.date as string;
+      const populationData = await storage.getRegionalPopulation(region, date);
+      res.json(populationData);
+    } catch (error) {
+      console.error("Error fetching regional population:", error);
+      res.status(500).json({ message: "Failed to fetch regional population" });
+    }
+  });
+
+  // Get population history for all regions
+  app.get("/api/population/history", async (req, res) => {
+    try {
+      const days = req.query.days ? parseInt(req.query.days as string) : 7;
+      const populationHistory = await storage.getPopulationHistory(days);
+      res.json(populationHistory);
+    } catch (error) {
+      console.error("Error fetching population history:", error);
+      res.status(500).json({ message: "Failed to fetch population history" });
+    }
+  });
+
+  // Add daily population data (admin only)
+  app.post("/api/population/total", requireAdmin, async (req, res) => {
+    try {
+      const { date, total_population } = req.body;
+      
+      if (!date || !total_population) {
+        return res.status(400).json({ message: "Date and total_population are required" });
+      }
+
+      const result = await storage.addTotalPopulation({ date, total_population });
+      res.json(result);
+    } catch (error) {
+      console.error("Error adding total population:", error);
+      res.status(500).json({ message: "Failed to add total population" });
+    }
+  });
+
+  // Add regional population data (admin only)
+  app.post("/api/population/region", requireAdmin, async (req, res) => {
+    try {
+      const { date, region, population } = req.body;
+      
+      if (!date || !region || !population) {
+        return res.status(400).json({ message: "Date, region, and population are required" });
+      }
+
+      const result = await storage.addRegionalPopulation({ date, region, population });
+      res.json(result);
+    } catch (error) {
+      console.error("Error adding regional population:", error);
+      res.status(500).json({ message: "Failed to add regional population" });
+    }
+  });
+
   // For Replit, we need to listen on port 5000 
   // as this is the port Replit expects
   let server: Server = createHttpServer(app);
