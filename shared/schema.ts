@@ -411,7 +411,7 @@ export const regionPopulationTracking = pgTable("region_population_tracking", {
   id: serial("id").primaryKey(),
   date: text("date").notNull(),
   region: text("region").notNull(),
-  population: integer("population").notNull(),
+  total_population: integer("total_population").notNull(),
   created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => {
   return {
@@ -422,6 +422,8 @@ export const regionPopulationTracking = pgTable("region_population_tracking", {
 export const insertRegionPopulationTrackingSchema = createInsertSchema(regionPopulationTracking).omit({
   id: true,
   created_at: true,
+}).extend({
+  population: z.number().optional() // Allow both 'population' and 'total_population' for compatibility
 });
 
 export type InsertRegionPopulationTracking = z.infer<typeof insertRegionPopulationTrackingSchema>;

@@ -5770,6 +5770,148 @@ export class PostgresStorage implements IStorage {
 
     return results;
   }
+
+  // Public interface methods for the API endpoints
+  async getTotalPopulation(date?: string): Promise<{
+    totalPopulation: number;
+    date: string;
+    change?: {
+      currentPopulation: number;
+      previousPopulation: number;
+      change: number;
+      changePercent: number;
+    };
+  }> {
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    
+    let populationData: PopulationTracking | undefined;
+    
+    if (date) {
+      populationData = await this.getPopulationByDate(date);
+    } else {
+      populationData = await this.getLatestPopulation();
+    }
+    
+    if (!populationData) {
+      // Calculate from water scheme data if no stored data
+      const waterSchemeData = await this.getAllWaterSchemeData();
+      const totalPopulation = waterSchemeData.reduce((sum, scheme) => sum + (scheme.population || 0), 0);
+      
+      // Store this calculation for future use
+      await this.savePopulationSnapshot(targetDate, totalPopulation);
+      
+      return {
+        totalPopulation,
+        date: targetDate
+      };
+    }
+    
+    // Get change data
+    const change = await this.calculatePopulationChange(populationData.date);
+    
+    return {
+      totalPopulation: populationData.total_population,
+      date: populationData.date,
+      change: change || undefined
+    };
+  }
+
+  async getRegionalPopulation(region: string, date?: string): Promise<{
+    totalPopulation: number;
+    region: string;
+    date: string;
+    change?: {
+      currentPopulation: number;
+      previousPopulation: number;
+      change: number;
+      changePercent: number;
+    };
+  }> {
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    
+    let populationData: RegionPopulationTracking | undefined;
+    
+    if (date) {
+      populationData = await this.getRegionPopulationByDate(date, region);
+    } else {
+      populationData = await this.getLatestRegionPopulation(region);
+    }
+    
+    if (!populationData) {
+      // Calculate from water scheme data if no stored data
+      const waterSchemeData = await this.getAllWaterSchemeData({ region });
+      const totalPopulation = waterSchemeData.reduce((sum, scheme) => sum + (scheme.population || 0), 0);
+      
+      // Store this calculation for future use
+      await this.saveRegionPopulationSnapshot(targetDate, region, totalPopulation);
+      
+      return {
+        totalPopulation,
+        region,
+        date: targetDate
+      };
+    }
+    
+    // Get change data
+    const change = await this.calculateRegionPopulationChange(populationData.date, region);
+    
+    return {
+      totalPopulation: populationData.total_population,
+      region,
+      date: populationData.date,
+      change: change || undefined
+    };
+  }
+
+  async getPopulationHistory(days: number = 7): Promise<{
+    totalHistory: Array<{
+      date: string;
+      totalPopulation: number;
+    }>;
+    regionHistory: Array<{
+      date: string;
+      region: string;
+      population: number;
+    }>;
+  }> {
+    const db = await this.ensureInitialized();
+    
+    // Get total population history
+    const totalResult = await db.execute(sql`
+      SELECT date, total_population 
+      FROM population_tracking 
+      ORDER BY date DESC 
+      LIMIT ${days}
+    `);
+    
+    // Get regional population history
+    const regionResult = await db.execute(sql`
+      SELECT date, region, total_population as population
+      FROM region_population_tracking 
+      ORDER BY date DESC, region 
+      LIMIT ${days * 10}
+    `);
+    
+    return {
+      totalHistory: totalResult.rows.map(row => ({
+        date: row.date,
+        totalPopulation: row.total_population
+      })),
+      regionHistory: regionResult.rows.map(row => ({
+        date: row.date,
+        region: row.region,
+        population: row.population
+      }))
+    };
+  }
+
+  async addTotalPopulation(data: InsertPopulationTracking): Promise<PopulationTracking> {
+    return await this.savePopulationSnapshot(data.date, data.total_population);
+  }
+
+  async addRegionalPopulation(data: InsertRegionPopulationTracking): Promise<RegionPopulationTracking> {
+    return await this.saveRegionPopulationSnapshot(data.date, data.region, data.population);
+  }
 }
 
 export const storage = new PostgresStorage();
