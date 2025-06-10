@@ -11,33 +11,6 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideInUp {
-  from { 
-    opacity: 0; 
-    transform: translateY(30px) scale(0.95); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0) scale(1); 
-  }
-}
-
-@keyframes pulse {
-  0%, 100% { 
-    transform: scale(1); 
-    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
-  }
-  50% { 
-    transform: scale(1.02); 
-    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
-  }
-}
-
-@keyframes shimmer {
-  0% { background-position: -200px 0; }
-  100% { background-position: calc(200px + 100%) 0; }
-}
-
 @keyframes ping {
   0% { transform: scale(1); opacity: 1; }
   75%, 100% { transform: scale(2); opacity: 0; }
@@ -47,34 +20,9 @@
   animation: fadeIn 0.3s ease-out forwards;
 }
 
-.animate-slideInUp {
-  animation: slideInUp 0.6s ease-out forwards;
-}
-
-.animate-pulse-custom {
-  animation: pulse 2s ease-in-out infinite;
-}
-
-.animate-shimmer {
-  background-image: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.1) 50%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  background-size: 200px 100%;
-  animation: shimmer 2s infinite;
-}
-
 .animate-ping {
   animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
-
-/* Animation delays */
-.animation-delay-100 { animation-delay: 0.1s; }
-.animation-delay-200 { animation-delay: 0.2s; }
-.animation-delay-300 { animation-delay: 0.3s; }
-.animation-delay-400 { animation-delay: 0.4s; }
 
 /* Draggable element styles */
 .drag-handle {
@@ -102,29 +50,6 @@
                 rgba(0, 0, 0, 0.05) 0px 2px 8px 0px;
   }
 
-  /* Enhanced shadow effects for population cards */
-  .shadow-blue-500\/30 {
-    box-shadow: 0 25px 50px -12px rgba(59, 130, 246, 0.3);
-  }
-  
-  .shadow-emerald-500\/30 {
-    box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.3);
-  }
-  
-  .shadow-red-500\/30 {
-    box-shadow: 0 25px 50px -12px rgba(239, 68, 68, 0.3);
-  }
-  
-  .shadow-teal-500\/30 {
-    box-shadow: 0 25px 50px -12px rgba(20, 184, 166, 0.3);
-  }
-  
-  .shadow-amber-500\/30 {
-    box-shadow: 0 25px 50px -12px rgba(245, 158, 11, 0.3);
-  }
-}
-
-@layer components {
   table thead tr {
     background-color: var(--table-header-bg) !important;
   }
