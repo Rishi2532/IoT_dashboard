@@ -219,7 +219,7 @@ export default function CompactPopulationCards({
   return (
     <div className="w-full">
       {/* Single Row - All Five Cards */}
-      <div className="grid grid-cols-5 gap-6">
+      <div className="grid grid-cols-5 gap-6 p-2">
         {/* Total Population Covered */}
         <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 text-white relative shadow-2xl hover:shadow-blue-500/30 transition-all duration-500 ease-in-out overflow-hidden rounded-xl h-40 border border-blue-400/20 hover:scale-105 hover:border-blue-300/40 transform hover:-translate-y-3 animate-slideInUp group backdrop-blur-sm">
           {/* Shimmer effect overlay */}
@@ -351,7 +351,9 @@ export default function CompactPopulationCards({
         </div>
 
         {/* Population No Water */}
-        <div className="bg-gradient-to-br from-red-500 via-red-600 to-orange-700 text-white relative shadow-2xl hover:shadow-3xl transition-all duration-500 ease-in-out overflow-hidden rounded-xl h-40 border border-red-400/20 hover:scale-105 hover:border-red-300/40 transform hover:-translate-y-2 animate-fadeIn animation-delay-200">
+        <div className="bg-gradient-to-br from-red-500 via-red-600 to-orange-700 text-white relative shadow-2xl hover:shadow-red-500/30 transition-all duration-500 ease-in-out overflow-hidden rounded-xl h-40 border border-red-400/20 hover:scale-105 hover:border-red-300/40 transform hover:-translate-y-3 animate-slideInUp animation-delay-200 group backdrop-blur-sm">
+          {/* Shimmer effect overlay */}
+          <div className="absolute inset-0 animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">
@@ -390,7 +392,9 @@ export default function CompactPopulationCards({
         </div>
 
         {/* Population with LPCD > 55 */}
-        <div className="bg-gradient-to-br from-teal-500 via-cyan-600 to-teal-700 text-white relative shadow-2xl hover:shadow-3xl transition-all duration-500 ease-in-out overflow-hidden rounded-xl h-40 border border-teal-400/20 hover:scale-105 hover:border-teal-300/40 transform hover:-translate-y-2 animate-fadeIn animation-delay-300">
+        <div className="bg-gradient-to-br from-teal-500 via-cyan-600 to-teal-700 text-white relative shadow-2xl hover:shadow-teal-500/30 transition-all duration-500 ease-in-out overflow-hidden rounded-xl h-40 border border-teal-400/20 hover:scale-105 hover:border-teal-300/40 transform hover:-translate-y-3 animate-slideInUp animation-delay-300 group backdrop-blur-sm">
+          {/* Shimmer effect overlay */}
+          <div className="absolute inset-0 animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">
@@ -450,7 +454,9 @@ export default function CompactPopulationCards({
         </div>
 
         {/* Population with LPCD ≤ 55 */}
-        <div className="bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 text-white relative shadow-2xl hover:shadow-3xl transition-all duration-500 ease-in-out overflow-hidden rounded-xl h-40 border border-amber-400/20 hover:scale-105 hover:border-amber-300/40 transform hover:-translate-y-2 animate-fadeIn animation-delay-400">
+        <div className="bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 text-white relative shadow-2xl hover:shadow-amber-500/30 transition-all duration-500 ease-in-out overflow-hidden rounded-xl h-40 border border-amber-400/20 hover:scale-105 hover:border-amber-300/40 transform hover:-translate-y-3 animate-slideInUp animation-delay-400 group backdrop-blur-sm">
+          {/* Shimmer effect overlay */}
+          <div className="absolute inset-0 animate-shimmer opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">
