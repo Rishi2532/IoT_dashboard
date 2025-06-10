@@ -70,17 +70,19 @@ export default function CompactPopulationCards({
     },
   });
 
-  // Fetch population tracking data for daily changes (only for "all" regions)
+  // Fetch population tracking data for daily changes
   const { data: populationTracking } = useQuery<PopulationTrackingResponse>({
-    queryKey: ["/api/population/total"],
+    queryKey: ["/api/population", selectedRegion === "all" ? "total" : `region/${selectedRegion}`],
     queryFn: async () => {
-      const response = await fetch("/api/population/total");
+      const url = selectedRegion === "all" 
+        ? "/api/population/total"
+        : `/api/population/region/${encodeURIComponent(selectedRegion)}`;
+      const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch population tracking data");
       }
       return response.json();
     },
-    enabled: selectedRegion === "all", // Only fetch for total population
   });
 
   if (isLoading) {
@@ -254,11 +256,13 @@ export default function CompactPopulationCards({
                 </div>
               )}
               <div className="text-green-200 text-xs mt-1">
-                {populationTracking?.change && selectedRegion === "all" ? (
+                {populationTracking?.change ? (
                   <>
                     {formatPercentage(Math.abs(populationTracking.change.changePercent))}%
                     <br />
-                    <span className="text-xs text-blue-100">from yesterday</span>
+                    <span className="text-xs text-blue-100">
+                      {selectedRegion === "all" ? "from yesterday" : `${selectedRegion} daily change`}
+                    </span>
                   </>
                 ) : (
                   <>

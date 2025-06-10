@@ -5634,6 +5634,142 @@ export class PostgresStorage implements IStorage {
       changePercent
     };
   }
+
+  // Region-specific population tracking methods
+  async saveRegionPopulationSnapshot(date: string, region: string, totalPopulation: number): Promise<RegionPopulationTracking> {
+    const db = await this.ensureInitialized();
+    
+    // Ensure the region_population_tracking table exists
+    await db.execute(sql`
+      CREATE TABLE IF NOT EXISTS "region_population_tracking" (
+        "id" SERIAL PRIMARY KEY,
+        "date" TEXT NOT NULL,
+        "region" TEXT NOT NULL,
+        "total_population" INTEGER NOT NULL,
+        "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE("date", "region")
+      );
+    `);
+
+    // Use INSERT ... ON CONFLICT to update if date and region combination already exists
+    const result = await db.execute(sql`
+      INSERT INTO region_population_tracking (date, region, total_population)
+      VALUES (${date}, ${region}, ${totalPopulation})
+      ON CONFLICT (date, region) 
+      DO UPDATE SET 
+        total_population = ${totalPopulation},
+        created_at = CURRENT_TIMESTAMP
+      RETURNING *;
+    `);
+
+    return result.rows[0] as RegionPopulationTracking;
+  }
+
+  async getRegionPopulationByDate(date: string, region: string): Promise<RegionPopulationTracking | undefined> {
+    const db = await this.ensureInitialized();
+    
+    const result = await db.execute(sql`
+      SELECT * FROM region_population_tracking 
+      WHERE date = ${date} AND region = ${region}
+    `);
+
+    return result.rows[0] as RegionPopulationTracking | undefined;
+  }
+
+  async getLatestRegionPopulation(region: string): Promise<RegionPopulationTracking | undefined> {
+    const db = await this.ensureInitialized();
+    
+    const result = await db.execute(sql`
+      SELECT * FROM region_population_tracking 
+      WHERE region = ${region}
+      ORDER BY date DESC 
+      LIMIT 1
+    `);
+
+    return result.rows[0] as RegionPopulationTracking | undefined;
+  }
+
+  async getPreviousRegionPopulation(currentDate: string, region: string): Promise<RegionPopulationTracking | undefined> {
+    const db = await this.ensureInitialized();
+    
+    const result = await db.execute(sql`
+      SELECT * FROM region_population_tracking 
+      WHERE region = ${region} AND date < ${currentDate}
+      ORDER BY date DESC 
+      LIMIT 1
+    `);
+
+    return result.rows[0] as RegionPopulationTracking | undefined;
+  }
+
+  async calculateRegionPopulationChange(currentDate: string, region: string): Promise<{
+    currentPopulation: number;
+    previousPopulation: number;
+    change: number;
+    changePercent: number;
+  } | null> {
+    const db = await this.ensureInitialized();
+    
+    // Get current region population
+    const current = await this.getRegionPopulationByDate(currentDate, region);
+    if (!current) {
+      return null;
+    }
+
+    // Get previous region population
+    const previous = await this.getPreviousRegionPopulation(currentDate, region);
+    if (!previous) {
+      return {
+        currentPopulation: current.total_population,
+        previousPopulation: 0,
+        change: current.total_population,
+        changePercent: 0
+      };
+    }
+
+    const change = current.total_population - previous.total_population;
+    const changePercent = previous.total_population > 0 
+      ? (change / previous.total_population) * 100 
+      : 0;
+
+    return {
+      currentPopulation: current.total_population,
+      previousPopulation: previous.total_population,
+      change,
+      changePercent
+    };
+  }
+
+  async saveAllRegionPopulationSnapshots(date: string): Promise<RegionPopulationTracking[]> {
+    const db = await this.ensureInitialized();
+    
+    // Get all water scheme data grouped by region
+    const waterSchemeDataList = await this.getAllWaterSchemeData();
+    
+    // Calculate population by region
+    const regionPopulations = new Map<string, number>();
+    
+    waterSchemeDataList.forEach(scheme => {
+      if (scheme.region) {
+        const currentTotal = regionPopulations.get(scheme.region) || 0;
+        regionPopulations.set(scheme.region, currentTotal + (scheme.population || 0));
+      }
+    });
+
+    // Save snapshots for all regions
+    const results: RegionPopulationTracking[] = [];
+    
+    for (const [region, totalPopulation] of regionPopulations) {
+      try {
+        const snapshot = await this.saveRegionPopulationSnapshot(date, region, totalPopulation);
+        results.push(snapshot);
+      } catch (error) {
+        console.error(`Error saving snapshot for region ${region}:`, error);
+      }
+    }
+
+    return results;
+  }
 }
 
 export const storage = new PostgresStorage();

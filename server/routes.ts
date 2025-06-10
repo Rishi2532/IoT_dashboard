@@ -3554,6 +3554,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Save today's population snapshot
       await storage.savePopulationSnapshot(today, totalPopulation);
       
+      // Also save region-specific snapshots
+      await storage.saveAllRegionPopulationSnapshots(today);
+      
       // Calculate population change from previous day
       const changeData = await storage.calculatePopulationChange(today);
       
@@ -3565,6 +3568,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error calculating total population:", error);
       res.status(500).json({ message: "Failed to calculate total population" });
+    }
+  });
+
+  // Region-specific population tracking endpoints
+  app.get("/api/population/region/:region", async (req, res) => {
+    try {
+      const { region } = req.params;
+      
+      // Calculate current population for the specific region
+      const waterSchemeDataList = await storage.getAllWaterSchemeData();
+      const regionSchemes = waterSchemeDataList.filter(scheme => scheme.region === region);
+      const regionPopulation = regionSchemes.reduce((sum, scheme) => {
+        return sum + (scheme.population || 0);
+      }, 0);
+
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Save today's region population snapshot
+      await storage.saveRegionPopulationSnapshot(today, region, regionPopulation);
+      
+      // Calculate population change from previous day
+      const changeData = await storage.calculateRegionPopulationChange(today, region);
+      
+      res.json({
+        totalPopulation: regionPopulation,
+        region,
+        date: today,
+        change: changeData
+      });
+    } catch (error) {
+      console.error("Error calculating region population:", error);
+      res.status(500).json({ message: "Failed to calculate region population" });
+    }
+  });
+
+  app.post("/api/population/region/snapshot", async (req, res) => {
+    try {
+      const { date, region, totalPopulation } = req.body;
+      
+      if (!date || !region || typeof totalPopulation !== 'number') {
+        return res.status(400).json({ 
+          message: "Date, region, and totalPopulation are required" 
+        });
+      }
+
+      const snapshot = await storage.saveRegionPopulationSnapshot(date, region, totalPopulation);
+      res.json(snapshot);
+    } catch (error) {
+      console.error("Error saving region population snapshot:", error);
+      res.status(500).json({ message: "Failed to save region population snapshot" });
+    }
+  });
+
+  app.get("/api/population/region/:region/change/:date", async (req, res) => {
+    try {
+      const { region, date } = req.params;
+      const changeData = await storage.calculateRegionPopulationChange(date, region);
+      
+      if (!changeData) {
+        return res.status(404).json({ 
+          message: "No population data found for the specified region and date" 
+        });
+      }
+
+      res.json(changeData);
+    } catch (error) {
+      console.error("Error calculating region population change:", error);
+      res.status(500).json({ message: "Failed to calculate region population change" });
     }
   });
 
