@@ -189,29 +189,16 @@ export default function CompactPopulationCards({
     populationStats.population_lpcd_below_55_day6,
   );
 
-  // Determine arrow directions and formatting
-  const getArrowIcon = (change: number) => {
-    if (change > 0) return "↗";
-    if (change < 0) return "↘";
-    return "→";
-  };
-
-  const getArrowColor = (change: number, isGoodIncrease: boolean = true) => {
-    if (change > 0) return isGoodIncrease ? "text-green-300" : "text-red-300";
-    if (change < 0) return isGoodIncrease ? "text-red-300" : "text-green-300";
-    return "text-yellow-300";
-  };
-
-  const formatChangeWithArrow = (
-    change: number,
-    color: string = "text-white",
-  ) => {
-    const arrow = getArrowIcon(change);
+  // Format change with + or - sign
+  const formatChangeWithSign = (change: number) => {
+    if (change === 0) return null;
+    const sign = change > 0 ? "+" : "-";
     const value = formatNumber(Math.abs(change));
+    const colorClass = change > 0 ? "text-green-300" : "text-red-300";
     return (
-      <div className={`flex items-center gap-1 ${color}`}>
-        <span className="text-lg">{arrow}</span>
-        <span className="font-bold">{value}</span>
+      <div className={`flex items-center gap-1 ${colorClass} font-bold`}>
+        <span className="text-lg">{sign}</span>
+        <span>{value}</span>
       </div>
     );
   };
@@ -220,8 +207,8 @@ export default function CompactPopulationCards({
     <div className="w-full">
       {/* Single Row - All Five Cards */}
       <div className="grid grid-cols-5 gap-6">
-        {/* Total Population Covered */}
-        <div className="bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-blue-400/20">
+        {/* Population Covered */}
+        <div className="bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-slate-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">
@@ -233,38 +220,20 @@ export default function CompactPopulationCards({
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               {populationTracking?.change && populationTracking.change.change !== 0 ? (
-                <div className="flex items-center justify-center gap-1">
-                  {populationTracking.change.change > 0 ? (
-                    <ArrowUp className="h-4 w-4 text-green-300" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4 text-red-300" />
-                  )}
-                  <div className={`text-sm font-bold ${populationTracking.change.change > 0 ? 'text-green-300' : 'text-red-300'}`}>
-                    {formatNumber(Math.abs(populationTracking.change.change))}
-                  </div>
-                </div>
+                formatChangeWithSign(populationTracking.change.change)
               ) : selectedRegion === "all" ? (
-                <div className="text-green-200 text-xs">No change</div>
+                <div className="text-slate-200 text-xs">No change</div>
               ) : (
-                <div className="flex items-center justify-center gap-1">
-                  {netPopulationChange > 0 ? (
-                    <ArrowUp className="h-4 w-4 text-green-300" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4 text-red-300" />
-                  )}
-                  <span className={netPopulationChange > 0 ? 'text-green-300' : 'text-red-300'}>
-                    {Math.abs(netPopulationChange)}
-                  </span>
-                </div>
+                netPopulationChange !== 0 && formatChangeWithSign(netPopulationChange)
               )}
-              <div className="text-green-200 text-xs mt-1">
+              <div className="text-slate-200 text-xs mt-1">
                 {populationTracking?.change ? (
                   <>
                     <span className={populationTracking.change.change > 0 ? 'text-green-200' : 'text-red-200'}>
                       {formatPercentage(Math.abs(populationTracking.change.changePercent))}%
                     </span>
                     <br />
-                    <span className="text-xs text-blue-100">
+                    <span className="text-xs text-slate-100">
                       {selectedRegion === "all" ? "from yesterday" : `${selectedRegion} daily change`}
                     </span>
                   </>
@@ -274,7 +243,7 @@ export default function CompactPopulationCards({
                       {formatPercentage(Math.abs(waterGainedPercent))}%
                     </span>
                     <br />
-                    <span className="text-xs text-blue-100">of total</span>
+                    <span className="text-xs text-slate-100">change</span>
                   </>
                 )}
               </div>
@@ -284,16 +253,16 @@ export default function CompactPopulationCards({
           {/* Description - bottom left */}
           <div className="absolute bottom-2 left-2">
             <div className="flex items-center gap-1">
-              <Users className="h-3 w-3 text-blue-100" />
-              <span className="text-xs font-medium text-blue-100">
-                Total Population
+              <Users className="h-3 w-3 text-slate-100" />
+              <span className="text-xs font-medium text-slate-100">
+                Population
               </span>
             </div>
           </div>
         </div>
 
         {/* Population With Water */}
-        <div className="bg-gradient-to-br from-emerald-500 via-green-600 to-emerald-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-emerald-400/20">
+        <div className="bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-teal-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">
@@ -301,35 +270,19 @@ export default function CompactPopulationCards({
             </div>
           </div>
 
-          {/* Arrow down if population gained water decreased - top right */}
-          <div className="absolute top-2 right-2">
-            {populationStats.population_gained_water < 0 && (
-              <ArrowDown className="h-4 w-4 text-yellow-300" />
-            )}
-          </div>
-
           {/* Change number and percentages - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              {populationStats.population_gained_water !== 0 && (
-                <div className={`flex items-center justify-center gap-1 ${populationStats.population_gained_water > 0 ? 'text-green-300' : 'text-red-300'}`}>
-                  {populationStats.population_gained_water > 0 ? (
-                    <ArrowUp className="h-4 w-4" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4" />
-                  )}
-                  <span>
-                    {Math.abs(populationStats.population_gained_water)}
-                  </span>
-                </div>
-              )}
-              <div className="text-green-200 text-sm mt-1 leading-tight">
+              {populationStats.population_gained_water !== 0 && 
+                formatChangeWithSign(populationStats.population_gained_water)
+              }
+              <div className="text-teal-200 text-sm mt-1 leading-tight">
                 <span className={populationStats.population_gained_water > 0 ? 'text-green-200' : 'text-red-200'}>
                   {formatPercentage(withWaterChangePercentage)}%
                 </span>
                 <br />
-                <span className="text-xs text-green-100">
-                  {formatPercentage(withWaterPercentage)}% of total
+                <span className="text-xs text-teal-100">
+                  {formatPercentage(withWaterPercentage)}% coverage
                 </span>
               </div>
             </div>
@@ -338,8 +291,8 @@ export default function CompactPopulationCards({
           {/* Description - bottom left */}
           <div className="absolute bottom-2 left-2">
             <div className="flex items-center gap-1">
-              <Droplets className="h-3 w-3 text-green-100" />
-              <span className="text-xs font-medium text-green-100">
+              <Droplets className="h-3 w-3 text-teal-100" />
+              <span className="text-xs font-medium text-teal-100">
                 With Water
               </span>
             </div>
