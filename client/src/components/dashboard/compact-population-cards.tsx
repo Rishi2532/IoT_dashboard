@@ -339,7 +339,7 @@ export default function CompactPopulationCards({
           {/* Center: Change number and percentages */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              {populationStats.population_lost_water > 0 &&
+              {populationStats.population_lost_water !== 0 &&
                 formatChangeWithSign(populationStats.population_lost_water)}
               <div className="text-rose-200 text-sm mt-1 leading-tight">
                 <span
