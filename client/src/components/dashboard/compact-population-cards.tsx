@@ -300,7 +300,7 @@ export default function CompactPopulationCards({
         </div>
 
         {/* Population No Water */}
-        <div className="bg-gradient-to-br from-red-500 via-red-600 to-orange-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-red-400/20">
+        <div className="bg-gradient-to-br from-rose-600 via-rose-700 to-red-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-rose-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">
@@ -311,19 +311,16 @@ export default function CompactPopulationCards({
           {/* Center: Change number and percentages */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              {populationStats.population_lost_water > 0 && (
-                <div className="flex items-center justify-center gap-1 text-red-300">
-                  <ArrowDown className="h-4 w-4" />
-                  <span>{populationStats.population_lost_water}</span>
-                </div>
-              )}
-              <div className="text-yellow-200 text-sm mt-1 leading-tight">
-                <span className={populationStats.population_lost_water > 0 ? 'text-red-200' : 'text-yellow-200'}>
+              {populationStats.population_lost_water > 0 && 
+                formatChangeWithSign(populationStats.population_lost_water)
+              }
+              <div className="text-rose-200 text-sm mt-1 leading-tight">
+                <span className={populationStats.population_lost_water > 0 ? 'text-red-200' : 'text-rose-200'}>
                   {formatPercentage(noWaterChangePercentage)}%
                 </span>
                 <br />
-                <span className="text-xs text-yellow-100">
-                  {formatPercentage(noWaterPercentage)}% of total
+                <span className="text-xs text-rose-100">
+                  {formatPercentage(noWaterPercentage)}% coverage
                 </span>
               </div>
             </div>
@@ -332,14 +329,14 @@ export default function CompactPopulationCards({
           {/* Description - bottom left */}
           <div className="absolute bottom-2 left-2">
             <div className="flex items-center gap-1">
-              <AlertTriangle className="h-3 w-3 text-red-100" />
-              <span className="text-xs font-medium text-red-100">No Water</span>
+              <AlertTriangle className="h-3 w-3 text-rose-100" />
+              <span className="text-xs font-medium text-rose-100">No Water</span>
             </div>
           </div>
         </div>
 
         {/* Population with LPCD > 55 */}
-        <div className="bg-gradient-to-br from-teal-500 via-cyan-600 to-teal-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-teal-400/20">
+        <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-green-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-emerald-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">
@@ -347,39 +344,19 @@ export default function CompactPopulationCards({
             </div>
           </div>
 
-          {/* Arrow down if lpcd > 55 decreased - top right */}
-          <div className="absolute top-2 right-2">
-            {lpcdAbove55Change < 0 && (
-              <ArrowDown className="h-4 w-4 text-orange-200" />
-            )}
-          </div>
-
-          {/* Arrow and change number - center */}
+          {/* Change number - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              {lpcdAbove55Change !== 0 && (
-                <div className="flex items-center justify-center gap-1">
-                  {lpcdAbove55Change > 0 ? (
-                    <ArrowUp className="h-4 w-4 text-teal-200" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4 text-red-300" />
-                  )}
-                  <span
-                    className={
-                      lpcdAbove55Change >= 0 ? "text-teal-200" : "text-red-300"
-                    }
-                  >
-                    {Math.abs(lpcdAbove55Change)}
-                  </span>
-                </div>
-              )}
-              <div className="text-teal-200 text-sm mt-1 leading-tight">
-                <span className={lpcdAbove55Change >= 0 ? 'text-teal-200' : 'text-red-200'}>
+              {lpcdAbove55Change !== 0 && 
+                formatChangeWithSign(lpcdAbove55Change)
+              }
+              <div className="text-emerald-200 text-sm mt-1 leading-tight">
+                <span className={lpcdAbove55Change >= 0 ? 'text-green-200' : 'text-red-200'}>
                   {formatPercentage(lpcdAbove55ChangePercentage)}%
                 </span>
                 <br />
-                <span className="text-xs text-teal-100">
-                  {formatPercentage(lpcdAbove55Percentage)}% of total
+                <span className="text-xs text-emerald-100">
+                  {formatPercentage(lpcdAbove55Percentage)}% coverage
                 </span>
               </div>
             </div>
@@ -388,10 +365,7 @@ export default function CompactPopulationCards({
           {/* Description - bottom left */}
           <div className="absolute bottom-2 left-2">
             <div className="flex items-center gap-1">
-              {/* <div className="w-3 h-3 bg-white/30 rounded-full flex items-center justify-center">
-                <span className="text-xs font-bold">55+</span>
-              </div> */}
-              <span className="text-xs font-medium text-teal-100">
+              <span className="text-xs font-medium text-emerald-100">
                 LPCD &gt; 55
               </span>
             </div>
@@ -399,7 +373,7 @@ export default function CompactPopulationCards({
         </div>
 
         {/* Population with LPCD ≤ 55 */}
-        <div className="bg-gradient-to-br from-amber-500 via-orange-600 to-amber-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-amber-400/20">
+        <div className="bg-gradient-to-br from-amber-600 via-amber-700 to-orange-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-amber-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
             <div className="text-2xl font-bold">
@@ -407,30 +381,15 @@ export default function CompactPopulationCards({
             </div>
           </div>
 
-          {/* Arrow down if LPCD ≤ 55 increased (which is bad) - top right */}
-          <div className="absolute top-2 right-2">
-            {lpcdBelow55Change > 0 && (
-              <ArrowDown className="h-4 w-4 text-red-200" />
-            )}
-          </div>
-
-          {/* Arrow and change number - center */}
+          {/* Change number - center */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
               {lpcdBelow55Change !== 0 && (
-                <div className="flex items-center justify-center gap-1">
-                  {lpcdBelow55Change > 0 ? (
-                    <ArrowUp className="h-4 w-4 text-red-300" />
-                  ) : (
-                    <ArrowDown className="h-4 w-4 text-green-300" />
-                  )}
-                  <span
-                    className={
-                      lpcdBelow55Change <= 0 ? "text-green-300" : "text-red-300"
-                    }
-                  >
-                    {Math.abs(lpcdBelow55Change)}
-                  </span>
+                <div className={`flex items-center gap-1 font-bold ${
+                  lpcdBelow55Change <= 0 ? "text-green-300" : "text-red-300"
+                }`}>
+                  <span className="text-lg">{lpcdBelow55Change <= 0 ? "+" : "-"}</span>
+                  <span>{Math.abs(lpcdBelow55Change)}</span>
                 </div>
               )}
               <div className="text-amber-200 text-sm mt-1 leading-tight">
@@ -439,7 +398,7 @@ export default function CompactPopulationCards({
                 </span>
                 <br />
                 <span className="text-xs text-amber-100">
-                  {formatPercentage(lpcdBelow55Percentage)}% of total
+                  {formatPercentage(lpcdBelow55Percentage)}% coverage
                 </span>
               </div>
             </div>

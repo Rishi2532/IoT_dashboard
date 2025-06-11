@@ -78,7 +78,7 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
         <CardHeader className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b border-blue-200 rounded-t-lg">
           <CardTitle className="text-center text-2xl font-bold text-blue-900 flex items-center justify-center gap-2">
             <Users className="h-6 w-6" />
-            Total Population Covered
+            Population Covered
           </CardTitle>
         </CardHeader>
         <CardContent className="pt-6 pb-6">
@@ -100,7 +100,7 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
           <CardHeader className="bg-gradient-to-r from-green-100 to-emerald-100 border-b border-green-200 rounded-t-lg">
             <CardTitle className="text-center text-xl font-bold text-green-900 flex items-center justify-center gap-2">
               <Droplets className="h-5 w-5" />
-              Population Receiving Water Supply
+              Population with Water Supply
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6 pb-6">
@@ -109,7 +109,7 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
                 {formatNumber(populationStats.population_with_water)}
               </p>
               <p className="text-sm text-gray-600">
-                ({formatPercentage(populationStats.percent_population_with_water)}% of total population)
+                ({formatPercentage(populationStats.percent_population_with_water)}% coverage)
               </p>
             </div>
             
@@ -142,7 +142,7 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
           <CardHeader className="bg-gradient-to-r from-red-100 to-orange-100 border-b border-red-200 rounded-t-lg">
             <CardTitle className="text-center text-xl font-bold text-red-900 flex items-center justify-center gap-2">
               <AlertTriangle className="h-5 w-5" />
-              Population Receiving No Water
+              Population with No Water
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-6 pb-6">
@@ -151,14 +151,14 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
                 {formatNumber(populationStats.population_no_water)}
               </p>
               <p className="text-sm text-gray-600">
-                ({formatPercentage(populationStats.percent_population_no_water)}% of total population)
+                ({formatPercentage(populationStats.percent_population_no_water)}% coverage)
               </p>
             </div>
             
             {/* Village Count Below */}
             <div className="space-y-3 border-t border-red-200 pt-4">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-gray-700">Villages Receiving No Water:</span>
+                <span className="text-sm font-medium text-gray-700">Villages with No Water:</span>
                 <span className="text-lg font-bold text-red-700">
                   {formatNumber(populationStats.villages_no_water)}
                 </span>
