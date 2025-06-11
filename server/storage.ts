@@ -5093,7 +5093,18 @@ export class PostgresStorage implements IStorage {
       const endTime = Date.now();
       const elapsedSeconds = (endTime - startTime) / 1000;
       
-      console.log(`LPCD CSV import completed in ${elapsedSeconds.toFixed(2)} seconds: ${inserted} inserted, ${updated} updated, ${removed} removed, ${errors.length} errors`);
+      // Add duplicate information to errors for user visibility
+      if (duplicatesInCsv > 0) {
+        errors.push(`Note: ${duplicatesInCsv} duplicate entries found within CSV file (scheme_id + village_name combinations). Later entries overwrite earlier ones.`);
+      }
+      
+      console.log(`LPCD CSV import completed in ${elapsedSeconds.toFixed(2)} seconds:`);
+      console.log(`- ${inserted} records inserted`);
+      console.log(`- ${updated} records updated`);
+      console.log(`- ${removed} records removed`);
+      console.log(`- ${duplicatesInCsv} duplicates found in CSV`);
+      console.log(`- ${errors.length} errors/warnings`);
+      
       return { inserted, updated, removed, errors };
     } catch (error) {
       console.error(`CSV import error:`, error);
