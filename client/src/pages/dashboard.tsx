@@ -662,7 +662,7 @@ export default function Dashboard() {
               </span>
             )}
           </div>
-          <CompactPopulationCards selectedRegion={selectedRegion} />
+          <FlipPopulationCards selectedRegion={selectedRegion} />
         </div>
       </div>
 

@@ -390,7 +390,7 @@ export default function FlipPopulationCards({
                 <div className="flex items-center gap-1">
                   <Droplets className="h-3 w-3 text-green-100" />
                   <span className="text-xs font-medium text-green-100">
-                    Villages LPCD &gt; 55
+                    Villages LPCD {">"} 55
                   </span>
                 </div>
               </div>
