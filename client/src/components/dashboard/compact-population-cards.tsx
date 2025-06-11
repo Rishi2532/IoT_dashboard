@@ -123,22 +123,15 @@ export default function CompactPopulationCards({
     return numValue.toFixed(1);
   };
 
-  // Calculate change percentages
-  const calculateDiffPercentage = (change: number, previous: number) => {
-    if (previous === 0) return change > 0 ? 100 : 0;
-    return (Math.abs(change) / previous) * 100;
+  // Calculate change percentages properly
+  const calculateChangePercentage = (change: number, previous: number) => {
+    if (previous === 0) {
+      return change === 0 ? 0 : 100;
+    }
+    return (change / previous) * 100;
   };
 
-  const waterGainedPercent = calculateDiffPercentage(
-    populationStats.population_gained_water,
-    populationStats.population_with_water_day5,
-  );
-
-  const waterLostPercent = calculateDiffPercentage(
-    populationStats.population_lost_water,
-    populationStats.population_no_water_day5,
-  );
-
+  // Net population change calculation
   const netPopulationChange =
     populationStats.population_gained_water -
     populationStats.population_lost_water;
@@ -151,13 +144,13 @@ export default function CompactPopulationCards({
     (populationStats.population_lpcd_below_55_day7 || 0) -
     (populationStats.population_lpcd_below_55_day6 || 0);
 
-  // Calculate percentages for each card
+  // Calculate percentages for each card (coverage percentages)
   const calculatePopulationPercentage = (population: number, total: number) => {
     if (total === 0) return 0;
     return (population / total) * 100;
   };
 
-  // Card percentages
+  // Card coverage percentages
   const withWaterPercentage = calculatePopulationPercentage(
     populationStats.population_with_water,
     populationStats.total_population,
@@ -175,20 +168,20 @@ export default function CompactPopulationCards({
     populationStats.total_population,
   );
 
-  // Change percentages
-  const withWaterChangePercentage = calculateDiffPercentage(
+  // Change percentages (day-over-day changes)
+  const withWaterChangePercentage = calculateChangePercentage(
     populationStats.population_gained_water,
     populationStats.population_with_water_day5,
   );
-  const noWaterChangePercentage = calculateDiffPercentage(
+  const noWaterChangePercentage = calculateChangePercentage(
     populationStats.population_lost_water,
     populationStats.population_no_water_day5,
   );
-  const lpcdAbove55ChangePercentage = calculateDiffPercentage(
+  const lpcdAbove55ChangePercentage = calculateChangePercentage(
     lpcdAbove55Change,
     populationStats.population_lpcd_above_55_day6,
   );
-  const lpcdBelow55ChangePercentage = calculateDiffPercentage(
+  const lpcdBelow55ChangePercentage = calculateChangePercentage(
     lpcdBelow55Change,
     populationStats.population_lpcd_below_55_day6,
   );
@@ -346,10 +339,13 @@ export default function CompactPopulationCards({
                   className={
                     populationStats.population_lost_water > 0
                       ? "text-red-200"
-                      : "text-rose-200"
+                      : "text-green-200"
                   }
                 >
-                  {formatPercentage(noWaterChangePercentage)}%
+                  {populationStats.population_lost_water !== 0 
+                    ? `${populationStats.population_lost_water > 0 ? '+' : ''}${formatPercentage(Math.abs(noWaterChangePercentage))}%`
+                    : '0.0%'
+                  }
                 </span>
                 <br />
                 {/* <span className="text-xs text-rose-100">
