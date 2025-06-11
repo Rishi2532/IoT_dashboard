@@ -83,7 +83,7 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
         </CardHeader>
         <CardContent className="pt-6 pb-6">
           <div className="text-center">
-            <p className="text-5xl font-extrabold text-blue-700 mb-2">
+            <p className="text-6xl font-extrabold text-blue-700 mb-2">
               {formatNumber(populationStats.total_population)}
             </p>
             <p className="text-lg text-gray-600">
@@ -105,7 +105,7 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
           </CardHeader>
           <CardContent className="pt-6 pb-6">
             <div className="text-center mb-4">
-              <p className="text-4xl font-extrabold text-green-700 mb-1">
+              <p className="text-5xl font-extrabold text-green-700 mb-1">
                 {formatNumber(populationStats.population_with_water)}
               </p>
               <p className="text-sm text-gray-600">
@@ -147,7 +147,7 @@ export default function PopulationCards({ selectedRegion = "all" }: PopulationCa
           </CardHeader>
           <CardContent className="pt-6 pb-6">
             <div className="text-center mb-4">
-              <p className="text-4xl font-extrabold text-red-700 mb-1">
+              <p className="text-5xl font-extrabold text-red-700 mb-1">
                 {formatNumber(populationStats.population_no_water)}
               </p>
               <p className="text-sm text-gray-600">

@@ -211,7 +211,7 @@ export default function CompactPopulationCards({
         <div className="bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-slate-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {formatNumber(populationStats.total_population)}
             </div>
           </div>
@@ -265,7 +265,7 @@ export default function CompactPopulationCards({
         <div className="bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-teal-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {formatNumber(populationStats.population_with_water)}
             </div>
           </div>
@@ -303,7 +303,7 @@ export default function CompactPopulationCards({
         <div className="bg-gradient-to-br from-rose-600 via-rose-700 to-red-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-rose-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {formatNumber(populationStats.population_no_water)}
             </div>
           </div>
@@ -339,7 +339,7 @@ export default function CompactPopulationCards({
         <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-green-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-emerald-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {formatNumber(populationStats.population_lpcd_above_55)}
             </div>
           </div>
@@ -376,7 +376,7 @@ export default function CompactPopulationCards({
         <div className="bg-gradient-to-br from-amber-600 via-amber-700 to-orange-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-amber-400/20">
           {/* Population number - top left */}
           <div className="absolute top-2 left-2">
-            <div className="text-2xl font-bold">
+            <div className="text-3xl font-bold">
               {formatNumber(populationStats.population_lpcd_below_55)}
             </div>
           </div>
