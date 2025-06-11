@@ -4812,6 +4812,9 @@ export class PostgresStorage implements IStorage {
       // OPTIMIZATION: Store batch mapping data for faster processing
       const recordsMap = new Map<string, Partial<InsertWaterSchemeData>>();
       const uniqueKeys = new Set<string>();
+      let totalRowsProcessed = 0;
+      let duplicatesInCsv = 0;
+      let skippedRows = 0;
       
       // Process all records and collect unique keys
       for (let i = 1; i < records.length; i++) { // Skip header row (i=0)
@@ -4826,6 +4829,7 @@ export class PostgresStorage implements IStorage {
           
           if (!record[schemeIdIndex] || !record[villageNameIndex]) {
             errors.push(`Row ${i+1} missing required field: scheme_id or village_name`);
+            skippedRows++;
             continue;
           }
           
@@ -4835,6 +4839,8 @@ export class PostgresStorage implements IStorage {
           
           // Only process if we have both required fields for composite key
           if (schemeId && villageName) {
+            totalRowsProcessed++;
+            
             // Map fields from CSV to database schema based on column index
             for (const [indexStr, dbField] of Object.entries(this.positionalColumnMapping)) {
               const index = parseInt(indexStr);
@@ -4880,16 +4886,29 @@ export class PostgresStorage implements IStorage {
             
             // Generate a composite key for lookup
             const key = `${schemeId}::${villageName}`;
+            
+            // Check if this is a duplicate within the CSV itself
+            if (recordsMap.has(key)) {
+              duplicatesInCsv++;
+              console.log(`WARNING: Duplicate found in CSV at row ${i+1}: ${schemeId} - ${villageName} (overwriting previous entry)`);
+            }
+            
             uniqueKeys.add(key);
             recordsMap.set(key, schemeData);
           }
         } catch (rowError) {
           const errorMessage = rowError instanceof Error ? rowError.message : String(rowError);
           errors.push(`Error processing row ${i+1}: ${errorMessage}`);
+          skippedRows++;
         }
       }
       
-      console.log(`Processed ${recordsMap.size} unique water records from CSV`);
+      console.log(`CSV Processing Summary:`);
+      console.log(`- Total rows in CSV: ${records.length} (including header)`);
+      console.log(`- Data rows processed: ${totalRowsProcessed}`);
+      console.log(`- Duplicates within CSV: ${duplicatesInCsv}`);
+      console.log(`- Skipped rows: ${skippedRows}`);
+      console.log(`- Unique records to process: ${recordsMap.size}`);
       
       // OPTIMIZATION: Get all existing water scheme data in a single query
       console.log("Fetching all existing water scheme data...");
