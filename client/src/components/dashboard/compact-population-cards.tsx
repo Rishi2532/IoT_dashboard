@@ -1,4 +1,228 @@
-       <div className="text-center">
+import { useQuery } from "@tanstack/react-query";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import {
+  ArrowUp,
+  ArrowDown,
+  Users,
+  Droplets,
+  AlertTriangle,
+} from "lucide-react";
+
+interface PopulationStats {
+  total_villages: number;
+  total_population: number;
+  villages_with_water: number;
+  population_with_water: number;
+  percent_villages_with_water: number;
+  percent_population_with_water: number;
+  villages_no_water: number;
+  population_no_water: number;
+  percent_villages_no_water: number;
+  percent_population_no_water: number;
+  villages_lpcd_above_55: number;
+  villages_lpcd_below_55: number;
+  population_lpcd_above_55: number;
+  population_lpcd_below_55: number;
+  population_gained_water: number;
+  population_lost_water: number;
+  population_with_water_day5: number;
+  population_no_water_day5: number;
+  // New LPCD comparison fields
+  population_lpcd_above_55_day7: number;
+  population_lpcd_below_55_day7: number;
+  population_lpcd_above_55_day6: number;
+  population_lpcd_below_55_day6: number;
+}
+
+interface PopulationChangeData {
+  currentPopulation: number;
+  previousPopulation: number;
+  change: number;
+  changePercent: number;
+}
+
+interface PopulationTrackingResponse {
+  totalPopulation: number;
+  date: string;
+  change: PopulationChangeData | null;
+}
+
+interface CompactPopulationCardsProps {
+  selectedRegion?: string;
+}
+
+export default function CompactPopulationCards({
+  selectedRegion = "all",
+}: CompactPopulationCardsProps) {
+  // Fetch population statistics from water_scheme_data
+  const { data: populationStats, isLoading } = useQuery<PopulationStats>({
+    queryKey: ["/api/water-scheme-data/population-stats", selectedRegion],
+    queryFn: async () => {
+      const url =
+        selectedRegion === "all"
+          ? "/api/water-scheme-data/population-stats"
+          : `/api/water-scheme-data/population-stats?region=${selectedRegion}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch population statistics");
+      }
+      return response.json();
+    },
+  });
+
+  // Fetch population tracking data for daily changes
+  const { data: populationTracking } = useQuery<PopulationTrackingResponse>({
+    queryKey: [
+      "/api/population",
+      selectedRegion === "all" ? "total" : `region/${selectedRegion}`,
+    ],
+    queryFn: async () => {
+      const url =
+        selectedRegion === "all"
+          ? "/api/population/total"
+          : `/api/population/region/${encodeURIComponent(selectedRegion)}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch population tracking data");
+      }
+      return response.json();
+    },
+  });
+
+  if (isLoading) {
+    return (
+      <div className="space-y-3 h-full">
+        <div className="animate-pulse">
+          <div className="h-16 bg-gray-200 rounded-lg mb-3"></div>
+          <div className="grid grid-cols-1 gap-3">
+            <div className="h-20 bg-gray-200 rounded-lg"></div>
+            <div className="h-20 bg-gray-200 rounded-lg"></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!populationStats) {
+    return (
+      <div className="text-center py-4">
+        <p className="text-gray-500 text-sm">No population data available</p>
+      </div>
+    );
+  }
+
+  const formatNumber = (num: number | string | null | undefined) => {
+    const numValue = Number(num);
+    if (isNaN(numValue)) return "0";
+    return new Intl.NumberFormat("en-IN").format(numValue);
+  };
+
+  const formatPercentage = (num: number | string | null | undefined) => {
+    const numValue = Number(num);
+    if (isNaN(numValue)) return "0.0";
+    return numValue.toFixed(1);
+  };
+
+  // Calculate change percentages
+  const calculateDiffPercentage = (change: number, previous: number) => {
+    if (previous === 0) return change > 0 ? 100 : 0;
+    return (Math.abs(change) / previous) * 100;
+  };
+
+  const waterGainedPercent = calculateDiffPercentage(
+    populationStats.population_gained_water,
+    populationStats.population_with_water_day5,
+  );
+
+  const waterLostPercent = calculateDiffPercentage(
+    populationStats.population_lost_water,
+    populationStats.population_no_water_day5,
+  );
+
+  const netPopulationChange =
+    populationStats.population_gained_water -
+    populationStats.population_lost_water;
+
+  // Calculate LPCD population changes (day 7 vs day 6)
+  const lpcdAbove55Change =
+    (populationStats.population_lpcd_above_55_day7 || 0) -
+    (populationStats.population_lpcd_above_55_day6 || 0);
+  const lpcdBelow55Change =
+    (populationStats.population_lpcd_below_55_day7 || 0) -
+    (populationStats.population_lpcd_below_55_day6 || 0);
+
+  // Calculate percentages for each card
+  const calculatePopulationPercentage = (population: number, total: number) => {
+    if (total === 0) return 0;
+    return (population / total) * 100;
+  };
+
+  // Card percentages
+  const withWaterPercentage = calculatePopulationPercentage(
+    populationStats.population_with_water,
+    populationStats.total_population,
+  );
+  const noWaterPercentage = calculatePopulationPercentage(
+    populationStats.population_no_water,
+    populationStats.total_population,
+  );
+  const lpcdAbove55Percentage = calculatePopulationPercentage(
+    populationStats.population_lpcd_above_55,
+    populationStats.total_population,
+  );
+  const lpcdBelow55Percentage = calculatePopulationPercentage(
+    populationStats.population_lpcd_below_55,
+    populationStats.total_population,
+  );
+
+  // Change percentages
+  const withWaterChangePercentage = calculateDiffPercentage(
+    populationStats.population_gained_water,
+    populationStats.population_with_water_day5,
+  );
+  const noWaterChangePercentage = calculateDiffPercentage(
+    populationStats.population_lost_water,
+    populationStats.population_no_water_day5,
+  );
+  const lpcdAbove55ChangePercentage = calculateDiffPercentage(
+    lpcdAbove55Change,
+    populationStats.population_lpcd_above_55_day6,
+  );
+  const lpcdBelow55ChangePercentage = calculateDiffPercentage(
+    lpcdBelow55Change,
+    populationStats.population_lpcd_below_55_day6,
+  );
+
+  // Format change with + or - sign
+  const formatChangeWithSign = (change: number) => {
+    if (change === 0) return null;
+    const sign = change > 0 ? "+" : "-";
+    const value = formatNumber(Math.abs(change));
+    const colorClass = change > 0 ? "text-green-300" : "text-red-300";
+    return (
+      <div className={`flex items-center gap-1 ${colorClass} font-bold`}>
+        <span className="text-lg">{sign}</span>
+        <span>{value}</span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="w-full">
+      {/* Single Row - All Five Cards */}
+      <div className="grid grid-cols-5 gap-6">
+        {/* Population Covered */}
+        <div className="bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-slate-400/20">
+          {/* Population number - top left */}
+          <div className="absolute top-2 left-2">
+            <div className="text-3xl font-bold">
+              {formatNumber(populationStats.total_population)}
+            </div>
+          </div>
+
+          {/* Center: Daily population change and percentage */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="text-center">
               {populationTracking?.change &&
               populationTracking.change.change !== 0 ? (
                 formatChangeWithSign(populationTracking.change.change)
