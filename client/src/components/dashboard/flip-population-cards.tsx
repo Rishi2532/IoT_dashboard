@@ -366,6 +366,7 @@ export default function FlipPopulationCards({
 
         {/* Card 4: Population/Villages with LPCD > 55 */}
         <FlipCard
+          isFlipped={allFlipped}
           frontContent={
             <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-green-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-emerald-400/20">
               <div className="absolute top-2 left-2">
@@ -420,6 +421,7 @@ export default function FlipPopulationCards({
 
         {/* Card 5: Population/Villages with LPCD < 55 */}
         <FlipCard
+          isFlipped={allFlipped}
           frontContent={
             <div className="bg-gradient-to-br from-amber-600 via-yellow-700 to-orange-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-amber-400/20">
               <div className="absolute top-2 left-2">
