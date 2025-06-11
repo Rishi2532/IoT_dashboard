@@ -256,7 +256,7 @@ export default function CompactPopulationCards({
                           : "text-red-200"
                       }
                     >
-                      {formatPercentage(Math.abs(waterGainedPercent))}%
+                      {formatPercentage(Math.abs(withWaterChangePercentage))}%
                     </span>
                     <br />
                     <span className="text-xs text-slate-100">change</span>
@@ -299,7 +299,10 @@ export default function CompactPopulationCards({
                       : "text-red-200"
                   }
                 >
-                  {formatPercentage(withWaterChangePercentage)}%
+                  {populationStats.population_gained_water !== 0 
+                    ? `${populationStats.population_gained_water > 0 ? '+' : ''}${formatPercentage(Math.abs(withWaterChangePercentage))}%`
+                    : '0.0%'
+                  }
                 </span>
                 <br />
                 {/* <span className="text-xs text-teal-100">
@@ -386,7 +389,10 @@ export default function CompactPopulationCards({
                     lpcdAbove55Change >= 0 ? "text-green-200" : "text-red-200"
                   }
                 >
-                  {formatPercentage(lpcdAbove55ChangePercentage)}%
+                  {lpcdAbove55Change !== 0 
+                    ? `${lpcdAbove55Change > 0 ? '+' : ''}${formatPercentage(Math.abs(lpcdAbove55ChangePercentage))}%`
+                    : '0.0%'
+                  }
                 </span>
                 <br />
                 {/* <span className="text-xs text-emerald-100">
@@ -436,7 +442,10 @@ export default function CompactPopulationCards({
                     lpcdBelow55Change <= 0 ? "text-green-200" : "text-red-200"
                   }
                 >
-                  {formatPercentage(lpcdBelow55ChangePercentage)}%
+                  {lpcdBelow55Change !== 0 
+                    ? `${lpcdBelow55Change > 0 ? '+' : ''}${formatPercentage(Math.abs(lpcdBelow55ChangePercentage))}%`
+                    : '0.0%'
+                  }
                 </span>
                 <br />
                 {/* <span className="text-xs text-amber-100">
