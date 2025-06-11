@@ -500,12 +500,12 @@ const EnhancedLpcdDashboard = () => {
 
     if (globallyFilteredData.length === 0) return counts;
 
-    // Create a map to track unique villages by name+region to avoid double counting
+    // Create a map to track unique villages by scheme_id+village_name (correct unique key)
     const uniqueVillages = new Map();
     
     // First pass: deduplicate villages and collect unique entries
     globallyFilteredData.forEach((scheme) => {
-      const villageKey = `${scheme.village_name}|${scheme.region}`;
+      const villageKey = `${scheme.scheme_id}|${scheme.village_name}`;
       
       // Only keep the first occurrence of each unique village
       if (!uniqueVillages.has(villageKey)) {
