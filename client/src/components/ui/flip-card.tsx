@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -7,6 +7,8 @@ interface FlipCardProps {
   backContent: React.ReactNode;
   className?: string;
   height?: string;
+  isFlipped?: boolean;
+  onFlip?: (flipped: boolean) => void;
 }
 
 export default function FlipCard({
@@ -14,11 +16,19 @@ export default function FlipCard({
   backContent,
   className,
   height = "h-40",
+  isFlipped: externalIsFlipped,
+  onFlip,
 }: FlipCardProps) {
-  const [isFlipped, setIsFlipped] = useState(false);
+  const [internalIsFlipped, setInternalIsFlipped] = useState(false);
+  
+  const isFlipped = externalIsFlipped !== undefined ? externalIsFlipped : internalIsFlipped;
 
   const handleCardClick = () => {
-    setIsFlipped(!isFlipped);
+    const newFlipped = !isFlipped;
+    if (externalIsFlipped === undefined) {
+      setInternalIsFlipped(newFlipped);
+    }
+    onFlip?.(newFlipped);
   };
 
   return (

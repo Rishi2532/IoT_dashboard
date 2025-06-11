@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowUp, ArrowDown, Users, Droplets, AlertTriangle, MapPin } from "lucide-react";
+import { ArrowUp, ArrowDown, Users, Droplets, AlertTriangle, MapPin, RotateCcw } from "lucide-react";
 import FlipCard from "@/components/ui/flip-card";
+import { Button } from "@/components/ui/button";
 
 interface PopulationStats {
   total_villages: number;
@@ -54,6 +56,7 @@ interface FlipPopulationCardsProps {
 export default function FlipPopulationCards({
   selectedRegion = "all",
 }: FlipPopulationCardsProps) {
+  const [allFlipped, setAllFlipped] = useState(false);
   // Fetch population statistics
   const { data: populationStats, isLoading: populationLoading } = useQuery<PopulationStats>({
     queryKey: ["/api/water-scheme-data/population-stats", selectedRegion],
@@ -179,12 +182,10 @@ export default function FlipPopulationCards({
     if (!change) return null;
     
     return (
-      <div className={`flex items-center gap-1 ${change.isPositive ? 'text-green-300' : 'text-red-300'}`}>
-        {change.isPositive ? (
-          <ArrowUp className="h-3 w-3" />
-        ) : (
-          <ArrowDown className="h-3 w-3" />
-        )}
+      <div className={`flex items-center gap-1 ${change.isPositive ? 'text-green-200' : 'text-red-200'}`}>
+        <span className="text-sm font-bold">
+          {change.isPositive ? '+' : '-'}
+        </span>
         <span className="text-xs font-medium">
           {formatNumber(change.value)} ({change.percentage.toFixed(1)}%)
         </span>
@@ -192,13 +193,31 @@ export default function FlipPopulationCards({
     );
   };
 
+  const handleToggleAll = () => {
+    setAllFlipped(!allFlipped);
+  };
+
   return (
     <div className="w-full">
+      {/* Master Toggle Button */}
+      <div className="flex justify-end mb-4">
+        <Button
+          onClick={handleToggleAll}
+          variant="outline"
+          size="sm"
+          className="flex items-center gap-2"
+        >
+          <RotateCcw className="h-4 w-4" />
+          {allFlipped ? 'Show Population' : 'Show Villages'}
+        </Button>
+      </div>
+      
       {/* Single Row - All Five Flip Cards */}
       <div className="grid grid-cols-5 gap-6">
         
         {/* Card 1: Total Population/Villages */}
         <FlipCard
+          isFlipped={allFlipped}
           frontContent={
             <div className="bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-slate-400/20">
               <div className="absolute top-2 left-2">
@@ -213,9 +232,6 @@ export default function FlipPopulationCards({
                     Population Covered
                   </span>
                 </div>
-              </div>
-              <div className="absolute bottom-2 right-2">
-                <span className="text-xs text-slate-300">Click to flip</span>
               </div>
             </div>
           }
@@ -234,15 +250,13 @@ export default function FlipPopulationCards({
                   </span>
                 </div>
               </div>
-              <div className="absolute bottom-2 right-2">
-                <span className="text-xs text-purple-300">Click to flip</span>
-              </div>
             </div>
           }
         />
 
         {/* Card 2: Population/Villages With Water */}
         <FlipCard
+          isFlipped={allFlipped}
           frontContent={
             <div className="bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-teal-400/20">
               <div className="absolute top-2 left-2">
@@ -297,6 +311,7 @@ export default function FlipPopulationCards({
 
         {/* Card 3: Population/Villages Without Water */}
         <FlipCard
+          isFlipped={allFlipped}
           frontContent={
             <div className="bg-gradient-to-br from-rose-600 via-red-700 to-pink-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-rose-400/20">
               <div className="absolute top-2 left-2">
