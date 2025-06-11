@@ -7,7 +7,7 @@ import RegionComparisonChart from "@/components/dashboard/region-comparison-char
 import SimpleMaharashtraMap from "@/components/dashboard/simple-maharashtra-map";
 import MetricSelector from "@/components/dashboard/metric-selector";
 import DailyUpdates from "@/components/dashboard/daily-updates";
-import CompactPopulationCards from "@/components/dashboard/compact-population-cards";
+import FlipPopulationCards from "@/components/dashboard/flip-population-cards";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";

@@ -173,6 +173,84 @@ router.get('/village-counts', async (req, res) => {
   }
 });
 
+// Get village statistics from water_scheme_data
+router.get('/village-stats', async (req, res) => {
+  try {
+    const { region } = req.query;
+    
+    // Use pg directly for this route
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      let baseQuery = `
+        WITH unique_villages AS (
+          SELECT DISTINCT
+            village_name,
+            scheme_id,
+            region,
+            water_value_day6,
+            water_value_day5,
+            lpcd_value_day7,
+            lpcd_value_day6
+          FROM water_scheme_data 
+          WHERE village_name IS NOT NULL AND village_name != ''
+        )
+        SELECT 
+          COUNT(DISTINCT CONCAT(village_name, '|', scheme_id)) as total_villages,
+          
+          -- Villages receiving water (water_value_day6 > 0)
+          COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) as villages_with_water,
+          ROUND((COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_with_water,
+          
+          -- Villages not receiving water (water_value_day6 = 0 or NULL)
+          COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) as villages_without_water,
+          ROUND((COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_without_water,
+          
+          -- Villages with LPCD > 55
+          COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) as villages_lpcd_above_55,
+          ROUND((COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_lpcd_above_55,
+          
+          -- Villages with LPCD <= 55 (but > 0)
+          COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_lpcd_below_55,
+          ROUND((COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_lpcd_below_55,
+          
+          -- Daily change calculations (comparing day 6 vs day 5)
+          COUNT(CASE WHEN water_value_day6 > 0 AND (water_value_day5 = 0 OR water_value_day5 IS NULL) THEN 1 END) as villages_gained_water,
+          COUNT(CASE WHEN (water_value_day6 = 0 OR water_value_day6 IS NULL) AND water_value_day5 > 0 THEN 1 END) as villages_lost_water,
+          
+          -- Villages with water on day 5 for comparison
+          COUNT(CASE WHEN water_value_day5 > 0 THEN 1 END) as villages_with_water_day5,
+          COUNT(CASE WHEN water_value_day5 = 0 OR water_value_day5 IS NULL THEN 1 END) as villages_without_water_day5,
+          
+          -- LPCD change calculations (day 7 vs day 6)
+          COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) as villages_lpcd_above_55_day7,
+          COUNT(CASE WHEN lpcd_value_day6 > 55 THEN 1 END) as villages_lpcd_above_55_day6,
+          COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_lpcd_below_55_day7,
+          COUNT(CASE WHEN lpcd_value_day6 <= 55 AND lpcd_value_day6 > 0 THEN 1 END) as villages_lpcd_below_55_day6
+          
+        FROM unique_villages
+      `;
+      
+      const queryParams: any[] = [];
+      
+      if (region && region !== 'all') {
+        baseQuery = baseQuery.replace('FROM unique_villages', 'FROM unique_villages WHERE region = $1');
+        queryParams.push(region);
+      }
+      
+      const result = await client.query(baseQuery, queryParams);
+      res.json(result.rows[0]);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching village statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch village statistics' });
+  }
+});
+
 // Get population statistics from water_scheme_data
 router.get('/population-stats', async (req, res) => {
   try {
