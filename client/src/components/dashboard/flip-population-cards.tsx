@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowUp, ArrowDown, Users, Droplets, AlertTriangle, MapPin, RotateCcw } from "lucide-react";
 import FlipCard from "@/components/ui/flip-card";
 import { Button } from "@/components/ui/button";
-import PopulationDetailsModal from "./population-details-modal";
 
 interface PopulationStats {
   total_villages: number;
@@ -58,8 +57,6 @@ export default function FlipPopulationCards({
   selectedRegion = "all",
 }: FlipPopulationCardsProps) {
   const [allFlipped, setAllFlipped] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedCardType, setSelectedCardType] = useState<"total" | "with_water" | "no_water" | "lpcd_above" | "lpcd_below">("total");
   // Fetch population statistics
   const { data: populationStats, isLoading: populationLoading } = useQuery<PopulationStats>({
     queryKey: ["/api/water-scheme-data/population-stats", selectedRegion],
@@ -200,11 +197,6 @@ export default function FlipPopulationCards({
     setAllFlipped(!allFlipped);
   };
 
-  const handleCardClick = (cardType: "total" | "with_water" | "no_water" | "lpcd_above" | "lpcd_below") => {
-    setSelectedCardType(cardType);
-    setModalOpen(true);
-  };
-
   return (
     <div className="w-full">
       {/* Master Toggle Button */}
@@ -227,7 +219,6 @@ export default function FlipPopulationCards({
         <FlipCard
           isFlipped={allFlipped}
           delay={0}
-          onClick={() => handleCardClick("total")}
           frontContent={
             <div className="bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-slate-400/20">
               <div className="absolute top-2 left-2">
@@ -268,7 +259,6 @@ export default function FlipPopulationCards({
         <FlipCard
           isFlipped={allFlipped}
           delay={0.1}
-          onClick={() => handleCardClick("with_water")}
           frontContent={
             <div className="bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-teal-400/20">
               <div className="absolute top-2 left-2">
