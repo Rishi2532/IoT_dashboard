@@ -346,7 +346,7 @@ export default function CompactPopulationCards({
                   }
                 >
                   {populationStats.population_lost_water !== 0 
-                    ? `+${formatPercentage(Math.abs(noWaterChangePercentage))}%`
+                    ? `${populationStats.population_lost_water > 0 ? '+' : ''}${formatPercentage(Math.abs(noWaterChangePercentage))}%`
                     : '0.0%'
                   }
                 </span>

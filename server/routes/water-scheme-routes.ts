@@ -300,11 +300,11 @@ router.get('/population-stats', async (req, res) => {
           SUM(CASE WHEN lpcd_value_day7 > 55 THEN population ELSE 0 END) as population_lpcd_above_55,
           SUM(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) as population_lpcd_below_55,
           
-          -- Population change analysis (day6 vs day5) - Proper change calculation
-          -- Population that gained water: had no water on day 5 but has water on day 6
-          SUM(CASE WHEN (water_value_day5 = 0 OR water_value_day5 IS NULL) AND water_value_day6 > 0 THEN population ELSE 0 END) as population_gained_water,
-          -- Population that lost water: had water on day 5 but no water on day 6  
-          SUM(CASE WHEN water_value_day5 > 0 AND (water_value_day6 = 0 OR water_value_day6 IS NULL) THEN population ELSE 0 END) as population_lost_water,
+          -- Population change analysis (day6 vs day5) - Net change calculation
+          -- Net change in population with water (day6 - day5)
+          SUM(CASE WHEN water_value_day6 > 0 THEN population ELSE 0 END) - SUM(CASE WHEN water_value_day5 > 0 THEN population ELSE 0 END) as population_gained_water,
+          -- Net change in population without water (day6 - day5)  
+          SUM(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN population ELSE 0 END) - SUM(CASE WHEN water_value_day5 = 0 OR water_value_day5 IS NULL THEN population ELSE 0 END) as population_lost_water,
           
           -- Day 5 baseline for comparison
           SUM(CASE WHEN water_value_day5 > 0 THEN population ELSE 0 END) as population_with_water_day5,
