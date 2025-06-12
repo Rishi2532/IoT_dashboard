@@ -8,8 +8,18 @@ const router = Router();
 // Get current total population with daily change
 router.get("/current", async (req, res) => {
   try {
+    const { region } = req.query;
     const currentDate = new Date().toISOString().split('T')[0];
-    const populationData = await storage.getCurrentPopulation(currentDate);
+    
+    let populationData;
+    
+    if (region && region !== "all") {
+      // Get regional population data
+      populationData = await storage.getRegionalPopulation(region as string, currentDate);
+    } else {
+      // Get total population data
+      populationData = await storage.getCurrentPopulation(currentDate);
+    }
     
     res.json({
       success: true,
