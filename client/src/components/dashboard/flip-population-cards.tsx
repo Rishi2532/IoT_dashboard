@@ -90,6 +90,21 @@ export default function FlipPopulationCards({
     },
   });
 
+  // Fetch current population tracking data with change calculation
+  const { data: currentPopulationData } = useQuery({
+    queryKey: ["/api/population-tracking/current", selectedRegion],
+    queryFn: async () => {
+      const url = selectedRegion === "all" 
+        ? "/api/population-tracking/current"
+        : `/api/population-tracking/current?region=${selectedRegion}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        return null;
+      }
+      return response.json();
+    },
+  });
+
   // Fetch previous day population data for comparison
   const { data: previousPopulationData } = useQuery({
     queryKey: ["/api/population-tracking/previous", selectedRegion],
