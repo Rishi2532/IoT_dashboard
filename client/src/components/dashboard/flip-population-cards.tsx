@@ -437,7 +437,7 @@ export default function FlipPopulationCards({
             <div className="bg-gradient-to-br from-green-50 to-emerald-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-green-200">
               <div className="p-4">
                 <div className="flex justify-between items-start mb-2">
-                  <div className="text-sm font-medium text-slate-600">Population LPCD &gt; 55</div>
+                  <div className="text-sm font-medium text-slate-600">Population LPCD {">"}  55</div>
                   <div className="flex items-center gap-1">
                     <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
                       populationLpcdAbove55Change?.isPositive 
@@ -466,27 +466,34 @@ export default function FlipPopulationCards({
             </div>
           }
           backContent={
-            <div className="bg-gradient-to-br from-lime-500 via-green-600 to-emerald-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-lime-400/30">
-              <div className="absolute top-2 left-2">
-                <div className="text-3xl font-bold">
+            <div className="bg-gradient-to-br from-lime-50 to-green-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-lime-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-sm font-medium text-slate-600">Villages LPCD {">"} 55</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                      villageLpcdAbove55Change?.isPositive 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {villageLpcdAbove55Change?.isPositive ? '▲' : '▼'}
+                      <span>{villageLpcdAbove55Change?.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.villages_lpcd_above_55)}
                 </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <ChangeIndicator change={villageLpcdAbove55Change} />
-              </div>
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1">
-                  <Droplets className="h-3 w-3 text-green-100" />
-                  <span className="text-xs font-medium text-green-100">
-                    Villages LPCD {">"} 55
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <Droplets className="h-3 w-3" />
+                    <span>Adequate Supply</span>
+                  </div>
+                  <span className="font-medium text-lime-600">
+                    {formatPercentage(villageStats.percent_villages_lpcd_above_55)}%
                   </span>
                 </div>
-              </div>
-              <div className="absolute bottom-2 right-2">
-                <span className="text-xs text-green-300">
-                  {formatPercentage(villageStats.percent_villages_lpcd_above_55)}%
-                </span>
+                <div className="mt-3 h-8 bg-gradient-to-r from-lime-200 to-green-300 rounded opacity-60"></div>
               </div>
             </div>
           }
@@ -497,52 +504,66 @@ export default function FlipPopulationCards({
           isFlipped={allFlipped}
           delay={0.4}
           frontContent={
-            <div className="bg-gradient-to-br from-yellow-500 via-amber-600 to-orange-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-yellow-400/30">
-              <div className="absolute top-2 left-2">
-                <div className="text-3xl font-bold">
+            <div className="bg-gradient-to-br from-yellow-50 to-amber-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-yellow-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-sm font-medium text-slate-600">Population LPCD ≤ 55</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                      populationLpcdBelow55Change?.isPositive 
+                        ? 'bg-yellow-100 text-yellow-700' 
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {populationLpcdBelow55Change?.isPositive ? '▲' : '▼'}
+                      <span>{populationLpcdBelow55Change?.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.population_lpcd_below_55)}
                 </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <ChangeIndicator change={populationLpcdBelow55Change} />
-              </div>
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3 text-amber-100" />
-                  <span className="text-xs font-medium text-amber-100">
-                    Population LPCD ≤ 55
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>Below Standard</span>
+                  </div>
+                  <span className="font-medium text-amber-600">
+                    {formatPercentage((populationStats.population_lpcd_below_55 / populationStats.total_population) * 100)}%
                   </span>
                 </div>
-              </div>
-              <div className="absolute bottom-2 right-2">
-                <span className="text-xs text-amber-300">
-                  {formatPercentage((populationStats.population_lpcd_below_55 / populationStats.total_population) * 100)}%
-                </span>
+                <div className="mt-3 h-8 bg-gradient-to-r from-yellow-200 to-amber-300 rounded opacity-60"></div>
               </div>
             </div>
           }
           backContent={
-            <div className="bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-orange-400/30">
-              <div className="absolute top-2 left-2">
-                <div className="text-3xl font-bold">
+            <div className="bg-gradient-to-br from-orange-50 to-yellow-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-orange-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-sm font-medium text-slate-600">Villages LPCD ≤ 55</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                      villageLpcdBelow55Change?.isPositive 
+                        ? 'bg-yellow-100 text-yellow-700' 
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {villageLpcdBelow55Change?.isPositive ? '▲' : '▼'}
+                      <span>{villageLpcdBelow55Change?.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.villages_lpcd_below_55)}
                 </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <ChangeIndicator change={villageLpcdBelow55Change} />
-              </div>
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3 text-yellow-100" />
-                  <span className="text-xs font-medium text-yellow-100">
-                    Villages LPCD ≤ 55
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>Below Standard</span>
+                  </div>
+                  <span className="font-medium text-orange-600">
+                    {formatPercentage(villageStats.percent_villages_lpcd_below_55)}%
                   </span>
                 </div>
-              </div>
-              <div className="absolute bottom-2 right-2">
-                <span className="text-xs text-yellow-300">
-                  {formatPercentage(villageStats.percent_villages_lpcd_below_55)}%
-                </span>
+                <div className="mt-3 h-8 bg-gradient-to-r from-orange-200 to-yellow-300 rounded opacity-60"></div>
               </div>
             </div>
           }
