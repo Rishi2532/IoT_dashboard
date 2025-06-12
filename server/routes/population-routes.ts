@@ -170,6 +170,33 @@ router.post("/region/calculate-all", async (req, res) => {
   }
 });
 
+// Get previous day population data for comparison
+router.get("/previous", async (req, res) => {
+  try {
+    const { region } = req.query;
+    
+    // Calculate yesterday's date
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayDate = yesterday.toISOString().split('T')[0];
+    
+    let previousData;
+    
+    if (region && region !== "all") {
+      // Get regional previous day data
+      previousData = await storage.getRegionalPopulation(region as string, yesterdayDate);
+    } else {
+      // Get total previous day data
+      previousData = await storage.getPopulationByDate(yesterdayDate);
+    }
+    
+    res.json(previousData || null);
+  } catch (error) {
+    console.error("Error fetching previous day population:", error);
+    res.json(null); // Return null if no previous data exists
+  }
+});
+
 // Get population history (last 30 days)
 router.get("/history", async (req, res) => {
   try {

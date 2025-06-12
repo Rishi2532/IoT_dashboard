@@ -197,16 +197,20 @@ export default function FlipPopulationCards({
     villageStats.villages_lpcd_below_55_day6 || 0
   );
 
-  // Total population change (add sample previous day data)
+  // Get previous day population for comparison
+  const previousTotalPopulation = previousPopulationData?.total_population || 
+                                  previousPopulationData?.population;
+
+  // Total population change using real previous day data
   const totalPopulationChange = getChangeIndicator(
     populationStats.total_population,
-    Number(populationStats.total_population) - 5000 // Sample decrease of 5,000 from previous day
+    previousTotalPopulation || (populationStats.total_population - 25000) // Sample change if no previous data
   );
 
-  // Total villages change (add sample previous day data)
+  // Total villages change (using sample data since village tracking not implemented yet)
   const totalVillagesChange = getChangeIndicator(
     villageStats.total_villages,
-    Number(villageStats.total_villages) + 8 // Sample increase of 8 villages from previous day
+    Number(villageStats.total_villages) - 3 // Sample change
   );
 
   const ChangeIndicator = ({ change }: { change: any }) => {
@@ -262,7 +266,7 @@ export default function FlipPopulationCards({
                         : 'bg-red-100 text-red-700'
                     }`}>
                       {totalPopulationChange?.isPositive ? '▲' : '▼'}
-                      <span>{totalPopulationChange?.percentage.toFixed(1)}%</span>
+                      <span>{formatNumber(totalPopulationChange?.value || 0)}</span>
                     </div>
                   </div>
                 </div>
@@ -289,7 +293,7 @@ export default function FlipPopulationCards({
                         : 'bg-red-100 text-red-700'
                     }`}>
                       {totalVillagesChange?.isPositive ? '▲' : '▼'}
-                      <span>{totalVillagesChange?.percentage.toFixed(1)}%</span>
+                      <span>{formatNumber(totalVillagesChange?.value || 0)}</span>
                     </div>
                   </div>
                 </div>
@@ -322,7 +326,7 @@ export default function FlipPopulationCards({
                         : 'bg-red-100 text-red-700'
                     }`}>
                       {populationWaterChange?.isPositive ? '▲' : '▼'}
-                      <span>{populationWaterChange?.percentage.toFixed(1)}%</span>
+                      <span>{formatNumber(populationWaterChange?.value || 0)}</span>
                     </div>
                   </div>
                 </div>
@@ -354,7 +358,7 @@ export default function FlipPopulationCards({
                         : 'bg-red-100 text-red-700'
                     }`}>
                       {villageWaterChange?.isPositive ? '▲' : '▼'}
-                      <span>{villageWaterChange?.percentage.toFixed(1)}%</span>
+                      <span>{formatNumber(villageWaterChange?.value || 0)}</span>
                     </div>
                   </div>
                 </div>
