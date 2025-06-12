@@ -473,14 +473,16 @@ export default function FlipPopulationCards({
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.population_lpcd_above_55)}
                 </div>
+                <div className="text-xs text-slate-500 mb-2">
+                  <span className="font-medium text-green-600">
+                    {formatPercentage((populationStats.population_lpcd_above_55 / populationStats.total_population) * 100)}%
+                  </span>
+                </div>
                 <div className="flex items-center justify-between text-xs text-slate-500">
                   <div className="flex items-center gap-1">
                     <Droplets className="h-3 w-3" />
                     <span>Adequate Supply</span>
                   </div>
-                  <span className="font-medium text-green-600">
-                    {formatPercentage((populationStats.population_lpcd_above_55 / populationStats.total_population) * 100)}%
-                  </span>
                 </div>
                 <div className="mt-3 h-8 bg-gradient-to-r from-green-200 to-emerald-300 rounded opacity-60"></div>
               </div>
@@ -505,14 +507,16 @@ export default function FlipPopulationCards({
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.villages_lpcd_above_55)}
                 </div>
+                <div className="text-xs text-slate-500 mb-2">
+                  <span className="font-medium text-lime-600">
+                    {formatPercentage(villageStats.percent_villages_lpcd_above_55)}%
+                  </span>
+                </div>
                 <div className="flex items-center justify-between text-xs text-slate-500">
                   <div className="flex items-center gap-1">
                     <Droplets className="h-3 w-3" />
                     <span>Adequate Supply</span>
                   </div>
-                  <span className="font-medium text-lime-600">
-                    {formatPercentage(villageStats.percent_villages_lpcd_above_55)}%
-                  </span>
                 </div>
                 <div className="mt-3 h-8 bg-gradient-to-r from-lime-200 to-green-300 rounded opacity-60"></div>
               </div>
@@ -543,14 +547,16 @@ export default function FlipPopulationCards({
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.population_lpcd_below_55)}
                 </div>
+                <div className="text-xs text-slate-500 mb-2">
+                  <span className="font-medium text-amber-600">
+                    {formatPercentage((populationStats.population_lpcd_below_55 / populationStats.total_population) * 100)}%
+                  </span>
+                </div>
                 <div className="flex items-center justify-between text-xs text-slate-500">
                   <div className="flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3" />
                     <span>Below Standard</span>
                   </div>
-                  <span className="font-medium text-amber-600">
-                    {formatPercentage((populationStats.population_lpcd_below_55 / populationStats.total_population) * 100)}%
-                  </span>
                 </div>
                 <div className="mt-3 h-8 bg-gradient-to-r from-yellow-200 to-amber-300 rounded opacity-60"></div>
               </div>
@@ -575,14 +581,16 @@ export default function FlipPopulationCards({
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.villages_lpcd_below_55)}
                 </div>
+                <div className="text-xs text-slate-500 mb-2">
+                  <span className="font-medium text-orange-600">
+                    {formatPercentage(villageStats.percent_villages_lpcd_below_55)}%
+                  </span>
+                </div>
                 <div className="flex items-center justify-between text-xs text-slate-500">
                   <div className="flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3" />
                     <span>Below Standard</span>
                   </div>
-                  <span className="font-medium text-orange-600">
-                    {formatPercentage(villageStats.percent_villages_lpcd_below_55)}%
-                  </span>
                 </div>
                 <div className="mt-3 h-8 bg-gradient-to-r from-orange-200 to-yellow-300 rounded opacity-60"></div>
               </div>
