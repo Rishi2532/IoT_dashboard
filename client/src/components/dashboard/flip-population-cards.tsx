@@ -294,52 +294,66 @@ export default function FlipPopulationCards({
           isFlipped={allFlipped}
           delay={0.1}
           frontContent={
-            <div className="bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-emerald-400/30">
-              <div className="absolute top-2 left-2">
-                <div className="text-3xl font-bold">
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-emerald-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-sm font-medium text-slate-600">Population with Water</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                      populationWaterChange?.isPositive 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {populationWaterChange?.isPositive ? '▲' : '▼'}
+                      <span>{populationWaterChange?.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.population_with_water)}
                 </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <ChangeIndicator change={populationWaterChange} />
-              </div>
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1">
-                  <Droplets className="h-3 w-3 text-teal-100" />
-                  <span className="text-xs font-medium text-teal-100">
-                    Population with Water
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <Droplets className="h-3 w-3" />
+                    <span>Coverage</span>
+                  </div>
+                  <span className="font-medium text-emerald-600">
+                    {formatPercentage(populationStats.percent_population_with_water)}%
                   </span>
                 </div>
-              </div>
-              <div className="absolute bottom-2 right-2">
-                <span className="text-xs text-teal-300">
-                  {formatPercentage(populationStats.percent_population_with_water)}%
-                </span>
+                <div className="mt-3 h-8 bg-gradient-to-r from-emerald-200 to-teal-300 rounded opacity-60"></div>
               </div>
             </div>
           }
           backContent={
-            <div className="bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-sky-400/30">
-              <div className="absolute top-2 left-2">
-                <div className="text-3xl font-bold">
+            <div className="bg-gradient-to-br from-cyan-50 to-blue-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-cyan-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-sm font-medium text-slate-600">Villages with Water</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                      villageWaterChange?.isPositive 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {villageWaterChange?.isPositive ? '▲' : '▼'}
+                      <span>{villageWaterChange?.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.villages_with_water)}
                 </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <ChangeIndicator change={villageWaterChange} />
-              </div>
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1">
-                  <Droplets className="h-3 w-3 text-blue-100" />
-                  <span className="text-xs font-medium text-blue-100">
-                    Villages with Water
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <Droplets className="h-3 w-3" />
+                    <span>Coverage</span>
+                  </div>
+                  <span className="font-medium text-cyan-600">
+                    {formatPercentage(villageStats.percent_villages_with_water)}%
                   </span>
                 </div>
-              </div>
-              <div className="absolute bottom-2 right-2">
-                <span className="text-xs text-blue-300">
-                  {formatPercentage(villageStats.percent_villages_with_water)}%
-                </span>
+                <div className="mt-3 h-8 bg-gradient-to-r from-cyan-200 to-blue-300 rounded opacity-60"></div>
               </div>
             </div>
           }
@@ -350,52 +364,66 @@ export default function FlipPopulationCards({
           isFlipped={allFlipped}
           delay={0.2}
           frontContent={
-            <div className="bg-gradient-to-br from-red-500 via-rose-600 to-pink-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-red-400/30">
-              <div className="absolute top-2 left-2">
-                <div className="text-3xl font-bold">
+            <div className="bg-gradient-to-br from-red-50 to-rose-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-red-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-sm font-medium text-slate-600">Population No Water</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                      populationNoWaterChange?.isPositive 
+                        ? 'bg-red-100 text-red-700' 
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {populationNoWaterChange?.isPositive ? '▲' : '▼'}
+                      <span>{populationNoWaterChange?.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.population_no_water)}
                 </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <ChangeIndicator change={populationNoWaterChange} />
-              </div>
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3 text-rose-100" />
-                  <span className="text-xs font-medium text-rose-100">
-                    Population No Water
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>No Access</span>
+                  </div>
+                  <span className="font-medium text-red-600">
+                    {formatPercentage(populationStats.percent_population_no_water)}%
                   </span>
                 </div>
-              </div>
-              <div className="absolute bottom-2 right-2">
-                <span className="text-xs text-rose-300">
-                  {formatPercentage(populationStats.percent_population_no_water)}%
-                </span>
+                <div className="mt-3 h-8 bg-gradient-to-r from-red-200 to-rose-300 rounded opacity-60"></div>
               </div>
             </div>
           }
           backContent={
-            <div className="bg-gradient-to-br from-orange-500 via-red-600 to-rose-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-orange-400/30">
-              <div className="absolute top-2 left-2">
-                <div className="text-3xl font-bold">
+            <div className="bg-gradient-to-br from-orange-50 to-red-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-orange-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-sm font-medium text-slate-600">Villages No Water</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                      villageNoWaterChange?.isPositive 
+                        ? 'bg-red-100 text-red-700' 
+                        : 'bg-green-100 text-green-700'
+                    }`}>
+                      {villageNoWaterChange?.isPositive ? '▲' : '▼'}
+                      <span>{villageNoWaterChange?.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.villages_without_water)}
                 </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <ChangeIndicator change={villageNoWaterChange} />
-              </div>
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1">
-                  <AlertTriangle className="h-3 w-3 text-orange-100" />
-                  <span className="text-xs font-medium text-orange-100">
-                    Villages No Water
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" />
+                    <span>No Access</span>
+                  </div>
+                  <span className="font-medium text-orange-600">
+                    {formatPercentage(villageStats.percent_villages_without_water)}%
                   </span>
                 </div>
-              </div>
-              <div className="absolute bottom-2 right-2">
-                <span className="text-xs text-orange-300">
-                  {formatPercentage(villageStats.percent_villages_without_water)}%
-                </span>
+                <div className="mt-3 h-8 bg-gradient-to-r from-orange-200 to-red-300 rounded opacity-60"></div>
               </div>
             </div>
           }
@@ -406,27 +434,34 @@ export default function FlipPopulationCards({
           isFlipped={allFlipped}
           delay={0.3}
           frontContent={
-            <div className="bg-gradient-to-br from-green-500 via-emerald-600 to-teal-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-green-400/30">
-              <div className="absolute top-2 left-2">
-                <div className="text-3xl font-bold">
+            <div className="bg-gradient-to-br from-green-50 to-emerald-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-green-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-sm font-medium text-slate-600">Population LPCD &gt; 55</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                      populationLpcdAbove55Change?.isPositive 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {populationLpcdAbove55Change?.isPositive ? '▲' : '▼'}
+                      <span>{populationLpcdAbove55Change?.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.population_lpcd_above_55)}
                 </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <ChangeIndicator change={populationLpcdAbove55Change} />
-              </div>
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1">
-                  <Droplets className="h-3 w-3 text-emerald-100" />
-                  <span className="text-xs font-medium text-emerald-100">
-                    Population LPCD {">"} 55
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center gap-1">
+                    <Droplets className="h-3 w-3" />
+                    <span>Adequate Supply</span>
+                  </div>
+                  <span className="font-medium text-green-600">
+                    {formatPercentage((populationStats.population_lpcd_above_55 / populationStats.total_population) * 100)}%
                   </span>
                 </div>
-              </div>
-              <div className="absolute bottom-2 right-2">
-                <span className="text-xs text-emerald-300">
-                  {formatPercentage((populationStats.population_lpcd_above_55 / populationStats.total_population) * 100)}%
-                </span>
+                <div className="mt-3 h-8 bg-gradient-to-r from-green-200 to-emerald-300 rounded opacity-60"></div>
               </div>
             </div>
           }
