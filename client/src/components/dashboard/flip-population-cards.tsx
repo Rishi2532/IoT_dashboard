@@ -254,13 +254,18 @@ export default function FlipPopulationCards({
   const populationTrackingChange = currentPopulationData?.data?.change;
   
   // Debug logging to track data flow
-  console.log('FlipPopulationCards - Selected Region:', selectedRegion);
-  console.log('FlipPopulationCards - Current Population Data:', currentPopulationData?.data);
-  console.log('FlipPopulationCards - Population Stats:', populationStats?.total_population);
+  console.log('=== FlipPopulationCards Debug ===');
+  console.log('Selected Region:', selectedRegion);
+  console.log('Current Population Data:', currentPopulationData?.data);
+  console.log('Population Stats Total:', populationStats?.total_population);
+  console.log('Final currentTotalPopulation will be:', 
+    currentPopulationData?.data?.totalPopulation || 
+    (selectedRegion !== "all" ? 0 : populationStats?.total_population) || 0
+  );
+  console.log('=== End Debug ===');
   
-  // Prioritize authentic tracking data for regional filtering
-  const currentTotalPopulation = currentPopulationData?.data?.totalPopulation || 
-    (selectedRegion !== "all" ? 0 : populationStats?.total_population) || 0;
+  // Always prioritize the current population tracking data if available
+  const currentTotalPopulation = currentPopulationData?.data?.totalPopulation || populationStats?.total_population || 0;
   const previousTotalPopulation = previousPopulationData?.total_population || previousPopulationData?.population;
 
   // Total population change using authentic tracking data
