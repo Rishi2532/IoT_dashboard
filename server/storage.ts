@@ -5701,11 +5701,11 @@ export class PostgresStorage implements IStorage {
 
     // Use INSERT ... ON CONFLICT to update if date and region combination already exists
     const result = await db.execute(sql`
-      INSERT INTO region_population_tracking (date, region, population)
+      INSERT INTO region_population_tracking (date, region, total_population)
       VALUES (${date}, ${region}, ${totalPopulation})
       ON CONFLICT (date, region) 
       DO UPDATE SET 
-        population = ${totalPopulation},
+        total_population = ${totalPopulation},
         created_at = CURRENT_TIMESTAMP
       RETURNING *;
     `);

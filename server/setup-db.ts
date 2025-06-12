@@ -423,7 +423,7 @@ export async function initializeTables(db: any) {
         "id" SERIAL PRIMARY KEY,
         "date" TEXT NOT NULL,
         "region" TEXT NOT NULL,
-        "population" INTEGER NOT NULL,
+        "total_population" INTEGER NOT NULL,
         "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         UNIQUE("date", "region")
       );
