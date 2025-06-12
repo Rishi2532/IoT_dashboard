@@ -369,7 +369,14 @@ export default function FlipPopulationCards({
                   <MapPin className="h-3 w-3" />
                   <span>Total Villages</span>
                 </div>
-                <div className="mt-3 h-8 bg-gradient-to-r from-purple-200 to-violet-300 rounded opacity-60"></div>
+                <div className="mt-3 h-8 flex items-center justify-center">
+                  <MiniLineChart 
+                    data={populationTrend || []} 
+                    color="#8B5CF6" 
+                    height={32} 
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
           }
