@@ -466,7 +466,7 @@ export default function FlipPopulationCards({
                         : 'bg-red-100 text-red-700'
                     }`}>
                       {populationLpcdAbove55Change?.isPositive ? '▲' : '▼'}
-                      <span>{populationLpcdAbove55Change?.percentage.toFixed(1)}%</span>
+                      <span>{formatNumber(populationLpcdAbove55Change?.value || 0)}</span>
                     </div>
                   </div>
                 </div>
@@ -498,7 +498,7 @@ export default function FlipPopulationCards({
                         : 'bg-red-100 text-red-700'
                     }`}>
                       {villageLpcdAbove55Change?.isPositive ? '▲' : '▼'}
-                      <span>{villageLpcdAbove55Change?.percentage.toFixed(1)}%</span>
+                      <span>{formatNumber(villageLpcdAbove55Change?.value || 0)}</span>
                     </div>
                   </div>
                 </div>
@@ -536,7 +536,7 @@ export default function FlipPopulationCards({
                         : 'bg-green-100 text-green-700'
                     }`}>
                       {populationLpcdBelow55Change?.isPositive ? '▲' : '▼'}
-                      <span>{populationLpcdBelow55Change?.percentage.toFixed(1)}%</span>
+                      <span>{formatNumber(populationLpcdBelow55Change?.value || 0)}</span>
                     </div>
                   </div>
                 </div>
