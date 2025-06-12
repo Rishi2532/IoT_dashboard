@@ -253,8 +253,14 @@ export default function FlipPopulationCards({
   // Get population tracking data with automatic change calculation
   const populationTrackingChange = currentPopulationData?.data?.change;
   
-  // Use the authentic tracking data if available, otherwise calculate from water scheme data
-  const currentTotalPopulation = currentPopulationData?.data?.totalPopulation || populationStats.total_population;
+  // Debug logging to track data flow
+  console.log('FlipPopulationCards - Selected Region:', selectedRegion);
+  console.log('FlipPopulationCards - Current Population Data:', currentPopulationData?.data);
+  console.log('FlipPopulationCards - Population Stats:', populationStats?.total_population);
+  
+  // Prioritize authentic tracking data for regional filtering
+  const currentTotalPopulation = currentPopulationData?.data?.totalPopulation || 
+    (selectedRegion !== "all" ? 0 : populationStats?.total_population) || 0;
   const previousTotalPopulation = previousPopulationData?.total_population || previousPopulationData?.population;
 
   // Total population change using authentic tracking data
