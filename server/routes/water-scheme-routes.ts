@@ -368,12 +368,12 @@ router.get('/population-change', async (req, res) => {
           WITH today_data AS (
             SELECT population 
             FROM region_population_tracking 
-            WHERE region = $1 AND date = CURRENT_DATE::text
+            WHERE region = $1 AND date = TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
           ),
           yesterday_data AS (
             SELECT population 
             FROM region_population_tracking 
-            WHERE region = $1 AND date = (CURRENT_DATE - INTERVAL '1 day')::text
+            WHERE region = $2 AND date = TO_CHAR(CURRENT_DATE - INTERVAL '1 day', 'YYYY-MM-DD')
           )
           SELECT 
             COALESCE(today_data.population, 0) as current_population,
@@ -389,12 +389,12 @@ router.get('/population-change', async (req, res) => {
           WITH today_data AS (
             SELECT total_population 
             FROM population_tracking 
-            WHERE date = CURRENT_DATE::text
+            WHERE date = TO_CHAR(CURRENT_DATE, 'YYYY-MM-DD')
           ),
           yesterday_data AS (
             SELECT total_population 
             FROM population_tracking 
-            WHERE date = (CURRENT_DATE - INTERVAL '1 day')::text
+            WHERE date = TO_CHAR(CURRENT_DATE - INTERVAL '1 day', 'YYYY-MM-DD')
           )
           SELECT 
             COALESCE(today_data.total_population, 0) as current_population,
