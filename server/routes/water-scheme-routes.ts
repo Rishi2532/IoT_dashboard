@@ -267,7 +267,7 @@ router.get('/population-stats', async (req, res) => {
           SELECT DISTINCT
             village_name,
             scheme_id,
-            region,
+            TRIM(region) as region,
             population,
             water_value_day6,
             water_value_day5,

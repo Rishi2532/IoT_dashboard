@@ -568,7 +568,7 @@ export default function FlipPopulationCards({
                         : 'bg-green-100 text-green-700'
                     }`}>
                       {villageLpcdBelow55Change?.isPositive ? '▲' : '▼'}
-                      <span>{villageLpcdBelow55Change?.percentage.toFixed(1)}%</span>
+                      <span>{formatNumber(villageLpcdBelow55Change?.value || 0)}</span>
                     </div>
                   </div>
                 </div>
