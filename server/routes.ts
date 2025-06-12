@@ -35,6 +35,7 @@ import pressureRoutes from "./routes/pressure-routes";
 import translationRoutes from "./routes/translation";
 import schemeLpcdRoutes from "./routes/scheme-lpcd-routes";
 import reportsRoutes from "./routes/reports";
+import populationRoutes from "./routes/population-routes";
 
 const exec = promisify(cp.exec);
 
@@ -102,6 +103,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount translation routes
   app.use("/api/translation", translationRoutes);
+  
+  // Mount population tracking routes
+  app.use("/api/population", populationRoutes);
 
   // Register endpoint
   app.post("/api/auth/register", async (req, res) => {

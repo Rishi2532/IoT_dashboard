@@ -248,6 +248,21 @@ export interface IStorage {
     changePercent: number;
   } | null>;
   saveAllRegionPopulationSnapshots(date: string): Promise<RegionPopulationTracking[]>;
+  
+  // Additional population tracking methods
+  getCurrentPopulation(date?: string): Promise<{
+    totalPopulation: number;
+    date: string;
+    change?: {
+      currentPopulation: number;
+      previousPopulation: number;
+      change: number;
+      changePercent: number;
+    };
+  }>;
+  calculateTotalPopulation(): Promise<number>;
+  getPopulationHistory(days: number): Promise<PopulationTracking[]>;
+  getRegionalPopulationHistory(region: string, days: number): Promise<RegionPopulationTracking[]>;
 }
 
 // PostgreSQL implementation
@@ -5942,6 +5957,111 @@ export class PostgresStorage implements IStorage {
   async addRegionalPopulation(data: InsertRegionPopulationTracking): Promise<RegionPopulationTracking> {
     const population = data.population || data.total_population || 0;
     return await this.saveRegionPopulationSnapshot(data.date, data.region, population);
+  }
+
+  // Get current population with change calculation
+  async getCurrentPopulation(date?: string): Promise<{
+    totalPopulation: number;
+    date: string;
+    change?: {
+      currentPopulation: number;
+      previousPopulation: number;
+      change: number;
+      changePercent: number;
+    };
+  }> {
+    const targetDate = date || new Date().toISOString().split('T')[0];
+    
+    // Try to get existing population data for the date
+    const existingData = await this.getPopulationByDate(targetDate);
+    
+    if (existingData) {
+      // Get change data if population exists for this date
+      const change = await this.calculatePopulationChange(targetDate);
+      return {
+        totalPopulation: existingData.total_population,
+        date: existingData.date,
+        change: change || undefined
+      };
+    }
+    
+    // If no data exists for today, calculate from water scheme data and store it
+    const totalPopulation = await this.calculateTotalPopulation();
+    await this.savePopulationSnapshot(targetDate, totalPopulation);
+    
+    const change = await this.calculatePopulationChange(targetDate);
+    
+    return {
+      totalPopulation,
+      date: targetDate,
+      change: change || undefined
+    };
+  }
+
+  // Calculate total population from water scheme data
+  async calculateTotalPopulation(): Promise<number> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      const result = await db.execute(`
+        SELECT COALESCE(SUM(population), 0) as total_population
+        FROM water_scheme_data
+        WHERE population IS NOT NULL AND population > 0
+      `);
+      
+      return parseInt(result.rows[0]?.total_population || '0', 10);
+    } catch (error) {
+      console.error('Error calculating total population:', error);
+      return 0;
+    }
+  }
+
+  // Get population history for specified number of days
+  async getPopulationHistory(days: number): Promise<PopulationTracking[]> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      const result = await db.execute(`
+        SELECT * FROM population_tracking
+        ORDER BY date DESC
+        LIMIT ${days}
+      `);
+      
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        date: row.date,
+        total_population: row.total_population,
+        created_at: new Date(row.created_at)
+      }));
+    } catch (error) {
+      console.error('Error fetching population history:', error);
+      return [];
+    }
+  }
+
+  // Get regional population history for specified number of days
+  async getRegionalPopulationHistory(region: string, days: number): Promise<RegionPopulationTracking[]> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      const result = await db.execute(`
+        SELECT * FROM region_population_tracking
+        WHERE region = $1
+        ORDER BY date DESC
+        LIMIT $2
+      `, [region, days]);
+      
+      return result.rows.map((row: any) => ({
+        id: row.id,
+        date: row.date,
+        region: row.region,
+        total_population: row.total_population,
+        created_at: row.created_at
+      }));
+    } catch (error) {
+      console.error('Error fetching regional population history:', error);
+      return [];
+    }
   }
 }
 
