@@ -74,14 +74,18 @@ export default function CompactPopulationCards({
   const { data: populationTracking, isLoading: trackingLoading, error: trackingError } = useQuery<PopulationTrackingResponse>({
     queryKey: ["/api/population/total"],
     queryFn: async () => {
+      console.log("Making population tracking API call");
       const response = await fetch("/api/population/total");
       if (!response.ok) {
+        console.error("Population tracking API failed:", response.status);
         throw new Error("Failed to fetch population tracking data");
       }
       const data = await response.json();
+      console.log("Population tracking data:", data);
       return data;
     },
-    enabled: selectedRegion === "all",
+    retry: 3,
+    refetchOnWindowFocus: false,
   });
 
   if (isLoading) {
@@ -211,7 +215,7 @@ export default function CompactPopulationCards({
           {/* Center: Daily population change and percentage */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              {selectedRegion === "all" && populationTracking?.change ? (
+              {populationTracking?.change ? (
                 <>
                   {formatChangeWithSign(populationTracking.change.change)}
                   <div className="text-slate-200 text-xs mt-1">
