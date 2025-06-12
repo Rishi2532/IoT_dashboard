@@ -382,7 +382,7 @@ router.get('/population-change', async (req, res) => {
           FROM today_data 
           FULL OUTER JOIN yesterday_data ON 1=1
         `;
-        queryParams.push(region);
+        queryParams.push(region, region);
       } else {
         // Get total population change
         query = `
