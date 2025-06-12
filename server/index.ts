@@ -29,6 +29,7 @@ import { setupVite, serveStatic, log } from "./vite";
 import session from "express-session";
 import { randomBytes } from "crypto";
 import "./init-database.js"; // Run database initialization on startup
+import { initializeDataCleanup } from "./data-cleanup.js"; // Run data cleanup on startup
 
 const app = express();
 app.use(express.json());
@@ -112,6 +113,11 @@ app.use((req, res, next) => {
     },
     () => {
       log(`serving on port ${port}`);
+      
+      // Initialize data cleanup after server starts
+      setTimeout(() => {
+        initializeDataCleanup().catch(console.error);
+      }, 5000); // Wait 5 seconds after server start
     },
   );
 })();
