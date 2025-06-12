@@ -14,8 +14,13 @@ if (fs.existsSync(envVscodePath)) {
 
 // Ensure DATABASE_URL is available from Replit environment
 if (!process.env.DATABASE_URL && process.env.REPL_ID) {
-  // In Replit, the DATABASE_URL might be available as a different env var
+  // In Replit, check for database environment variables
   console.log("Setting up Replit database connection...");
+  // Check if individual DB components are available
+  if (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE) {
+    process.env.DATABASE_URL = `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE}?sslmode=require`;
+    console.log("Constructed DATABASE_URL from individual components");
+  }
 }
 
 import express, { type Request, Response, NextFunction } from "express";
