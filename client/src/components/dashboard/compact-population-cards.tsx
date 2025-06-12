@@ -72,24 +72,16 @@ export default function CompactPopulationCards({
 
   // Fetch population tracking data for daily changes
   const { data: populationTracking, isLoading: trackingLoading, error: trackingError } = useQuery<PopulationTrackingResponse>({
-    queryKey: [
-      "/api/population",
-      selectedRegion === "all" ? "total" : `region/${selectedRegion}`,
-    ],
+    queryKey: ["/api/population/total"],
     queryFn: async () => {
-      const url =
-        selectedRegion === "all"
-          ? "/api/population/total"
-          : `/api/population/region/${encodeURIComponent(selectedRegion)}`;
-      console.log("Fetching population tracking from:", url);
-      const response = await fetch(url);
+      const response = await fetch("/api/population/total");
       if (!response.ok) {
         throw new Error("Failed to fetch population tracking data");
       }
       const data = await response.json();
-      console.log("Population tracking data received:", data);
       return data;
     },
+    enabled: selectedRegion === "all",
   });
 
   if (isLoading) {
@@ -219,16 +211,10 @@ export default function CompactPopulationCards({
           {/* Center: Daily population change and percentage */}
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="text-center">
-              {populationTracking?.change ? (
-                formatChangeWithSign(populationTracking.change.change)
-              ) : selectedRegion !== "all" && netPopulationChange !== 0 ? (
-                formatChangeWithSign(netPopulationChange)
-              ) : (
-                <div className="text-slate-200 text-xs">Loading...</div>
-              )}
-              <div className="text-slate-200 text-xs mt-1">
-                {populationTracking?.change ? (
-                  <>
+              {selectedRegion === "all" && populationTracking?.change ? (
+                <>
+                  {formatChangeWithSign(populationTracking.change.change)}
+                  <div className="text-slate-200 text-xs mt-1">
                     <span
                       className={
                         populationTracking.change.change > 0
@@ -247,9 +233,12 @@ export default function CompactPopulationCards({
                     <span className="text-xs text-slate-100">
                       from yesterday
                     </span>
-                  </>
-                ) : selectedRegion !== "all" && netPopulationChange !== 0 ? (
-                  <>
+                  </div>
+                </>
+              ) : selectedRegion !== "all" && netPopulationChange !== 0 ? (
+                <>
+                  {formatChangeWithSign(netPopulationChange)}
+                  <div className="text-slate-200 text-xs mt-1">
                     <span
                       className={
                         netPopulationChange > 0
@@ -261,9 +250,13 @@ export default function CompactPopulationCards({
                     </span>
                     <br />
                     <span className="text-xs text-slate-100">change</span>
-                  </>
-                ) : null}
-              </div>
+                  </div>
+                </>
+              ) : (
+                <div className="text-slate-200 text-xs">
+                  {trackingLoading ? "Loading..." : "No change"}
+                </div>
+              )}
             </div>
           </div>
 
