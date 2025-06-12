@@ -5908,47 +5908,7 @@ export class PostgresStorage implements IStorage {
     };
   }
 
-  async getPopulationHistory(days: number = 7): Promise<{
-    totalHistory: Array<{
-      date: string;
-      totalPopulation: number;
-    }>;
-    regionHistory: Array<{
-      date: string;
-      region: string;
-      population: number;
-    }>;
-  }> {
-    const db = await this.ensureInitialized();
-    
-    // Get total population history
-    const totalResult = await db.execute(sql`
-      SELECT date, total_population 
-      FROM population_tracking 
-      ORDER BY date DESC 
-      LIMIT ${days}
-    `);
-    
-    // Get regional population history
-    const regionResult = await db.execute(sql`
-      SELECT date, region, total_population as population
-      FROM region_population_tracking 
-      ORDER BY date DESC, region 
-      LIMIT ${days * 10}
-    `);
-    
-    return {
-      totalHistory: totalResult.rows.map(row => ({
-        date: row.date,
-        totalPopulation: row.total_population
-      })),
-      regionHistory: regionResult.rows.map(row => ({
-        date: row.date,
-        region: row.region,
-        population: row.population
-      }))
-    };
-  }
+
 
   async addTotalPopulation(data: InsertPopulationTracking): Promise<PopulationTracking> {
     return await this.savePopulationSnapshot(data.date, data.total_population);
