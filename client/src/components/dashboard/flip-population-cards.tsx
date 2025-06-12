@@ -220,7 +220,7 @@ export default function FlipPopulationCards({
           isFlipped={allFlipped}
           delay={0}
           frontContent={
-            <div className="bg-gradient-to-br from-slate-600 via-slate-700 to-slate-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-slate-400/20">
+            <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-indigo-400/30">
               <div className="absolute top-2 left-2">
                 <div className="text-3xl font-bold">
                   {formatNumber(populationStats.total_population)}
@@ -237,7 +237,7 @@ export default function FlipPopulationCards({
             </div>
           }
           backContent={
-            <div className="bg-gradient-to-br from-purple-600 via-purple-700 to-indigo-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-purple-400/20">
+            <div className="bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-violet-400/30">
               <div className="absolute top-2 left-2">
                 <div className="text-3xl font-bold">
                   {formatNumber(villageStats.total_villages)}
@@ -260,7 +260,7 @@ export default function FlipPopulationCards({
           isFlipped={allFlipped}
           delay={0.1}
           frontContent={
-            <div className="bg-gradient-to-br from-teal-600 via-teal-700 to-cyan-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-teal-400/20">
+            <div className="bg-gradient-to-br from-emerald-500 via-teal-600 to-cyan-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-emerald-400/30">
               <div className="absolute top-2 left-2">
                 <div className="text-3xl font-bold">
                   {formatNumber(populationStats.population_with_water)}
@@ -285,7 +285,7 @@ export default function FlipPopulationCards({
             </div>
           }
           backContent={
-            <div className="bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-blue-400/20">
+            <div className="bg-gradient-to-br from-sky-500 via-blue-600 to-indigo-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-sky-400/30">
               <div className="absolute top-2 left-2">
                 <div className="text-3xl font-bold">
                   {formatNumber(villageStats.villages_with_water)}
@@ -315,9 +315,8 @@ export default function FlipPopulationCards({
         <FlipCard
           isFlipped={allFlipped}
           delay={0.2}
-          onClick={() => handleCardClick("no_water")}
           frontContent={
-            <div className="bg-gradient-to-br from-rose-600 via-red-700 to-pink-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-rose-400/20">
+            <div className="bg-gradient-to-br from-red-500 via-rose-600 to-pink-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-red-400/30">
               <div className="absolute top-2 left-2">
                 <div className="text-3xl font-bold">
                   {formatNumber(populationStats.population_no_water)}
@@ -342,7 +341,7 @@ export default function FlipPopulationCards({
             </div>
           }
           backContent={
-            <div className="bg-gradient-to-br from-orange-600 via-red-700 to-red-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-orange-400/20">
+            <div className="bg-gradient-to-br from-orange-500 via-red-600 to-rose-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-orange-400/30">
               <div className="absolute top-2 left-2">
                 <div className="text-3xl font-bold">
                   {formatNumber(villageStats.villages_without_water)}
@@ -372,7 +371,6 @@ export default function FlipPopulationCards({
         <FlipCard
           isFlipped={allFlipped}
           delay={0.3}
-          onClick={() => handleCardClick("lpcd_above")}
           frontContent={
             <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-green-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-emerald-400/20">
               <div className="absolute top-2 left-2">
@@ -429,7 +427,6 @@ export default function FlipPopulationCards({
         <FlipCard
           isFlipped={allFlipped}
           delay={0.4}
-          onClick={() => handleCardClick("lpcd_below")}
           frontContent={
             <div className="bg-gradient-to-br from-amber-600 via-yellow-700 to-orange-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-amber-400/20">
               <div className="absolute top-2 left-2">
@@ -482,15 +479,6 @@ export default function FlipPopulationCards({
           }
         />
       </div>
-
-      {/* Population Details Modal */}
-      <PopulationDetailsModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        cardType={selectedCardType}
-        selectedRegion={selectedRegion}
-        isVillageView={allFlipped}
-      />
     </div>
   );
 }
