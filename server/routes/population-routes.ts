@@ -218,6 +218,27 @@ router.get("/history", async (req, res) => {
   }
 });
 
+// Get weekly trend data for mini charts
+router.get("/weekly-trend", async (req, res) => {
+  try {
+    const history = await storage.getPopulationHistory(7);
+    
+    // Extract just the numbers for the chart
+    const trendData = history.map(entry => entry.total_population);
+    
+    res.json({
+      success: true,
+      data: trendData.reverse() // Reverse to show oldest to newest
+    });
+  } catch (error) {
+    console.error("Error fetching weekly trend:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch weekly trend data"
+    });
+  }
+});
+
 // Get regional population history
 router.get("/region/:region/history", async (req, res) => {
   try {

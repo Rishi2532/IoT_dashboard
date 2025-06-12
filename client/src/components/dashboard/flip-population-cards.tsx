@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowUp, ArrowDown, Users, Droplets, AlertTriangle, MapPin, RotateCcw } from "lucide-react";
 import FlipCard from "@/components/ui/flip-card";
 import { Button } from "@/components/ui/button";
+import MiniLineChart from "@/components/ui/mini-line-chart";
 
 interface PopulationStats {
   total_villages: number;
@@ -117,6 +118,43 @@ export default function FlipPopulationCards({
         return null; // Return null if no previous data exists
       }
       return response.json();
+    },
+  });
+
+  // Fetch trend data for mini charts
+  const { data: populationTrend } = useQuery({
+    queryKey: ["/api/population-tracking/weekly-trend", selectedRegion],
+    queryFn: async () => {
+      const response = await fetch("/api/population-tracking/weekly-trend");
+      if (!response.ok) return [];
+      const result = await response.json();
+      return result.data || [];
+    },
+  });
+
+  const { data: waterTrend } = useQuery({
+    queryKey: ["/api/water-scheme-data/water-trends", selectedRegion],
+    queryFn: async () => {
+      const url = selectedRegion === "all" 
+        ? "/api/water-scheme-data/water-trends"
+        : `/api/water-scheme-data/water-trends?region=${selectedRegion}`;
+      const response = await fetch(url);
+      if (!response.ok) return [];
+      const result = await response.json();
+      return result.data || [];
+    },
+  });
+
+  const { data: lpcdTrend } = useQuery({
+    queryKey: ["/api/water-scheme-data/lpcd-trends", selectedRegion],
+    queryFn: async () => {
+      const url = selectedRegion === "all" 
+        ? "/api/water-scheme-data/lpcd-trends"
+        : `/api/water-scheme-data/lpcd-trends?region=${selectedRegion}`;
+      const response = await fetch(url);
+      if (!response.ok) return [];
+      const result = await response.json();
+      return result.data || [];
     },
   });
 
@@ -297,7 +335,14 @@ export default function FlipPopulationCards({
                   <Users className="h-3 w-3" />
                   <span>Population Covered</span>
                 </div>
-                <div className="mt-3 h-8 bg-gradient-to-r from-blue-200 to-blue-300 rounded opacity-60"></div>
+                <div className="mt-3 h-8 flex items-center justify-center">
+                  <MiniLineChart 
+                    data={populationTrend || []} 
+                    color="#3B82F6" 
+                    height={32} 
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
           }

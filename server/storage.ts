@@ -249,6 +249,9 @@ export interface IStorage {
   } | null>;
   saveAllRegionPopulationSnapshots(date: string): Promise<RegionPopulationTracking[]>;
   
+  // Database access method
+  getDb(): Promise<any>;
+  
   // Additional population tracking methods
   getCurrentPopulation(date?: string): Promise<{
     totalPopulation: number;
@@ -6022,6 +6025,10 @@ export class PostgresStorage implements IStorage {
       console.error('Error fetching regional population history:', error);
       return [];
     }
+  }
+
+  async getDb() {
+    return getDB();
   }
 }
 
