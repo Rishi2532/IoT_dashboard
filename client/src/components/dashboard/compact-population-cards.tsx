@@ -71,7 +71,11 @@ export default function CompactPopulationCards({
   });
 
   // Fetch population tracking data for daily changes
-  const { data: populationTracking, isLoading: trackingLoading, error: trackingError } = useQuery<PopulationTrackingResponse>({
+  const {
+    data: populationTracking,
+    isLoading: trackingLoading,
+    error: trackingError,
+  } = useQuery<PopulationTrackingResponse>({
     queryKey: ["/api/population/total"],
     queryFn: async () => {
       console.log("Making population tracking API call");
@@ -222,10 +226,10 @@ export default function CompactPopulationCards({
                     <span
                       className={
                         populationTracking.change.change > 0
-                          ? "text-green-200"
+                          ? "text-green-600"
                           : populationTracking.change.change < 0
-                          ? "text-red-200"
-                          : "text-slate-200"
+                            ? "text-red-200"
+                            : "text-slate-200"
                       }
                     >
                       {formatPercentage(
@@ -297,10 +301,9 @@ export default function CompactPopulationCards({
                       : "text-red-200"
                   }
                 >
-                  {populationStats.population_gained_water !== 0 
-                    ? `${populationStats.population_gained_water > 0 ? '+' : ''}${formatPercentage(Math.abs(withWaterChangePercentage))}%`
-                    : '0.0%'
-                  }
+                  {populationStats.population_gained_water !== 0
+                    ? `${populationStats.population_gained_water > 0 ? "+" : ""}${formatPercentage(Math.abs(withWaterChangePercentage))}%`
+                    : "0.0%"}
                 </span>
                 <br />
                 {/* <span className="text-xs text-teal-100">
@@ -343,10 +346,9 @@ export default function CompactPopulationCards({
                       : "text-green-200"
                   }
                 >
-                  {populationStats.population_lost_water !== 0 
-                    ? `${populationStats.population_lost_water > 0 ? '+' : ''}${formatPercentage(Math.abs(noWaterChangePercentage))}%`
-                    : '0.0%'
-                  }
+                  {populationStats.population_lost_water !== 0
+                    ? `${populationStats.population_lost_water > 0 ? "+" : ""}${formatPercentage(Math.abs(noWaterChangePercentage))}%`
+                    : "0.0%"}
                 </span>
                 <br />
                 {/* <span className="text-xs text-rose-100">
@@ -387,10 +389,9 @@ export default function CompactPopulationCards({
                     lpcdAbove55Change >= 0 ? "text-green-200" : "text-red-200"
                   }
                 >
-                  {lpcdAbove55Change !== 0 
-                    ? `${lpcdAbove55Change > 0 ? '+' : ''}${formatPercentage(Math.abs(lpcdAbove55ChangePercentage))}%`
-                    : '0.0%'
-                  }
+                  {lpcdAbove55Change !== 0
+                    ? `${lpcdAbove55Change > 0 ? "+" : ""}${formatPercentage(Math.abs(lpcdAbove55ChangePercentage))}%`
+                    : "0.0%"}
                 </span>
                 <br />
                 {/* <span className="text-xs text-emerald-100">
@@ -440,10 +441,9 @@ export default function CompactPopulationCards({
                     lpcdBelow55Change <= 0 ? "text-green-200" : "text-red-200"
                   }
                 >
-                  {lpcdBelow55Change !== 0 
-                    ? `${lpcdBelow55Change > 0 ? '+' : ''}${formatPercentage(Math.abs(lpcdBelow55ChangePercentage))}%`
-                    : '0.0%'
-                  }
+                  {lpcdBelow55Change !== 0
+                    ? `${lpcdBelow55Change > 0 ? "+" : ""}${formatPercentage(Math.abs(lpcdBelow55ChangePercentage))}%`
+                    : "0.0%"}
                 </span>
                 <br />
                 {/* <span className="text-xs text-amber-100">
