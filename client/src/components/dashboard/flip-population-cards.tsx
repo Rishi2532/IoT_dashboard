@@ -492,6 +492,15 @@ export default function FlipPopulationCards({
           }
         />
       </div>
+
+      {/* Population Details Modal */}
+      <PopulationDetailsModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        cardType={selectedCardType}
+        selectedRegion={selectedRegion}
+        isVillageView={allFlipped}
+      />
     </div>
   );
 }
