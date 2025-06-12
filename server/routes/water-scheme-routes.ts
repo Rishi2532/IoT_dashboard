@@ -349,6 +349,75 @@ router.get('/population-stats', async (req, res) => {
   }
 });
 
+// Get population change statistics from tracking tables
+router.get('/population-change', async (req, res) => {
+  try {
+    const { region } = req.query;
+    
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      let query;
+      const queryParams: any[] = [];
+      
+      if (region && region !== 'all') {
+        // Get regional population change
+        query = `
+          WITH today_data AS (
+            SELECT population 
+            FROM region_population_tracking 
+            WHERE region = $1 AND date = CURRENT_DATE::text
+          ),
+          yesterday_data AS (
+            SELECT population 
+            FROM region_population_tracking 
+            WHERE region = $1 AND date = (CURRENT_DATE - INTERVAL '1 day')::text
+          )
+          SELECT 
+            COALESCE(today_data.population, 0) as current_population,
+            COALESCE(yesterday_data.population, 0) as previous_population,
+            COALESCE(today_data.population, 0) - COALESCE(yesterday_data.population, 0) as population_change
+          FROM today_data 
+          FULL OUTER JOIN yesterday_data ON 1=1
+        `;
+        queryParams.push(region);
+      } else {
+        // Get total population change
+        query = `
+          WITH today_data AS (
+            SELECT total_population 
+            FROM population_tracking 
+            WHERE date = CURRENT_DATE::text
+          ),
+          yesterday_data AS (
+            SELECT total_population 
+            FROM population_tracking 
+            WHERE date = (CURRENT_DATE - INTERVAL '1 day')::text
+          )
+          SELECT 
+            COALESCE(today_data.total_population, 0) as current_population,
+            COALESCE(yesterday_data.total_population, 0) as previous_population,
+            COALESCE(today_data.total_population, 0) - COALESCE(yesterday_data.total_population, 0) as population_change
+          FROM today_data 
+          FULL OUTER JOIN yesterday_data ON 1=1
+        `;
+      }
+      
+      const result = await client.query(query, queryParams);
+      const data = result.rows[0] || { current_population: 0, previous_population: 0, population_change: 0 };
+      
+      res.json(data);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching population change:', error);
+    res.status(500).json({ error: 'Failed to fetch population change' });
+  }
+});
+
 // Get LPCD statistics - counts villages with different LPCD ranges
 router.get('/lpcd-stats', async (req, res) => {
   try {
