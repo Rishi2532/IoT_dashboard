@@ -105,7 +105,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/translation", translationRoutes);
   
   // Mount population tracking routes
-  app.use("/api/population", populationRoutes);
+  app.use("/api/population-tracking", populationRoutes);
 
   // Register endpoint
   app.post("/api/auth/register", async (req, res) => {

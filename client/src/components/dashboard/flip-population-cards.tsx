@@ -212,15 +212,20 @@ export default function FlipPopulationCards({
     villageStats.villages_lpcd_below_55_day6 || 0
   );
 
-  // Get previous day population for comparison
-  const previousTotalPopulation = previousPopulationData?.total_population || 
-                                  previousPopulationData?.population;
+  // Get population tracking data with automatic change calculation
+  const populationTrackingChange = currentPopulationData?.data?.change;
+  
+  // Use the authentic tracking data if available, otherwise calculate from water scheme data
+  const currentTotalPopulation = currentPopulationData?.data?.totalPopulation || populationStats.total_population;
+  const previousTotalPopulation = previousPopulationData?.total_population || previousPopulationData?.population;
 
-  // Total population change using real previous day data
-  const totalPopulationChange = getChangeIndicator(
-    populationStats.total_population,
-    previousTotalPopulation || (populationStats.total_population - 25000) // Sample change if no previous data
-  );
+  // Total population change using authentic tracking data
+  const totalPopulationChange = populationTrackingChange ? {
+    value: Math.abs(populationTrackingChange.change),
+    change: populationTrackingChange.change,
+    isPositive: populationTrackingChange.change > 0,
+    percentage: Math.abs(populationTrackingChange.changePercent)
+  } : (previousTotalPopulation ? getChangeIndicator(currentTotalPopulation, previousTotalPopulation) : null);
 
   // Total villages change (using sample data since village tracking not implemented yet)
   const totalVillagesChange = getChangeIndicator(
@@ -286,7 +291,7 @@ export default function FlipPopulationCards({
                   </div>
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
-                  {formatNumber(populationStats.total_population)}
+                  {formatNumber(currentTotalPopulation)}
                 </div>
                 <div className="flex items-center gap-1 text-xs text-slate-500">
                   <Users className="h-3 w-3" />
