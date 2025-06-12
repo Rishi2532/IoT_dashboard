@@ -234,42 +234,56 @@ export default function FlipPopulationCards({
           isFlipped={allFlipped}
           delay={0}
           frontContent={
-            <div className="bg-gradient-to-br from-indigo-600 via-purple-600 to-blue-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-indigo-400/30">
-              <div className="absolute top-2 left-2">
-                <div className="text-3xl font-bold">
+            <div className="bg-gradient-to-br from-sky-50 to-blue-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-blue-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-sm font-medium text-slate-600">Total Population</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                      totalPopulationChange?.isPositive 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {totalPopulationChange?.isPositive ? '▲' : '▼'}
+                      <span>{totalPopulationChange?.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.total_population)}
                 </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <ChangeIndicator change={totalPopulationChange} />
-              </div>
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1">
-                  <Users className="h-3 w-3 text-slate-100" />
-                  <span className="text-xs font-medium text-slate-100">
-                    Population Covered
-                  </span>
+                <div className="flex items-center gap-1 text-xs text-slate-500">
+                  <Users className="h-3 w-3" />
+                  <span>Population Covered</span>
                 </div>
+                <div className="mt-3 h-8 bg-gradient-to-r from-blue-200 to-blue-300 rounded opacity-60"></div>
               </div>
             </div>
           }
           backContent={
-            <div className="bg-gradient-to-br from-violet-600 via-indigo-600 to-purple-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-violet-400/30">
-              <div className="absolute top-2 left-2">
-                <div className="text-3xl font-bold">
+            <div className="bg-gradient-to-br from-purple-50 to-violet-100 text-slate-800 relative shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden rounded-xl h-44 border border-purple-200">
+              <div className="p-4">
+                <div className="flex justify-between items-start mb-2">
+                  <div className="text-sm font-medium text-slate-600">Total Villages</div>
+                  <div className="flex items-center gap-1">
+                    <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                      totalVillagesChange?.isPositive 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-red-100 text-red-700'
+                    }`}>
+                      {totalVillagesChange?.isPositive ? '▲' : '▼'}
+                      <span>{totalVillagesChange?.percentage.toFixed(1)}%</span>
+                    </div>
+                  </div>
+                </div>
+                <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.total_villages)}
                 </div>
-              </div>
-              <div className="absolute top-2 right-2">
-                <ChangeIndicator change={totalVillagesChange} />
-              </div>
-              <div className="absolute bottom-2 left-2">
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-3 w-3 text-purple-100" />
-                  <span className="text-xs font-medium text-purple-100">
-                    Total Villages
-                  </span>
+                <div className="flex items-center gap-1 text-xs text-slate-500">
+                  <MapPin className="h-3 w-3" />
+                  <span>Total Villages</span>
                 </div>
+                <div className="mt-3 h-8 bg-gradient-to-r from-purple-200 to-violet-300 rounded opacity-60"></div>
               </div>
             </div>
           }
