@@ -396,7 +396,7 @@ export default function FlipPopulationCards({
                         : 'bg-green-100 text-green-700'
                     }`}>
                       {populationNoWaterChange?.isPositive ? '▲' : '▼'}
-                      <span>{populationNoWaterChange?.percentage.toFixed(1)}%</span>
+                      <span>{formatNumber(populationNoWaterChange?.value || 0)}</span>
                     </div>
                   </div>
                 </div>
