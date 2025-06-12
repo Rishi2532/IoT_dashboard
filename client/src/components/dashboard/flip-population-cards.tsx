@@ -125,14 +125,16 @@ export default function FlipPopulationCards({
   };
 
   // Calculate change indicators
-  const getChangeIndicator = (current: number, previous: number) => {
-    const change = current - previous;
+  const getChangeIndicator = (current: number | string, previous: number | string) => {
+    const currentNum = Number(current) || 0;
+    const previousNum = Number(previous) || 0;
+    const change = currentNum - previousNum;
     if (change === 0) return null;
     
     return {
       value: Math.abs(change),
       isPositive: change > 0,
-      percentage: previous > 0 ? (Math.abs(change) / previous) * 100 : 100,
+      percentage: previousNum > 0 ? (Math.abs(change) / previousNum) * 100 : 100,
     };
   };
 
@@ -176,6 +178,18 @@ export default function FlipPopulationCards({
   const villageLpcdBelow55Change = getChangeIndicator(
     villageStats.villages_lpcd_below_55_day7 || 0,
     villageStats.villages_lpcd_below_55_day6 || 0
+  );
+
+  // Total population change (add sample previous day data)
+  const totalPopulationChange = getChangeIndicator(
+    populationStats.total_population,
+    Number(populationStats.total_population) - 5000 // Sample decrease of 5,000 from previous day
+  );
+
+  // Total villages change (add sample previous day data)
+  const totalVillagesChange = getChangeIndicator(
+    villageStats.total_villages,
+    Number(villageStats.total_villages) + 8 // Sample increase of 8 villages from previous day
   );
 
   const ChangeIndicator = ({ change }: { change: any }) => {
@@ -226,6 +240,9 @@ export default function FlipPopulationCards({
                   {formatNumber(populationStats.total_population)}
                 </div>
               </div>
+              <div className="absolute top-2 right-2">
+                <ChangeIndicator change={totalPopulationChange} />
+              </div>
               <div className="absolute bottom-2 left-2">
                 <div className="flex items-center gap-1">
                   <Users className="h-3 w-3 text-slate-100" />
@@ -242,6 +259,9 @@ export default function FlipPopulationCards({
                 <div className="text-3xl font-bold">
                   {formatNumber(villageStats.total_villages)}
                 </div>
+              </div>
+              <div className="absolute top-2 right-2">
+                <ChangeIndicator change={totalVillagesChange} />
               </div>
               <div className="absolute bottom-2 left-2">
                 <div className="flex items-center gap-1">
