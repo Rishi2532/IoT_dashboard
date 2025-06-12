@@ -57,6 +57,7 @@ export default function FlipPopulationCards({
   selectedRegion = "all",
 }: FlipPopulationCardsProps) {
   const [allFlipped, setAllFlipped] = useState(false);
+  
   // Fetch population statistics
   const { data: populationStats, isLoading: populationLoading } = useQuery<PopulationStats>({
     queryKey: ["/api/water-scheme-data/population-stats", selectedRegion],
@@ -84,6 +85,21 @@ export default function FlipPopulationCards({
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch village statistics");
+      }
+      return response.json();
+    },
+  });
+
+  // Fetch previous day population data for comparison
+  const { data: previousPopulationData } = useQuery({
+    queryKey: ["/api/population-tracking/previous", selectedRegion],
+    queryFn: async () => {
+      const url = selectedRegion === "all" 
+        ? "/api/population-tracking/previous"
+        : `/api/population-tracking/previous?region=${selectedRegion}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        return null; // Return null if no previous data exists
       }
       return response.json();
     },
@@ -124,17 +140,18 @@ export default function FlipPopulationCards({
     return numValue.toFixed(1);
   };
 
-  // Calculate change indicators
+  // Calculate change indicators with real number differences
   const getChangeIndicator = (current: number | string, previous: number | string) => {
     const currentNum = Number(current) || 0;
     const previousNum = Number(previous) || 0;
     const change = currentNum - previousNum;
-    if (change === 0) return null;
+    if (change === 0 || previousNum === 0) return null;
     
     return {
       value: Math.abs(change),
+      change: change, // Actual number change
       isPositive: change > 0,
-      percentage: previousNum > 0 ? (Math.abs(change) / previousNum) * 100 : 100,
+      percentage: (Math.abs(change) / previousNum) * 100,
     };
   };
 
