@@ -372,7 +372,7 @@ export default function FlipPopulationCards({
           isFlipped={allFlipped}
           delay={0.3}
           frontContent={
-            <div className="bg-gradient-to-br from-emerald-600 via-emerald-700 to-green-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-emerald-400/20">
+            <div className="bg-gradient-to-br from-green-500 via-emerald-600 to-teal-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-green-400/30">
               <div className="absolute top-2 left-2">
                 <div className="text-3xl font-bold">
                   {formatNumber(populationStats.population_lpcd_above_55)}
@@ -397,7 +397,7 @@ export default function FlipPopulationCards({
             </div>
           }
           backContent={
-            <div className="bg-gradient-to-br from-green-600 via-emerald-700 to-teal-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-green-400/20">
+            <div className="bg-gradient-to-br from-lime-500 via-green-600 to-emerald-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-lime-400/30">
               <div className="absolute top-2 left-2">
                 <div className="text-3xl font-bold">
                   {formatNumber(villageStats.villages_lpcd_above_55)}
@@ -428,7 +428,7 @@ export default function FlipPopulationCards({
           isFlipped={allFlipped}
           delay={0.4}
           frontContent={
-            <div className="bg-gradient-to-br from-amber-600 via-yellow-700 to-orange-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-amber-400/20">
+            <div className="bg-gradient-to-br from-yellow-500 via-amber-600 to-orange-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-yellow-400/30">
               <div className="absolute top-2 left-2">
                 <div className="text-3xl font-bold">
                   {formatNumber(populationStats.population_lpcd_below_55)}
@@ -453,7 +453,7 @@ export default function FlipPopulationCards({
             </div>
           }
           backContent={
-            <div className="bg-gradient-to-br from-yellow-600 via-amber-700 to-orange-800 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-yellow-400/20">
+            <div className="bg-gradient-to-br from-orange-500 via-amber-600 to-yellow-700 text-white relative shadow-xl hover:shadow-2xl transition-all duration-300 overflow-hidden rounded-xl h-40 border border-orange-400/30">
               <div className="absolute top-2 left-2">
                 <div className="text-3xl font-bold">
                   {formatNumber(villageStats.villages_lpcd_below_55)}
