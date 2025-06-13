@@ -1157,7 +1157,7 @@ function mapCsvFields(row: string[]) {
   return record;
 }
 
-// Get water value trends for mini charts (last 6 days)
+// Get water value trends for mini charts - Population WITH water (last 6 days)
 router.get("/water-trends", async (req, res) => {
   try {
     const { region } = req.query;
@@ -1175,14 +1175,15 @@ router.get("/water-trends", async (req, res) => {
     try {
       const result = await client.query(`
         SELECT 
-          COUNT(CASE WHEN water_value_day1 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day1 IS NOT NULL THEN 1 END), 0) as day1,
-          COUNT(CASE WHEN water_value_day2 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day2 IS NOT NULL THEN 1 END), 0) as day2,
-          COUNT(CASE WHEN water_value_day3 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day3 IS NOT NULL THEN 1 END), 0) as day3,
-          COUNT(CASE WHEN water_value_day4 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day4 IS NOT NULL THEN 1 END), 0) as day4,
-          COUNT(CASE WHEN water_value_day5 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day5 IS NOT NULL THEN 1 END), 0) as day5,
-          COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day6 IS NOT NULL THEN 1 END), 0) as day6
+          SUM(CASE WHEN water_value_day1 > 0 THEN CAST(population AS INTEGER) ELSE 0 END) as day1,
+          SUM(CASE WHEN water_value_day2 > 0 THEN CAST(population AS INTEGER) ELSE 0 END) as day2,
+          SUM(CASE WHEN water_value_day3 > 0 THEN CAST(population AS INTEGER) ELSE 0 END) as day3,
+          SUM(CASE WHEN water_value_day4 > 0 THEN CAST(population AS INTEGER) ELSE 0 END) as day4,
+          SUM(CASE WHEN water_value_day5 > 0 THEN CAST(population AS INTEGER) ELSE 0 END) as day5,
+          SUM(CASE WHEN water_value_day6 > 0 THEN CAST(population AS INTEGER) ELSE 0 END) as day6
         FROM water_scheme_data 
-        ${whereClause}
+        WHERE population IS NOT NULL AND population > 0
+        ${region && region !== 'all' ? 'AND region = \'' + region + '\'' : ''}
       `);
     
       const row = result.rows[0];
@@ -1211,7 +1212,56 @@ router.get("/water-trends", async (req, res) => {
   }
 });
 
-// Get LPCD trends for mini charts (last 7 days)
+// Get water value trends for mini charts - Population WITHOUT water (last 6 days)
+router.get("/no-water-trends", async (req, res) => {
+  try {
+    const { region } = req.query;
+    
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      const result = await client.query(`
+        SELECT 
+          SUM(CASE WHEN water_value_day1 = 0 OR water_value_day1 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day1,
+          SUM(CASE WHEN water_value_day2 = 0 OR water_value_day2 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day2,
+          SUM(CASE WHEN water_value_day3 = 0 OR water_value_day3 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day3,
+          SUM(CASE WHEN water_value_day4 = 0 OR water_value_day4 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day4,
+          SUM(CASE WHEN water_value_day5 = 0 OR water_value_day5 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day5,
+          SUM(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day6
+        FROM water_scheme_data 
+        WHERE population IS NOT NULL AND population > 0
+        ${region && region !== 'all' ? 'AND region = \'' + region + '\'' : ''}
+      `);
+    
+      const row = result.rows[0];
+      const trendData = [
+        parseFloat(row.day1) || 0,
+        parseFloat(row.day2) || 0,
+        parseFloat(row.day3) || 0,
+        parseFloat(row.day4) || 0,
+        parseFloat(row.day5) || 0,
+        parseFloat(row.day6) || 0
+      ];
+      
+      res.json({
+        success: true,
+        data: trendData
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error("Error fetching no water trends:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch no water trends"
+    });
+  }
+});
+
+// Get LPCD trends for mini charts - Population with LPCD > 55 (last 7 days)
 router.get("/lpcd-trends", async (req, res) => {
   try {
     const { region } = req.query;
@@ -1229,15 +1279,16 @@ router.get("/lpcd-trends", async (req, res) => {
       
       const result = await client.query(`
         SELECT 
-          AVG(CASE WHEN lpcd_value_day1 > 0 AND lpcd_value_day1 <= 200 THEN lpcd_value_day1 END) as day1,
-          AVG(CASE WHEN lpcd_value_day2 > 0 AND lpcd_value_day2 <= 200 THEN lpcd_value_day2 END) as day2,
-          AVG(CASE WHEN lpcd_value_day3 > 0 AND lpcd_value_day3 <= 200 THEN lpcd_value_day3 END) as day3,
-          AVG(CASE WHEN lpcd_value_day4 > 0 AND lpcd_value_day4 <= 200 THEN lpcd_value_day4 END) as day4,
-          AVG(CASE WHEN lpcd_value_day5 > 0 AND lpcd_value_day5 <= 200 THEN lpcd_value_day5 END) as day5,
-          AVG(CASE WHEN lpcd_value_day6 > 0 AND lpcd_value_day6 <= 200 THEN lpcd_value_day6 END) as day6,
-          AVG(CASE WHEN lpcd_value_day7 > 0 AND lpcd_value_day7 <= 200 THEN lpcd_value_day7 END) as day7
+          SUM(CASE WHEN lpcd_value_day1 > 55 AND lpcd_value_day1 <= 200 THEN CAST(population AS INTEGER) ELSE 0 END) as day1,
+          SUM(CASE WHEN lpcd_value_day2 > 55 AND lpcd_value_day2 <= 200 THEN CAST(population AS INTEGER) ELSE 0 END) as day2,
+          SUM(CASE WHEN lpcd_value_day3 > 55 AND lpcd_value_day3 <= 200 THEN CAST(population AS INTEGER) ELSE 0 END) as day3,
+          SUM(CASE WHEN lpcd_value_day4 > 55 AND lpcd_value_day4 <= 200 THEN CAST(population AS INTEGER) ELSE 0 END) as day4,
+          SUM(CASE WHEN lpcd_value_day5 > 55 AND lpcd_value_day5 <= 200 THEN CAST(population AS INTEGER) ELSE 0 END) as day5,
+          SUM(CASE WHEN lpcd_value_day6 > 55 AND lpcd_value_day6 <= 200 THEN CAST(population AS INTEGER) ELSE 0 END) as day6,
+          SUM(CASE WHEN lpcd_value_day7 > 55 AND lpcd_value_day7 <= 200 THEN CAST(population AS INTEGER) ELSE 0 END) as day7
         FROM water_scheme_data 
-        ${whereClause}
+        WHERE population IS NOT NULL AND population > 0
+        ${region && region !== 'all' ? 'AND region = \'' + region + '\'' : ''}
       `);
       
       const row = result.rows[0];
@@ -1263,6 +1314,57 @@ router.get("/lpcd-trends", async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Failed to fetch LPCD trends"
+    });
+  }
+});
+
+// Get LPCD trends for mini charts - Population with LPCD < 55 (last 7 days)
+router.get("/lpcd-below-55-trends", async (req, res) => {
+  try {
+    const { region } = req.query;
+    
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      const result = await client.query(`
+        SELECT 
+          SUM(CASE WHEN (lpcd_value_day1 > 0 AND lpcd_value_day1 < 55) OR lpcd_value_day1 = 0 OR lpcd_value_day1 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day1,
+          SUM(CASE WHEN (lpcd_value_day2 > 0 AND lpcd_value_day2 < 55) OR lpcd_value_day2 = 0 OR lpcd_value_day2 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day2,
+          SUM(CASE WHEN (lpcd_value_day3 > 0 AND lpcd_value_day3 < 55) OR lpcd_value_day3 = 0 OR lpcd_value_day3 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day3,
+          SUM(CASE WHEN (lpcd_value_day4 > 0 AND lpcd_value_day4 < 55) OR lpcd_value_day4 = 0 OR lpcd_value_day4 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day4,
+          SUM(CASE WHEN (lpcd_value_day5 > 0 AND lpcd_value_day5 < 55) OR lpcd_value_day5 = 0 OR lpcd_value_day5 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day5,
+          SUM(CASE WHEN (lpcd_value_day6 > 0 AND lpcd_value_day6 < 55) OR lpcd_value_day6 = 0 OR lpcd_value_day6 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day6,
+          SUM(CASE WHEN (lpcd_value_day7 > 0 AND lpcd_value_day7 < 55) OR lpcd_value_day7 = 0 OR lpcd_value_day7 IS NULL THEN CAST(population AS INTEGER) ELSE 0 END) as day7
+        FROM water_scheme_data 
+        WHERE population IS NOT NULL AND population > 0
+        ${region && region !== 'all' ? 'AND region = \'' + region + '\'' : ''}
+      `);
+      
+      const row = result.rows[0];
+      const trendData = [
+        parseFloat(row.day1) || 0,
+        parseFloat(row.day2) || 0,
+        parseFloat(row.day3) || 0,
+        parseFloat(row.day4) || 0,
+        parseFloat(row.day5) || 0,
+        parseFloat(row.day6) || 0,
+        parseFloat(row.day7) || 0
+      ];
+      
+      res.json({
+        success: true,
+        data: trendData
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error("Error fetching LPCD below 55 trends:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to fetch LPCD below 55 trends"
     });
   }
 });

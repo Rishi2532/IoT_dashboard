@@ -158,9 +158,21 @@ export default function FlipPopulationCards({
       const response = await fetch(url);
       if (!response.ok) return [];
       const result = await response.json();
-      return (result.data || []).map(
-        (item: any) => item.value || item.percentage || 0,
-      );
+      return result.data || [];
+    },
+  });
+
+  const { data: noWaterTrend } = useQuery({
+    queryKey: ["/api/water-scheme-data/no-water-trends", selectedRegion],
+    queryFn: async () => {
+      const url =
+        selectedRegion === "all"
+          ? "/api/water-scheme-data/no-water-trends"
+          : `/api/water-scheme-data/no-water-trends?region=${selectedRegion}`;
+      const response = await fetch(url);
+      if (!response.ok) return [];
+      const result = await response.json();
+      return result.data || [];
     },
   });
 
