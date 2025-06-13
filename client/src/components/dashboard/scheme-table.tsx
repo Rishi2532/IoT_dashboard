@@ -153,29 +153,13 @@ export default function SchemeTable({
     return Number(((value / total) * 100).toFixed(2));
   };
 
-  // Calculate totals for filtered schemes (not just current page)
-  const filteredTotals = filteredSchemes.reduce(
-    (totals, scheme) => {
-      return {
-        totalVillages: totals.totalVillages + (scheme.number_of_village || 0),
-        totalFullyCompletedVillages:
-          totals.totalFullyCompletedVillages +
-          (scheme.fully_completed_villages || 0),
-        totalEsr: totals.totalEsr + (scheme.total_number_of_esr || 0),
-        totalFullyCompletedEsr:
-          totals.totalFullyCompletedEsr + (scheme.no_fully_completed_esr || 0),
-      };
-    },
-    {
-      totalVillages: 0,
-      totalFullyCompletedVillages: 0,
-      totalEsr: 0,
-      totalFullyCompletedEsr: 0,
-    },
-  );
-
-  // Use filtered totals instead of global totals for better filtering experience
-  const overallTotals = filteredTotals;
+  // Get overall totals from region summary (always global, regardless of filters)
+  const overallTotals = {
+    totalVillages: regionSummary?.total_villages_integrated ? parseInt(String(regionSummary.total_villages_integrated)) : 0,
+    totalFullyCompletedVillages: regionSummary?.fully_completed_villages ? parseInt(String(regionSummary.fully_completed_villages)) : 0,
+    totalEsr: regionSummary?.total_esr_integrated ? parseInt(String(regionSummary.total_esr_integrated)) : 0,
+    totalFullyCompletedEsr: regionSummary?.fully_completed_esr ? parseInt(String(regionSummary.fully_completed_esr)) : 0
+  };
 
   return (
     <Card className="bg-white shadow mb-8">
