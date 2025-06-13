@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import {
   Card,
   CardContent,
@@ -69,18 +70,24 @@ export default function SchemeTable({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
+  // Fetch overall region summary data
+  const { data: regionSummary } = useQuery({
+    queryKey: ["/api/regions/summary"],
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  }) as { data: any };
+
   // If statusFilter prop changes, update local state
   useEffect(() => {
     setLocalStatusFilter(statusFilter);
   }, [statusFilter]);
-  
+
   // Make filter states globally accessible for export function
   useEffect(() => {
     // Add filter states to the window object for the export function to use
     (window as any).schemeTableFilters = {
       statusFilter: localStatusFilter,
       commissionedFilter,
-      fullyCompletedFilter
+      fullyCompletedFilter,
     };
   }, [localStatusFilter, commissionedFilter, fullyCompletedFilter]);
 
@@ -146,15 +153,30 @@ export default function SchemeTable({
     return Number(((value / total) * 100).toFixed(2));
   };
 
-  // Calculate totals for current page
-  const currentPageTotals = currentItems.reduce((totals, scheme) => {
-    return {
-      fullyCompletedVillages: totals.fullyCompletedVillages + (scheme.fully_completed_villages || 0),
-      totalVillages: totals.totalVillages + (scheme.number_of_village || 0),
-      fullyCompletedEsr: totals.fullyCompletedEsr + (scheme.no_fully_completed_esr || 0),
-      totalEsr: totals.totalEsr + (scheme.total_number_of_esr || 0)
-    };
-  }, { fullyCompletedVillages: 0, totalVillages: 0, fullyCompletedEsr: 0, totalEsr: 0 });
+  // Calculate totals for current page schemes (contribution to overall totals)
+  const currentPageTotals = currentItems.reduce(
+    (totals, scheme) => {
+      return {
+        fullyCompletedVillages:
+          totals.fullyCompletedVillages +
+          (scheme.fully_completed_villages || 0),
+        fullyCompletedEsr:
+          totals.fullyCompletedEsr + (scheme.no_fully_completed_esr || 0),
+      };
+    },
+    {
+      fullyCompletedVillages: 0,
+      fullyCompletedEsr: 0,
+    },
+  );
+
+  // Get overall totals from region summary
+  const overallTotals = {
+    totalVillages: regionSummary?.total_villages_integrated ? parseInt(regionSummary.total_villages_integrated) : 0,
+    totalFullyCompletedVillages: regionSummary?.fully_completed_villages ? parseInt(regionSummary.fully_completed_villages) : 0,
+    totalEsr: regionSummary?.total_esr_integrated ? parseInt(regionSummary.total_esr_integrated) : 0,
+    totalFullyCompletedEsr: regionSummary?.fully_completed_esr ? parseInt(regionSummary.fully_completed_esr) : 0
+  };
 
   return (
     <Card className="bg-white shadow mb-8">
@@ -170,10 +192,10 @@ export default function SchemeTable({
                 {filteredSchemes.length} schemes found
               </span>
               <span className="px-3 py-1 bg-green-100 rounded-full text-green-800 text-sm font-medium">
-                {currentPageTotals.fullyCompletedVillages} / {currentPageTotals.totalVillages} villages completed
+                {currentPageTotals.fullyCompletedVillages} / {overallTotals.totalFullyCompletedVillages} villages completed
               </span>
               <span className="px-3 py-1 bg-purple-100 rounded-full text-purple-800 text-sm font-medium">
-                {currentPageTotals.fullyCompletedEsr} / {currentPageTotals.totalEsr} ESR completed
+                {currentPageTotals.fullyCompletedEsr} / {overallTotals.totalFullyCompletedEsr} ESR completed
               </span>
             </div>
             <CardDescription className="mt-1 max-w-2xl text-xs sm:text-sm lg:text-base text-neutral-500">
@@ -332,12 +354,22 @@ export default function SchemeTable({
                   </TableHead>
 
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    <div className="flex justify-center">
+                    <div className="flex justify-center items-center gap-x-2">
                       Fully Completed Villages
+                      <span className="px-3 py-1 bg-green-100 rounded-full text-green-800 text-sm font-medium">
+                        {currentPageTotals.fullyCompletedVillages} /{" "}
+                        {currentPageTotals.totalVillages}
+                      </span>
                     </div>
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    <div className="flex justify-center">ESR</div>
+                    <div className="flex justify-center items-center gap-x-2">
+                      ESR
+                      <span className="px-3 py-1 bg-purple-100 rounded-full text-purple-800 text-sm font-medium">
+                        {currentPageTotals.fullyCompletedEsr} /{" "}
+                        {currentPageTotals.totalEsr}
+                      </span>
+                    </div>
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
                     <div className="flex justify-center">Status</div>
