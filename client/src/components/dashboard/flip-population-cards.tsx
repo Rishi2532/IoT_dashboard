@@ -128,7 +128,8 @@ export default function FlipPopulationCards({
       const response = await fetch("/api/population-tracking/weekly-trend");
       if (!response.ok) return [];
       const result = await response.json();
-      return result.data || [];
+      // Transform the data to extract just the population numbers for the chart
+      return (result.data || []).map((item: any) => item.population);
     },
   });
 
@@ -141,7 +142,7 @@ export default function FlipPopulationCards({
       const response = await fetch(url);
       if (!response.ok) return [];
       const result = await response.json();
-      return result.data || [];
+      return (result.data || []).map((item: any) => item.value || item.percentage || 0);
     },
   });
 
@@ -154,7 +155,7 @@ export default function FlipPopulationCards({
       const response = await fetch(url);
       if (!response.ok) return [];
       const result = await response.json();
-      return result.data || [];
+      return (result.data || []).map((item: any) => item.value || item.lpcd || 0);
     },
   });
 
