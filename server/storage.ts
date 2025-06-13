@@ -3070,6 +3070,153 @@ export class PostgresStorage implements IStorage {
     return executeWithRetry(operation);
   }
 
+  // Population tracking methods
+  async storePopulationData(): Promise<void> {
+    console.log('📊 Storing current population data in tracking tables...');
+    const db = await this.ensureInitialized();
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    try {
+      // Calculate total population from water_scheme_data
+      const totalPopulationResult = await db.execute(sql`
+        SELECT COALESCE(SUM(CAST(population AS INTEGER)), 0) as total_population
+        FROM water_scheme_data 
+        WHERE population IS NOT NULL AND population != 0
+      `);
+      
+      const totalPopulation = Number(totalPopulationResult.rows[0]?.total_population) || 0;
+      
+      // Store total population in population_tracking table
+      if (totalPopulation > 0) {
+        await db.execute(sql`
+          INSERT INTO population_tracking (date, total_population) 
+          VALUES (${today}, ${totalPopulation})
+          ON CONFLICT (date) 
+          DO UPDATE SET total_population = ${totalPopulation}
+        `);
+        console.log(`✅ Stored total population: ${totalPopulation.toLocaleString()} for ${today}`);
+      }
+      
+      // Calculate region-wise population and store in region_population_tracking
+      const regionPopulationResult = await db.execute(sql`
+        SELECT 
+          region,
+          COALESCE(SUM(CAST(population AS INTEGER)), 0) as total_population
+        FROM water_scheme_data 
+        WHERE population IS NOT NULL AND population != 0 AND region IS NOT NULL
+        GROUP BY region
+      `);
+      
+      for (const row of regionPopulationResult.rows) {
+        const region = row.region as string;
+        const regionPopulation = Number(row.total_population) || 0;
+        
+        if (regionPopulation > 0) {
+          await db.execute(sql`
+            INSERT INTO region_population_tracking (date, region, total_population) 
+            VALUES (${today}, ${region}, ${regionPopulation})
+            ON CONFLICT (date, region) 
+            DO UPDATE SET total_population = ${regionPopulation}
+          `);
+          console.log(`✅ Stored ${region} population: ${regionPopulation.toLocaleString()} for ${today}`);
+        }
+      }
+      
+      console.log('📊 Population data storage completed successfully');
+    } catch (error) {
+      console.error('❌ Error storing population data:', error);
+      throw error;
+    }
+  }
+
+  // Get current population tracking data with change calculation
+  async getCurrentPopulationData(region?: string): Promise<{
+    totalPopulation: number;
+    change: {
+      change: number;
+      changePercent: number;
+    } | null;
+  }> {
+    const db = await this.ensureInitialized();
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    try {
+      if (region && region !== 'all') {
+        // Region-specific population data
+        const currentResult = await db.execute(sql`
+          SELECT total_population 
+          FROM region_population_tracking 
+          WHERE date = ${today} AND region = ${region}
+        `);
+        
+        const previousResult = await db.execute(sql`
+          SELECT total_population 
+          FROM region_population_tracking 
+          WHERE date = ${yesterday} AND region = ${region}
+        `);
+        
+        const current = Number(currentResult.rows[0]?.total_population) || 0;
+        const previous = Number(previousResult.rows[0]?.total_population) || 0;
+        
+        const change = previous > 0 ? {
+          change: current - previous,
+          changePercent: ((current - previous) / previous) * 100
+        } : null;
+        
+        return { totalPopulation: current, change };
+      } else {
+        // Total population data
+        const currentResult = await db.execute(sql`
+          SELECT total_population 
+          FROM population_tracking 
+          WHERE date = ${today}
+        `);
+        
+        const previousResult = await db.execute(sql`
+          SELECT total_population 
+          FROM population_tracking 
+          WHERE date = ${yesterday}
+        `);
+        
+        const current = Number(currentResult.rows[0]?.total_population) || 0;
+        const previous = Number(previousResult.rows[0]?.total_population) || 0;
+        
+        const change = previous > 0 ? {
+          change: current - previous,
+          changePercent: ((current - previous) / previous) * 100
+        } : null;
+        
+        return { totalPopulation: current, change };
+      }
+    } catch (error) {
+      console.error('Error fetching current population data:', error);
+      return { totalPopulation: 0, change: null };
+    }
+  }
+
+  // Get weekly population trend data for charts
+  async getWeeklyPopulationTrend(): Promise<Array<{ date: string; population: number }>> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      const result = await db.execute(sql`
+        SELECT date, total_population as population
+        FROM population_tracking 
+        ORDER BY date DESC 
+        LIMIT 7
+      `);
+      
+      return result.rows.map(row => ({
+        date: row.date as string,
+        population: Number(row.population) || 0
+      })).reverse(); // Reverse to get chronological order
+    } catch (error) {
+      console.error('Error fetching weekly population trend:', error);
+      return [];
+    }
+  }
+
   // User methods (from original schema)
   async getUser(id: number): Promise<User | undefined> {
     const db = await this.ensureInitialized();
