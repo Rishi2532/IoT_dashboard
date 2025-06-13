@@ -283,6 +283,9 @@ export async function initializeDatabase() {
     // Check if this is a new remix with water_scheme_data but no population tracking
     await seedPopulationTrackingData(db);
     
+    // Always update population tracking for today's date to ensure current data
+    await updateDailyPopulationTracking(db);
+    
     console.log("Database initialized successfully!");
     return;
     

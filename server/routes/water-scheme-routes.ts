@@ -8,11 +8,14 @@ import * as XLSX from 'xlsx';
 import { parse } from 'csv-parse';
 import pg from 'pg';
 import { fileURLToPath } from 'url';
+import { storage as storageInstance } from '../storage';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const router = express.Router();
+
+
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -491,6 +494,16 @@ router.post('/import/excel', upload.single('file'), async (req, res) => {
     // Remove temp file after processing
     fs.unlinkSync(filePath);
     
+    // Automatically update population tracking after successful import
+    try {
+      console.log('📊 Triggering population tracking update after data import...');
+      await storageInstance.storePopulationData();
+      console.log('✅ Population tracking data updated successfully');
+    } catch (popError) {
+      console.error('❌ Error updating population tracking:', popError);
+      // Don't fail the import if population tracking fails
+    }
+    
     res.json(result);
   } catch (error) {
     console.error('Error importing from Excel:', error);
@@ -514,7 +527,7 @@ router.post('/import/csv', upload.single('file'), async (req, res) => {
     // Automatically update population tracking after successful import
     try {
       console.log('📊 Triggering population tracking update after data import...');
-      await updatePopulationTrackingAfterImport();
+      await storageInstance.storePopulationData();
       console.log('✅ Population tracking data updated successfully');
     } catch (popError) {
       console.error('❌ Error updating population tracking:', popError);
