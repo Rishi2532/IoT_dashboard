@@ -195,6 +195,66 @@ export async function cleanupOldUpdates() {
   }
 }
 
+// Update daily population tracking data
+export async function updateDailyPopulationTracking(db: any) {
+  try {
+    console.log('📊 Updating daily population tracking data...');
+    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+    
+    // Calculate total population from water_scheme_data
+    const totalPopulationResult = await db.execute(sql`
+      SELECT COALESCE(SUM(CAST(population AS INTEGER)), 0) as total_population
+      FROM water_scheme_data 
+      WHERE population IS NOT NULL AND population > 0
+    `);
+    
+    const totalPopulation = Number(totalPopulationResult.rows[0]?.total_population) || 0;
+    
+    // Store total population in population_tracking table (upsert)
+    if (totalPopulation > 0) {
+      await db.execute(sql`
+        INSERT INTO population_tracking (date, total_population) 
+        VALUES (${today}, ${totalPopulation})
+        ON CONFLICT (date) 
+        DO UPDATE SET total_population = ${totalPopulation}
+      `);
+      console.log(`✅ Updated total population: ${totalPopulation.toLocaleString()} for ${today}`);
+      
+      // Calculate region-wise population and store in region_population_tracking
+      const regionPopulationResult = await db.execute(sql`
+        SELECT 
+          region,
+          COALESCE(SUM(CAST(population AS INTEGER)), 0) as total_population
+        FROM water_scheme_data 
+        WHERE population IS NOT NULL AND population > 0 AND region IS NOT NULL
+        GROUP BY region
+      `);
+      
+      for (const row of regionPopulationResult.rows) {
+        const region = row.region as string;
+        const regionPopulation = Number(row.total_population) || 0;
+        
+        if (regionPopulation > 0) {
+          await db.execute(sql`
+            INSERT INTO region_population_tracking (date, region, total_population) 
+            VALUES (${today}, ${region}, ${regionPopulation})
+            ON CONFLICT (date, region) 
+            DO UPDATE SET total_population = ${regionPopulation}
+          `);
+          console.log(`✅ Updated ${region} population: ${regionPopulation.toLocaleString()} for ${today}`);
+        }
+      }
+      
+      console.log('📊 Daily population tracking update completed successfully');
+    } else {
+      console.log('ℹ️ No population data found to track');
+    }
+  } catch (error) {
+    console.error('❌ Error updating daily population tracking:', error);
+    // Don't throw error to avoid breaking database initialization
+  }
+}
+
 // Seed population tracking data for new remixed apps
 async function seedPopulationTrackingData(db: any) {
   try {
