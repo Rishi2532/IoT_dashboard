@@ -553,7 +553,7 @@ export default function FlipPopulationCards({
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart 
-                    data={waterTrend?.map(val => -val) || []} 
+                    data={waterTrend?.map((val: number) => -val) || []} 
                     color="#EA580C" 
                     height={32} 
                     strokeWidth={2}
@@ -598,7 +598,14 @@ export default function FlipPopulationCards({
                     <span>Adequate Supply</span>
                   </div>
                 </div>
-                <div className="mt-3 h-8 bg-gradient-to-r from-green-200 to-emerald-300 rounded opacity-60"></div>
+                <div className="mt-3 h-8 flex items-center justify-center">
+                  <MiniLineChart 
+                    data={lpcdTrend || []} 
+                    color="#059669" 
+                    height={32} 
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
           }
@@ -632,7 +639,14 @@ export default function FlipPopulationCards({
                     <span>Adequate Supply</span>
                   </div>
                 </div>
-                <div className="mt-3 h-8 bg-gradient-to-r from-lime-200 to-green-300 rounded opacity-60"></div>
+                <div className="mt-3 h-8 flex items-center justify-center">
+                  <MiniLineChart 
+                    data={lpcdTrend || []} 
+                    color="#65A30D" 
+                    height={32} 
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
           }
@@ -672,7 +686,14 @@ export default function FlipPopulationCards({
                     <span>Below Standard</span>
                   </div>
                 </div>
-                <div className="mt-3 h-8 bg-gradient-to-r from-yellow-200 to-amber-300 rounded opacity-60"></div>
+                <div className="mt-3 h-8 flex items-center justify-center">
+                  <MiniLineChart 
+                    data={lpcdTrend?.map((val: number) => 100 - val) || []} 
+                    color="#D97706" 
+                    height={32} 
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
           }
@@ -706,7 +727,14 @@ export default function FlipPopulationCards({
                     <span>Below Standard</span>
                   </div>
                 </div>
-                <div className="mt-3 h-8 bg-gradient-to-r from-orange-200 to-yellow-300 rounded opacity-60"></div>
+                <div className="mt-3 h-8 flex items-center justify-center">
+                  <MiniLineChart 
+                    data={lpcdTrend?.map((val: number) => 100 - val) || []} 
+                    color="#EA580C" 
+                    height={32} 
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
           }
