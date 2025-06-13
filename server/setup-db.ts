@@ -407,6 +407,9 @@ export async function initializeTables(db: any) {
       );
     `);
     
+    // Initialize population tracking data with historical sample data
+    await initializePopulationTrackingData(db);
+    
     // Create population_tracking table for daily total population storage
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "population_tracking" (
@@ -435,3 +438,4 @@ export async function initializeTables(db: any) {
     throw error;
   }
 }
+
