@@ -150,9 +150,11 @@ export default function SchemeTable({
   const currentPageTotals = currentItems.reduce((totals, scheme) => {
     return {
       fullyCompletedVillages: totals.fullyCompletedVillages + (scheme.fully_completed_villages || 0),
-      fullyCompletedEsr: totals.fullyCompletedEsr + (scheme.no_fully_completed_esr || 0)
+      totalVillages: totals.totalVillages + (scheme.number_of_village || 0),
+      fullyCompletedEsr: totals.fullyCompletedEsr + (scheme.no_fully_completed_esr || 0),
+      totalEsr: totals.totalEsr + (scheme.total_number_of_esr || 0)
     };
-  }, { fullyCompletedVillages: 0, fullyCompletedEsr: 0 });
+  }, { fullyCompletedVillages: 0, totalVillages: 0, fullyCompletedEsr: 0, totalEsr: 0 });
 
   return (
     <Card className="bg-white shadow mb-8">
@@ -168,10 +170,10 @@ export default function SchemeTable({
                 {filteredSchemes.length} schemes found
               </span>
               <span className="px-3 py-1 bg-green-100 rounded-full text-green-800 text-sm font-medium">
-                {currentPageTotals.fullyCompletedVillages} villages completed
+                {currentPageTotals.fullyCompletedVillages} / {currentPageTotals.totalVillages} villages completed
               </span>
               <span className="px-3 py-1 bg-purple-100 rounded-full text-purple-800 text-sm font-medium">
-                {currentPageTotals.fullyCompletedEsr} ESR completed
+                {currentPageTotals.fullyCompletedEsr} / {currentPageTotals.totalEsr} ESR completed
               </span>
             </div>
             <CardDescription className="mt-1 max-w-2xl text-xs sm:text-sm lg:text-base text-neutral-500">
