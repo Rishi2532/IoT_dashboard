@@ -1149,32 +1149,36 @@ router.get("/water-trends", async (req, res) => {
       whereClause = `WHERE region = '${region}'`;
     }
     
-    const result = await db.execute(`
-      SELECT 
-        AVG(CASE WHEN water_value_day1 > 0 THEN water_value_day1 END) as day1,
-        AVG(CASE WHEN water_value_day2 > 0 THEN water_value_day2 END) as day2,
-        AVG(CASE WHEN water_value_day3 > 0 THEN water_value_day3 END) as day3,
-        AVG(CASE WHEN water_value_day4 > 0 THEN water_value_day4 END) as day4,
-        AVG(CASE WHEN water_value_day5 > 0 THEN water_value_day5 END) as day5,
-        AVG(CASE WHEN water_value_day6 > 0 THEN water_value_day6 END) as day6
-      FROM water_scheme_data 
-      ${whereClause}
-    `);
+    try {
+      const result = await client.query(`
+        SELECT 
+          AVG(CASE WHEN water_value_day1 > 0 THEN water_value_day1 END) as day1,
+          AVG(CASE WHEN water_value_day2 > 0 THEN water_value_day2 END) as day2,
+          AVG(CASE WHEN water_value_day3 > 0 THEN water_value_day3 END) as day3,
+          AVG(CASE WHEN water_value_day4 > 0 THEN water_value_day4 END) as day4,
+          AVG(CASE WHEN water_value_day5 > 0 THEN water_value_day5 END) as day5,
+          AVG(CASE WHEN water_value_day6 > 0 THEN water_value_day6 END) as day6
+        FROM water_scheme_data 
+        ${whereClause}
+      `);
     
-    const row = result.rows[0];
-    const trendData = [
-      parseFloat(row.day1) || 0,
-      parseFloat(row.day2) || 0,
-      parseFloat(row.day3) || 0,
-      parseFloat(row.day4) || 0,
-      parseFloat(row.day5) || 0,
-      parseFloat(row.day6) || 0
-    ];
-    
-    res.json({
-      success: true,
-      data: trendData
-    });
+      const row = result.rows[0];
+      const trendData = [
+        parseFloat(row.day1) || 0,
+        parseFloat(row.day2) || 0,
+        parseFloat(row.day3) || 0,
+        parseFloat(row.day4) || 0,
+        parseFloat(row.day5) || 0,
+        parseFloat(row.day6) || 0
+      ];
+      
+      res.json({
+        success: true,
+        data: trendData
+      });
+    } finally {
+      client.release();
+    }
   } catch (error) {
     console.error("Error fetching water trends:", error);
     res.status(500).json({
@@ -1190,41 +1194,47 @@ router.get("/lpcd-trends", async (req, res) => {
     const { region } = req.query;
     
     // Get average LPCD values for the last 7 days
-    const db = await storage.getDb();
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
     
-    let whereClause = '';
-    if (region && region !== 'all') {
-      whereClause = `WHERE region = '${region}'`;
+    try {
+      let whereClause = '';
+      if (region && region !== 'all') {
+        whereClause = `WHERE region = '${region}'`;
+      }
+      
+      const result = await client.query(`
+        SELECT 
+          AVG(CASE WHEN lpcd_value_day1 > 0 THEN lpcd_value_day1 END) as day1,
+          AVG(CASE WHEN lpcd_value_day2 > 0 THEN lpcd_value_day2 END) as day2,
+          AVG(CASE WHEN lpcd_value_day3 > 0 THEN lpcd_value_day3 END) as day3,
+          AVG(CASE WHEN lpcd_value_day4 > 0 THEN lpcd_value_day4 END) as day4,
+          AVG(CASE WHEN lpcd_value_day5 > 0 THEN lpcd_value_day5 END) as day5,
+          AVG(CASE WHEN lpcd_value_day6 > 0 THEN lpcd_value_day6 END) as day6,
+          AVG(CASE WHEN lpcd_value_day7 > 0 THEN lpcd_value_day7 END) as day7
+        FROM water_scheme_data 
+        ${whereClause}
+      `);
+      
+      const row = result.rows[0];
+      const trendData = [
+        parseFloat(row.day1) || 0,
+        parseFloat(row.day2) || 0,
+        parseFloat(row.day3) || 0,
+        parseFloat(row.day4) || 0,
+        parseFloat(row.day5) || 0,
+        parseFloat(row.day6) || 0,
+        parseFloat(row.day7) || 0
+      ];
+      
+      res.json({
+        success: true,
+        data: trendData
+      });
+    } finally {
+      client.release();
     }
-    
-    const result = await db.execute(`
-      SELECT 
-        AVG(CASE WHEN lpcd_value_day1 > 0 THEN lpcd_value_day1 END) as day1,
-        AVG(CASE WHEN lpcd_value_day2 > 0 THEN lpcd_value_day2 END) as day2,
-        AVG(CASE WHEN lpcd_value_day3 > 0 THEN lpcd_value_day3 END) as day3,
-        AVG(CASE WHEN lpcd_value_day4 > 0 THEN lpcd_value_day4 END) as day4,
-        AVG(CASE WHEN lpcd_value_day5 > 0 THEN lpcd_value_day5 END) as day5,
-        AVG(CASE WHEN lpcd_value_day6 > 0 THEN lpcd_value_day6 END) as day6,
-        AVG(CASE WHEN lpcd_value_day7 > 0 THEN lpcd_value_day7 END) as day7
-      FROM water_scheme_data 
-      ${whereClause}
-    `);
-    
-    const row = result.rows[0];
-    const trendData = [
-      parseFloat(row.day1) || 0,
-      parseFloat(row.day2) || 0,
-      parseFloat(row.day3) || 0,
-      parseFloat(row.day4) || 0,
-      parseFloat(row.day5) || 0,
-      parseFloat(row.day6) || 0,
-      parseFloat(row.day7) || 0
-    ];
-    
-    res.json({
-      success: true,
-      data: trendData
-    });
   } catch (error) {
     console.error("Error fetching LPCD trends:", error);
     res.status(500).json({
