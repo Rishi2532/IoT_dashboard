@@ -146,18 +146,32 @@ export default function SchemeTable({
     return Number(((value / total) * 100).toFixed(2));
   };
 
+  // Calculate totals for current page
+  const currentPageTotals = currentItems.reduce((totals, scheme) => {
+    return {
+      fullyCompletedVillages: totals.fullyCompletedVillages + (scheme.fully_completed_villages || 0),
+      fullyCompletedEsr: totals.fullyCompletedEsr + (scheme.no_fully_completed_esr || 0)
+    };
+  }, { fullyCompletedVillages: 0, fullyCompletedEsr: 0 });
+
   return (
     <Card className="bg-white shadow mb-8">
       <CardHeader className="px-3 py-3 sm:px-4 sm:py-5 lg:px-6 lg:py-6 xl:px-8 xl:py-6 flex flex-col sm:flex-row justify-between items-start space-y-4 sm:space-y-0">
         {/* Left side: Title + Description + Search bars */}
         <div className="flex flex-col space-y-3 sm:space-y-4 w-full sm:w-1/2">
           <div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 flex-wrap">
               <CardTitle className="text-base sm:text-lg lg:text-xl xl:text-2xl font-medium text-neutral-900">
                 Scheme Status
               </CardTitle>
               <span className="px-3 py-1 bg-blue-100 rounded-full text-blue-800 text-sm font-medium">
                 {filteredSchemes.length} schemes found
+              </span>
+              <span className="px-3 py-1 bg-green-100 rounded-full text-green-800 text-sm font-medium">
+                {currentPageTotals.fullyCompletedVillages} villages completed
+              </span>
+              <span className="px-3 py-1 bg-purple-100 rounded-full text-purple-800 text-sm font-medium">
+                {currentPageTotals.fullyCompletedEsr} ESR completed
               </span>
             </div>
             <CardDescription className="mt-1 max-w-2xl text-xs sm:text-sm lg:text-base text-neutral-500">
