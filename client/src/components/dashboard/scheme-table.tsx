@@ -172,10 +172,10 @@ export default function SchemeTable({
 
   // Get overall totals from region summary
   const overallTotals = {
-    totalVillages: regionSummary?.total_villages_integrated ? parseInt(regionSummary.total_villages_integrated) : 0,
-    totalFullyCompletedVillages: regionSummary?.fully_completed_villages ? parseInt(regionSummary.fully_completed_villages) : 0,
-    totalEsr: regionSummary?.total_esr_integrated ? parseInt(regionSummary.total_esr_integrated) : 0,
-    totalFullyCompletedEsr: regionSummary?.fully_completed_esr ? parseInt(regionSummary.fully_completed_esr) : 0
+    totalVillages: regionSummary?.total_villages_integrated ? parseInt(String(regionSummary.total_villages_integrated)) : 0,
+    totalFullyCompletedVillages: regionSummary?.fully_completed_villages ? parseInt(String(regionSummary.fully_completed_villages)) : 0,
+    totalEsr: regionSummary?.total_esr_integrated ? parseInt(String(regionSummary.total_esr_integrated)) : 0,
+    totalFullyCompletedEsr: regionSummary?.fully_completed_esr ? parseInt(String(regionSummary.fully_completed_esr)) : 0
   };
 
   return (
@@ -354,22 +354,12 @@ export default function SchemeTable({
                   </TableHead>
 
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    <div className="flex justify-center items-center gap-x-2">
+                    <div className="flex justify-center">
                       Fully Completed Villages
-                      <span className="px-3 py-1 bg-green-100 rounded-full text-green-800 text-sm font-medium">
-                        {currentPageTotals.fullyCompletedVillages} /{" "}
-                        {currentPageTotals.totalVillages}
-                      </span>
                     </div>
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
-                    <div className="flex justify-center items-center gap-x-2">
-                      ESR
-                      <span className="px-3 py-1 bg-purple-100 rounded-full text-purple-800 text-sm font-medium">
-                        {currentPageTotals.fullyCompletedEsr} /{" "}
-                        {currentPageTotals.totalEsr}
-                      </span>
-                    </div>
+                    <div className="flex justify-center">ESR</div>
                   </TableHead>
                   <TableHead className="text-xs sm:text-sm lg:text-base p-2 sm:p-3 lg:p-4 xl:p-5 text-blue-800 font-semibold border-b border-blue-200 text-center">
                     <div className="flex justify-center">Status</div>
