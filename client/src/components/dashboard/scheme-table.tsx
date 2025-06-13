@@ -192,10 +192,10 @@ export default function SchemeTable({
                 {filteredSchemes.length} schemes found
               </span>
               <span className="px-3 py-1 bg-green-100 rounded-full text-green-800 text-sm font-medium">
-                {currentPageTotals.fullyCompletedVillages} / {overallTotals.totalFullyCompletedVillages} villages completed
+                {overallTotals.totalFullyCompletedVillages} / {overallTotals.totalVillages} villages completed
               </span>
               <span className="px-3 py-1 bg-purple-100 rounded-full text-purple-800 text-sm font-medium">
-                {currentPageTotals.fullyCompletedEsr} / {overallTotals.totalFullyCompletedEsr} ESR completed
+                {overallTotals.totalFullyCompletedEsr} / {overallTotals.totalEsr} ESR completed
               </span>
             </div>
             <CardDescription className="mt-1 max-w-2xl text-xs sm:text-sm lg:text-base text-neutral-500">
