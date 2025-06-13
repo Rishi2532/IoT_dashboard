@@ -13,14 +13,8 @@ export default function MiniLineChart({
   height = 32, 
   strokeWidth = 2 
 }: MiniLineChartProps) {
-  // Debug logging
-  console.log('MiniLineChart received data:', data);
-  
-  // Use sample data if no data provided or insufficient data
-  const chartData = (!data || data.length < 2) ? 
-    [2365420, 2368150, 2371280, 2374890, 2376200, 2377935, 2386247] : data;
-  
-  console.log('Using chart data:', chartData);
+  // Use actual data, fallback to empty if insufficient
+  const chartData = (data && data.length >= 2) ? data : [];
   
   if (!chartData || chartData.length < 2) {
     return <div className="h-8 bg-gray-200 rounded opacity-60 flex items-center justify-center">
@@ -110,8 +104,8 @@ export default function MiniLineChart({
         />
         
         {/* Data points */}
-        {data.map((value, index) => {
-          const x = padding + (index * (width - 2 * padding)) / (data.length - 1);
+        {chartData.map((value, index) => {
+          const x = padding + (index * (width - 2 * padding)) / (chartData.length - 1);
           const y = height - padding - ((value - minValue) / range) * (height - 2 * padding);
           
           return (
