@@ -428,7 +428,14 @@ export default function FlipPopulationCards({
                     {formatPercentage(populationStats.percent_population_with_water)}%
                   </span>
                 </div>
-                <div className="mt-3 h-8 bg-gradient-to-r from-emerald-200 to-teal-300 rounded opacity-60"></div>
+                <div className="mt-3 h-8 flex items-center justify-center">
+                  <MiniLineChart 
+                    data={waterTrend || []} 
+                    color="#10B981" 
+                    height={32} 
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
           }
@@ -460,7 +467,14 @@ export default function FlipPopulationCards({
                     {formatPercentage(villageStats.percent_villages_with_water)}%
                   </span>
                 </div>
-                <div className="mt-3 h-8 bg-gradient-to-r from-cyan-200 to-blue-300 rounded opacity-60"></div>
+                <div className="mt-3 h-8 flex items-center justify-center">
+                  <MiniLineChart 
+                    data={waterTrend || []} 
+                    color="#0891B2" 
+                    height={32} 
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
           }
@@ -498,7 +512,14 @@ export default function FlipPopulationCards({
                     {formatPercentage(populationStats.percent_population_no_water)}%
                   </span>
                 </div>
-                <div className="mt-3 h-8 bg-gradient-to-r from-red-200 to-rose-300 rounded opacity-60"></div>
+                <div className="mt-3 h-8 flex items-center justify-center">
+                  <MiniLineChart 
+                    data={waterTrend?.map((val: number) => -val) || []} 
+                    color="#DC2626" 
+                    height={32} 
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
           }
@@ -530,7 +551,14 @@ export default function FlipPopulationCards({
                     {formatPercentage(villageStats.percent_villages_without_water)}%
                   </span>
                 </div>
-                <div className="mt-3 h-8 bg-gradient-to-r from-orange-200 to-red-300 rounded opacity-60"></div>
+                <div className="mt-3 h-8 flex items-center justify-center">
+                  <MiniLineChart 
+                    data={waterTrend?.map(val => -val) || []} 
+                    color="#EA580C" 
+                    height={32} 
+                    strokeWidth={2}
+                  />
+                </div>
               </div>
             </div>
           }
