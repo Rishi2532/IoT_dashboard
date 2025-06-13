@@ -9,17 +9,9 @@ const router = Router();
 router.get("/current", async (req, res) => {
   try {
     const { region } = req.query;
-    const currentDate = new Date().toISOString().split('T')[0];
     
-    let populationData;
-    
-    if (region && region !== "all") {
-      // Get regional population data
-      populationData = await storage.getRegionalPopulation(region as string, currentDate);
-    } else {
-      // Get total population data
-      populationData = await storage.getCurrentPopulation(currentDate);
-    }
+    // Use the new getCurrentPopulationData method that includes change calculation
+    const populationData = await storage.getCurrentPopulationData(region as string);
     
     res.json({
       success: true,
@@ -231,14 +223,11 @@ router.get("/history", async (req, res) => {
 // Get weekly trend data for mini charts
 router.get("/weekly-trend", async (req, res) => {
   try {
-    const history = await storage.getPopulationHistory(7);
-    
-    // Extract just the numbers for the chart
-    const trendData = history.map(entry => entry.total_population);
+    const trendData = await storage.getWeeklyPopulationTrend();
     
     res.json({
       success: true,
-      data: trendData.reverse() // Reverse to show oldest to newest
+      data: trendData
     });
   } catch (error) {
     console.error("Error fetching weekly trend:", error);

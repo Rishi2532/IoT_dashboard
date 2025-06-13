@@ -4924,6 +4924,15 @@ export class PostgresStorage implements IStorage {
       }
       
       console.log(`LPCD import complete: ${inserted} inserted, ${updated} updated, ${removed} removed, ${errors.length} errors`);
+      
+      // Automatically store population data in tracking tables after import
+      try {
+        await this.storePopulationData();
+      } catch (populationError) {
+        console.error('Error storing population data after Excel import:', populationError);
+        errors.push('Failed to store population tracking data');
+      }
+      
       return { inserted, updated, removed, errors };
     } catch (error: any) {
       console.error(`Excel import error: ${error.message}`);
@@ -5269,6 +5278,14 @@ export class PostgresStorage implements IStorage {
       console.log(`- ${removed} records removed`);
       console.log(`- ${duplicatesInCsv} duplicates found in CSV`);
       console.log(`- ${errors.length} errors/warnings`);
+      
+      // Automatically store population data in tracking tables after import
+      try {
+        await this.storePopulationData();
+      } catch (populationError) {
+        console.error('Error storing population data after CSV import:', populationError);
+        errors.push('Failed to store population tracking data');
+      }
       
       return { inserted, updated, removed, errors };
     } catch (error) {
