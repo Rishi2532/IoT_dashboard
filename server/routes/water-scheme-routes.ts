@@ -1175,24 +1175,24 @@ router.get("/water-trends", async (req, res) => {
     try {
       const result = await client.query(`
         SELECT 
-          COUNT(CASE WHEN water_value_day1 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as day1,
-          COUNT(CASE WHEN water_value_day2 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as day2,
-          COUNT(CASE WHEN water_value_day3 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as day3,
-          COUNT(CASE WHEN water_value_day4 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as day4,
-          COUNT(CASE WHEN water_value_day5 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as day5,
-          COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0) as day6
+          COUNT(CASE WHEN water_value_day1 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day1 IS NOT NULL THEN 1 END), 0) as day1,
+          COUNT(CASE WHEN water_value_day2 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day2 IS NOT NULL THEN 1 END), 0) as day2,
+          COUNT(CASE WHEN water_value_day3 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day3 IS NOT NULL THEN 1 END), 0) as day3,
+          COUNT(CASE WHEN water_value_day4 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day4 IS NOT NULL THEN 1 END), 0) as day4,
+          COUNT(CASE WHEN water_value_day5 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day5 IS NOT NULL THEN 1 END), 0) as day5,
+          COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN water_value_day6 IS NOT NULL THEN 1 END), 0) as day6
         FROM water_scheme_data 
         ${whereClause}
       `);
     
       const row = result.rows[0];
       const trendData = [
-        parseFloat(row.day1) || 45,
-        parseFloat(row.day2) || 52,
-        parseFloat(row.day3) || 48,
-        parseFloat(row.day4) || 55,
-        parseFloat(row.day5) || 53,
-        parseFloat(row.day6) || 58
+        parseFloat(row.day1) || 0,
+        parseFloat(row.day2) || 0,
+        parseFloat(row.day3) || 0,
+        parseFloat(row.day4) || 0,
+        parseFloat(row.day5) || 0,
+        parseFloat(row.day6) || 0
       ];
       
       res.json({
@@ -1229,26 +1229,26 @@ router.get("/lpcd-trends", async (req, res) => {
       
       const result = await client.query(`
         SELECT 
-          AVG(CASE WHEN lpcd_value_day1 > 0 THEN lpcd_value_day1 END) as day1,
-          AVG(CASE WHEN lpcd_value_day2 > 0 THEN lpcd_value_day2 END) as day2,
-          AVG(CASE WHEN lpcd_value_day3 > 0 THEN lpcd_value_day3 END) as day3,
-          AVG(CASE WHEN lpcd_value_day4 > 0 THEN lpcd_value_day4 END) as day4,
-          AVG(CASE WHEN lpcd_value_day5 > 0 THEN lpcd_value_day5 END) as day5,
-          AVG(CASE WHEN lpcd_value_day6 > 0 THEN lpcd_value_day6 END) as day6,
-          AVG(CASE WHEN lpcd_value_day7 > 0 THEN lpcd_value_day7 END) as day7
+          AVG(CASE WHEN lpcd_value_day1 > 0 AND lpcd_value_day1 <= 200 THEN lpcd_value_day1 END) as day1,
+          AVG(CASE WHEN lpcd_value_day2 > 0 AND lpcd_value_day2 <= 200 THEN lpcd_value_day2 END) as day2,
+          AVG(CASE WHEN lpcd_value_day3 > 0 AND lpcd_value_day3 <= 200 THEN lpcd_value_day3 END) as day3,
+          AVG(CASE WHEN lpcd_value_day4 > 0 AND lpcd_value_day4 <= 200 THEN lpcd_value_day4 END) as day4,
+          AVG(CASE WHEN lpcd_value_day5 > 0 AND lpcd_value_day5 <= 200 THEN lpcd_value_day5 END) as day5,
+          AVG(CASE WHEN lpcd_value_day6 > 0 AND lpcd_value_day6 <= 200 THEN lpcd_value_day6 END) as day6,
+          AVG(CASE WHEN lpcd_value_day7 > 0 AND lpcd_value_day7 <= 200 THEN lpcd_value_day7 END) as day7
         FROM water_scheme_data 
         ${whereClause}
       `);
       
       const row = result.rows[0];
       const trendData = [
-        parseFloat(row.day1) || 42,
-        parseFloat(row.day2) || 48,
-        parseFloat(row.day3) || 45,
-        parseFloat(row.day4) || 52,
-        parseFloat(row.day5) || 47,
-        parseFloat(row.day6) || 50,
-        parseFloat(row.day7) || 53
+        parseFloat(row.day1) || 0,
+        parseFloat(row.day2) || 0,
+        parseFloat(row.day3) || 0,
+        parseFloat(row.day4) || 0,
+        parseFloat(row.day5) || 0,
+        parseFloat(row.day6) || 0,
+        parseFloat(row.day7) || 0
       ];
       
       res.json({
