@@ -186,9 +186,21 @@ export default function FlipPopulationCards({
       const response = await fetch(url);
       if (!response.ok) return [];
       const result = await response.json();
-      return (result.data || []).map(
-        (item: any) => item.value || item.lpcd || 0,
-      );
+      return result.data || [];
+    },
+  });
+
+  const { data: lpcdBelow55Trend } = useQuery({
+    queryKey: ["/api/water-scheme-data/lpcd-below-55-trends", selectedRegion],
+    queryFn: async () => {
+      const url =
+        selectedRegion === "all"
+          ? "/api/water-scheme-data/lpcd-below-55-trends"
+          : `/api/water-scheme-data/lpcd-below-55-trends?region=${selectedRegion}`;
+      const response = await fetch(url);
+      if (!response.ok) return [];
+      const result = await response.json();
+      return result.data || [];
     },
   });
 
@@ -597,7 +609,7 @@ export default function FlipPopulationCards({
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
-                    data={waterTrend?.map((val: number) => -val) || []}
+                    data={noWaterTrend || []}
                     color="#DC2626"
                     height={32}
                     strokeWidth={2}
@@ -645,7 +657,7 @@ export default function FlipPopulationCards({
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
-                    data={waterTrend?.map((val: number) => -val) || []}
+                    data={noWaterTrend || []}
                     color="#EA580C"
                     height={32}
                     strokeWidth={2}
@@ -800,7 +812,7 @@ export default function FlipPopulationCards({
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
-                    data={lpcdTrend?.map((val: number) => 100 - val) || []}
+                    data={lpcdBelow55Trend || []}
                     color="#D97706"
                     height={32}
                     strokeWidth={2}
@@ -858,7 +870,7 @@ export default function FlipPopulationCards({
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
-                    data={lpcdTrend?.map((val: number) => 100 - val) || []}
+                    data={lpcdBelow55Trend || []}
                     color="#EA580C"
                     height={32}
                     strokeWidth={2}
