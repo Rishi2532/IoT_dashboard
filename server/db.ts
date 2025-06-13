@@ -195,6 +195,83 @@ export async function cleanupOldUpdates() {
   }
 }
 
+// Seed population tracking data for new remixed apps
+async function seedPopulationTrackingData(db: any) {
+  try {
+    console.log("🌱 Checking if population tracking data needs to be seeded...");
+    
+    // Check if population tracking tables have any data
+    const existingPopulationData = await db.execute(sql`
+      SELECT COUNT(*) as count FROM population_tracking
+    `);
+    
+    const populationCount = Number(existingPopulationData.rows[0]?.count) || 0;
+    
+    // Check if water_scheme_data exists
+    const waterSchemeCount = await db.execute(sql`
+      SELECT COUNT(*) as count FROM water_scheme_data WHERE population IS NOT NULL AND population > 0
+    `);
+    
+    const hasWaterData = Number(waterSchemeCount.rows[0]?.count) > 0;
+    
+    if (populationCount === 0 && hasWaterData) {
+      console.log("🌱 Found water scheme data but no population tracking data. Seeding initial population data...");
+      
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Calculate total population from water_scheme_data
+      const totalPopulationResult = await db.execute(sql`
+        SELECT COALESCE(SUM(CAST(population AS INTEGER)), 0) as total_population
+        FROM water_scheme_data 
+        WHERE population IS NOT NULL AND population > 0
+      `);
+      
+      const totalPopulation = Number(totalPopulationResult.rows[0]?.total_population) || 0;
+      
+      if (totalPopulation > 0) {
+        // Store total population
+        await db.execute(sql`
+          INSERT INTO population_tracking (date, total_population) 
+          VALUES (${today}, ${totalPopulation})
+        `);
+        console.log(`✅ Seeded total population: ${totalPopulation.toLocaleString()} for ${today}`);
+        
+        // Calculate and store region-wise population
+        const regionPopulationResult = await db.execute(sql`
+          SELECT 
+            region,
+            COALESCE(SUM(CAST(population AS INTEGER)), 0) as total_population
+          FROM water_scheme_data 
+          WHERE population IS NOT NULL AND population > 0 AND region IS NOT NULL
+          GROUP BY region
+        `);
+        
+        for (const row of regionPopulationResult.rows) {
+          const region = row.region as string;
+          const regionPopulation = Number(row.total_population) || 0;
+          
+          if (regionPopulation > 0) {
+            await db.execute(sql`
+              INSERT INTO region_population_tracking (date, region, total_population) 
+              VALUES (${today}, ${region}, ${regionPopulation})
+            `);
+            console.log(`✅ Seeded ${region} population: ${regionPopulation.toLocaleString()} for ${today}`);
+          }
+        }
+        
+        console.log("🌱 Population tracking data seeding completed successfully");
+      }
+    } else if (populationCount > 0) {
+      console.log("✅ Population tracking data already exists, skipping seeding");
+    } else {
+      console.log("ℹ️ No water scheme data found, skipping population seeding");
+    }
+  } catch (error) {
+    console.error("❌ Error seeding population tracking data:", error);
+    // Don't throw error to avoid breaking database initialization
+  }
+}
+
 export async function initializeDatabase() {
   const db = await getDB();
 
@@ -202,6 +279,10 @@ export async function initializeDatabase() {
     console.log("Initializing database with new setup...");
     // Use the new initializeTables function
     await initializeTables(db);
+    
+    // Check if this is a new remix with water_scheme_data but no population tracking
+    await seedPopulationTrackingData(db);
+    
     console.log("Database initialized successfully!");
     return;
     
