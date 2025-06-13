@@ -121,15 +121,17 @@ export default function FlipPopulationCards({
     },
   });
 
-  // Fetch trend data for mini charts
+  // Fetch population trend data from tracking tables
   const { data: populationTrend } = useQuery({
-    queryKey: ["/api/population-tracking/weekly-trend", selectedRegion],
+    queryKey: ["/api/water-scheme-data/population-trends", selectedRegion],
     queryFn: async () => {
-      const response = await fetch("/api/population-tracking/weekly-trend");
+      const url = selectedRegion === "all" 
+        ? "/api/water-scheme-data/population-trends"
+        : `/api/water-scheme-data/population-trends?region=${selectedRegion}`;
+      const response = await fetch(url);
       if (!response.ok) return [];
       const result = await response.json();
-      // Transform the data to extract just the population numbers for the chart
-      return (result.data || []).map((item: any) => item.population);
+      return result.data || [];
     },
   });
 

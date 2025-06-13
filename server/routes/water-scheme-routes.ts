@@ -1140,7 +1140,9 @@ router.get("/water-trends", async (req, res) => {
     const { region } = req.query;
     
     // Get average water values for the last 6 days
-    const db = await storage.getDb();
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
     
     let whereClause = '';
     if (region && region !== 'all') {
@@ -1228,6 +1230,64 @@ router.get("/lpcd-trends", async (req, res) => {
     res.status(500).json({
       success: false,
       error: "Failed to fetch LPCD trends"
+    });
+  }
+});
+
+// Get population trends from population tracking tables
+router.get("/population-trends", async (req, res) => {
+  try {
+    const { region } = req.query;
+    
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      let query;
+      const queryParams: any[] = [];
+      
+      if (region && region !== 'all') {
+        // Get regional population trends from region_population_tracking
+        query = `
+          SELECT 
+            date,
+            total_population as population
+          FROM region_population_tracking 
+          WHERE region = $1
+          ORDER BY date DESC 
+          LIMIT 7
+        `;
+        queryParams.push(region);
+      } else {
+        // Get total population trends from population_tracking
+        query = `
+          SELECT 
+            date,
+            total_population as population
+          FROM population_tracking 
+          ORDER BY date DESC 
+          LIMIT 7
+        `;
+      }
+      
+      const result = await client.query(query, queryParams);
+      
+      // Reverse to get chronological order and extract just population values
+      const trendData = result.rows.reverse().map(row => row.population || 0);
+      
+      res.json({
+        success: true,
+        data: trendData
+      });
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching population trends:', error);
+    res.status(500).json({ 
+      success: false,
+      error: 'Failed to fetch population trends' 
     });
   }
 });
