@@ -49,6 +49,7 @@ interface SchemeTableProps {
   statusFilter?: string;
   onStatusFilterChange?: (status: string) => void;
   onFilteredSchemesChange?: (filteredSchemes: SchemeStatus[]) => void;
+  selectedRegion?: string;
 }
 
 export default function SchemeTable({
@@ -58,6 +59,7 @@ export default function SchemeTable({
   statusFilter = "all",
   onStatusFilterChange,
   onFilteredSchemesChange,
+  selectedRegion = "all",
 }: SchemeTableProps) {
   const { trackSchemeDataLinkClick } = useDashboardTracking();
   const [searchTerm, setSearchTerm] = useState("");
@@ -70,9 +72,19 @@ export default function SchemeTable({
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  // Fetch overall region summary data
+  // Fetch region summary data (region-specific or overall)
   const { data: regionSummary } = useQuery({
-    queryKey: ["/api/regions/summary"],
+    queryKey: ["/api/regions/summary", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+      const url = `/api/regions/summary${params.toString() ? `?${params.toString()}` : ""}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error("Failed to fetch region summary");
+      return response.json();
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
   }) as { data: any };
 

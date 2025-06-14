@@ -754,6 +754,7 @@ export default function Dashboard() {
               statusFilter={statusFilter}
               onStatusFilterChange={handleStatusFilterChange}
               onFilteredSchemesChange={handleFilteredSchemesChange}
+              selectedRegion={selectedRegion}
             />
           </div>
         </div>

@@ -79,6 +79,7 @@ export default function Schemes() {
         onViewDetails={handleViewSchemeDetails}
         statusFilter={statusFilter}
         onStatusFilterChange={handleStatusFilterChange}
+        selectedRegion={selectedRegion}
       />
 
       <SchemeDetailsModal 
