@@ -51,6 +51,9 @@ import {
   Download,
   BarChart,
   ExternalLink,
+  Calendar,
+  History,
+  TrendingUp,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -108,6 +111,21 @@ interface ChlorineDashboardStats {
   };
 }
 
+interface HistoricalChlorineData {
+  scheme_id: string;
+  region: string;
+  circle: string;
+  division: string;
+  sub_division: string;
+  block: string;
+  scheme_name: string;
+  village_name: string;
+  esr_name: string;
+  measurement_date: string;
+  chlorine_value: number;
+  dashboard_url?: string;
+}
+
 type ChlorineRange =
   | "all"
   | "below_0.2"
@@ -141,6 +159,15 @@ const ChlorineDashboard: React.FC = () => {
 
   // Selected ESR for detailed view
   const [selectedESR, setSelectedESR] = useState<ChlorineData | null>(null);
+
+  // Historical data state
+  const [showHistoricalData, setShowHistoricalData] = useState<boolean>(false);
+  const [historicalStartDate, setHistoricalStartDate] = useState<string>(
+    new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] // 30 days ago
+  );
+  const [historicalEndDate, setHistoricalEndDate] = useState<string>(
+    new Date().toISOString().split('T')[0] // Today
+  );
 
   // Track page visit on component mount
   useEffect(() => {
@@ -237,6 +264,37 @@ const ChlorineDashboard: React.FC = () => {
         return data;
       },
     });
+
+  // Fetch historical chlorine data when dates change
+  const {
+    data: historicalChlorineData = [],
+    isLoading: isLoadingHistorical,
+    error: historicalError,
+    refetch: refetchHistorical,
+  } = useQuery<HistoricalChlorineData[]>({
+    queryKey: ["/api/chlorine/historical", historicalStartDate, historicalEndDate, selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append("startDate", historicalStartDate);
+      params.append("endDate", historicalEndDate);
+      
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/chlorine/historical?${queryString}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch historical chlorine data");
+      }
+
+      const result = await response.json();
+      return result.data || [];
+    },
+    enabled: showHistoricalData, // Only fetch when historical view is enabled
+  });
 
   // Get latest chlorine value
   const getLatestChlorineValue = (data: ChlorineData): number | null => {
