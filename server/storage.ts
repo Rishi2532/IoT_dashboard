@@ -2083,16 +2083,8 @@ export class PostgresStorage implements IStorage {
           const batch = historicalRecords.slice(i, i + historyBatchSize);
           
           try {
-            // Use ON CONFLICT to handle duplicates - keep the most recent upload
-            await db.insert(chlorineHistory).values(batch).onConflictDoNothing({
-              target: [
-                chlorineHistory.scheme_id,
-                chlorineHistory.village_name,
-                chlorineHistory.esr_name,
-                chlorineHistory.chlorine_date,
-                chlorineHistory.uploaded_at
-              ]
-            });
+            // Insert historical records - duplicates will be handled by unique constraint
+            await db.insert(chlorineHistory).values(batch);
             
             console.log(`Stored historical batch ${Math.floor(i/historyBatchSize) + 1}/${Math.ceil(historicalRecords.length/historyBatchSize)}`);
           } catch (historyError) {

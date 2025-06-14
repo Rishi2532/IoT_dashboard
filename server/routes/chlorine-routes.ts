@@ -85,27 +85,37 @@ router.get("/historical", async (req, res) => {
       esr_name
     });
     
-    const filter: any = {
-      startDate: startDate as string,
-      endDate: endDate as string
-    };
+    // Use the new chlorine_history table-based method
+    const historicalData = await storage.getChlorineHistoricalDataByDateRange(
+      startDate as string,
+      endDate as string,
+      region as string,
+      scheme_id as string,
+      village_name as string
+    );
     
-    if (region) filter.region = region as string;
-    if (scheme_id) filter.scheme_id = scheme_id as string;
-    if (village_name) filter.village_name = village_name as string;
-    if (esr_name) filter.esr_name = esr_name as string;
+    // Filter by ESR name if specified
+    let filteredData = historicalData;
+    if (esr_name) {
+      filteredData = historicalData.filter(record => 
+        record.esr_name === esr_name
+      );
+    }
     
-    const historicalData = await storage.getHistoricalChlorineData(filter);
-    
-    console.log(`Returning ${historicalData.length} historical chlorine records`);
+    console.log(`Returning ${filteredData.length} historical chlorine records`);
     
     res.json({
       success: true,
-      count: historicalData.length,
-      data: historicalData,
+      count: filteredData.length,
+      data: filteredData,
       query: {
         dateRange: `${startDate} to ${endDate}`,
-        filters: filter
+        filters: {
+          region,
+          scheme_id,
+          village_name,
+          esr_name
+        }
       }
     });
   } catch (error) {
