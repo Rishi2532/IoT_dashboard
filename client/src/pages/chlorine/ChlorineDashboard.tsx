@@ -630,6 +630,80 @@ const ChlorineDashboard: React.FC = () => {
     setPage(1); // Reset to first page when filter changes
   };
 
+  // Handler for exporting historical chlorine data
+  const exportHistoricalData = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.append("startDate", historicalStartDate);
+      params.append("endDate", historicalEndDate);
+      
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/chlorine/export/historical?${queryString}`;
+
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to export historical data");
+      }
+
+      // Get the filename from response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `Chlorine_Historical_Data_${historicalStartDate}_to_${historicalEndDate}.xlsx`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename=(.+)/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Convert response to blob and trigger download
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      // Track the export activity
+      trackDataExport(
+        "Chlorine Historical Data",
+        filename,
+        historicalChlorineData.length,
+        { 
+          dateRange: `${historicalStartDate} to ${historicalEndDate}`,
+          region: selectedRegion !== "all" ? selectedRegion : undefined 
+        },
+        {
+          exportSource: "chlorine_historical_dashboard",
+          startDate: historicalStartDate,
+          endDate: historicalEndDate
+        }
+      );
+
+      toast({
+        title: "Export Successful",
+        description: `Historical chlorine data exported successfully`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "Failed to export historical data",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Function to export data to Excel
   const exportToExcel = (data: ChlorineData[], filename: string) => {
     try {

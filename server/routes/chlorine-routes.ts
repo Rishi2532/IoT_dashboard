@@ -4,6 +4,7 @@ import { storage } from "../storage";
 import { ZodError } from "zod";
 import { insertChlorineDataSchema, updateChlorineDataSchema } from "@shared/schema";
 import { executeWithRetry } from "../db-retry";
+import * as XLSX from 'xlsx';
 
 const router = express.Router();
 
@@ -398,6 +399,123 @@ router.get("/history/esr/:schemeId/:villageName/:esrName", async (req, res) => {
     res.status(500).json({ 
       error: "Failed to fetch ESR historical data",
       details: error.message 
+    });
+  }
+});
+
+// Export chlorine historical data to Excel
+router.get("/export/historical", async (req, res) => {
+  try {
+    const { startDate, endDate, region, scheme_id, village_name, esr_name } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        error: "Both startDate and endDate are required. Format: YYYY-MM-DD" 
+      });
+    }
+    
+    console.log("Exporting Chlorine Historical Data:", {
+      startDate,
+      endDate,
+      region,
+      scheme_id,
+      village_name,
+      esr_name
+    });
+    
+    // Get historical data using the existing method
+    const historicalData = await storage.getChlorineHistoricalDataByDateRange(
+      startDate as string,
+      endDate as string,
+      region as string,
+      scheme_id as string,
+      village_name as string
+    );
+    
+    // Filter by ESR name if specified
+    let filteredData = historicalData;
+    if (esr_name) {
+      filteredData = historicalData.filter(record => 
+        record.esr_name === esr_name
+      );
+    }
+    
+    if (filteredData.length === 0) {
+      return res.status(404).json({ 
+        error: "No chlorine data found for the specified date range and filters" 
+      });
+    }
+    
+    // Transform data for Excel export
+    // Group by ESR and create date-wise columns
+    const esrMap = new Map();
+    
+    filteredData.forEach(record => {
+      const esrKey = `${record.scheme_id}_${record.village_name}_${record.esr_name}`;
+      
+      if (!esrMap.has(esrKey)) {
+        esrMap.set(esrKey, {
+          'Scheme ID': record.scheme_id,
+          'Region': record.region,
+          'Circle': record.circle,
+          'Division': record.division,
+          'Sub Division': record.sub_division,
+          'Block': record.block,
+          'Scheme Name': record.scheme_name,
+          'Village Name': record.village_name,
+          'ESR Name': record.esr_name,
+          'Dashboard URL': record.dashboard_url || ''
+        });
+      }
+      
+      // Add chlorine value for the specific date
+      const dateKey = `Chlorine_${record.chlorine_date}`;
+      esrMap.get(esrKey)[dateKey] = record.chlorine_value || 0;
+    });
+    
+    // Convert map to array for Excel
+    const excelData = Array.from(esrMap.values());
+    
+    // Create workbook and worksheet
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    
+    // Auto-size columns
+    const colWidths = [];
+    if (excelData.length > 0) {
+      Object.keys(excelData[0]).forEach(key => {
+        const maxWidth = Math.max(
+          key.length,
+          ...excelData.map(row => String(row[key] || '').length)
+        );
+        colWidths.push({ wch: Math.min(maxWidth + 2, 50) });
+      });
+      worksheet['!cols'] = colWidths;
+    }
+    
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Chlorine Historical Data");
+    
+    // Generate Excel buffer
+    const excelBuffer = XLSX.write(workbook, { 
+      type: 'buffer', 
+      bookType: 'xlsx' 
+    });
+    
+    // Set response headers for file download
+    const fileName = `Chlorine_Data_${region || 'all'}_${scheme_id || 'all'}_${new Date().toISOString().split('T')[0]}_${Date.now()}.xlsx`;
+    
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
+    res.setHeader('Content-Length', excelBuffer.length);
+    
+    console.log(`Exporting ${excelData.length} ESRs with historical chlorine data to Excel`);
+    
+    res.send(excelBuffer);
+  } catch (error) {
+    console.error("Error exporting chlorine historical data:", error);
+    res.status(500).json({ 
+      error: "Failed to export chlorine historical data",
+      details: error instanceof Error ? error.message : String(error)
     });
   }
 });
