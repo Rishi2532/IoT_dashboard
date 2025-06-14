@@ -264,6 +264,48 @@ export type InsertChlorineData = z.infer<typeof insertChlorineDataSchema>;
 export type UpdateChlorineData = z.infer<typeof updateChlorineDataSchema>;
 export type ChlorineData = typeof chlorineData.$inferSelect;
 
+// Chlorine History table for permanent historical storage
+export const chlorineHistory = pgTable("chlorine_history", {
+  id: serial("id").primaryKey(),
+  
+  // Location information
+  region: varchar("region", { length: 100 }),
+  circle: varchar("circle", { length: 100 }),
+  division: varchar("division", { length: 100 }),
+  sub_division: varchar("sub_division", { length: 100 }),
+  block: varchar("block", { length: 100 }),
+  
+  // Identification
+  scheme_id: varchar("scheme_id", { length: 100 }),
+  scheme_name: varchar("scheme_name", { length: 255 }),
+  village_name: varchar("village_name", { length: 255 }),
+  esr_name: varchar("esr_name", { length: 255 }),
+  
+  // Single day data
+  chlorine_date: varchar("chlorine_date", { length: 15 }).notNull(),
+  chlorine_value: decimal("chlorine_value"),
+  
+  // Upload tracking
+  uploaded_at: timestamp("uploaded_at").defaultNow().notNull(),
+  upload_batch_id: varchar("upload_batch_id", { length: 50 }), // To group records from same CSV upload
+  
+  // Dashboard URL
+  dashboard_url: text("dashboard_url"),
+}, (table) => {
+  return {
+    // Unique constraint to ensure no duplicates for same ESR + date + upload
+    unique_esr_date: unique().on(table.scheme_id, table.village_name, table.esr_name, table.chlorine_date, table.uploaded_at),
+  };
+});
+
+export const insertChlorineHistorySchema = createInsertSchema(chlorineHistory).omit({
+  id: true,
+  uploaded_at: true,
+});
+
+export type InsertChlorineHistory = z.infer<typeof insertChlorineHistorySchema>;
+export type ChlorineHistory = typeof chlorineHistory.$inferSelect;
+
 // Pressure Data table for ESR-level pressure monitoring
 export const pressureData = pgTable("pressure_data", {
   // Location information

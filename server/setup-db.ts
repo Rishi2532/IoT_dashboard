@@ -310,6 +310,40 @@ export async function initializeTables(db: any) {
       console.error('Error checking for dashboard_url column in chlorine_data:', error);
     }
     
+    // Create chlorine_history table for permanent historical storage
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "chlorine_history" (
+        "id" SERIAL PRIMARY KEY,
+        "region" VARCHAR(100),
+        "circle" VARCHAR(100),
+        "division" VARCHAR(100),
+        "sub_division" VARCHAR(100),
+        "block" VARCHAR(100),
+        "scheme_id" VARCHAR(100),
+        "scheme_name" VARCHAR(255),
+        "village_name" VARCHAR(255),
+        "esr_name" VARCHAR(255),
+        "chlorine_date" VARCHAR(15) NOT NULL,
+        "chlorine_value" NUMERIC,
+        "uploaded_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "upload_batch_id" VARCHAR(50),
+        "dashboard_url" TEXT,
+        UNIQUE("scheme_id", "village_name", "esr_name", "chlorine_date", "uploaded_at")
+      );
+    `);
+    
+    // Create index on chlorine_history for efficient date range queries
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS "idx_chlorine_history_date_range" 
+      ON "chlorine_history" ("chlorine_date", "scheme_id", "village_name", "esr_name");
+    `);
+    
+    // Create index on chlorine_history for efficient latest record queries
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS "idx_chlorine_history_latest" 
+      ON "chlorine_history" ("scheme_id", "village_name", "esr_name", "chlorine_date", "uploaded_at" DESC);
+    `);
+    
     // Create pressure_data table
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "pressure_data" (
