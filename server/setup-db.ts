@@ -26,6 +26,12 @@ export function setupDatabase() {
     console.log("VS Code pgAdmin configuration detected!");
   }
 
+  // Check for Replit environment first
+  const isReplit = process.env.REPL_ID || process.env.REPLIT;
+  if (isReplit) {
+    console.log("Replit environment detected!");
+  }
+
   // Ensure DATABASE_URL is available
   if (!process.env.DATABASE_URL) {
     console.error("DATABASE_URL environment variable is not set!");
@@ -33,6 +39,8 @@ export function setupDatabase() {
     // If in VS Code, suggest using the pgAdmin setup
     if (isVSCode) {
       console.log("Try running the application with F5 in VS Code or use the .env.vscode file");
+    } else if (isReplit) {
+      console.log("In Replit, the DATABASE_URL should be automatically provided. Please check if PostgreSQL database is properly configured.");
     }
     
     throw new Error("DATABASE_URL environment variable is not set!");

@@ -1,0 +1,127 @@
+# Maharashtra Water Infrastructure Management Platform
+
+## Overview
+
+This is a comprehensive water infrastructure management platform for Maharashtra, designed to provide intelligent insights into regional water projects through data analysis and multi-block scheme management. The platform features a TypeScript/React frontend with an Express.js backend, utilizing PostgreSQL for data storage and supporting real-time water consumption tracking, scheme management, and AI-powered chatbot assistance.
+
+## System Architecture
+
+### Frontend Architecture
+- **Framework**: React 18 with TypeScript
+- **Build Tool**: Vite for fast development and optimized production builds
+- **UI Framework**: Shadcn/ui components with Tailwind CSS for styling
+- **State Management**: TanStack Query for server state management and caching
+- **Form Handling**: React Hook Form with Zod validation
+- **Charts & Visualization**: Custom components for data visualization
+
+### Backend Architecture
+- **Runtime**: Node.js with Express.js framework
+- **Language**: TypeScript with ES modules
+- **API Design**: RESTful API with structured endpoints
+- **File Processing**: Support for Excel and CSV imports using XLSX library
+- **Session Management**: Express sessions for user authentication
+
+### Database Architecture
+- **Primary Database**: PostgreSQL with Drizzle ORM
+- **Schema Management**: Drizzle Kit for migrations and schema management
+- **Connection Pooling**: PostgreSQL connection pooling for performance
+- **Data Models**: Comprehensive schema for regions, schemes, villages, users, and tracking data
+
+## Key Components
+
+### Core Data Models
+1. **Region Management**: Regional water infrastructure summaries and statistics
+2. **Scheme Status**: Detailed tracking of water schemes across Maharashtra
+3. **Water Scheme Data**: Village-level water consumption and LPCD tracking
+4. **User Management**: Authentication and role-based access control
+5. **Population Tracking**: Historical population data storage and analysis
+6. **Chlorine Data**: Water quality monitoring and chlorine level tracking
+
+### Import System
+- **Excel Import**: Specialized handling for water scheme data from Excel files
+- **CSV Import**: Flexible CSV data import with column mapping
+- **Data Validation**: Comprehensive validation and error handling during imports
+- **Automatic Processing**: Background processing for large datasets
+
+### AI Integration
+- **Chatbot**: OpenAI-powered conversational interface for data queries
+- **Multi-language Support**: Support for various Indian languages
+- **Voice Recognition**: Speech-to-text capabilities for accessibility
+- **Intelligent Filtering**: Natural language processing for data filtering
+
+### Dashboard Features
+- **Regional Overview**: Comprehensive regional water infrastructure statistics
+- **Scheme Monitoring**: Real-time tracking of scheme completion status
+- **LPCD Analysis**: Liters Per Capita per Day monitoring and trends
+- **Interactive Maps**: Geospatial visualization of water infrastructure
+- **Export Capabilities**: Data export in multiple formats
+
+## Data Flow
+
+### Data Import Flow
+1. **File Upload**: Users upload Excel/CSV files through the web interface
+2. **Validation**: Server validates file format and data structure
+3. **Processing**: Background processing extracts and transforms data
+4. **Storage**: Validated data is stored in PostgreSQL database
+5. **Population Tracking**: Automatic population data storage for historical analysis
+6. **Notification**: Users receive feedback on import success/failure
+
+### Query Flow
+1. **API Request**: Frontend makes authenticated requests to backend APIs
+2. **Data Retrieval**: Express routes query PostgreSQL using Drizzle ORM
+3. **Processing**: Server-side data aggregation and filtering
+4. **Response**: JSON responses with structured data
+5. **Caching**: TanStack Query caches responses for performance
+
+### Authentication Flow
+1. **Login**: Users authenticate with username/password
+2. **Session**: Express sessions maintain user state
+3. **Authorization**: Route-level protection for sensitive operations
+4. **Default Access**: Admin user (admin/admin123) for initial setup
+
+## External Dependencies
+
+### Core Technologies
+- **Database**: PostgreSQL (local or cloud-hosted)
+- **Runtime**: Node.js 20+ with TypeScript support
+- **Package Manager**: npm with lockfile for dependency management
+
+### Cloud Services
+- **Database Hosting**: Neon Database for cloud PostgreSQL
+- **OpenAI API**: For chatbot functionality and natural language processing
+- **Google Translate**: Multi-language support for internationalization
+
+### Development Tools
+- **Drizzle Kit**: Database schema management and migrations
+- **Vite**: Frontend build tool and development server
+- **ESBuild**: Backend bundling for production deployment
+- **TypeScript**: Static type checking across the entire codebase
+
+## Deployment Strategy
+
+### Development Environment
+- **Local Setup**: Complete local development with PostgreSQL
+- **Environment Variables**: Flexible configuration for different environments
+- **Hot Reload**: Vite dev server with fast refresh for frontend development
+- **Database Seeding**: Automatic database initialization with required tables
+
+### Production Deployment
+- **Build Process**: Vite builds optimized frontend bundle
+- **Backend Bundle**: ESBuild creates Node.js production bundle
+- **Database Migration**: Drizzle handles schema updates and migrations
+- **Environment Configuration**: Production-specific environment variables
+
+### Platform Support
+- **Replit**: Native support with automatic database provisioning
+- **VS Code**: Local development setup with configuration scripts
+- **pgAdmin**: Integration with existing PostgreSQL installations
+- **Docker**: Containerized deployment options
+
+## User Preferences
+
+Preferred communication style: Simple, everyday language.
+
+## Changelog
+
+Changelog:
+- June 14, 2025. Initial setup
