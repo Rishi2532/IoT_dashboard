@@ -297,4 +297,99 @@ router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res)
   }
 });
 
+// Get chlorine historical data by date range
+router.get("/history", async (req, res) => {
+  try {
+    const { startDate, endDate, region, scheme, village } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        error: "Both startDate and endDate are required" 
+      });
+    }
+    
+    console.log(`Fetching chlorine historical data from ${startDate} to ${endDate}`);
+    
+    const historicalData = await storage.getChlorineHistoricalDataByDateRange(
+      startDate as string,
+      endDate as string,
+      region as string,
+      scheme as string,
+      village as string
+    );
+    
+    console.log(`Returning ${historicalData.length} historical chlorine records`);
+    res.json(historicalData);
+  } catch (error: any) {
+    console.error("Error fetching chlorine historical data:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch historical chlorine data",
+      details: error.message 
+    });
+  }
+});
+
+// Get chlorine historical summary by date range
+router.get("/history/summary", async (req, res) => {
+  try {
+    const { startDate, endDate, region } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        error: "Both startDate and endDate are required" 
+      });
+    }
+    
+    console.log(`Generating chlorine historical summary from ${startDate} to ${endDate}`);
+    
+    const summary = await storage.getChlorineHistoricalSummaryByDateRange(
+      startDate as string,
+      endDate as string,
+      region as string
+    );
+    
+    console.log("Historical summary generated:", summary);
+    res.json(summary);
+  } catch (error: any) {
+    console.error("Error generating chlorine historical summary:", error);
+    res.status(500).json({ 
+      error: "Failed to generate historical summary",
+      details: error.message 
+    });
+  }
+});
+
+// Get chlorine historical data for specific ESR
+router.get("/history/esr/:schemeId/:villageName/:esrName", async (req, res) => {
+  try {
+    const { schemeId, villageName, esrName } = req.params;
+    const { startDate, endDate } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        error: "Both startDate and endDate are required" 
+      });
+    }
+    
+    console.log(`Fetching ESR historical data for ${esrName} from ${startDate} to ${endDate}`);
+    
+    const esrHistory = await storage.getChlorineHistoricalDataForESR(
+      schemeId,
+      villageName,
+      esrName,
+      startDate as string,
+      endDate as string
+    );
+    
+    console.log(`Returning ${esrHistory.length} daily records for ESR ${esrName}`);
+    res.json(esrHistory);
+  } catch (error: any) {
+    console.error("Error fetching ESR historical data:", error);
+    res.status(500).json({ 
+      error: "Failed to fetch ESR historical data",
+      details: error.message 
+    });
+  }
+});
+
 export default router;
