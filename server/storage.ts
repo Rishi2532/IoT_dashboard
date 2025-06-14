@@ -2476,13 +2476,8 @@ export class PostgresStorage implements IStorage {
     try {
       console.log(`Querying chlorine historical data from ${startDate} to ${endDate}`);
       
-      let query = db
-        .select()
-        .from(chlorineHistory)
-        .where(
-          sql`${chlorineHistory.chlorine_date} >= ${startDate} 
-              AND ${chlorineHistory.chlorine_date} <= ${endDate}`
-        );
+      // Get all records and filter dates in JavaScript to handle mixed formats
+      let query = db.select().from(chlorineHistory);
       
       // Apply additional filters
       if (regionFilter && regionFilter !== 'all') {
@@ -2508,10 +2503,59 @@ export class PostgresStorage implements IStorage {
       
       const results = await query;
       
+      // Helper function to parse various date formats to a comparable Date object
+      const parseDate = (dateStr: string): Date | null => {
+        if (!dateStr) return null;
+        
+        // Handle YYYY-MM-DD format
+        if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          return new Date(dateStr);
+        }
+        
+        // Handle DD-MMM-YY format (e.g., "03-Jun-25")
+        if (/^\d{2}-[A-Za-z]{3}-\d{2}$/.test(dateStr)) {
+          const [day, month, year] = dateStr.split('-');
+          const fullYear = parseInt(year) + 2000; // Assume 20xx
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                             'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const monthIndex = monthNames.indexOf(month);
+          if (monthIndex !== -1) {
+            return new Date(fullYear, monthIndex, parseInt(day));
+          }
+        }
+        
+        // Handle Excel numeric date format (days since 1900-01-01, with 2-day offset)
+        if (/^\d+\.?\d*$/.test(dateStr)) {
+          const daysSince1900 = parseFloat(dateStr);
+          const baseDate = new Date(1900, 0, 1); // January 1, 1900
+          return new Date(baseDate.getTime() + (daysSince1900 - 2) * 24 * 60 * 60 * 1000);
+        }
+        
+        return null;
+      };
+      
+      // Parse start and end dates for comparison
+      const startDateObj = new Date(startDate);
+      const endDateObj = new Date(endDate);
+      
+      // Filter results by date range
+      const filteredResults = results.filter(record => {
+        const recordDate = parseDate(record.chlorine_date);
+        if (!recordDate) return false;
+        
+        return recordDate >= startDateObj && recordDate <= endDateObj;
+      });
+      
       // Remove duplicates - keep only the most recent upload for each ESR + date combination
       const uniqueRecords = new Map<string, ChlorineHistory>();
       
-      for (const record of results) {
+      // Sort by upload time (most recent first) before deduplication
+      const sortedResults = filteredResults.sort((a, b) => {
+        if (!a.uploaded_at || !b.uploaded_at) return 0;
+        return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
+      });
+      
+      for (const record of sortedResults) {
         const key = `${record.scheme_id}|${record.village_name}|${record.esr_name}|${record.chlorine_date}`;
         
         // Only keep if this is the first (most recent) record for this key
