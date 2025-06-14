@@ -481,7 +481,7 @@ router.get("/export/historical", async (req, res) => {
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     
     // Auto-size columns
-    const colWidths = [];
+    const colWidths: Array<{ wch: number }> = [];
     if (excelData.length > 0) {
       Object.keys(excelData[0]).forEach(key => {
         const maxWidth = Math.max(

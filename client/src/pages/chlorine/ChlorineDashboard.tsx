@@ -1117,6 +1117,17 @@ const ChlorineDashboard: React.FC = () => {
                   <TrendingUp className="h-4 w-4" />
                   Query Historical Data
                 </Button>
+
+                <Button
+                  onClick={exportHistoricalData}
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-2 mt-4 md:mt-0 bg-blue-600 hover:bg-blue-700"
+                  disabled={isLoadingHistorical}
+                >
+                  <Download className="h-4 w-4" />
+                  Export to Excel ({updatedCardStats?.totalSensors || 0})
+                </Button>
               </div>
             </div>
 
