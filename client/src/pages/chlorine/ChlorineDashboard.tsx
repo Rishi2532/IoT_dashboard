@@ -587,7 +587,7 @@ const ChlorineDashboard: React.FC = () => {
     }
 
     return filtered;
-  }, [globallyFilteredData, selectedCardFilter]);
+  }, [globallyFilteredData, selectedCardFilter, showHistoricalData, historicalChlorineData, searchQuery]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -982,6 +982,15 @@ const ChlorineDashboard: React.FC = () => {
               {filteredData.length > 0 ? ` (${filteredData.length})` : ""}
             </Button>
             <Button
+              onClick={() => setShowHistoricalData(!showHistoricalData)}
+              variant={showHistoricalData ? "default" : "outline"}
+              className="flex items-center gap-2"
+            >
+              <History className="h-4 w-4" />
+              {showHistoricalData ? "Current Data" : "Historical Data"}
+            </Button>
+
+            <Button
               onClick={() => refetch()}
               variant="outline"
               className="bg-blue-50 border-blue-200 text-blue-700 hover:bg-blue-100 gap-2"
@@ -991,6 +1000,66 @@ const ChlorineDashboard: React.FC = () => {
             </Button>
           </div>
         </div>
+
+        {/* Historical Data Date Selection */}
+        {showHistoricalData && (
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-700">
+                  Select Date Range for Historical Data
+                </span>
+              </div>
+              
+              <div className="flex flex-col md:flex-row gap-4 items-center">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-600">Start Date</label>
+                  <Input
+                    type="date"
+                    value={historicalStartDate}
+                    onChange={(e) => setHistoricalStartDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+                
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-600">End Date</label>
+                  <Input
+                    type="date"
+                    value={historicalEndDate}
+                    onChange={(e) => setHistoricalEndDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+
+                <Button
+                  onClick={() => refetchHistorical()}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 mt-4 md:mt-0"
+                  disabled={isLoadingHistorical}
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Query Historical Data
+                </Button>
+              </div>
+            </div>
+
+            {historicalChlorineData.length > 0 && (
+              <div className="mt-3 text-sm text-green-700">
+                Found {historicalChlorineData.length} historical records
+                ({historicalStartDate} to {historicalEndDate})
+              </div>
+            )}
+
+            {historicalError && (
+              <div className="mt-3 text-sm text-red-700">
+                Error loading historical data. Please try again.
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Dashboard Cards */}
