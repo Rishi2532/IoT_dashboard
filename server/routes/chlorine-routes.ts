@@ -65,6 +65,58 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Get historical chlorine data by date range with deduplication
+router.get("/historical", async (req, res) => {
+  try {
+    const { startDate, endDate, region, scheme_id, village_name, esr_name } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        error: "Both startDate and endDate are required. Format: YYYY-MM-DD or DD-MM-YYYY" 
+      });
+    }
+    
+    console.log("Historical Chlorine Data Request:", {
+      startDate,
+      endDate,
+      region,
+      scheme_id,
+      village_name,
+      esr_name
+    });
+    
+    const filter: any = {
+      startDate: startDate as string,
+      endDate: endDate as string
+    };
+    
+    if (region) filter.region = region as string;
+    if (scheme_id) filter.scheme_id = scheme_id as string;
+    if (village_name) filter.village_name = village_name as string;
+    if (esr_name) filter.esr_name = esr_name as string;
+    
+    const historicalData = await storage.getHistoricalChlorineData(filter);
+    
+    console.log(`Returning ${historicalData.length} historical chlorine records`);
+    
+    res.json({
+      success: true,
+      count: historicalData.length,
+      data: historicalData,
+      query: {
+        dateRange: `${startDate} to ${endDate}`,
+        filters: filter
+      }
+    });
+  } catch (error) {
+    console.error("Error getting historical chlorine data:", error);
+    res.status(500).json({ 
+      error: "Failed to get historical chlorine data",
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 // Get dashboard statistics for chlorine data
 router.get("/dashboard-stats", async (req, res) => {
   try {

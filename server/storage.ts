@@ -160,6 +160,27 @@ export interface IStorage {
   getAllChlorineData(
     filter?: ChlorineDataFilter
   ): Promise<ChlorineData[]>;
+  getHistoricalChlorineData(filter: {
+    startDate: string;
+    endDate: string;
+    region?: string;
+    scheme_id?: string;
+    village_name?: string;
+    esr_name?: string;
+  }): Promise<Array<{
+    scheme_id: string;
+    region: string;
+    circle: string;
+    division: string;
+    sub_division: string;
+    block: string;
+    scheme_name: string;
+    village_name: string;
+    esr_name: string;
+    measurement_date: string;
+    chlorine_value: number;
+    dashboard_url?: string;
+  }>>;
   getChlorineDataByCompositeKey(schemeId: string, villageName: string, esrName: string): Promise<ChlorineData | undefined>;
   createChlorineData(data: InsertChlorineData): Promise<ChlorineData>;
   updateChlorineData(schemeId: string, villageName: string, esrName: string, data: UpdateChlorineData): Promise<ChlorineData>;
@@ -1176,6 +1197,163 @@ export class PostgresStorage implements IStorage {
     } catch (error) {
       console.error("Error fetching chlorine data:", error);
       return [];
+    }
+  }
+
+  async getHistoricalChlorineData(filter: {
+    startDate: string;
+    endDate: string;
+    region?: string;
+    scheme_id?: string;
+    village_name?: string;
+    esr_name?: string;
+  }): Promise<Array<{
+    scheme_id: string;
+    region: string;
+    circle: string;
+    division: string;
+    sub_division: string;
+    block: string;
+    scheme_name: string;
+    village_name: string;
+    esr_name: string;
+    measurement_date: string;
+    chlorine_value: number;
+    dashboard_url?: string;
+  }>> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+
+    try {
+      // Helper function to parse date strings (supports DD-MM-YYYY and YYYY-MM-DD formats)
+      const parseDate = (dateStr: string): string => {
+        if (dateStr.includes('-')) {
+          const parts = dateStr.split('-');
+          if (parts[0].length === 4) {
+            // YYYY-MM-DD format
+            return dateStr;
+          } else {
+            // DD-MM-YYYY format, convert to YYYY-MM-DD
+            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+          }
+        }
+        return dateStr; // Return as-is if format is unclear
+      };
+
+      const startDate = parseDate(filter.startDate);
+      const endDate = parseDate(filter.endDate);
+
+      console.log(`Querying chlorine data from ${startDate} to ${endDate}`);
+
+      // Build the unpivot query with deduplication
+      let whereConditions = [];
+      
+      // Date range condition - check if any of the 7 date fields fall within range
+      whereConditions.push(`(
+        (cd.chlorine_date_day_1 IS NOT NULL AND cd.chlorine_date_day_1 BETWEEN '${startDate}' AND '${endDate}') OR
+        (cd.chlorine_date_day_2 IS NOT NULL AND cd.chlorine_date_day_2 BETWEEN '${startDate}' AND '${endDate}') OR
+        (cd.chlorine_date_day_3 IS NOT NULL AND cd.chlorine_date_day_3 BETWEEN '${startDate}' AND '${endDate}') OR
+        (cd.chlorine_date_day_4 IS NOT NULL AND cd.chlorine_date_day_4 BETWEEN '${startDate}' AND '${endDate}') OR
+        (cd.chlorine_date_day_5 IS NOT NULL AND cd.chlorine_date_day_5 BETWEEN '${startDate}' AND '${endDate}') OR
+        (cd.chlorine_date_day_6 IS NOT NULL AND cd.chlorine_date_day_6 BETWEEN '${startDate}' AND '${endDate}') OR
+        (cd.chlorine_date_day_7 IS NOT NULL AND cd.chlorine_date_day_7 BETWEEN '${startDate}' AND '${endDate}')
+      )`);
+
+      // Add additional filters
+      if (filter.region) {
+        whereConditions.push(`cd.region = '${filter.region}'`);
+      }
+      if (filter.scheme_id) {
+        whereConditions.push(`cd.scheme_id = '${filter.scheme_id}'`);
+      }
+      if (filter.village_name) {
+        whereConditions.push(`cd.village_name = '${filter.village_name}'`);
+      }
+      if (filter.esr_name) {
+        whereConditions.push(`cd.esr_name = '${filter.esr_name}'`);
+      }
+
+      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+      // Raw SQL query to unpivot data and handle deduplication
+      const query = `
+        WITH unpivoted_data AS (
+          SELECT DISTINCT ON (cd.scheme_id, cd.village_name, cd.esr_name, measurement_date)
+            cd.scheme_id,
+            cd.region,
+            cd.circle,
+            cd.division,
+            cd.sub_division,
+            cd.block,
+            cd.scheme_name,
+            cd.village_name,
+            cd.esr_name,
+            measurement_date,
+            chlorine_value,
+            cd.dashboard_url,
+            -- Add a timestamp for ordering (we'll use a combination approach for deduplication)
+            CURRENT_TIMESTAMP as query_time
+          FROM chlorine_data cd
+          CROSS JOIN LATERAL (
+            VALUES 
+              (cd.chlorine_date_day_1, CAST(cd.chlorine_value_1 AS DECIMAL)),
+              (cd.chlorine_date_day_2, CAST(cd.chlorine_value_2 AS DECIMAL)),
+              (cd.chlorine_date_day_3, CAST(cd.chlorine_value_3 AS DECIMAL)),
+              (cd.chlorine_date_day_4, CAST(cd.chlorine_value_4 AS DECIMAL)),
+              (cd.chlorine_date_day_5, CAST(cd.chlorine_value_5 AS DECIMAL)),
+              (cd.chlorine_date_day_6, CAST(cd.chlorine_value_6 AS DECIMAL)),
+              (cd.chlorine_date_day_7, CAST(cd.chlorine_value_7 AS DECIMAL))
+          ) AS unpivot(measurement_date, chlorine_value)
+          ${whereClause}
+          AND unpivot.measurement_date IS NOT NULL 
+          AND unpivot.measurement_date != ''
+          AND unpivot.measurement_date BETWEEN '${startDate}' AND '${endDate}'
+          AND unpivot.chlorine_value IS NOT NULL
+          ORDER BY cd.scheme_id, cd.village_name, cd.esr_name, measurement_date, query_time DESC
+        )
+        SELECT 
+          scheme_id,
+          region,
+          circle,
+          division,
+          sub_division,
+          block,
+          scheme_name,
+          village_name,
+          esr_name,
+          measurement_date,
+          CAST(chlorine_value AS FLOAT) as chlorine_value,
+          dashboard_url
+        FROM unpivoted_data
+        ORDER BY region, scheme_id, village_name, esr_name, measurement_date;
+      `;
+
+      console.log("Executing historical chlorine query:", query);
+
+      const result = await db.execute(sql.raw(query));
+      
+      console.log(`Found ${result.rows.length} historical chlorine records`);
+      
+      // Transform the result to match the expected format
+      const transformedResult = result.rows.map((row: any) => ({
+        scheme_id: row.scheme_id || '',
+        region: row.region || '',
+        circle: row.circle || '',
+        division: row.division || '',
+        sub_division: row.sub_division || '',
+        block: row.block || '',
+        scheme_name: row.scheme_name || '',
+        village_name: row.village_name || '',
+        esr_name: row.esr_name || '',
+        measurement_date: row.measurement_date || '',
+        chlorine_value: parseFloat(row.chlorine_value) || 0,
+        dashboard_url: row.dashboard_url || undefined
+      }));
+
+      return transformedResult;
+    } catch (error) {
+      console.error("Error fetching historical chlorine data:", error);
+      throw new Error(`Failed to fetch historical chlorine data: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   
