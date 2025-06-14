@@ -446,9 +446,50 @@ router.get("/export/historical", async (req, res) => {
       });
     }
     
-    // Transform data for Excel export
-    // Group by ESR and create date-wise columns
+    // Transform data for Excel export - clean format as specified
+    // Group by ESR and create date-wise columns (one column per date)
     const esrMap = new Map();
+    
+    // Helper function to format date for column headers
+    const formatDateForColumn = (dateStr: string): string => {
+      // Handle different date formats and convert to a standard display format
+      const date = parseDate(dateStr);
+      if (date) {
+        return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      }
+      return dateStr; // fallback to original string
+    };
+    
+    // Helper function to parse various date formats (same as in storage)
+    const parseDate = (dateStr: string): Date | null => {
+      if (!dateStr) return null;
+      
+      // Handle YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return new Date(dateStr);
+      }
+      
+      // Handle DD-MMM-YY format (e.g., "03-Jun-25")
+      if (/^\d{2}-[A-Za-z]{3}-\d{2}$/.test(dateStr)) {
+        const [day, month, year] = dateStr.split('-');
+        const fullYear = parseInt(year) + 2000; // Assume 20xx
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthIndex = monthNames.indexOf(month);
+        if (monthIndex !== -1) {
+          return new Date(fullYear, monthIndex, parseInt(day));
+        }
+      }
+      
+      // Handle Excel numeric date format
+      if (/^\d+\.?\d*$/.test(dateStr)) {
+        const daysSince1900 = parseFloat(dateStr);
+        const baseDate = new Date(1900, 0, 1);
+        return new Date(baseDate.getTime() + (daysSince1900 - 2) * 24 * 60 * 60 * 1000);
+      }
+      
+      return null;
+    };
     
     filteredData.forEach(record => {
       const esrKey = `${record.scheme_id}_${record.village_name}_${record.esr_name}`;
@@ -456,21 +497,20 @@ router.get("/export/historical", async (req, res) => {
       if (!esrMap.has(esrKey)) {
         esrMap.set(esrKey, {
           'Scheme ID': record.scheme_id,
+          'Scheme Name': record.scheme_name,
+          'Village Name': record.village_name,
+          'ESR Name': record.esr_name,
           'Region': record.region,
           'Circle': record.circle,
           'Division': record.division,
           'Sub Division': record.sub_division,
-          'Block': record.block,
-          'Scheme Name': record.scheme_name,
-          'Village Name': record.village_name,
-          'ESR Name': record.esr_name,
-          'Dashboard URL': record.dashboard_url || ''
+          'Block': record.block
         });
       }
       
-      // Add chlorine value for the specific date
-      const dateKey = `Chlorine_${record.chlorine_date}`;
-      esrMap.get(esrKey)[dateKey] = record.chlorine_value || 0;
+      // Add chlorine value for the specific date with clean column name
+      const formattedDate = formatDateForColumn(record.chlorine_date);
+      esrMap.get(esrKey)[formattedDate] = parseFloat(record.chlorine_value as string) || 0;
     });
     
     // Convert map to array for Excel
