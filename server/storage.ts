@@ -5,6 +5,7 @@ import {
   appState,
   waterSchemeData,
   chlorineData,
+  chlorineHistory,
   pressureData,
   reportFiles,
   userLoginLogs,
@@ -23,6 +24,8 @@ import {
   type ChlorineData,
   type InsertChlorineData,
   type UpdateChlorineData,
+  type ChlorineHistory,
+  type InsertChlorineHistory,
   type PressureData,
   type InsertPressureData,
   type UpdatePressureData,
@@ -2033,6 +2036,74 @@ export class PostgresStorage implements IStorage {
         }
       }
 
+      // NEW: Store historical data by unpacking 7-day records into individual entries
+      console.log("Storing historical chlorine data...");
+      const uploadBatchId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const historicalRecords: InsertChlorineHistory[] = [];
+      
+      // Process all records (both new and updated) for historical storage
+      const allProcessedRecords = [...recordsToInsert, ...recordsToUpdate];
+      
+      for (const record of allProcessedRecords) {
+        // Unpack 7-day data into individual historical entries
+        for (let day = 1; day <= 7; day++) {
+          const dateField = `chlorine_date_day_${day}` as keyof typeof record;
+          const valueField = `chlorine_value_${day}` as keyof typeof record;
+          
+          const chlorineDate = record[dateField] as string;
+          const chlorineValue = record[valueField] as string;
+          
+          // Only store if both date and value exist
+          if (chlorineDate && chlorineValue !== null && chlorineValue !== undefined) {
+            historicalRecords.push({
+              region: record.region as string,
+              circle: record.circle as string,
+              division: record.division as string,
+              sub_division: record.sub_division as string,
+              block: record.block as string,
+              scheme_id: record.scheme_id as string,
+              scheme_name: record.scheme_name as string,
+              village_name: record.village_name as string,
+              esr_name: record.esr_name as string,
+              chlorine_date: chlorineDate,
+              chlorine_value: chlorineValue,
+              upload_batch_id: uploadBatchId,
+              dashboard_url: record.dashboard_url as string
+            });
+          }
+        }
+      }
+      
+      if (historicalRecords.length > 0) {
+        console.log(`Storing ${historicalRecords.length} historical chlorine records...`);
+        
+        // Insert historical records in batches
+        const historyBatchSize = 200;
+        for (let i = 0; i < historicalRecords.length; i += historyBatchSize) {
+          const batch = historicalRecords.slice(i, i + historyBatchSize);
+          
+          try {
+            // Use ON CONFLICT to handle duplicates - keep the most recent upload
+            await db.insert(chlorineHistory).values(batch).onConflictDoNothing({
+              target: [
+                chlorineHistory.scheme_id,
+                chlorineHistory.village_name,
+                chlorineHistory.esr_name,
+                chlorineHistory.chlorine_date,
+                chlorineHistory.uploaded_at
+              ]
+            });
+            
+            console.log(`Stored historical batch ${Math.floor(i/historyBatchSize) + 1}/${Math.ceil(historicalRecords.length/historyBatchSize)}`);
+          } catch (historyError) {
+            console.error(`Error storing historical batch ${Math.floor(i/historyBatchSize) + 1}:`, historyError);
+            errors.push(`Historical storage error: ${historyError}`);
+          }
+        }
+        
+        console.log(`✅ Successfully stored ${historicalRecords.length} historical chlorine records with batch ID: ${uploadBatchId}`);
+      }
+
       // Calculate elapsed time
       const endTime = Date.now();
       const elapsedSeconds = (endTime - startTime) / 1000;
@@ -2396,6 +2467,199 @@ export class PostgresStorage implements IStorage {
         consistentOptimalSensors: 0,
         consistentAboveRangeSensors: 0
       };
+    }
+  }
+
+  // Chlorine Historical Data Query Functions
+  async getChlorineHistoricalDataByDateRange(
+    startDate: string, 
+    endDate: string, 
+    regionFilter?: string,
+    schemeFilter?: string,
+    villageFilter?: string
+  ): Promise<ChlorineHistory[]> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      console.log(`Querying chlorine historical data from ${startDate} to ${endDate}`);
+      
+      let query = db
+        .select()
+        .from(chlorineHistory)
+        .where(
+          sql`${chlorineHistory.chlorine_date} >= ${startDate} 
+              AND ${chlorineHistory.chlorine_date} <= ${endDate}`
+        );
+      
+      // Apply additional filters
+      if (regionFilter && regionFilter !== 'all') {
+        query = query.where(eq(chlorineHistory.region, regionFilter));
+      }
+      
+      if (schemeFilter) {
+        query = query.where(eq(chlorineHistory.scheme_id, schemeFilter));
+      }
+      
+      if (villageFilter) {
+        query = query.where(eq(chlorineHistory.village_name, villageFilter));
+      }
+      
+      // Order by date and uploaded_at to get latest values for each date
+      query = query.orderBy(
+        chlorineHistory.scheme_id,
+        chlorineHistory.village_name,
+        chlorineHistory.esr_name,
+        chlorineHistory.chlorine_date,
+        sql`${chlorineHistory.uploaded_at} DESC`
+      );
+      
+      const results = await query;
+      
+      // Remove duplicates - keep only the most recent upload for each ESR + date combination
+      const uniqueRecords = new Map<string, ChlorineHistory>();
+      
+      for (const record of results) {
+        const key = `${record.scheme_id}|${record.village_name}|${record.esr_name}|${record.chlorine_date}`;
+        
+        // Only keep if this is the first (most recent) record for this key
+        if (!uniqueRecords.has(key)) {
+          uniqueRecords.set(key, record);
+        }
+      }
+      
+      const finalResults = Array.from(uniqueRecords.values());
+      console.log(`Found ${finalResults.length} unique chlorine records for date range ${startDate} to ${endDate}`);
+      
+      return finalResults;
+    } catch (error) {
+      console.error('Error querying chlorine historical data by date range:', error);
+      throw error;
+    }
+  }
+
+  async getChlorineHistoricalSummaryByDateRange(
+    startDate: string, 
+    endDate: string, 
+    regionFilter?: string
+  ): Promise<{
+    totalReadings: number;
+    esrCount: number;
+    avgChlorineLevel: number;
+    belowRangeReadings: number;
+    optimalRangeReadings: number;
+    aboveRangeReadings: number;
+    zeroReadings: number;
+  }> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      console.log(`Getting chlorine historical summary from ${startDate} to ${endDate}`);
+      
+      // Build base conditions
+      let whereConditions = sql`${chlorineHistory.chlorine_date} >= ${startDate} 
+                               AND ${chlorineHistory.chlorine_date} <= ${endDate}`;
+      
+      if (regionFilter && regionFilter !== 'all') {
+        whereConditions = sql`${whereConditions} AND ${chlorineHistory.region} = ${regionFilter}`;
+      }
+      
+      // Get the most recent records for each ESR + date combination
+      const latestRecordsQuery = sql`
+        WITH latest_records AS (
+          SELECT DISTINCT ON (scheme_id, village_name, esr_name, chlorine_date)
+            scheme_id, village_name, esr_name, chlorine_date, chlorine_value, uploaded_at
+          FROM ${chlorineHistory}
+          WHERE ${whereConditions}
+          ORDER BY scheme_id, village_name, esr_name, chlorine_date, uploaded_at DESC
+        )
+        SELECT 
+          COUNT(*) as total_readings,
+          COUNT(DISTINCT CONCAT(scheme_id, '|', village_name, '|', esr_name)) as esr_count,
+          AVG(CAST(chlorine_value AS NUMERIC)) as avg_chlorine_level,
+          COUNT(CASE WHEN CAST(chlorine_value AS NUMERIC) < 0.2 AND CAST(chlorine_value AS NUMERIC) > 0 THEN 1 END) as below_range_readings,
+          COUNT(CASE WHEN CAST(chlorine_value AS NUMERIC) >= 0.2 AND CAST(chlorine_value AS NUMERIC) <= 0.5 THEN 1 END) as optimal_range_readings,
+          COUNT(CASE WHEN CAST(chlorine_value AS NUMERIC) > 0.5 THEN 1 END) as above_range_readings,
+          COUNT(CASE WHEN CAST(chlorine_value AS NUMERIC) = 0 OR chlorine_value IS NULL THEN 1 END) as zero_readings
+        FROM latest_records
+      `;
+      
+      const result = await db.execute(latestRecordsQuery);
+      const row = result.rows[0] as any;
+      
+      return {
+        totalReadings: parseInt(row.total_readings) || 0,
+        esrCount: parseInt(row.esr_count) || 0,
+        avgChlorineLevel: parseFloat(row.avg_chlorine_level) || 0,
+        belowRangeReadings: parseInt(row.below_range_readings) || 0,
+        optimalRangeReadings: parseInt(row.optimal_range_readings) || 0,
+        aboveRangeReadings: parseInt(row.above_range_readings) || 0,
+        zeroReadings: parseInt(row.zero_readings) || 0
+      };
+    } catch (error) {
+      console.error('Error getting chlorine historical summary:', error);
+      return {
+        totalReadings: 0,
+        esrCount: 0,
+        avgChlorineLevel: 0,
+        belowRangeReadings: 0,
+        optimalRangeReadings: 0,
+        aboveRangeReadings: 0,
+        zeroReadings: 0
+      };
+    }
+  }
+
+  async getChlorineHistoricalDataForESR(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+    startDate: string,
+    endDate: string
+  ): Promise<ChlorineHistory[]> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      console.log(`Getting chlorine history for ESR ${esrName} in ${villageName} from ${startDate} to ${endDate}`);
+      
+      // Get records for specific ESR within date range, ordered by date and upload time
+      const results = await db
+        .select()
+        .from(chlorineHistory)
+        .where(
+          sql`${chlorineHistory.scheme_id} = ${schemeId} 
+              AND ${chlorineHistory.village_name} = ${villageName}
+              AND ${chlorineHistory.esr_name} = ${esrName}
+              AND ${chlorineHistory.chlorine_date} >= ${startDate} 
+              AND ${chlorineHistory.chlorine_date} <= ${endDate}`
+        )
+        .orderBy(
+          chlorineHistory.chlorine_date,
+          sql`${chlorineHistory.uploaded_at} DESC`
+        );
+      
+      // Remove duplicates - keep only the most recent upload for each date
+      const uniqueRecords = new Map<string, ChlorineHistory>();
+      
+      for (const record of results) {
+        const dateKey = record.chlorine_date!;
+        
+        // Only keep if this is the first (most recent) record for this date
+        if (!uniqueRecords.has(dateKey)) {
+          uniqueRecords.set(dateKey, record);
+        }
+      }
+      
+      const finalResults = Array.from(uniqueRecords.values())
+        .sort((a, b) => a.chlorine_date!.localeCompare(b.chlorine_date!));
+      
+      console.log(`Found ${finalResults.length} unique daily records for ESR ${esrName}`);
+      return finalResults;
+    } catch (error) {
+      console.error(`Error getting chlorine historical data for ESR ${esrName}:`, error);
+      throw error;
     }
   }
   
