@@ -1225,39 +1225,71 @@ export class PostgresStorage implements IStorage {
     const db = await this.ensureInitialized();
 
     try {
-      // Helper function to parse date strings (supports DD-MM-YYYY and YYYY-MM-DD formats)
-      const parseDate = (dateStr: string): string => {
+      // Helper function to convert YYYY-MM-DD to DD-MMM-YY format for database comparison
+      const convertToDbDateFormat = (dateStr: string): string => {
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        
         if (dateStr.includes('-')) {
           const parts = dateStr.split('-');
           if (parts[0].length === 4) {
-            // YYYY-MM-DD format
-            return dateStr;
-          } else {
-            // DD-MM-YYYY format, convert to YYYY-MM-DD
-            return `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            // YYYY-MM-DD format, convert to DD-MMM-YY
+            const year = parts[0].slice(-2); // Get last 2 digits of year
+            const month = months[parseInt(parts[1]) - 1]; // Convert month number to name
+            const day = parts[2].padStart(2, '0');
+            return `${day}-${month}-${year}`;
+          } else if (parts[2].length === 4) {
+            // DD-MM-YYYY format, convert to DD-MMM-YY
+            const year = parts[2].slice(-2);
+            const month = months[parseInt(parts[1]) - 1];
+            const day = parts[0].padStart(2, '0');
+            return `${day}-${month}-${year}`;
           }
         }
         return dateStr; // Return as-is if format is unclear
       };
 
-      const startDate = parseDate(filter.startDate);
-      const endDate = parseDate(filter.endDate);
+      // Convert input dates to database format for comparison
+      const startDateDb = convertToDbDateFormat(filter.startDate);
+      const endDateDb = convertToDbDateFormat(filter.endDate);
+      
+      // Also keep original format for potential direct comparison
+      const startDate = filter.startDate;
+      const endDate = filter.endDate;
 
-      console.log(`Querying chlorine data from ${startDate} to ${endDate}`);
+      console.log(`Querying chlorine data from ${startDate} to ${endDate} (DB format: ${startDateDb} to ${endDateDb})`);
+
+      // Create date range conditions for both input format and database format
+      const createDateRangeConditions = (start: string, end: string) => {
+        // Generate all possible date strings between start and end dates
+        const startDateObj = new Date(start);
+        const endDateObj = new Date(end);
+        const dates = [];
+        
+        for (let d = new Date(startDateObj); d <= endDateObj; d.setDate(d.getDate() + 1)) {
+          const dbFormatDate = convertToDbDateFormat(d.toISOString().split('T')[0]);
+          dates.push(dbFormatDate);
+        }
+        
+        // Create IN clause for exact matches
+        const dateList = dates.map(d => `'${d}'`).join(', ');
+        
+        return `(
+          cd.chlorine_date_day_1 IN (${dateList}) OR
+          cd.chlorine_date_day_2 IN (${dateList}) OR
+          cd.chlorine_date_day_3 IN (${dateList}) OR
+          cd.chlorine_date_day_4 IN (${dateList}) OR
+          cd.chlorine_date_day_5 IN (${dateList}) OR
+          cd.chlorine_date_day_6 IN (${dateList}) OR
+          cd.chlorine_date_day_7 IN (${dateList})
+        )`;
+      };
 
       // Build the unpivot query with deduplication
       let whereConditions = [];
       
-      // Date range condition - check if any of the 7 date fields fall within range
-      whereConditions.push(`(
-        (cd.chlorine_date_day_1 IS NOT NULL AND cd.chlorine_date_day_1 BETWEEN '${startDate}' AND '${endDate}') OR
-        (cd.chlorine_date_day_2 IS NOT NULL AND cd.chlorine_date_day_2 BETWEEN '${startDate}' AND '${endDate}') OR
-        (cd.chlorine_date_day_3 IS NOT NULL AND cd.chlorine_date_day_3 BETWEEN '${startDate}' AND '${endDate}') OR
-        (cd.chlorine_date_day_4 IS NOT NULL AND cd.chlorine_date_day_4 BETWEEN '${startDate}' AND '${endDate}') OR
-        (cd.chlorine_date_day_5 IS NOT NULL AND cd.chlorine_date_day_5 BETWEEN '${startDate}' AND '${endDate}') OR
-        (cd.chlorine_date_day_6 IS NOT NULL AND cd.chlorine_date_day_6 BETWEEN '${startDate}' AND '${endDate}') OR
-        (cd.chlorine_date_day_7 IS NOT NULL AND cd.chlorine_date_day_7 BETWEEN '${startDate}' AND '${endDate}')
-      )`);
+      // Date range condition using exact date matching
+      whereConditions.push(createDateRangeConditions(startDate, endDate));
 
       // Add additional filters
       if (filter.region) {
@@ -1307,7 +1339,6 @@ export class PostgresStorage implements IStorage {
           ${whereClause}
           AND unpivot.measurement_date IS NOT NULL 
           AND unpivot.measurement_date != ''
-          AND unpivot.measurement_date BETWEEN '${startDate}' AND '${endDate}'
           AND unpivot.chlorine_value IS NOT NULL
           ORDER BY cd.scheme_id, cd.village_name, cd.esr_name, measurement_date, query_time DESC
         )
