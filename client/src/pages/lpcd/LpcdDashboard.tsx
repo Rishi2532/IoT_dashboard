@@ -80,6 +80,24 @@ const LpcdDashboard: React.FC = () => {
   useEffect(() => {
     trackPageVisit("Village LPCD Dashboard");
   }, [trackPageVisit]);
+
+  // Listen for region filter changes from chatbot
+  useEffect(() => {
+    const handleRegionFilterChange = (event: CustomEvent) => {
+      const { region } = event.detail;
+      console.log("LPCD Dashboard received region filter:", region);
+      setFilters(prev => ({
+        ...prev,
+        region: region === 'all' ? '' : region
+      }));
+    };
+
+    window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    };
+  }, []);
   
   // Filter state
   const [filters, setFilters] = useState({

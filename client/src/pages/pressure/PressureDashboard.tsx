@@ -135,6 +135,21 @@ const PressureDashboard: React.FC = () => {
     trackPageVisit("Pressure Dashboard");
   }, [trackPageVisit]);
 
+  // Listen for region filter changes from chatbot
+  useEffect(() => {
+    const handleRegionFilterChange = (event: CustomEvent) => {
+      const { region } = event.detail;
+      console.log("Pressure Dashboard received region filter:", region);
+      setSelectedRegion(region);
+    };
+
+    window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    };
+  }, []);
+
   // Global filter state (affects both cards and table data)
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");

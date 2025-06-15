@@ -174,6 +174,21 @@ const ChlorineDashboard: React.FC = () => {
     trackPageVisit("Chlorine Dashboard");
   }, [trackPageVisit]);
 
+  // Listen for region filter changes from chatbot
+  useEffect(() => {
+    const handleRegionFilterChange = (event: CustomEvent) => {
+      const { region } = event.detail;
+      console.log("Chlorine Dashboard received region filter:", region);
+      setSelectedRegion(region);
+    };
+
+    window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    };
+  }, []);
+
   // Fetch all chlorine data
   const {
     data: allChlorineData = [],
