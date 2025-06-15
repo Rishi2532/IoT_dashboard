@@ -558,6 +558,10 @@ const CustomChatbot = () => {
             statusDescription = "fully completed";
           } else if (statusFilters.status === "in_progress") {
             statusDescription = "in progress";
+          } else if (statusFilters.status === "connected") {
+            statusDescription = "connected IoT";
+          } else if (statusFilters.status === "not_connected") {
+            statusDescription = "not connected IoT";
           }
           
           response = `I've filtered the dashboard to show ${statusDescription} schemes across Maharashtra.`;
