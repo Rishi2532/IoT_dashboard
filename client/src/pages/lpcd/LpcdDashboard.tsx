@@ -119,7 +119,7 @@ const LpcdDashboard: React.FC = () => {
     error: schemesError,
     refetch
   } = useQuery<WaterSchemeData[]>({
-    queryKey: ['/api/water-scheme-data'],
+    queryKey: ['/api/water-scheme-data', filters.region],
     queryFn: async () => {
       // Only apply region filter on server-side for performance
       const params = new URLSearchParams();
