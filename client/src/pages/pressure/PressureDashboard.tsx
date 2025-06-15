@@ -161,7 +161,11 @@ const PressureDashboard: React.FC = () => {
       if (status === "fully_completed") {
         setSchemeStatusFilter("Fully Completed");
       } else if (status === "in_progress") {
-        setSchemeStatusFilter("Partial Integration");
+        setSchemeStatusFilter("In Progress");
+      } else if (status === "connected") {
+        setSchemeStatusFilter("Connected");
+      } else if (status === "not_connected") {
+        setSchemeStatusFilter("Not-Connected");
       } else {
         setSchemeStatusFilter("all");
       }

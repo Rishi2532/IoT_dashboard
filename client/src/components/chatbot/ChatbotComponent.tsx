@@ -239,6 +239,14 @@ const CustomChatbot = () => {
       statusFilters.status = "in_progress";
     }
     
+    if (normalizedText.includes("connected") && !normalizedText.includes("not connected") && !normalizedText.includes("disconnect")) {
+      statusFilters.status = "connected";
+    }
+    
+    if (normalizedText.includes("not connected") || normalizedText.includes("disconnect") || normalizedText.includes("not-connected")) {
+      statusFilters.status = "not_connected";
+    }
+    
     if (normalizedText.includes("commissioned") || normalizedText.includes("commission")) {
       if (!statusFilters.mjpCommissioned) { // Only set if MJP commissioned not already set
         statusFilters.mjpCommissioned = true;
@@ -529,6 +537,10 @@ const CustomChatbot = () => {
             statusDescription = " with fully completed status";
           } else if (statusFilters.status === "in_progress") {
             statusDescription = " with in progress status";
+          } else if (statusFilters.status === "connected") {
+            statusDescription = " with connected IoT status";
+          } else if (statusFilters.status === "not_connected") {
+            statusDescription = " with not connected IoT status";
           }
           
           response = `I've filtered the dashboard to show schemes in ${region} region${statusDescription}.`;
@@ -586,6 +598,10 @@ const CustomChatbot = () => {
               statusDescription = " with fully completed status";
             } else if (statusFilters.status === "in_progress") {
               statusDescription = " with in progress status";
+            } else if (statusFilters.status === "connected") {
+              statusDescription = " with connected IoT status";
+            } else if (statusFilters.status === "not_connected") {
+              statusDescription = " with not connected IoT status";
             }
 
             response = `I'll help you download an Excel file with schemes in ${region} region${statusDescription}. The download will start shortly.`;
@@ -603,6 +619,10 @@ const CustomChatbot = () => {
               statusDescription = "fully completed";
             } else if (statusFilters.status === "in_progress") {
               statusDescription = "in progress";
+            } else if (statusFilters.status === "connected") {
+              statusDescription = "connected IoT";
+            } else if (statusFilters.status === "not_connected") {
+              statusDescription = "not connected IoT";
             }
             
             response = `I'll help you download an Excel file with ${statusDescription} schemes across Maharashtra. The download will start shortly.`;
