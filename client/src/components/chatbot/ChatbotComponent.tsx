@@ -194,9 +194,7 @@ const CustomChatbot = () => {
 
         // Extract region from query with enhanced detection
         const region = extractRegion(text);
-        if (region) {
-          console.log(`Region detected: ${region}`);
-        }
+        console.log(`Region extraction result for "${text}":`, region);
 
         // Extract scheme ID or name if present - try different pattern matches
         let schemeId = null;
@@ -290,8 +288,35 @@ const CustomChatbot = () => {
           lowerText.includes("completed scheme") ||
           lowerText.includes("completed schemes");
 
+        // PRIORITY 1: Handle region filtering first (before other conditions)
+        if (region && !isHowManyQuery) {
+          console.log(`Priority region filter triggered for: ${region}`);
+          filters = { region };
+          
+          const currentPath = window.location.pathname;
+          let pageContext = "";
+          
+          if (currentPath.includes('/chlorine')) {
+            pageContext = "chlorine monitoring data";
+          } else if (currentPath.includes('/pressure')) {
+            pageContext = "pressure monitoring data";
+          } else if (currentPath.includes('/lpcd')) {
+            pageContext = "LPCD water consumption data";
+          } else if (currentPath.includes('/scheme-lpcd')) {
+            pageContext = "scheme-level LPCD data";
+          } else {
+            pageContext = "dashboard data";
+          }
+          
+          if (hasStatusFilter) {
+            filters.status = "Fully Completed";
+            response = `Filtering ${pageContext} for fully completed schemes in ${region} region.`;
+          } else {
+            response = `Filtering ${pageContext} for ${region} region. The dashboard now shows only ${region}'s information.`;
+          }
+        }
         // Handle greeting queries
-        if (lowerText.includes("hello") || lowerText.includes("hi")) {
+        else if (lowerText.includes("hello") || lowerText.includes("hi")) {
           response =
             "Hello! How can I help you with Maharashtra's water infrastructure today? You can ask me about flow meters, chlorine analyzers, ESRs, or villages in specific regions or schemes.";
         } 
@@ -399,34 +424,6 @@ const CustomChatbot = () => {
           } catch (error) {
             console.error("Error fetching infrastructure data:", error);
             response = "Sorry, I couldn't fetch the requested infrastructure information at the moment.";
-          }
-        } 
-        // Prioritize region filtering - check for region first
-        else if (region) {
-          filters = { region };
-          
-          // Get current page for contextual response
-          const currentPath = window.location.pathname;
-          let pageContext = "";
-          
-          if (currentPath.includes('/chlorine')) {
-            pageContext = "chlorine monitoring data";
-          } else if (currentPath.includes('/pressure')) {
-            pageContext = "pressure monitoring data";
-          } else if (currentPath.includes('/lpcd')) {
-            pageContext = "LPCD water consumption data";
-          } else if (currentPath.includes('/scheme-lpcd')) {
-            pageContext = "scheme-level LPCD data";
-          } else {
-            pageContext = "dashboard data";
-          }
-          
-          // Check if user also wants specific status filter
-          if (hasStatusFilter) {
-            filters.status = "Fully Completed";
-            response = `Filtering ${pageContext} for fully completed schemes in ${region} region.`;
-          } else {
-            response = `Filtering ${pageContext} for ${region} region. The dashboard now shows only ${region}'s information.`;
           }
         }
         // Handle status filter requests without region
