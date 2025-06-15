@@ -195,9 +195,7 @@ const CustomChatbot = () => {
         // Extract region from query with enhanced detection
         const region = extractRegion(text);
         if (region) {
-          console.log(`✓ Detected region: ${region} from text: "${text}"`);
-        } else {
-          console.log(`✗ No region detected in text: "${text}"`);
+          console.log(`Region detected: ${region}`);
         }
 
         // Extract scheme ID or name if present - try different pattern matches
@@ -403,22 +401,8 @@ const CustomChatbot = () => {
             response = "Sorry, I couldn't fetch the requested infrastructure information at the moment.";
           }
         } 
-        // Handle status filter requests
-        else if (hasStatusFilter) {
-          // If region is specified, apply both filters
-          if (region) {
-            filters = { region, status: "Fully Completed" };
-            response = `I've filtered the dashboard to show fully completed schemes in ${region} region.`;
-          } else {
-            // Apply just the status filter
-            filters = { status: "Fully Completed" };
-            response =
-              "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
-          }
-        } 
-        // Handle region filter requests
+        // Prioritize region filtering - check for region first
         else if (region) {
-          // Just filter by region
           filters = { region };
           
           // Get current page for contextual response
@@ -437,7 +421,18 @@ const CustomChatbot = () => {
             pageContext = "dashboard data";
           }
           
-          response = `Filtering ${pageContext} for ${region} region. The dashboard now shows only ${region}'s information.`;
+          // Check if user also wants specific status filter
+          if (hasStatusFilter) {
+            filters.status = "Fully Completed";
+            response = `Filtering ${pageContext} for fully completed schemes in ${region} region.`;
+          } else {
+            response = `Filtering ${pageContext} for ${region} region. The dashboard now shows only ${region}'s information.`;
+          }
+        }
+        // Handle status filter requests without region
+        else if (hasStatusFilter) {
+          filters = { status: "Fully Completed" };
+          response = "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
         } 
         // Handle Excel download requests
         else if (
