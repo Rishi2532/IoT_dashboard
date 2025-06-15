@@ -166,7 +166,7 @@ class MessageParser {
     // Handle comparing regions
     if (lowerCaseMessage.includes('compare')) {
       const regions = [];
-      for (const region of regionNames) {
+      for (const region of this.regionNames) {
         if (lowerCaseMessage.includes(region)) {
           regions.push(region);
         }

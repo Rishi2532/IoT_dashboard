@@ -30,9 +30,12 @@ import ChatbotComponent from "./components/chatbot/ChatbotComponent";
 import { TranslationProvider } from "./contexts/TranslationContext";
 import { ThemeProvider } from "./components/theme/theme-provider";
 import { GeoFilterProvider } from "./contexts/GeoFilterContext";
+import { PageContextProvider } from "./contexts/PageContext";
+import { RegionFilterProvider } from "./contexts/RegionFilterContext";
 import { Toaster } from "./components/ui/toaster";
 import { CurrentDate } from "./components/dashboard/CurrentDate";
 import Header from "./components/dashboard/header";
+import RegionFilterExample from "./components/chatbot/RegionFilterExample";
 function App() {
   const [location] = useLocation();
 
@@ -58,15 +61,17 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <GeoFilterProvider>
-          <TranslationProvider>
-            <header />
-            {/* Floating current date */}
+          <RegionFilterProvider>
+            <PageContextProvider>
+              <TranslationProvider>
+                <header />
+                {/* Floating current date */}
 
-            {!shouldHideChatbot && (
-              <div className="fixed top-20 right-6 p-2 bg-white shadow-md z-50 text-xs rounded">
-                Last Update: <CurrentDate />
-              </div>
-            )}
+                {!shouldHideChatbot && (
+                  <div className="fixed top-20 right-6 p-2 bg-white shadow-md z-50 text-xs rounded">
+                    Last Update: <CurrentDate />
+                  </div>
+                )}
 
             {/* Global styles to fix z-index issues */}
             <style
@@ -201,19 +206,21 @@ function App() {
               <Route component={NotFound} />
             </Switch>
 
-            {/* JJM Assistant Chatbot (conditionally rendered based on route) */}
-            {!shouldHideChatbot && (
-              <>
-                {/* JJM Assistant Chatbot */}
-                <FilterContextProvider
-                  setSelectedRegion={() => {}}
-                  setStatusFilter={() => {}}
-                >
-                  <ChatbotComponent />
-                </FilterContextProvider>
-              </>
-            )}
-          </TranslationProvider>
+                {/* JJM Assistant Chatbot (conditionally rendered based on route) */}
+                {!shouldHideChatbot && (
+                  <>
+                    {/* JJM Assistant Chatbot */}
+                    <FilterContextProvider
+                      setSelectedRegion={() => {}}
+                      setStatusFilter={() => {}}
+                    >
+                      <ChatbotComponent />
+                    </FilterContextProvider>
+                  </>
+                )}
+              </TranslationProvider>
+            </PageContextProvider>
+          </RegionFilterProvider>
         </GeoFilterProvider>
       </AuthProvider>
     </ThemeProvider>
