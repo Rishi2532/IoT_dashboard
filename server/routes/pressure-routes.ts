@@ -337,58 +337,110 @@ router.get("/export/historical", async (req, res) => {
       });
     }
     
-    // Transform data for Excel export
-    const excelData = historicalData.map(row => ({
-      'Region': row.region,
-      'Circle': row.circle,
-      'Division': row.division,
-      'Sub Division': row.sub_division,
-      'Block': row.block,
-      'Scheme ID': row.scheme_id,
-      'Scheme Name': row.scheme_name,
-      'Village Name': row.village_name,
-      'ESR Name': row.esr_name,
-      'Measurement Date': row.measurement_date,
-      'Pressure Value (bar)': row.pressure_value,
-      'Dashboard URL': row.dashboard_url || 'N/A',
-    }));
+    // Transform data for Excel export - match chlorine format with dates as columns
+    // Group by ESR and create date-wise columns (one column per date)
+    const esrMap = new Map();
     
-    // Create workbook
+    // Helper function to format date for column headers
+    const formatDateForColumn = (dateStr: string): string => {
+      // Handle different date formats and convert to a standard display format
+      const date = parseDate(dateStr);
+      if (date) {
+        return date.toISOString().split('T')[0]; // YYYY-MM-DD format
+      }
+      return dateStr; // fallback to original string
+    };
+    
+    // Helper function to parse various date formats (same as in chlorine export)
+    const parseDate = (dateStr: string): Date | null => {
+      if (!dateStr) return null;
+      
+      // Handle YYYY-MM-DD format
+      if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return new Date(dateStr);
+      }
+      
+      // Handle DD-MMM-YY format (e.g., "03-Jun-25")
+      if (/^\d{2}-[A-Za-z]{3}-\d{2}$/.test(dateStr)) {
+        const [day, month, year] = dateStr.split('-');
+        const fullYear = parseInt(year) + 2000; // Assume 20xx
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const monthIndex = monthNames.indexOf(month);
+        if (monthIndex !== -1) {
+          return new Date(fullYear, monthIndex, parseInt(day));
+        }
+      }
+      
+      // Handle Excel numeric date format
+      if (/^\d+\.?\d*$/.test(dateStr)) {
+        const daysSince1900 = parseFloat(dateStr);
+        const baseDate = new Date(1900, 0, 1);
+        return new Date(baseDate.getTime() + (daysSince1900 - 2) * 24 * 60 * 60 * 1000);
+      }
+      
+      return null;
+    };
+    
+    historicalData.forEach(record => {
+      const esrKey = `${record.scheme_id}_${record.village_name}_${record.esr_name}`;
+      
+      if (!esrMap.has(esrKey)) {
+        esrMap.set(esrKey, {
+          'Scheme ID': record.scheme_id,
+          'Scheme Name': record.scheme_name,
+          'Village Name': record.village_name,
+          'ESR Name': record.esr_name,
+          'Region': record.region,
+          'Circle': record.circle,
+          'Division': record.division,
+          'Sub Division': record.sub_division,
+          'Block': record.block
+        });
+      }
+      
+      // Add pressure value for the specific date with clean column name
+      const formattedDate = formatDateForColumn(record.measurement_date);
+      esrMap.get(esrKey)[formattedDate] = parseFloat(record.pressure_value?.toString() || '0') || 0;
+    });
+    
+    // Convert map to array for Excel
+    const excelData = Array.from(esrMap.values());
+    
+    // Create workbook and worksheet
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     
-    // Set column widths
-    const columnWidths = [
-      { wch: 15 }, // Region
-      { wch: 15 }, // Circle
-      { wch: 15 }, // Division
-      { wch: 15 }, // Sub Division
-      { wch: 15 }, // Block
-      { wch: 12 }, // Scheme ID
-      { wch: 30 }, // Scheme Name
-      { wch: 20 }, // Village Name
-      { wch: 25 }, // ESR Name
-      { wch: 15 }, // Measurement Date
-      { wch: 18 }, // Pressure Value
-      { wch: 40 }, // Dashboard URL
-    ];
-    worksheet['!cols'] = columnWidths;
+    // Auto-size columns
+    const colWidths: Array<{ wch: number }> = [];
+    if (excelData.length > 0) {
+      Object.keys(excelData[0]).forEach(key => {
+        const maxWidth = Math.max(
+          key.length,
+          ...excelData.map(row => String(row[key] || '').length)
+        );
+        colWidths.push({ wch: Math.min(maxWidth + 2, 50) });
+      });
+      worksheet['!cols'] = colWidths;
+    }
     
-    XLSX.utils.book_append_sheet(workbook, worksheet, 'Historical Pressure Data');
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Pressure Historical Data");
     
     // Generate filename
-    const regionFilter = region && region !== 'all' ? `_${region}` : '_all_regions';
-    const filename = `Pressure_Historical_Data${regionFilter}_${startDate}_to_${endDate}.xlsx`;
+    const fileName = `Pressure_Data_${region || 'all'}_${new Date().toISOString().split('T')[0]}_${Date.now()}.xlsx`;
     
-    // Write to buffer
-    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    // Generate Excel buffer
+    const buffer = XLSX.write(workbook, { 
+      type: 'buffer', 
+      bookType: 'xlsx' 
+    });
     
     // Set response headers for file download
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', `attachment; filename=${filename}`);
+    res.setHeader('Content-Disposition', `attachment; filename=${fileName}`);
     res.setHeader('Content-Length', buffer.length);
     
-    console.log(`Exporting ${historicalData.length} historical pressure records to ${filename}`);
+    console.log(`Exporting ${excelData.length} ESRs with historical pressure data to Excel`);
     
     // Send the buffer
     res.send(buffer);
