@@ -216,6 +216,9 @@ function App() {
                     >
                       <ChatbotComponent />
                     </FilterContextProvider>
+                    
+                    {/* Region Filter Indicator */}
+                    <RegionFilterExample />
                   </>
                 )}
               </TranslationProvider>
