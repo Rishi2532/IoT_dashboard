@@ -213,6 +213,41 @@ const CustomChatbot = () => {
     return null;
   };
 
+  // Enhanced status extraction from query
+  const extractStatus = (text: string): { status?: string; mjpCommissioned?: boolean; mjpFullyCompleted?: boolean } => {
+    const normalizedText = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, " ");
+    
+    const statusFilters: { status?: string; mjpCommissioned?: boolean; mjpFullyCompleted?: boolean } = {};
+    
+    // MJP status patterns
+    if (normalizedText.includes("mjp fully completed") || normalizedText.includes("mjp complete")) {
+      statusFilters.mjpFullyCompleted = true;
+    }
+    
+    if (normalizedText.includes("mjp commissioned") || normalizedText.includes("mjp commission")) {
+      statusFilters.mjpCommissioned = true;
+    }
+    
+    // General status patterns
+    if (normalizedText.includes("fully completed") || normalizedText.includes("complete")) {
+      if (!statusFilters.mjpFullyCompleted) { // Only set if MJP fully completed not already set
+        statusFilters.status = "fully_completed";
+      }
+    }
+    
+    if (normalizedText.includes("in progress") || normalizedText.includes("progress") || normalizedText.includes("ongoing")) {
+      statusFilters.status = "in_progress";
+    }
+    
+    if (normalizedText.includes("commissioned") || normalizedText.includes("commission")) {
+      if (!statusFilters.mjpCommissioned) { // Only set if MJP commissioned not already set
+        statusFilters.mjpCommissioned = true;
+      }
+    }
+    
+    return statusFilters;
+  };
+
   // Process user message
   const handleSendMessage = async (text: string = input) => {
     if (!text.trim()) return;
@@ -228,14 +263,16 @@ const CustomChatbot = () => {
     setTimeout(async () => {
       try {
         let response = "";
-        let filters: { region?: string; status?: string; schemeId?: string } = {};
+        let filters: { region?: string; status?: string; schemeId?: string; mjpCommissioned?: boolean; mjpFullyCompleted?: boolean } = {};
 
         const lowerText = text.toLowerCase();
         console.log(`Processing query: "${lowerText}"`);
 
-        // Extract region from query with enhanced detection
+        // Extract region and status from query with enhanced detection
         const region = extractRegion(text);
+        const statusFilters = extractStatus(text);
         console.log(`Region extraction result for "${text}":`, region);
+        console.log(`Status extraction result for "${text}":`, statusFilters);
 
         // Extract scheme ID or name if present - try different pattern matches
         let schemeId = null;
@@ -467,10 +504,51 @@ const CustomChatbot = () => {
             response = "Sorry, I couldn't fetch the requested infrastructure information at the moment.";
           }
         }
+        // Handle region filtering with or without status
+        else if (region) {
+          filters = { region };
+          
+          // Apply status filters if detected
+          if (statusFilters.status) {
+            filters.status = statusFilters.status;
+          }
+          if (statusFilters.mjpCommissioned) {
+            filters.mjpCommissioned = statusFilters.mjpCommissioned;
+          }
+          if (statusFilters.mjpFullyCompleted) {
+            filters.mjpFullyCompleted = statusFilters.mjpFullyCompleted;
+          }
+
+          // Build response message
+          let statusDescription = "";
+          if (statusFilters.mjpFullyCompleted) {
+            statusDescription = " with MJP fully completed status";
+          } else if (statusFilters.mjpCommissioned) {
+            statusDescription = " with MJP commissioned status";
+          } else if (statusFilters.status === "fully_completed") {
+            statusDescription = " with fully completed status";
+          } else if (statusFilters.status === "in_progress") {
+            statusDescription = " with in progress status";
+          }
+          
+          response = `I've filtered the dashboard to show schemes in ${region} region${statusDescription}.`;
+        }
         // Handle status filter requests without region
-        else if (hasStatusFilter) {
-          filters = { status: "Fully Completed" };
-          response = "I've filtered the dashboard to show all fully completed schemes across Maharashtra. The highest completion rates are in Nashik and Pune regions.";
+        else if (Object.keys(statusFilters).length > 0) {
+          filters = { ...statusFilters };
+          
+          let statusDescription = "";
+          if (statusFilters.mjpFullyCompleted) {
+            statusDescription = "MJP fully completed";
+          } else if (statusFilters.mjpCommissioned) {
+            statusDescription = "MJP commissioned";
+          } else if (statusFilters.status === "fully_completed") {
+            statusDescription = "fully completed";
+          } else if (statusFilters.status === "in_progress") {
+            statusDescription = "in progress";
+          }
+          
+          response = `I've filtered the dashboard to show ${statusDescription} schemes across Maharashtra.`;
         } 
         // Handle Excel download requests
         else if (
@@ -487,29 +565,47 @@ const CustomChatbot = () => {
           if (region) {
             filters = { region };
 
-            // Check if a specific status is also mentioned
-            if (lowerText.includes("fully completed") || 
-                lowerText.includes("complete") || 
-                lowerText.includes("completed schemes")) {
-              filters.status = "Fully Completed";
-              response = `I'll help you download an Excel file with fully completed schemes in ${region} region. The download will start shortly.`;
-            } 
-            else if (lowerText.includes("partial") || 
-                     lowerText.includes("ongoing") || 
-                     lowerText.includes("in progress")) {
-              filters.status = "Partial Integration";
-              response = `I'll help you download an Excel file with partially completed schemes in ${region} region. The download will start shortly.`;
+            // Apply status filters if detected
+            if (statusFilters.status) {
+              filters.status = statusFilters.status;
             }
-            else {
-              response = `I'll help you download an Excel file with all schemes in ${region} region. The download will start shortly.`;
+            if (statusFilters.mjpCommissioned) {
+              filters.mjpCommissioned = statusFilters.mjpCommissioned;
             }
+            if (statusFilters.mjpFullyCompleted) {
+              filters.mjpFullyCompleted = statusFilters.mjpFullyCompleted;
+            }
+
+            // Build response message based on detected filters
+            let statusDescription = "";
+            if (statusFilters.mjpFullyCompleted) {
+              statusDescription = " with MJP fully completed status";
+            } else if (statusFilters.mjpCommissioned) {
+              statusDescription = " with MJP commissioned status";
+            } else if (statusFilters.status === "fully_completed") {
+              statusDescription = " with fully completed status";
+            } else if (statusFilters.status === "in_progress") {
+              statusDescription = " with in progress status";
+            }
+
+            response = `I'll help you download an Excel file with schemes in ${region} region${statusDescription}. The download will start shortly.`;
           }
-          // No region specified, check if status filter is needed
-          else if (lowerText.includes("fully completed") || 
-                  lowerText.includes("complete") || 
-                  lowerText.includes("completed schemes")) {
-            filters = { status: "Fully Completed" };
-            response = `I'll help you download an Excel file with fully completed schemes across Maharashtra. The download will start shortly.`;
+          // No region specified, apply status filters if detected
+          else if (Object.keys(statusFilters).length > 0) {
+            filters = { ...statusFilters };
+            
+            let statusDescription = "";
+            if (statusFilters.mjpFullyCompleted) {
+              statusDescription = "MJP fully completed";
+            } else if (statusFilters.mjpCommissioned) {
+              statusDescription = "MJP commissioned";
+            } else if (statusFilters.status === "fully_completed") {
+              statusDescription = "fully completed";
+            } else if (statusFilters.status === "in_progress") {
+              statusDescription = "in progress";
+            }
+            
+            response = `I'll help you download an Excel file with ${statusDescription} schemes across Maharashtra. The download will start shortly.`;
           }
           else if (lowerText.includes("partial") || 
                   lowerText.includes("ongoing") || 
@@ -676,7 +772,7 @@ const CustomChatbot = () => {
         }
 
         // Apply filters using event-based system that works across all pages
-        if (filters.region || filters.status) {
+        if (filters.region || filters.status || filters.mjpCommissioned || filters.mjpFullyCompleted) {
           console.log('Applying filters to dashboard:', filters);
           
           // Dispatch custom events that dashboard pages can listen to
@@ -691,6 +787,20 @@ const CustomChatbot = () => {
             console.log(`Dispatching statusFilterChange event with status: ${filters.status}`);
             window.dispatchEvent(new CustomEvent('statusFilterChange', {
               detail: { status: filters.status }
+            }));
+          }
+          
+          if (filters.mjpCommissioned) {
+            console.log(`Dispatching mjpCommissionedFilterChange event`);
+            window.dispatchEvent(new CustomEvent('mjpCommissionedFilterChange', {
+              detail: { mjpCommissioned: filters.mjpCommissioned }
+            }));
+          }
+          
+          if (filters.mjpFullyCompleted) {
+            console.log(`Dispatching mjpFullyCompletedFilterChange event`);
+            window.dispatchEvent(new CustomEvent('mjpFullyCompletedFilterChange', {
+              detail: { mjpFullyCompleted: filters.mjpFullyCompleted }
             }));
           }
 
