@@ -125,6 +125,87 @@ const CustomChatbot = () => {
     }
   };
 
+  // Historical data export helper function
+  const triggerHistoricalExport = (startDate: string, endDate: string, region?: string) => {
+    try {
+      console.log(`Attempting to trigger historical export from ${startDate} to ${endDate} for region: ${region || 'all'}`);
+      
+      // Find historical data button
+      const historicalButtons = Array.from(document.querySelectorAll('button'));
+      const historicalButton = historicalButtons.find(btn => {
+        const text = btn.textContent?.toLowerCase() || '';
+        return text.includes('historical') && text.includes('data');
+      });
+      
+      if (historicalButton) {
+        console.log('Found historical data button, clicking to open modal');
+        (historicalButton as HTMLButtonElement).click();
+        
+        // Wait for modal to open, then populate date fields
+        setTimeout(() => {
+          try {
+            // Find and populate start date field
+            const startDateInput = document.querySelector('input[type="date"]') as HTMLInputElement;
+            if (startDateInput) {
+              startDateInput.value = startDate;
+              startDateInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            
+            // Find and populate end date field (usually the second date input)
+            const dateInputs = document.querySelectorAll('input[type="date"]');
+            if (dateInputs.length > 1) {
+              const endDateInput = dateInputs[1] as HTMLInputElement;
+              endDateInput.value = endDate;
+              endDateInput.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            
+            // If region is specified, try to set it in the region dropdown
+            if (region) {
+              setTimeout(() => {
+                const regionSelects = Array.from(document.querySelectorAll('select, [role="combobox"]'));
+                for (const select of regionSelects) {
+                  const options = Array.from(select.querySelectorAll('option, [role="option"]'));
+                  for (const option of options) {
+                    if (option.textContent?.toLowerCase().includes(region.toLowerCase())) {
+                      (option as HTMLElement).click();
+                      break;
+                    }
+                  }
+                }
+              }, 200);
+            }
+            
+            // Wait a bit more then trigger the export
+            setTimeout(() => {
+              const exportButtons = document.querySelectorAll('button');
+              const exportButton = Array.from(exportButtons).find(btn => {
+                const text = btn.textContent?.toLowerCase() || '';
+                return text.includes('export') || text.includes('download');
+              });
+              
+              if (exportButton) {
+                console.log('Triggering historical data export');
+                (exportButton as HTMLButtonElement).click();
+              }
+            }, 500);
+            
+          } catch (error) {
+            console.error('Error setting up historical export:', error);
+          }
+        }, 300);
+        
+      } else {
+        console.warn('Historical data button not found - may not be on chlorine/pressure dashboard');
+        // Fallback to regular export
+        triggerExcelExport();
+      }
+    } catch (error) {
+      console.error('Error triggering historical export:', error);
+      // Fallback to regular export
+      triggerExcelExport();
+    }
+  };
+
   // Enhanced region extraction from query with better pattern matching
   const extractRegion = (text: string): string | null => {
     // Normalize text - convert to lowercase and remove punctuation
@@ -256,6 +337,111 @@ const CustomChatbot = () => {
     return statusFilters;
   };
 
+  // Enhanced date extraction from query
+  const extractDateRange = (text: string): { startDate?: string; endDate?: string } => {
+    const normalizedText = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, " ");
+    
+    const dateRange: { startDate?: string; endDate?: string } = {};
+    
+    // Pattern 1: "from X to Y" format
+    const fromToPattern = /from\s+(\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+\w+\s+\d{4})\s+to\s+(\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+\w+\s+\d{4})/i;
+    const fromToMatch = text.match(fromToPattern);
+    
+    if (fromToMatch) {
+      dateRange.startDate = parseDate(fromToMatch[1]);
+      dateRange.endDate = parseDate(fromToMatch[2]);
+      return dateRange;
+    }
+    
+    // Pattern 2: "between X and Y" format
+    const betweenPattern = /between\s+(\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+\w+\s+\d{4})\s+and\s+(\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+\w+\s+\d{4})/i;
+    const betweenMatch = text.match(betweenPattern);
+    
+    if (betweenMatch) {
+      dateRange.startDate = parseDate(betweenMatch[1]);
+      dateRange.endDate = parseDate(betweenMatch[2]);
+      return dateRange;
+    }
+    
+    // Pattern 3: Single date mentioned - use as end date with 30 days before as start
+    const singleDatePattern = /(\d{1,2}[\s\/\-]\d{1,2}[\s\/\-]\d{4}|\d{1,2}(?:st|nd|rd|th)?\s+\w+\s+\d{4})/i;
+    const singleMatch = text.match(singleDatePattern);
+    
+    if (singleMatch) {
+      const endDate = parseDate(singleMatch[1]);
+      if (endDate) {
+        dateRange.endDate = endDate;
+        // Set start date to 30 days before end date
+        const endDateObj = new Date(endDate);
+        endDateObj.setDate(endDateObj.getDate() - 30);
+        dateRange.startDate = endDateObj.toISOString().split('T')[0];
+      }
+    }
+    
+    return dateRange;
+  };
+
+  // Helper function to parse various date formats
+  const parseDate = (dateStr: string): string | undefined => {
+    try {
+      // Clean up the date string
+      const cleaned = dateStr.trim().replace(/[\s\-]/g, '/');
+      
+      // Handle formats like "2nd june 2025", "9th june", etc.
+      const monthNames = {
+        'january': '01', 'jan': '01',
+        'february': '02', 'feb': '02',
+        'march': '03', 'mar': '03',
+        'april': '04', 'apr': '04',
+        'may': '05',
+        'june': '06', 'jun': '06',
+        'july': '07', 'jul': '07',
+        'august': '08', 'aug': '08',
+        'september': '09', 'sep': '09',
+        'october': '10', 'oct': '10',
+        'november': '11', 'nov': '11',
+        'december': '12', 'dec': '12'
+      };
+      
+      // Pattern for "2nd june 2025" format
+      const monthPattern = /(\d{1,2})(?:st|nd|rd|th)?\s+(\w+)\s*(\d{4})?/i;
+      const monthMatch = dateStr.match(monthPattern);
+      
+      if (monthMatch) {
+        const day = monthMatch[1].padStart(2, '0');
+        const monthName = monthMatch[2].toLowerCase();
+        const year = monthMatch[3] || '2025'; // Default to 2025 if no year specified
+        
+        if (monthNames[monthName as keyof typeof monthNames]) {
+          const month = monthNames[monthName as keyof typeof monthNames];
+          return `${year}-${month}-${day}`;
+        }
+      }
+      
+      // Pattern for numeric dates like "2/6/2025", "02/06/2025"
+      const numericPattern = /(\d{1,2})\/(\d{1,2})\/(\d{4})/;
+      const numericMatch = cleaned.match(numericPattern);
+      
+      if (numericMatch) {
+        const day = numericMatch[1].padStart(2, '0');
+        const month = numericMatch[2].padStart(2, '0');
+        const year = numericMatch[3];
+        return `${year}-${month}-${day}`;
+      }
+      
+      // Try to parse as a standard date
+      const parsed = new Date(dateStr);
+      if (!isNaN(parsed.getTime())) {
+        return parsed.toISOString().split('T')[0];
+      }
+      
+    } catch (error) {
+      console.error('Error parsing date:', dateStr, error);
+    }
+    
+    return undefined;
+  };
+
   // Process user message
   const handleSendMessage = async (text: string = input) => {
     if (!text.trim()) return;
@@ -276,11 +462,13 @@ const CustomChatbot = () => {
         const lowerText = text.toLowerCase();
         console.log(`Processing query: "${lowerText}"`);
 
-        // Extract region and status from query with enhanced detection
+        // Extract region, status, and date range from query with enhanced detection
         const region = extractRegion(text);
         const statusFilters = extractStatus(text);
+        const dateRange = extractDateRange(text);
         console.log(`Region extraction result for "${text}":`, region);
         console.log(`Status extraction result for "${text}":`, statusFilters);
+        console.log(`Date range extraction result for "${text}":`, dateRange);
 
         // Extract scheme ID or name if present - try different pattern matches
         let schemeId = null;
@@ -577,92 +765,111 @@ const CustomChatbot = () => {
         ) {
           console.log("Excel download request detected");
 
-          // If region is specified, first apply the region filter
-          if (region) {
-            filters = { region };
+          // Check if this is a historical data request (date range specified)
+          const isHistoricalRequest = dateRange.startDate && dateRange.endDate;
 
-            // Apply status filters if detected
-            if (statusFilters.status) {
-              filters.status = statusFilters.status;
-            }
-            if (statusFilters.mjpCommissioned) {
-              filters.mjpCommissioned = statusFilters.mjpCommissioned;
-            }
-            if (statusFilters.mjpFullyCompleted) {
-              filters.mjpFullyCompleted = statusFilters.mjpFullyCompleted;
-            }
-
-            // Build response message based on detected filters
-            let statusDescription = "";
-            if (statusFilters.mjpFullyCompleted) {
-              statusDescription = " with MJP fully completed status";
-            } else if (statusFilters.mjpCommissioned) {
-              statusDescription = " with MJP commissioned status";
-            } else if (statusFilters.status === "fully_completed") {
-              statusDescription = " with fully completed status";
-            } else if (statusFilters.status === "in_progress") {
-              statusDescription = " with in progress status";
-            } else if (statusFilters.status === "connected") {
-              statusDescription = " with connected IoT status";
-            } else if (statusFilters.status === "not_connected") {
-              statusDescription = " with not connected IoT status";
-            }
-
-            response = `I'll help you download an Excel file with schemes in ${region} region${statusDescription}. The download will start shortly.`;
-          }
-          // No region specified, apply status filters if detected
-          else if (Object.keys(statusFilters).length > 0) {
-            filters = { ...statusFilters };
+          if (isHistoricalRequest) {
+            console.log("Historical data export request detected");
             
-            let statusDescription = "";
-            if (statusFilters.mjpFullyCompleted) {
-              statusDescription = "MJP fully completed";
-            } else if (statusFilters.mjpCommissioned) {
-              statusDescription = "MJP commissioned";
-            } else if (statusFilters.status === "fully_completed") {
-              statusDescription = "fully completed";
-            } else if (statusFilters.status === "in_progress") {
-              statusDescription = "in progress";
-            } else if (statusFilters.status === "connected") {
-              statusDescription = "connected IoT";
-            } else if (statusFilters.status === "not_connected") {
-              statusDescription = "not connected IoT";
+            let dateDescription = `from ${dateRange.startDate} to ${dateRange.endDate}`;
+            if (region) {
+              response = `I'll help you download historical data for ${region} region ${dateDescription}. Opening the historical data export with your specified date range.`;
+            } else {
+              response = `I'll help you download historical data ${dateDescription}. Opening the historical data export with your specified date range.`;
             }
-            
-            response = `I'll help you download an Excel file with ${statusDescription} schemes across Maharashtra. The download will start shortly.`;
-          }
-          else if (lowerText.includes("partial") || 
-                  lowerText.includes("ongoing") || 
-                  lowerText.includes("in progress")) {
-            filters = { status: "Partial Integration" };
-            response = `I'll help you download an Excel file with partially completed schemes across Maharashtra. The download will start shortly.`;
-          }
-          else {
-            response = `I'll help you download an Excel file with all water schemes across Maharashtra. The download will start shortly.`;
-          }
 
-          // Apply filters first if any were specified
-          if (filterContext && filters) {
-            filterContext.applyFilters(filters);
-          }
-
-          // Apply region filter first if specified, then trigger download
-          if (region) {
-            console.log(`Applying region filter: ${region} before Excel export`);
-            window.dispatchEvent(new CustomEvent('regionFilterChange', {
-              detail: { region: region }
-            }));
-            
-            // Wait a moment for filter to apply, then trigger export
+            // Trigger historical export with date range and region
             setTimeout(() => {
-              triggerExcelExport();
-            }, 500);
+              triggerHistoricalExport(dateRange.startDate!, dateRange.endDate!, region || undefined);
+            }, 1000);
+
           } else {
-            // Trigger immediate export for all regions
-            triggerExcelExport();
+            // Regular export without date range
+            if (region) {
+              filters = { region };
+
+              // Apply status filters if detected
+              if (statusFilters.status) {
+                filters.status = statusFilters.status;
+              }
+              if (statusFilters.mjpCommissioned) {
+                filters.mjpCommissioned = statusFilters.mjpCommissioned;
+              }
+              if (statusFilters.mjpFullyCompleted) {
+                filters.mjpFullyCompleted = statusFilters.mjpFullyCompleted;
+              }
+
+              // Build response message based on detected filters
+              let statusDescription = "";
+              if (statusFilters.mjpFullyCompleted) {
+                statusDescription = " with MJP fully completed status";
+              } else if (statusFilters.mjpCommissioned) {
+                statusDescription = " with MJP commissioned status";
+              } else if (statusFilters.status === "fully_completed") {
+                statusDescription = " with fully completed status";
+              } else if (statusFilters.status === "in_progress") {
+                statusDescription = " with in progress status";
+              } else if (statusFilters.status === "connected") {
+                statusDescription = " with connected IoT status";
+              } else if (statusFilters.status === "not_connected") {
+                statusDescription = " with not connected IoT status";
+              }
+
+              response = `I'll help you download an Excel file with schemes in ${region} region${statusDescription}. The download will start shortly.`;
+            }
+            // No region specified, apply status filters if detected
+            else if (Object.keys(statusFilters).length > 0) {
+              filters = { ...statusFilters };
+              
+              let statusDescription = "";
+              if (statusFilters.mjpFullyCompleted) {
+                statusDescription = "MJP fully completed";
+              } else if (statusFilters.mjpCommissioned) {
+                statusDescription = "MJP commissioned";
+              } else if (statusFilters.status === "fully_completed") {
+                statusDescription = "fully completed";
+              } else if (statusFilters.status === "in_progress") {
+                statusDescription = "in progress";
+              } else if (statusFilters.status === "connected") {
+                statusDescription = "connected IoT";
+              } else if (statusFilters.status === "not_connected") {
+                statusDescription = "not connected IoT";
+              }
+              
+              response = `I'll help you download an Excel file with ${statusDescription} schemes across Maharashtra. The download will start shortly.`;
+            }
+            else if (lowerText.includes("partial") || 
+                    lowerText.includes("ongoing") || 
+                    lowerText.includes("in progress")) {
+              filters = { status: "Partial Integration" };
+              response = `I'll help you download an Excel file with partially completed schemes across Maharashtra. The download will start shortly.`;
+            }
+            else {
+              response = `I'll help you download an Excel file with all water schemes across Maharashtra. The download will start shortly.`;
+            }
+
+            // Apply filters first if any were specified
+            if (filterContext && filters) {
+              filterContext.applyFilters(filters);
+            }
+
+            // Apply region filter first if specified, then trigger download
+            if (region) {
+              console.log(`Applying region filter: ${region} before Excel export`);
+              window.dispatchEvent(new CustomEvent('regionFilterChange', {
+                detail: { region: region }
+              }));
+              
+              // Wait a moment for filter to apply, then trigger export
+              setTimeout(() => {
+                triggerExcelExport();
+              }, 500);
+            } else {
+              // Trigger immediate export for all regions
+              triggerExcelExport();
+            }
           }
         }
-
         // Handle standalone Excel export requests without other keywords
         else if (
           (lowerText.includes("excel") || lowerText.includes("export")) && 
