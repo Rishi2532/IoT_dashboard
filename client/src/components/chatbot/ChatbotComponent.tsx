@@ -13,14 +13,14 @@ import {
   Filter,
   MapPin,
 } from "lucide-react";
+
+
 // Import Voice Recognition component
 import VoiceRecognition from "./VoiceRecognition";
 import TextToSpeech from "./TextToSpeech";
 import ChatbotGuide from "./ChatbotGuide";
 // Import OpenAI integration
 import { getOpenAICompletion, detectLanguage, translateText, LANGUAGE_NAMES } from "@/services/openai-service";
-// Import Excel helper function
-import { triggerExcelExport } from "@/utils/excel-helper";
 
 // Create a context to manage dashboard filter state
 interface DashboardFilterContext {
@@ -485,24 +485,50 @@ const CustomChatbot = () => {
             filterContext.applyFilters(filters);
           }
 
-          // Directly trigger the Excel download (no need to wait for filters)
-          try {
-            // Direct call to manually trigger document click on export button
-            const exportButton = document.querySelector('button[aria-label="Export to Excel"], button:has(.lucide-download), button.border-blue-300');
+          // Apply region filter first if specified, then trigger download
+          if (region) {
+            console.log(`Applying region filter: ${region} before Excel export`);
+            window.dispatchEvent(new CustomEvent('regionFilterChange', {
+              detail: { region: region }
+            }));
+            
+            // Wait a moment for filter to apply, then trigger export
+            setTimeout(() => {
+              triggerExcelExport();
+            }, 500);
+          } else {
+            // Trigger immediate export for all regions
+            triggerExcelExport();
+          }
+        }
 
-            if (exportButton) {
-              console.log("Found export button, clicking it directly");
-              (exportButton as HTMLButtonElement).click();
-            } else {
-              // Fallback to the global method
-              console.log("No export button found, using global export method");
-              await triggerExcelExport();
-            }
-
-            console.log("Excel export triggered successfully");
-          } catch (error) {
-            console.error("Failed to trigger Excel export:", error);
-            // We don't need to update the UI here as the message is already sent
+        // Handle standalone Excel export requests without other keywords
+        else if (
+          (lowerText.includes("excel") || lowerText.includes("export")) && 
+          !isHowManyQuery && 
+          !hasFlowMeters && 
+          !hasChlorineAnalyzers && 
+          !hasPressureTransmitters && 
+          !hasESR && 
+          !hasVillages
+        ) {
+          console.log("Standalone Excel export request detected");
+          
+          if (region) {
+            filters = { region };
+            response = `Downloading Excel file for ${region} region data. The export will start shortly.`;
+            
+            // Apply region filter and trigger export
+            window.dispatchEvent(new CustomEvent('regionFilterChange', {
+              detail: { region: region }
+            }));
+            
+            setTimeout(() => {
+              triggerExcelExport();
+            }, 500);
+          } else {
+            response = `Downloading Excel file with all Maharashtra region data. The export will start shortly.`;
+            triggerExcelExport();
           }
         }
         // Handle summary requests
