@@ -3275,6 +3275,48 @@ export class PostgresStorage implements IStorage {
             }
           }
           
+          // Store historical data - extract daily readings and store in pressure_history table
+          const batchId = uuidv4(); // Generate unique batch ID for this import
+          const historicalRecords: InsertPressureHistory[] = [];
+          
+          // Process each day's data (1-7) and create historical records
+          for (let day = 1; day <= 7; day++) {
+            const pressureValueKey = `pressure_value_${day}` as keyof typeof pressureRecord;
+            const pressureDateKey = `pressure_date_day_${day}` as keyof typeof pressureRecord;
+            
+            const pressureValue = pressureRecord[pressureValueKey];
+            const pressureDate = pressureRecord[pressureDateKey];
+            
+            // Only create historical record if we have both date and value
+            if (pressureDate && pressureValue !== null && pressureValue !== undefined) {
+              historicalRecords.push({
+                region: pressureRecord.region as string,
+                circle: pressureRecord.circle as string,
+                division: pressureRecord.division as string,
+                sub_division: pressureRecord.sub_division as string,
+                block: pressureRecord.block as string,
+                scheme_id: pressureRecord.scheme_id as string,
+                scheme_name: pressureRecord.scheme_name as string,
+                village_name: pressureRecord.village_name as string,
+                esr_name: pressureRecord.esr_name as string,
+                pressure_date: pressureDate as string,
+                pressure_value: pressureValue as any,
+                upload_batch_id: batchId,
+                dashboard_url: pressureRecord.dashboard_url as string,
+              });
+            }
+          }
+          
+          // Store the historical records for this ESR
+          if (historicalRecords.length > 0) {
+            try {
+              await db.insert(pressureHistory).values(historicalRecords);
+            } catch (historyError) {
+              console.error(`Error storing pressure history for ${pressureRecord.scheme_id}/${pressureRecord.village_name}/${pressureRecord.esr_name}:`, historyError);
+              // Don't fail the entire import for history storage issues
+            }
+          }
+          
           // Check if record exists using our lookup map
           const key = `${pressureRecord.scheme_id}|${pressureRecord.village_name}|${pressureRecord.esr_name}`;
           
@@ -6721,6 +6763,103 @@ export class PostgresStorage implements IStorage {
     } catch (error) {
       console.error('Error fetching regional population history:', error);
       return [];
+    }
+  }
+
+  // Historical Pressure Data operations
+  async getHistoricalPressureData(filter: {
+    startDate: string;
+    endDate: string;
+    region?: string;
+    scheme_id?: string;
+    village_name?: string;
+    esr_name?: string;
+  }): Promise<Array<{
+    scheme_id: string;
+    region: string;
+    circle: string;
+    division: string;
+    sub_division: string;
+    block: string;
+    scheme_name: string;
+    village_name: string;
+    esr_name: string;
+    measurement_date: string;
+    pressure_value: number;
+    dashboard_url?: string;
+  }>> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    
+    try {
+      let query = db
+        .select({
+          scheme_id: pressureHistory.scheme_id,
+          region: pressureHistory.region,
+          circle: pressureHistory.circle,
+          division: pressureHistory.division,
+          sub_division: pressureHistory.sub_division,
+          block: pressureHistory.block,
+          scheme_name: pressureHistory.scheme_name,
+          village_name: pressureHistory.village_name,
+          esr_name: pressureHistory.esr_name,
+          measurement_date: pressureHistory.pressure_date,
+          pressure_value: pressureHistory.pressure_value,
+          dashboard_url: pressureHistory.dashboard_url,
+        })
+        .from(pressureHistory);
+      
+      // Apply date range filter
+      const conditions = [
+        sql`${pressureHistory.pressure_date} >= ${filter.startDate}`,
+        sql`${pressureHistory.pressure_date} <= ${filter.endDate}`
+      ];
+      
+      // Apply optional filters
+      if (filter.region) {
+        conditions.push(eq(pressureHistory.region, filter.region));
+      }
+      
+      if (filter.scheme_id) {
+        conditions.push(eq(pressureHistory.scheme_id, filter.scheme_id));
+      }
+      
+      if (filter.village_name) {
+        conditions.push(eq(pressureHistory.village_name, filter.village_name));
+      }
+      
+      if (filter.esr_name) {
+        conditions.push(eq(pressureHistory.esr_name, filter.esr_name));
+      }
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      const result = await query.orderBy(
+        pressureHistory.pressure_date,
+        pressureHistory.scheme_id,
+        pressureHistory.village_name,
+        pressureHistory.esr_name
+      );
+      
+      return result.map(row => ({
+        scheme_id: row.scheme_id || '',
+        region: row.region || '',
+        circle: row.circle || '',
+        division: row.division || '',
+        sub_division: row.sub_division || '',
+        block: row.block || '',
+        scheme_name: row.scheme_name || '',
+        village_name: row.village_name || '',
+        esr_name: row.esr_name || '',
+        measurement_date: row.measurement_date || '',
+        pressure_value: parseFloat(row.pressure_value?.toString() || '0'),
+        dashboard_url: row.dashboard_url || undefined,
+      }));
+    } catch (error) {
+      console.error("Error in getHistoricalPressureData:", error);
+      throw error;
     }
   }
 

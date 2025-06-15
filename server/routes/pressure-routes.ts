@@ -24,6 +24,36 @@ const requireAdmin = (req: express.Request, res: express.Response, next: express
   next();
 };
 
+// Get historical pressure data with date range filters
+router.get("/historical", async (req, res) => {
+  try {
+    const { startDate, endDate, region, scheme_id, village_name, esr_name } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: "startDate and endDate are required" });
+    }
+    
+    const filter = {
+      startDate: startDate as string,
+      endDate: endDate as string,
+      region: region as string | undefined,
+      scheme_id: scheme_id as string | undefined,
+      village_name: village_name as string | undefined,
+      esr_name: esr_name as string | undefined,
+    };
+    
+    console.log("Historical pressure data request:", filter);
+    
+    const historicalData = await storage.getHistoricalPressureData(filter);
+    
+    console.log(`Returning ${historicalData.length} historical pressure records`);
+    res.json(historicalData);
+  } catch (error) {
+    console.error("Error getting historical pressure data:", error);
+    res.status(500).json({ error: "Failed to get historical pressure data" });
+  }
+});
+
 // Get all pressure data with optional filters
 router.get("/", async (req, res) => {
   try {
@@ -278,6 +308,93 @@ router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res)
       error: "Failed to process CSV file upload",
       details: error.message || String(error)
     });
+  }
+});
+
+// Export historical pressure data to Excel
+router.get("/export/historical", async (req, res) => {
+  try {
+    const { startDate, endDate, region } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ error: "startDate and endDate are required" });
+    }
+    
+    const filter = {
+      startDate: startDate as string,
+      endDate: endDate as string,
+      region: region as string | undefined,
+    };
+    
+    console.log("Historical pressure export request:", filter);
+    
+    const historicalData = await storage.getHistoricalPressureData(filter);
+    
+    if (historicalData.length === 0) {
+      return res.status(404).json({ 
+        error: "No historical data found for the specified date range" 
+      });
+    }
+    
+    // Transform data for Excel export
+    const excelData = historicalData.map(row => ({
+      'Region': row.region,
+      'Circle': row.circle,
+      'Division': row.division,
+      'Sub Division': row.sub_division,
+      'Block': row.block,
+      'Scheme ID': row.scheme_id,
+      'Scheme Name': row.scheme_name,
+      'Village Name': row.village_name,
+      'ESR Name': row.esr_name,
+      'Measurement Date': row.measurement_date,
+      'Pressure Value (bar)': row.pressure_value,
+      'Dashboard URL': row.dashboard_url || 'N/A',
+    }));
+    
+    // Create workbook
+    const XLSX = require('xlsx');
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    
+    // Set column widths
+    const columnWidths = [
+      { wch: 15 }, // Region
+      { wch: 15 }, // Circle
+      { wch: 15 }, // Division
+      { wch: 15 }, // Sub Division
+      { wch: 15 }, // Block
+      { wch: 12 }, // Scheme ID
+      { wch: 30 }, // Scheme Name
+      { wch: 20 }, // Village Name
+      { wch: 25 }, // ESR Name
+      { wch: 15 }, // Measurement Date
+      { wch: 18 }, // Pressure Value
+      { wch: 40 }, // Dashboard URL
+    ];
+    worksheet['!cols'] = columnWidths;
+    
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Historical Pressure Data');
+    
+    // Generate filename
+    const regionFilter = region && region !== 'all' ? `_${region}` : '_all_regions';
+    const filename = `Pressure_Historical_Data${regionFilter}_${startDate}_to_${endDate}.xlsx`;
+    
+    // Write to buffer
+    const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+    
+    // Set response headers
+    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', buffer.length);
+    
+    console.log(`Exporting ${historicalData.length} historical pressure records to ${filename}`);
+    
+    // Send the buffer
+    res.send(buffer);
+  } catch (error) {
+    console.error("Error exporting historical pressure data:", error);
+    res.status(500).json({ error: "Failed to export historical pressure data" });
   }
 });
 
