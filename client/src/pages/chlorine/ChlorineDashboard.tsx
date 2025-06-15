@@ -174,7 +174,7 @@ const ChlorineDashboard: React.FC = () => {
     trackPageVisit("Chlorine Dashboard");
   }, [trackPageVisit]);
 
-  // Listen for region filter changes from chatbot
+  // Listen for filter changes from chatbot
   useEffect(() => {
     const handleRegionFilterChange = (event: CustomEvent) => {
       const { region } = event.detail;
@@ -182,10 +182,40 @@ const ChlorineDashboard: React.FC = () => {
       setSelectedRegion(region);
     };
 
+    const handleMjpCommissionedFilterChange = (event: CustomEvent) => {
+      const { mjpCommissioned } = event.detail;
+      console.log("Chlorine Dashboard received MJP commissioned filter:", mjpCommissioned);
+      setCommissionedFilter(mjpCommissioned ? "true" : "all");
+    };
+
+    const handleMjpFullyCompletedFilterChange = (event: CustomEvent) => {
+      const { mjpFullyCompleted } = event.detail;
+      console.log("Chlorine Dashboard received MJP fully completed filter:", mjpFullyCompleted);
+      setFullyCompletedFilter(mjpFullyCompleted ? "true" : "all");
+    };
+
+    const handleStatusFilterChange = (event: CustomEvent) => {
+      const { status } = event.detail;
+      console.log("Chlorine Dashboard received status filter:", status);
+      if (status === "fully_completed") {
+        setSchemeStatusFilter("Fully Completed");
+      } else if (status === "in_progress") {
+        setSchemeStatusFilter("Partial Integration");
+      } else {
+        setSchemeStatusFilter("all");
+      }
+    };
+
     window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    window.addEventListener('mjpCommissionedFilterChange', handleMjpCommissionedFilterChange as EventListener);
+    window.addEventListener('mjpFullyCompletedFilterChange', handleMjpFullyCompletedFilterChange as EventListener);
+    window.addEventListener('statusFilterChange', handleStatusFilterChange as EventListener);
     
     return () => {
       window.removeEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+      window.removeEventListener('mjpCommissionedFilterChange', handleMjpCommissionedFilterChange as EventListener);
+      window.removeEventListener('mjpFullyCompletedFilterChange', handleMjpFullyCompletedFilterChange as EventListener);
+      window.removeEventListener('statusFilterChange', handleStatusFilterChange as EventListener);
     };
   }, []);
 

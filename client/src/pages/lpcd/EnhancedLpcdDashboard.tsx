@@ -153,21 +153,53 @@ const EnhancedLpcdDashboard = () => {
     trackPageVisit("Village LPCD Dashboard");
   }, [trackPageVisit]);
 
-  // Listen for region filter changes from chatbot
+  // Listen for filter changes from chatbot
   useEffect(() => {
     const handleRegionFilterChange = (event: CustomEvent) => {
       const { region } = event.detail;
       console.log("Enhanced LPCD Dashboard received region filter:", region);
       const newRegion = region === 'all' ? 'all' : region;
       setSelectedRegion(newRegion);
-      // Reset pagination when filter changes
+      setPage(1);
+    };
+
+    const handleMjpCommissionedFilterChange = (event: CustomEvent) => {
+      const { mjpCommissioned } = event.detail;
+      console.log("Enhanced LPCD Dashboard received MJP commissioned filter:", mjpCommissioned);
+      setCommissionedFilter(mjpCommissioned ? "true" : "all");
+      setPage(1);
+    };
+
+    const handleMjpFullyCompletedFilterChange = (event: CustomEvent) => {
+      const { mjpFullyCompleted } = event.detail;
+      console.log("Enhanced LPCD Dashboard received MJP fully completed filter:", mjpFullyCompleted);
+      setFullyCompletedFilter(mjpFullyCompleted ? "true" : "all");
+      setPage(1);
+    };
+
+    const handleStatusFilterChange = (event: CustomEvent) => {
+      const { status } = event.detail;
+      console.log("Enhanced LPCD Dashboard received status filter:", status);
+      if (status === "fully_completed") {
+        setSchemeStatusFilter("Fully Completed");
+      } else if (status === "in_progress") {
+        setSchemeStatusFilter("Partial Integration");
+      } else {
+        setSchemeStatusFilter("all");
+      }
       setPage(1);
     };
 
     window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    window.addEventListener('mjpCommissionedFilterChange', handleMjpCommissionedFilterChange as EventListener);
+    window.addEventListener('mjpFullyCompletedFilterChange', handleMjpFullyCompletedFilterChange as EventListener);
+    window.addEventListener('statusFilterChange', handleStatusFilterChange as EventListener);
     
     return () => {
       window.removeEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+      window.removeEventListener('mjpCommissionedFilterChange', handleMjpCommissionedFilterChange as EventListener);
+      window.removeEventListener('mjpFullyCompletedFilterChange', handleMjpFullyCompletedFilterChange as EventListener);
+      window.removeEventListener('statusFilterChange', handleStatusFilterChange as EventListener);
     };
   }, []);
 
