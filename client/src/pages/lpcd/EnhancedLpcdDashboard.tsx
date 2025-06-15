@@ -153,6 +153,24 @@ const EnhancedLpcdDashboard = () => {
     trackPageVisit("Village LPCD Dashboard");
   }, [trackPageVisit]);
 
+  // Listen for region filter changes from chatbot
+  useEffect(() => {
+    const handleRegionFilterChange = (event: CustomEvent) => {
+      const { region } = event.detail;
+      console.log("Enhanced LPCD Dashboard received region filter:", region);
+      const newRegion = region === 'all' ? 'all' : region;
+      setSelectedRegion(newRegion);
+      // Reset pagination when filter changes
+      setPage(1);
+    };
+
+    window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    };
+  }, []);
+
   // Fetch all water scheme data
   const {
     data: allWaterSchemeData = [],
