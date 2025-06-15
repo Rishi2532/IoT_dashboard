@@ -5,6 +5,7 @@ import { ZodError } from "zod";
 import { insertPressureDataSchema, updatePressureDataSchema, appState } from "@shared/schema";
 import { getDB } from "../db";
 import { eq } from "drizzle-orm";
+import * as XLSX from 'xlsx';
 
 const router = express.Router();
 
@@ -353,7 +354,6 @@ router.get("/export/historical", async (req, res) => {
     }));
     
     // Create workbook
-    const XLSX = require('xlsx');
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.json_to_sheet(excelData);
     
