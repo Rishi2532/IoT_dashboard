@@ -420,7 +420,24 @@ const CustomChatbot = () => {
         else if (region) {
           // Just filter by region
           filters = { region };
-          response = `I've updated the dashboard to focus on ${region} region and its schemes.`;
+          
+          // Get current page for contextual response
+          const currentPath = window.location.pathname;
+          let pageContext = "";
+          
+          if (currentPath.includes('/chlorine')) {
+            pageContext = "chlorine monitoring data";
+          } else if (currentPath.includes('/pressure')) {
+            pageContext = "pressure monitoring data";
+          } else if (currentPath.includes('/lpcd')) {
+            pageContext = "LPCD water consumption data";
+          } else if (currentPath.includes('/scheme-lpcd')) {
+            pageContext = "scheme-level LPCD data";
+          } else {
+            pageContext = "dashboard data";
+          }
+          
+          response = `Filtering ${pageContext} for ${region} region. The dashboard now shows only ${region}'s information.`;
         } 
         // Handle Excel download requests
         else if (

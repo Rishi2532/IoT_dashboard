@@ -137,6 +137,21 @@ const SchemeLpcdDashboard = () => {
     trackPageVisit("Scheme LPCD Dashboard");
   }, [trackPageVisit]);
 
+  // Listen for region filter changes from chatbot
+  useEffect(() => {
+    const handleRegionFilterChange = (event: CustomEvent) => {
+      const { region } = event.detail;
+      console.log("Scheme LPCD Dashboard received region filter:", region);
+      setSelectedRegion(region === 'all' ? 'all' : region);
+    };
+
+    window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    };
+  }, []);
+
   // Filter state
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [currentFilter, setCurrentFilter] = useState<LpcdRange>("all");

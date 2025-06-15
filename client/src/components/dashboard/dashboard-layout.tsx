@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import Header from "./header";
+import RegionFilterIndicator from "@/components/chatbot/RegionFilterIndicator";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -16,6 +17,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8 xl:px-10 2xl:px-12 max-w-full lg:max-w-[90rem] 2xl:max-w-[120rem]">
           {children}
         </div>
+        {/* Region Filter Indicator */}
+        <RegionFilterIndicator />
       </main>
 
       {/* Company footer */}
