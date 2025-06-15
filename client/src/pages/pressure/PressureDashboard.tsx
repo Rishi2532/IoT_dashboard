@@ -50,6 +50,9 @@ import {
   Download,
   BarChart,
   ExternalLink,
+  Calendar,
+  History,
+  TrendingUp,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -94,6 +97,24 @@ interface PressureData {
 interface RegionData {
   region_id: number;
   region_name: string;
+}
+
+interface HistoricalPressureData {
+  id: number;
+  region: string;
+  circle: string;
+  division: string;
+  sub_division: string;
+  block: string;
+  scheme_id: string;
+  scheme_name: string;
+  village_name: string;
+  esr_name: string;
+  measurement_date: string;
+  pressure_value: number;
+  upload_batch_id: string;
+  dashboard_url?: string;
+  recorded_at: string;
 }
 
 interface ImportStats {
@@ -202,6 +223,18 @@ const PressureDashboard: React.FC = () => {
   // Selected ESR for detailed view
   const [selectedESR, setSelectedESR] = useState<PressureData | null>(null);
 
+  // Historical data state
+  const [showHistoricalData, setShowHistoricalData] = useState(false);
+  const [historicalStartDate, setHistoricalStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30); // Default to 30 days ago
+    return date.toISOString().split('T')[0];
+  });
+  const [historicalEndDate, setHistoricalEndDate] = useState(() => {
+    const date = new Date();
+    return date.toISOString().split('T')[0];
+  });
+
   // Fetch all pressure data
   const {
     data: allPressureData = [],
@@ -293,6 +326,37 @@ const PressureDashboard: React.FC = () => {
         return data;
       },
     });
+
+  // Fetch historical pressure data when dates change
+  const {
+    data: historicalPressureData = [],
+    isLoading: isLoadingHistorical,
+    error: historicalError,
+    refetch: refetchHistorical,
+  } = useQuery<HistoricalPressureData[]>({
+    queryKey: ["/api/pressure/historical", historicalStartDate, historicalEndDate, selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append("startDate", historicalStartDate);
+      params.append("endDate", historicalEndDate);
+      
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/pressure/historical?${queryString}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch historical pressure data");
+      }
+
+      const result = await response.json();
+      return result || [];
+    },
+    enabled: showHistoricalData, // Only fetch when historical view is enabled
+  });
 
   // Get latest pressure value
   const getLatestPressureValue = (data: PressureData): number | null => {
@@ -949,6 +1013,80 @@ const PressureDashboard: React.FC = () => {
       toast({
         title: "Export Failed",
         description: "Failed to export data to Excel. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  // Handler for exporting historical pressure data
+  const exportHistoricalData = async () => {
+    try {
+      const params = new URLSearchParams();
+      params.append("startDate", historicalStartDate);
+      params.append("endDate", historicalEndDate);
+      
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/pressure/export/historical?${queryString}`;
+
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to export historical data");
+      }
+
+      // Get the filename from response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `Pressure_Historical_Data_${historicalStartDate}_to_${historicalEndDate}.xlsx`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename=(.+)/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Convert response to blob and trigger download
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      // Track the export activity
+      trackDataExport(
+        "Pressure Historical Data",
+        filename,
+        historicalPressureData.length,
+        { 
+          dateRange: `${historicalStartDate} to ${historicalEndDate}`,
+          region: selectedRegion !== "all" ? selectedRegion : undefined 
+        },
+        {
+          exportSource: "pressure_historical_dashboard",
+          startDate: historicalStartDate,
+          endDate: historicalEndDate
+        }
+      );
+
+      toast({
+        title: "Export Successful",
+        description: `Historical pressure data exported successfully`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "Failed to export historical data",
         variant: "destructive",
       });
     }
