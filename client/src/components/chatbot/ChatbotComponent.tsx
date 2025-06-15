@@ -88,7 +88,6 @@ const CustomChatbot = () => {
   const extractRegion = (text: string): string | null => {
     // Normalize text - convert to lowercase and remove punctuation
     const normalizedText = text.toLowerCase().replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, " ");
-    console.log(`Normalized text for region extraction: "${normalizedText}"`);
 
     // Expanded region mapping with alternate spellings, typos, and local language variations
     const regionMap: Record<string, string> = {
@@ -158,18 +157,14 @@ const CustomChatbot = () => {
 
     // Standard inclusion check - look for region names in the text
     for (const [key, value] of Object.entries(regionMap)) {
-      console.log(`Checking region key: '${key}' against normalized text`);
-      
       // Add word boundary check for better precision with short region names
       if (key.length <= 4) {
         // For short names like Pune, check for word boundaries
         const pattern = new RegExp(`\\b${key}\\b`, 'i');
         if (pattern.test(normalizedText)) {
-          console.log(`✓ Matched region '${key}' using pattern ${pattern}`);
           return value;
         }
       } else if (normalizedText.includes(key)) {
-        console.log(`✓ Matched region '${key}' using simple inclusion`);
         return value;
       }
     }
@@ -200,9 +195,9 @@ const CustomChatbot = () => {
         // Extract region from query with enhanced detection
         const region = extractRegion(text);
         if (region) {
-          console.log(`Detected region: ${region}`);
+          console.log(`✓ Detected region: ${region} from text: "${text}"`);
         } else {
-          console.log(`No region detected in text: "${text}"`);
+          console.log(`✗ No region detected in text: "${text}"`);
         }
 
         // Extract scheme ID or name if present - try different pattern matches

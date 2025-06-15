@@ -86,10 +86,13 @@ const LpcdDashboard: React.FC = () => {
     const handleRegionFilterChange = (event: CustomEvent) => {
       const { region } = event.detail;
       console.log("LPCD Dashboard received region filter:", region);
+      const newRegion = region === 'all' ? '' : region;
       setFilters(prev => ({
         ...prev,
-        region: region === 'all' ? '' : region
+        region: newRegion
       }));
+      // Reset pagination when filter changes
+      setPage(1);
     };
 
     window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
