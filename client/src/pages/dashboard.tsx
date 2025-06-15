@@ -49,6 +49,21 @@ export default function Dashboard() {
     trackPageVisit("Main Dashboard", window.location.href);
   }, [trackPageVisit]);
 
+  // Listen for region filter changes from chatbot
+  useEffect(() => {
+    const handleRegionFilterChange = (event: CustomEvent) => {
+      const { region } = event.detail;
+      console.log("Main Dashboard received region filter:", region);
+      setSelectedRegion(region === 'all' ? 'all' : region);
+    };
+
+    window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+    };
+  }, []);
+
   // Map configuration
   const mapRef = useRef(null);
 

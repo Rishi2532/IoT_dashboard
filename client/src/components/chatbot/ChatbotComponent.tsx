@@ -599,29 +599,42 @@ const CustomChatbot = () => {
           }
         }
 
-        // Apply filters if available, with logging to debug the issue
-        if (filterContext && (filters.region || filters.status)) {
+        // Apply filters using event-based system that works across all pages
+        if (filters.region || filters.status) {
           console.log('Applying filters to dashboard:', filters);
-          try {
-            filterContext.applyFilters(filters);
-            console.log('Successfully applied filters to dashboard');
-
-            // For status filter, ensure it's properly mapped to the actual status value used by the dashboard
-            if (filters.status === "Fully Completed") {
-              // Make sure this matches the exact string expected by the dashboard filter component
-              const actualFilterValue = "Fully Completed";
-              console.log(`Mapping "Fully Completed" filter to dashboard value: ${actualFilterValue}`);
-              filterContext.setStatusFilter(actualFilterValue);
-            }
-          } catch (e) {
-            console.error('Error applying filters to dashboard:', e);
+          
+          // Dispatch custom events that dashboard pages can listen to
+          if (filters.region) {
+            console.log(`Dispatching regionFilterChange event with region: ${filters.region}`);
+            window.dispatchEvent(new CustomEvent('regionFilterChange', {
+              detail: { region: filters.region }
+            }));
+          }
+          
+          if (filters.status) {
+            console.log(`Dispatching statusFilterChange event with status: ${filters.status}`);
+            window.dispatchEvent(new CustomEvent('statusFilterChange', {
+              detail: { status: filters.status }
+            }));
           }
 
-          // Check if previous message was from voice input to enable auto-speak
-          const prevMessage = messages[messages.length - 1];
-          const autoSpeak = prevMessage?.fromVoice === true;
+          // Also try the filterContext if available (for backward compatibility)
+          if (filterContext) {
+            try {
+              filterContext.applyFilters(filters);
+              console.log('Successfully applied filters via filterContext');
+            } catch (e) {
+              console.error('Error applying filters via filterContext:', e);
+            }
+          }
+        }
 
-          // Add visual indication of filter application
+        // Check if previous message was from voice input to enable auto-speak
+        const prevMessage = messages[messages.length - 1];
+        const autoSpeak = prevMessage?.fromVoice === true;
+
+        // Add response message with filters if any were applied
+        if (filters.region || filters.status) {
           setMessages((prev) => [
             ...prev,
             {
@@ -632,10 +645,6 @@ const CustomChatbot = () => {
             },
           ]);
         } else {
-          // Check if previous message was from voice input to enable auto-speak
-          const prevMessage = messages[messages.length - 1];
-          const autoSpeak = prevMessage?.fromVoice === true;
-
           setMessages((prev) => [...prev, { 
             type: "bot", 
             text: response,
