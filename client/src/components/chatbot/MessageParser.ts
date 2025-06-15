@@ -7,8 +7,27 @@ class MessageParser {
     this.state = state;
   }
 
+  private regionNames = [
+    'amravati', 
+    'nagpur', 
+    'chhatrapati sambhajinagar',
+    'aurangabad', // alias for Chhatrapati Sambhajinagar
+    'nashik', 
+    'pune', 
+    'konkan',
+    'mumbai'
+  ];
+
   parse(message: string) {
     const lowerCaseMessage = message.toLowerCase();
+
+    // Detect region from message
+    const detectedRegion = this.detectRegion(lowerCaseMessage, this.regionNames);
+    
+    // Check if this is a simple region mention for filtering
+    if (detectedRegion && this.isSimpleRegionMention(lowerCaseMessage, detectedRegion)) {
+      return this.actionProvider.handleRegionFilter(detectedRegion);
+    }
 
     // Handle greetings
     if (
@@ -39,21 +58,24 @@ class MessageParser {
       return this.actionProvider.handleShowFullyCompletedSchemes();
     }
 
-    // Handle region-specific queries
-    const regionNames = [
-      'amravati', 
-      'nagpur', 
-      'chhatrapati sambhajinagar', 
-      'nashik', 
-      'pune', 
-      'konkan',
-      'mumbai'
-    ];
-
-    for (const region of regionNames) {
-      if (lowerCaseMessage.includes(region)) {
-        return this.actionProvider.handleSchemesByRegion(region);
+    // Handle region-specific data queries with page context awareness
+    if (detectedRegion) {
+      // Check for specific data type mentions
+      if (this.isChlorineQuery(lowerCaseMessage)) {
+        return this.actionProvider.handleRegionDataQuery(detectedRegion, 'chlorine');
       }
+      if (this.isPressureQuery(lowerCaseMessage)) {
+        return this.actionProvider.handleRegionDataQuery(detectedRegion, 'pressure');
+      }
+      if (this.isLpcdQuery(lowerCaseMessage)) {
+        return this.actionProvider.handleRegionDataQuery(detectedRegion, 'lpcd');
+      }
+      if (this.isWaterDataQuery(lowerCaseMessage)) {
+        return this.actionProvider.handleRegionDataQuery(detectedRegion, 'water');
+      }
+      
+      // Default to page context-aware query
+      return this.actionProvider.handleRegionContextQuery(detectedRegion);
     }
 
     // Handle region summary statistics
@@ -74,7 +96,7 @@ class MessageParser {
       lowerCaseMessage.includes('total scheme')
     ) {
       // Check if this is region specific
-      for (const region of regionNames) {
+      for (const region of this.regionNames) {
         if (lowerCaseMessage.includes(region)) {
           return this.actionProvider.handleSchemeCount(region);
         }
@@ -90,7 +112,7 @@ class MessageParser {
       lowerCaseMessage.includes('total village')
     ) {
       // Check if this is region specific
-      for (const region of regionNames) {
+      for (const region of this.regionNames) {
         if (lowerCaseMessage.includes(region)) {
           return this.actionProvider.handleVillageCount(region);
         }
@@ -107,18 +129,8 @@ class MessageParser {
     }
 
     // Extract region from message if present
-    const regionNames = [
-      'amravati', 
-      'nagpur', 
-      'chhatrapati sambhajinagar', 
-      'nashik', 
-      'pune', 
-      'konkan',
-      'mumbai'
-    ];
-
     let matchedRegion = null;
-    for (const region of regionNames) {
+    for (const region of this.regionNames) {
       if (lowerCaseMessage.includes(region)) {
         matchedRegion = region;
         break;
@@ -181,6 +193,67 @@ class MessageParser {
       console.error("Error in NLP processing:", error);
       this.actionProvider.handleUnknownQuery(message);
     }
+  }
+
+  // Helper method to detect region in message
+  detectRegion(message: string, regionNames: string[]): string | null {
+    for (const region of regionNames) {
+      if (message.includes(region)) {
+        // Handle alias mapping
+        if (region === 'aurangabad') {
+          return 'chhatrapati sambhajinagar';
+        }
+        return region;
+      }
+    }
+    return null;
+  }
+
+  // Check if this is a simple region mention (just the region name or basic query)
+  isSimpleRegionMention(message: string, region: string): boolean {
+    const trimmedMessage = message.trim();
+    const regionWords = region.split(' ');
+    
+    // If message is just the region name
+    if (trimmedMessage === region) return true;
+    
+    // If message is short and mainly contains the region
+    const words = trimmedMessage.split(' ');
+    const regionWordCount = regionWords.length;
+    const totalWords = words.length;
+    
+    // Simple heuristic: if region takes up most of the message
+    if (totalWords <= regionWordCount + 2) return true;
+    
+    return false;
+  }
+
+  // Check if message is asking about chlorine data
+  isChlorineQuery(message: string): boolean {
+    return message.includes('chlorine') || 
+           message.includes('rca') || 
+           message.includes('residual chlorine') ||
+           message.includes('analyzer');
+  }
+
+  // Check if message is asking about pressure data
+  isPressureQuery(message: string): boolean {
+    return message.includes('pressure') || 
+           message.includes('transmitter') ||
+           message.includes('bar');
+  }
+
+  // Check if message is asking about LPCD data
+  isLpcdQuery(message: string): boolean {
+    return message.includes('lpcd') || 
+           message.includes('liter') ||
+           message.includes('capita') ||
+           message.includes('per day');
+  }
+
+  // Check if message is asking about general water data
+  isWaterDataQuery(message: string): boolean {
+    return message.includes('water') && !this.isChlorineQuery(message) && !this.isPressureQuery(message);
   }
 }
 

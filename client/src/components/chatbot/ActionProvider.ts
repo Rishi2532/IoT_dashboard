@@ -523,6 +523,142 @@ class ActionProvider {
     return this.handleDeviceQuery(message, "pressure_transmitter", region);
   };
 
+  // Handle region filtering based on current page context
+  handleRegionFilter = async (region: string) => {
+    const formattedRegion = this.formatRegionName(region);
+    
+    // Get current page context from window location
+    const currentPath = window.location.pathname;
+    let pageType = 'dashboard';
+    
+    if (currentPath.includes('/chlorine')) {
+      pageType = 'chlorine';
+    } else if (currentPath.includes('/pressure')) {
+      pageType = 'pressure';
+    } else if (currentPath.includes('/lpcd')) {
+      pageType = 'lpcd';
+    }
+
+    // Apply the region filter and notify dashboard components
+    this.applyRegionFilter(formattedRegion);
+    
+    // Provide contextual response based on page
+    let responseMessage = '';
+    switch (pageType) {
+      case 'chlorine':
+        responseMessage = `Filtering chlorine data for ${formattedRegion} region. The dashboard now shows only chlorine monitoring data from ${formattedRegion}.`;
+        break;
+      case 'pressure':
+        responseMessage = `Filtering pressure data for ${formattedRegion} region. The dashboard now shows only pressure monitoring data from ${formattedRegion}.`;
+        break;
+      case 'lpcd':
+        responseMessage = `Filtering LPCD data for ${formattedRegion} region. The dashboard now shows only water consumption data from ${formattedRegion}.`;
+        break;
+      default:
+        responseMessage = `Filtering dashboard data for ${formattedRegion} region. All data views are now focused on ${formattedRegion}.`;
+    }
+    
+    this.addMessage(responseMessage);
+  };
+
+  // Handle region-specific data queries with page context
+  handleRegionContextQuery = async (region: string) => {
+    const formattedRegion = this.formatRegionName(region);
+    const currentPath = window.location.pathname;
+    
+    if (currentPath.includes('/chlorine')) {
+      return this.handleRegionDataQuery(region, 'chlorine');
+    } else if (currentPath.includes('/pressure')) {
+      return this.handleRegionDataQuery(region, 'pressure');
+    } else if (currentPath.includes('/lpcd')) {
+      return this.handleRegionDataQuery(region, 'lpcd');
+    } else {
+      // Default to scheme information
+      return this.handleSchemesByRegion(region);
+    }
+  };
+
+  // Handle specific data type queries for a region
+  handleRegionDataQuery = async (region: string, dataType: 'chlorine' | 'pressure' | 'lpcd' | 'water') => {
+    const formattedRegion = this.formatRegionName(region);
+    
+    try {
+      let endpoint = '';
+      let dataDescription = '';
+      
+      switch (dataType) {
+        case 'chlorine':
+          endpoint = `/api/chlorine-data?region=${encodeURIComponent(formattedRegion)}`;
+          dataDescription = 'chlorine monitoring';
+          break;
+        case 'pressure':
+          endpoint = `/api/pressure-data?region=${encodeURIComponent(formattedRegion)}`;
+          dataDescription = 'pressure monitoring';
+          break;
+        case 'lpcd':
+          endpoint = `/api/water-scheme-data?region=${encodeURIComponent(formattedRegion)}`;
+          dataDescription = 'LPCD (water consumption)';
+          break;
+        case 'water':
+          endpoint = `/api/water-scheme-data?region=${encodeURIComponent(formattedRegion)}`;
+          dataDescription = 'water scheme';
+          break;
+      }
+
+      this.addMessage(`Fetching ${dataDescription} data for ${formattedRegion} region...`);
+      
+      const response = await fetch(endpoint);
+      const data = await response.json();
+      
+      if (data.length > 0) {
+        // Apply region filter to dashboard
+        this.applyRegionFilter(formattedRegion);
+        
+        this.addMessage(
+          `Found ${data.length} ${dataDescription} records for ${formattedRegion} region. The dashboard has been filtered to show this data.`
+        );
+      } else {
+        this.addMessage(
+          `No ${dataDescription} data found for ${formattedRegion} region.`
+        );
+      }
+    } catch (error) {
+      console.error(`Error fetching ${dataType} data for ${formattedRegion}:`, error);
+      this.addMessage(
+        `Sorry, I encountered an error while fetching ${dataType} data for ${formattedRegion} region. Please try again later.`
+      );
+    }
+  };
+
+  // Helper method to format region names
+  private formatRegionName = (region: string): string => {
+    const regionMap: { [key: string]: string } = {
+      'nagpur': 'Nagpur',
+      'amravati': 'Amravati',
+      'nashik': 'Nashik',
+      'chhatrapati sambhajinagar': 'Chhatrapati Sambhajinagar',
+      'aurangabad': 'Chhatrapati Sambhajinagar',
+      'pune': 'Pune',
+      'konkan': 'Konkan',
+      'mumbai': 'Mumbai'
+    };
+
+    const lowerRegion = region.toLowerCase();
+    return regionMap[lowerRegion] || region;
+  };
+
+  // Helper method to apply region filter to dashboard components
+  private applyRegionFilter = (region: string) => {
+    // Dispatch custom event to notify dashboard components about region filter change
+    const event = new CustomEvent('regionFilterChange', {
+      detail: { region: region }
+    });
+    window.dispatchEvent(event);
+    
+    // Also update the chatbot state
+    this.updateState([], [], null, region);
+  };
+
   // Handle unknown queries
   handleUnknownQuery = (message: string) => {
     this.addMessage(
