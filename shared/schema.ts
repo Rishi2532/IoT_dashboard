@@ -365,6 +365,48 @@ export type InsertPressureData = z.infer<typeof insertPressureDataSchema>;
 export type UpdatePressureData = z.infer<typeof updatePressureDataSchema>;
 export type PressureData = typeof pressureData.$inferSelect;
 
+// Pressure History table for permanent historical storage
+export const pressureHistory = pgTable("pressure_history", {
+  id: serial("id").primaryKey(),
+  
+  // Location information
+  region: varchar("region", { length: 100 }),
+  circle: varchar("circle", { length: 100 }),
+  division: varchar("division", { length: 100 }),
+  sub_division: varchar("sub_division", { length: 100 }),
+  block: varchar("block", { length: 100 }),
+  
+  // Identification
+  scheme_id: varchar("scheme_id", { length: 100 }),
+  scheme_name: varchar("scheme_name", { length: 255 }),
+  village_name: varchar("village_name", { length: 255 }),
+  esr_name: varchar("esr_name", { length: 255 }),
+  
+  // Single day data
+  pressure_date: varchar("pressure_date", { length: 15 }).notNull(),
+  pressure_value: decimal("pressure_value", { precision: 12, scale: 2 }),
+  
+  // Upload tracking
+  uploaded_at: timestamp("uploaded_at").defaultNow().notNull(),
+  upload_batch_id: varchar("upload_batch_id", { length: 50 }), // To group records from same CSV upload
+  
+  // Dashboard URL
+  dashboard_url: text("dashboard_url"),
+}, (table) => {
+  return {
+    // Unique constraint to ensure no duplicates for same ESR + date + upload
+    unique_esr_date: unique().on(table.scheme_id, table.village_name, table.esr_name, table.pressure_date, table.uploaded_at),
+  };
+});
+
+export const insertPressureHistorySchema = createInsertSchema(pressureHistory).omit({
+  id: true,
+  uploaded_at: true,
+});
+
+export type InsertPressureHistory = z.infer<typeof insertPressureHistorySchema>;
+export type PressureHistory = typeof pressureHistory.$inferSelect;
+
 // Report Files table for managing uploaded Excel reports
 export const reportFiles = pgTable("report_files", {
   id: serial("id").primaryKey(),

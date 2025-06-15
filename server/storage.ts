@@ -7,6 +7,7 @@ import {
   chlorineData,
   chlorineHistory,
   pressureData,
+  pressureHistory,
   reportFiles,
   userLoginLogs,
   userActivityLogs,
@@ -29,6 +30,8 @@ import {
   type PressureData,
   type InsertPressureData,
   type UpdatePressureData,
+  type PressureHistory,
+  type InsertPressureHistory,
   type ReportFile,
   type InsertReportFile,
   type UserLoginLog,
@@ -217,6 +220,27 @@ export interface IStorage {
   getAllPressureData(
     filter?: PressureDataFilter
   ): Promise<PressureData[]>;
+  getHistoricalPressureData(filter: {
+    startDate: string;
+    endDate: string;
+    region?: string;
+    scheme_id?: string;
+    village_name?: string;
+    esr_name?: string;
+  }): Promise<Array<{
+    scheme_id: string;
+    region: string;
+    circle: string;
+    division: string;
+    sub_division: string;
+    block: string;
+    scheme_name: string;
+    village_name: string;
+    esr_name: string;
+    measurement_date: string;
+    pressure_value: number;
+    dashboard_url?: string;
+  }>>;
   getPressureDataByCompositeKey(schemeId: string, villageName: string, esrName: string): Promise<PressureData | undefined>;
   createPressureData(data: InsertPressureData): Promise<PressureData>;
   updatePressureData(schemeId: string, villageName: string, esrName: string, data: UpdatePressureData): Promise<PressureData>;
