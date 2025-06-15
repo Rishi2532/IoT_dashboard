@@ -84,6 +84,47 @@ const CustomChatbot = () => {
     }
   }, [messages]);
 
+  // Excel export helper function
+  const triggerExcelExport = () => {
+    try {
+      console.log('Attempting to trigger Excel export...');
+      
+      // Find export button on current page using multiple selectors
+      const exportButtonSelectors = [
+        'button:has(.lucide-download)',
+        'button[aria-label*="Export"]',
+        'button.border-green-200',
+        'button.bg-green-50',
+        'button.text-green-700'
+      ];
+      
+      for (const selector of exportButtonSelectors) {
+        const button = document.querySelector(selector);
+        if (button) {
+          console.log(`Found export button with selector: ${selector}`);
+          (button as HTMLButtonElement).click();
+          return;
+        }
+      }
+      
+      // Fallback: find any button with "export" or "download" text
+      const allButtons = Array.from(document.querySelectorAll('button'));
+      const exportButton = allButtons.find(btn => {
+        const text = btn.textContent?.toLowerCase() || '';
+        return text.includes('export') && text.includes('excel');
+      });
+      
+      if (exportButton) {
+        console.log('Found export button by text content');
+        (exportButton as HTMLButtonElement).click();
+      } else {
+        console.warn('No export button found on current page');
+      }
+    } catch (error) {
+      console.error('Error triggering Excel export:', error);
+    }
+  };
+
   // Enhanced region extraction from query with better pattern matching
   const extractRegion = (text: string): string | null => {
     // Normalize text - convert to lowercase and remove punctuation
