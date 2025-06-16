@@ -1638,4 +1638,68 @@ router.get('/export/history', async (req, res) => {
   }
 });
 
+// Get historical LPCD data with date range filtering
+router.get('/historical', async (req, res) => {
+  try {
+    const { startDate, endDate, region } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        error: 'startDate and endDate are required parameters' 
+      });
+    }
+
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      let query = `
+        SELECT 
+          region,
+          circle,
+          division,
+          sub_division,
+          block,
+          scheme_id,
+          scheme_name,
+          village_name,
+          population,
+          number_of_esr,
+          data_date,
+          water_value,
+          lpcd_value,
+          upload_batch_id,
+          uploaded_at
+        FROM water_scheme_data_history 
+        WHERE data_date >= $1 AND data_date <= $2
+      `;
+      
+      const queryParams = [startDate, endDate];
+      
+      // Add region filter if specified
+      if (region && region !== 'all') {
+        query += ' AND region = $3';
+        queryParams.push(region);
+      }
+      
+      query += ' ORDER BY data_date DESC, village_name ASC';
+      
+      console.log('Executing historical LPCD query:', query);
+      console.log('With parameters:', queryParams);
+      
+      const result = await client.query(query, queryParams);
+      
+      console.log(`Found ${result.rows.length} historical LPCD records`);
+      res.json(result.rows);
+      
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching historical LPCD data:', error);
+    res.status(500).json({ error: 'Failed to fetch historical LPCD data' });
+  }
+});
+
 export default router;
