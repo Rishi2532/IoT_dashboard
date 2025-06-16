@@ -4935,8 +4935,8 @@ export class PostgresStorage implements IStorage {
     return true;
   }
   
-  // Function to safely convert various cell values to numbers
-  private getNumericValue(value: any): number | null {
+  // Function to safely convert various cell values to numbers (duplicate removed)
+  private getNumericValueDuplicate(value: any): number | null {
     if (value === null || value === undefined) {
       return null;
     }
