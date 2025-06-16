@@ -46,6 +46,9 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
+  Calendar,
+  History,
+  TrendingUp,
 } from "lucide-react";
 import {
   Dialog,
@@ -58,6 +61,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Pagination } from "@/components/ui/pagination";
+import * as XLSX from "xlsx";
 
 // Types
 export interface WaterSchemeData {
@@ -147,6 +151,18 @@ const EnhancedLpcdDashboard = () => {
   // Pagination state
   const [page, setPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Historical data state
+  const [showHistoricalData, setShowHistoricalData] = useState(false);
+  const [historicalStartDate, setHistoricalStartDate] = useState(() => {
+    const date = new Date();
+    date.setDate(date.getDate() - 30); // Default to 30 days ago
+    return date.toISOString().split('T')[0];
+  });
+  const [historicalEndDate, setHistoricalEndDate] = useState(() => {
+    const date = new Date();
+    return date.toISOString().split('T')[0];
+  });
 
   // Track page visit on component mount
   useEffect(() => {
@@ -271,6 +287,38 @@ const EnhancedLpcdDashboard = () => {
         return data;
       },
     });
+
+  // Historical LPCD data query
+  const {
+    data: historicalLpcdData = [],
+    isLoading: isLoadingHistorical,
+    error: historicalError,
+    refetch: refetchHistorical,
+  } = useQuery<any[]>({
+    queryKey: ["/api/water-scheme-data/historical", historicalStartDate, historicalEndDate, selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      params.append("startDate", historicalStartDate);
+      params.append("endDate", historicalEndDate);
+      
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const url = `/api/water-scheme-data/historical?${params.toString()}`;
+      console.log("Fetching historical LPCD data with URL:", url);
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch historical LPCD data");
+      }
+
+      const data = await response.json();
+      console.log(`Received ${data.length} historical LPCD records`);
+      return data;
+    },
+    enabled: showHistoricalData, // Only fetch when historical data is requested
+  });
 
   // Get latest LPCD value
   const getLatestLpcdValue = (scheme: WaterSchemeData): number | null => {
@@ -907,6 +955,100 @@ const EnhancedLpcdDashboard = () => {
       });
   };
 
+  // Export historical LPCD data to Excel
+  const exportHistoricalData = () => {
+    if (historicalLpcdData.length === 0) {
+      toast({
+        title: "No Historical Data",
+        description: "No historical data available for the selected date range.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    Promise.resolve()
+      .then(() => {
+        // Prepare historical data for export
+        const dataToExport = historicalLpcdData.map((record, index) => ({
+          "Sr. No.": index + 1,
+          "Region": record.region || "N/A",
+          "Circle": record.circle || "N/A",
+          "Division": record.division || "N/A",
+          "Sub Division": record.sub_division || "N/A",
+          "Block": record.block || "N/A",
+          "Scheme ID": record.scheme_id || "N/A",
+          "Scheme Name": record.scheme_name || "N/A",
+          "Village Name": record.village_name || "N/A",
+          "Population": record.population || "N/A",
+          "Number of ESR": record.number_of_esr || "N/A",
+          "Date": record.data_date || "N/A",
+          "Water Value (MLD)": record.water_value !== null ? record.water_value : "N/A",
+          "LPCD Value": record.lpcd_value !== null ? record.lpcd_value : "N/A",
+          "Upload Batch ID": record.upload_batch_id || "N/A",
+          "Uploaded At": record.uploaded_at ? new Date(record.uploaded_at).toLocaleString() : "N/A",
+        }));
+
+        // Create worksheet
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+
+        // Set column widths
+        const columns = [
+          { wch: 8 },  // Sr. No.
+          { wch: 15 }, // Region
+          { wch: 15 }, // Circle
+          { wch: 15 }, // Division
+          { wch: 18 }, // Sub Division
+          { wch: 12 }, // Block
+          { wch: 12 }, // Scheme ID
+          { wch: 25 }, // Scheme Name
+          { wch: 20 }, // Village Name
+          { wch: 12 }, // Population
+          { wch: 12 }, // Number of ESR
+          { wch: 12 }, // Date
+          { wch: 15 }, // Water Value
+          { wch: 12 }, // LPCD Value
+          { wch: 20 }, // Upload Batch ID
+          { wch: 18 }, // Uploaded At
+        ];
+        ws["!cols"] = columns;
+
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Historical LPCD Data");
+
+        // Generate filename
+        let filename = "Historical_LPCD_Data";
+        if (selectedRegion !== "all") {
+          filename += `_${selectedRegion}`;
+        }
+        filename += `_${historicalStartDate}_to_${historicalEndDate}.xlsx`;
+
+        // Save file
+        XLSX.writeFile(wb, filename);
+
+        // Track the data export activity
+        trackDataExport("historical_lpcd_data", "xlsx", dataToExport.length, {
+          region_filter: selectedRegion !== "all" ? selectedRegion : null,
+          start_date: historicalStartDate,
+          end_date: historicalEndDate,
+          filename: filename
+        });
+
+        toast({
+          title: "Historical Export Successful",
+          description: `${dataToExport.length} historical records exported to Excel`,
+        });
+      })
+      .catch((error) => {
+        console.error("Error exporting historical data to Excel:", error);
+        toast({
+          title: "Export Failed",
+          description: "There was an error exporting historical data to Excel. Please try again.",
+          variant: "destructive",
+        });
+      });
+  };
+
   const NoDataMessage = () => (
     <div className="text-center p-8">
       <h3 className="text-lg font-medium text-gray-600">
@@ -1351,40 +1493,121 @@ const EnhancedLpcdDashboard = () => {
           </Select>
 
           {/* Action Buttons */}
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => refetch()}
-            title="Refresh data"
-            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
-          >
-            <RefreshCw className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={exportToExcel}
-            title="Export to Excel"
-            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
-          >
-            <FileSpreadsheet className="h-4 w-4" />
-          </Button>
-          <Button
-            variant="outline"
-            onClick={() => setShowCharts(!showCharts)}
-            className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
-          >
-            {showCharts ? (
-              <>
-                <ChartBarOff className="h-4 w-4 mr-2" /> Hide Charts
-              </>
-            ) : (
-              <>
-                <BarChart3 className="h-4 w-4 mr-2" /> Show Charts
-              </>
-            )}
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => refetch()}
+              title="Refresh data"
+              className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={exportToExcel}
+              title="Export to Excel"
+              className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
+            >
+              <FileSpreadsheet className="h-4 w-4" />
+            </Button>
+            <Button
+              onClick={() => setShowHistoricalData(!showHistoricalData)}
+              variant={showHistoricalData ? "default" : "outline"}
+              className="flex items-center gap-2"
+            >
+              <History className="h-4 w-4" />
+              {showHistoricalData ? "Current Data" : "Historical Data"}
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowCharts(!showCharts)}
+              className="border-blue-200 shadow-sm text-blue-700 hover:bg-blue-50"
+            >
+              {showCharts ? (
+                <>
+                  <ChartBarOff className="h-4 w-4 mr-2" /> Hide Charts
+                </>
+              ) : (
+                <>
+                  <BarChart3 className="h-4 w-4 mr-2" /> Show Charts
+                </>
+              )}
+            </Button>
+          </div>
         </div>
+
+        {/* Historical Data Date Selection */}
+        {showHistoricalData && (
+          <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <div className="flex items-center gap-2">
+                <Calendar className="h-4 w-4 text-blue-600" />
+                <span className="text-sm font-medium text-blue-700">
+                  Select Date Range for Historical LPCD Data
+                </span>
+              </div>
+              
+              <div className="flex flex-col md:flex-row gap-4 items-center">
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-600">Start Date</label>
+                  <Input
+                    type="date"
+                    value={historicalStartDate}
+                    onChange={(e) => setHistoricalStartDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+                
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs text-gray-600">End Date</label>
+                  <Input
+                    type="date"
+                    value={historicalEndDate}
+                    onChange={(e) => setHistoricalEndDate(e.target.value)}
+                    className="w-40"
+                  />
+                </div>
+
+                <Button
+                  onClick={() => refetchHistorical()}
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-2 mt-4 md:mt-0"
+                  disabled={isLoadingHistorical}
+                >
+                  <TrendingUp className="h-4 w-4" />
+                  Query Historical Data
+                </Button>
+
+                <Button
+                  onClick={exportHistoricalData}
+                  variant="default"
+                  size="sm"
+                  className="flex items-center gap-2 mt-4 md:mt-0 bg-blue-600 hover:bg-blue-700"
+                  disabled={isLoadingHistorical || historicalLpcdData.length === 0}
+                >
+                  <Download className="h-4 w-4" />
+                  Export to Excel ({historicalLpcdData.length})
+                </Button>
+              </div>
+            </div>
+
+            {historicalLpcdData.length > 0 && (
+              <div className="mt-3 text-sm text-green-700">
+                Found {historicalLpcdData.length} historical records
+                ({historicalStartDate} to {historicalEndDate})
+              </div>
+            )}
+
+            {historicalError && (
+              <div className="mt-3 text-sm text-red-700">
+                Error loading historical data. Please try again.
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Village details dialog */}
