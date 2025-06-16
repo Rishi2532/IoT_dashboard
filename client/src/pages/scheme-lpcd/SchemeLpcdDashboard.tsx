@@ -58,6 +58,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { HistoricalDataChart } from "@/components/dashboard/HistoricalDataChart";
 import { Pagination } from "@/components/ui/pagination";
 
 // Types

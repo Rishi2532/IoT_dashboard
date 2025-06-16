@@ -915,7 +915,7 @@ export class PostgresStorage implements IStorage {
    * Calculate derived values based on water scheme data
    * @param schemeData - The water scheme data object to calculate derived values for
    */
-  private calculateDerivedValues(schemeData: Partial<InsertWaterSchemeData>): void {
+  private calculateSchemeMetrics(schemeData: Partial<InsertWaterSchemeData>): void {
     // Count days with zero LPCD values
     let zeroLpcdCount = 0;
     let below55LpcdCount = 0;
@@ -5166,13 +5166,13 @@ export class PostgresStorage implements IStorage {
     return `${BASE_URL}?${STANDARD_PARAMS}&rootpath=${encodedPath}`;
   }
 
-  private calculateDerivedValues(data: any): any {
+  private calculateDerivedValuesForImport(data: any): any {
     // Extract LPCD values
     const lpcdValues = [
-      this.getNumericValue(data.lpcd_value_day1),
-      this.getNumericValue(data.lpcd_value_day2),
-      this.getNumericValue(data.lpcd_value_day3),
-      this.getNumericValue(data.lpcd_value_day4),
+      this.getNumericValueDuplicate(data.lpcd_value_day1),
+      this.getNumericValueDuplicate(data.lpcd_value_day2),
+      this.getNumericValueDuplicate(data.lpcd_value_day3),
+      this.getNumericValueDuplicate(data.lpcd_value_day4),
       this.getNumericValue(data.lpcd_value_day5),
       this.getNumericValue(data.lpcd_value_day6),
       this.getNumericValue(data.lpcd_value_day7)
