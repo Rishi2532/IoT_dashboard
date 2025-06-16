@@ -126,15 +126,71 @@ const CustomChatbot = () => {
   };
 
   // Historical data export helper function
+  const triggerPressureHistoricalExport = async (startDate: string, endDate: string, region?: string) => {
+    try {
+      console.log(`Triggering pressure historical export from ${startDate} to ${endDate} for region: ${region || 'all'}`);
+      
+      // Build query parameters for the API request
+      const params = new URLSearchParams();
+      params.append("startDate", startDate);
+      params.append("endDate", endDate);
+      
+      if (region && region !== "all") {
+        params.append("region", region);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/pressure/export/historical?${queryString}`;
+
+      console.log(`Calling pressure historical export API: ${url}`);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to export historical pressure data");
+      }
+
+      // Get the filename from response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `Pressure_Historical_Data_${startDate}_to_${endDate}.xlsx`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename=(.+)/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Create blob and download
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      console.log(`Successfully downloaded pressure historical data: ${filename}`);
+      
+    } catch (error) {
+      console.error('Error exporting pressure historical data:', error);
+      // Fallback to UI interaction approach
+      triggerHistoricalExport(startDate, endDate, region);
+    }
+  };
+
   const triggerHistoricalExport = (startDate: string, endDate: string, region?: string) => {
     try {
       console.log(`Attempting to trigger historical export from ${startDate} to ${endDate} for region: ${region || 'all'}`);
       
-      // Find historical data button
+      // Find historical data button - check for both "Historical Data" and "Current Data" text
       const historicalButtons = Array.from(document.querySelectorAll('button'));
       const historicalButton = historicalButtons.find(btn => {
         const text = btn.textContent?.toLowerCase() || '';
-        return text.includes('historical') && text.includes('data');
+        return text.includes('historical data') || (text.includes('historical') && text.includes('data'));
       });
       
       if (historicalButton) {
@@ -177,17 +233,30 @@ const CustomChatbot = () => {
             
             // Wait a bit more then trigger the export
             setTimeout(() => {
+              // Look specifically for the historical export button within the historical data section
               const exportButtons = document.querySelectorAll('button');
               const exportButton = Array.from(exportButtons).find(btn => {
                 const text = btn.textContent?.toLowerCase() || '';
-                return text.includes('export') || text.includes('download');
+                // Look for the specific export button that contains both "export" and numbers in parentheses
+                return (text.includes('export to excel') && text.includes('(')) || 
+                       (text.includes('export') && text.includes('excel'));
               });
               
               if (exportButton) {
-                console.log('Triggering historical data export');
+                console.log('Found historical export button, triggering export');
                 (exportButton as HTMLButtonElement).click();
+              } else {
+                console.log('Historical export button not found, trying alternative approach');
+                // Try to find any export button as fallback
+                const fallbackButton = Array.from(exportButtons).find(btn => {
+                  const text = btn.textContent?.toLowerCase() || '';
+                  return text.includes('export') || text.includes('download');
+                });
+                if (fallbackButton) {
+                  (fallbackButton as HTMLButtonElement).click();
+                }
               }
-            }, 500);
+            }, 800);
             
           } catch (error) {
             console.error('Error setting up historical export:', error);
@@ -778,9 +847,14 @@ const CustomChatbot = () => {
               response = `I'll help you download historical data ${dateDescription}. Opening the historical data export with your specified date range.`;
             }
 
-            // Trigger historical export with date range and region
+            // Trigger historical export with date range and region - detect dashboard type
             setTimeout(() => {
-              triggerHistoricalExport(dateRange.startDate!, dateRange.endDate!, region || undefined);
+              const currentPath = window.location.pathname;
+              if (currentPath.includes('/pressure')) {
+                triggerPressureHistoricalExport(dateRange.startDate!, dateRange.endDate!, region || undefined);
+              } else {
+                triggerHistoricalExport(dateRange.startDate!, dateRange.endDate!, region || undefined);
+              }
             }, 1000);
 
           } else {
