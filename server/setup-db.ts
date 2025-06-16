@@ -396,6 +396,40 @@ export async function initializeTables(db: any) {
       console.error('Error checking for dashboard_url column in pressure_data:', error);
     }
     
+    // Create pressure_history table for permanent historical storage
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "pressure_history" (
+        "id" SERIAL PRIMARY KEY,
+        "region" VARCHAR(100),
+        "circle" VARCHAR(100),
+        "division" VARCHAR(100),
+        "sub_division" VARCHAR(100),
+        "block" VARCHAR(100),
+        "scheme_id" VARCHAR(100),
+        "scheme_name" VARCHAR(255),
+        "village_name" VARCHAR(255),
+        "esr_name" VARCHAR(255),
+        "pressure_date" VARCHAR(15) NOT NULL,
+        "pressure_value" NUMERIC,
+        "uploaded_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "upload_batch_id" VARCHAR(50),
+        "dashboard_url" TEXT,
+        UNIQUE("scheme_id", "village_name", "esr_name", "pressure_date", "uploaded_at")
+      );
+    `);
+    
+    // Create index on pressure_history for efficient date range queries
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS "idx_pressure_history_date_range" 
+      ON "pressure_history" ("pressure_date", "scheme_id", "village_name", "esr_name");
+    `);
+    
+    // Create index on pressure_history for efficient latest record queries
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS "idx_pressure_history_latest" 
+      ON "pressure_history" ("scheme_id", "village_name", "esr_name", "pressure_date", "uploaded_at" DESC);
+    `);
+    
     // Check if the users table has any records using raw SQL to avoid Drizzle ORM issues
     try {
       const usersResult = await db.execute(`SELECT COUNT(*) FROM "users"`);
