@@ -182,11 +182,89 @@ const CustomChatbot = () => {
     }
   };
 
-  const triggerHistoricalExport = (startDate: string, endDate: string, region?: string) => {
+  const triggerHistoricalExport = async (startDate: string, endDate: string, region?: string) => {
     try {
-      console.log(`Attempting to trigger historical export from ${startDate} to ${endDate} for region: ${region || 'all'}`);
+      console.log(`Triggering direct API historical export from ${startDate} to ${endDate} for region: ${region || 'all'}`);
       
-      // Find historical data button - check for both "Historical Data" and "Current Data" text
+      // Determine which dashboard we're on based on the current URL
+      const currentPath = window.location.pathname;
+      let apiEndpoint = '';
+      let dataType = '';
+      
+      if (currentPath.includes('/chlorine')) {
+        apiEndpoint = '/api/chlorine/export/historical';
+        dataType = 'chlorine';
+      } else if (currentPath.includes('/pressure')) {
+        apiEndpoint = '/api/pressure/export/historical';
+        dataType = 'pressure';
+      } else if (currentPath.includes('/water-scheme')) {
+        apiEndpoint = '/api/water-scheme-data/export/history';
+        dataType = 'water scheme';
+      } else {
+        console.log('Not on a supported dashboard, falling back to UI interaction');
+        triggerUIBasedHistoricalExport(startDate, endDate, region);
+        return;
+      }
+      
+      // Build query parameters
+      const params = new URLSearchParams();
+      params.append('startDate', startDate);
+      params.append('endDate', endDate);
+      if (region && region !== 'all') {
+        params.append('region', region);
+      }
+      
+      const url = `${apiEndpoint}?${params.toString()}`;
+      console.log(`Making direct API call to: ${url}`);
+      
+      // Make the API call
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(errorData.error || `Failed to export ${dataType} data`);
+      }
+      
+      // Get the file blob and create download
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      
+      // Create and trigger download
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      
+      // Extract filename from Content-Disposition header or create default
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `${dataType}_historical_data_${startDate}_to_${endDate}.xlsx`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+      
+      console.log(`Successfully exported ${dataType} historical data for date range ${startDate} to ${endDate}`);
+      
+    } catch (error) {
+      console.error('Error with direct API export:', error);
+      // Fallback to UI interaction
+      triggerUIBasedHistoricalExport(startDate, endDate, region);
+    }
+  };
+
+  // Fallback function for UI-based historical export
+  const triggerUIBasedHistoricalExport = (startDate: string, endDate: string, region?: string) => {
+    try {
+      console.log('Using UI-based historical export fallback');
+      
+      // Find historical data button
       const historicalButtons = Array.from(document.querySelectorAll('button'));
       const historicalButton = historicalButtons.find(btn => {
         const text = btn.textContent?.toLowerCase() || '';
@@ -207,7 +285,7 @@ const CustomChatbot = () => {
               startDateInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
             
-            // Find and populate end date field (usually the second date input)
+            // Find and populate end date field
             const dateInputs = document.querySelectorAll('input[type="date"]');
             if (dateInputs.length > 1) {
               const endDateInput = dateInputs[1] as HTMLInputElement;
@@ -215,7 +293,7 @@ const CustomChatbot = () => {
               endDateInput.dispatchEvent(new Event('change', { bubbles: true }));
             }
             
-            // If region is specified, try to set it in the region dropdown
+            // Set region if specified
             if (region) {
               setTimeout(() => {
                 const regionSelects = Array.from(document.querySelectorAll('select, [role="combobox"]'));
@@ -231,13 +309,11 @@ const CustomChatbot = () => {
               }, 200);
             }
             
-            // Wait a bit more then trigger the export
+            // Trigger the export
             setTimeout(() => {
-              // Look specifically for the historical export button within the historical data section
               const exportButtons = document.querySelectorAll('button');
               const exportButton = Array.from(exportButtons).find(btn => {
                 const text = btn.textContent?.toLowerCase() || '';
-                // Look for the specific export button that contains both "export" and numbers in parentheses
                 return (text.includes('export to excel') && text.includes('(')) || 
                        (text.includes('export') && text.includes('excel'));
               });
@@ -246,8 +322,7 @@ const CustomChatbot = () => {
                 console.log('Found historical export button, triggering export');
                 (exportButton as HTMLButtonElement).click();
               } else {
-                console.log('Historical export button not found, trying alternative approach');
-                // Try to find any export button as fallback
+                console.log('Export button not found, trying fallback');
                 const fallbackButton = Array.from(exportButtons).find(btn => {
                   const text = btn.textContent?.toLowerCase() || '';
                   return text.includes('export') || text.includes('download');
@@ -264,13 +339,11 @@ const CustomChatbot = () => {
         }, 300);
         
       } else {
-        console.warn('Historical data button not found - may not be on chlorine/pressure dashboard');
-        // Fallback to regular export
+        console.warn('Historical data button not found - using regular export');
         triggerExcelExport();
       }
     } catch (error) {
-      console.error('Error triggering historical export:', error);
-      // Fallback to regular export
+      console.error('Error triggering UI-based historical export:', error);
       triggerExcelExport();
     }
   };
