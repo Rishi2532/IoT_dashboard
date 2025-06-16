@@ -6812,8 +6812,8 @@ export class PostgresStorage implements IStorage {
       // Apply date range filter with proper date conversion
       // Convert the filter dates to match the stored format and handle date comparison properly
       const conditions = [
-        sql`TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY') >= TO_DATE(${filter.startDate}, 'YYYY-MM-DD')`,
-        sql`TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY') <= TO_DATE(${filter.endDate}, 'YYYY-MM-DD')`
+        sql`TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY') >= DATE(${filter.startDate})`,
+        sql`TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY') <= DATE(${filter.endDate})`
       ];
       
       // Apply optional filters
