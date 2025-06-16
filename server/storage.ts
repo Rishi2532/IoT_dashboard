@@ -4,6 +4,7 @@ import {
   schemeStatuses,
   appState,
   waterSchemeData,
+  waterSchemeDataHistory,
   chlorineData,
   chlorineHistory,
   pressureData,
@@ -22,6 +23,8 @@ import {
   type WaterSchemeData,
   type InsertWaterSchemeData,
   type UpdateWaterSchemeData,
+  type WaterSchemeDataHistory,
+  type InsertWaterSchemeDataHistory,
   type ChlorineData,
   type InsertChlorineData,
   type UpdateChlorineData,
@@ -5500,6 +5503,16 @@ export class PostgresStorage implements IStorage {
       
       console.log(`LPCD import complete: ${inserted} inserted, ${updated} updated, ${removed} removed, ${errors.length} errors`);
       
+      // Store historical water scheme data after successful import
+      try {
+        console.log("Storing historical water scheme data...");
+        await this.storeWaterSchemeHistoricalData(jsonData);
+        console.log("✅ Historical water scheme data stored successfully");
+      } catch (historicalError) {
+        console.error('Error storing historical water scheme data after Excel import:', historicalError);
+        errors.push('Failed to store historical water scheme data');
+      }
+      
       // Automatically store population data in tracking tables after import
       try {
         await this.storePopulationData();
@@ -5854,6 +5867,18 @@ export class PostgresStorage implements IStorage {
       console.log(`- ${duplicatesInCsv} duplicates found in CSV`);
       console.log(`- ${errors.length} errors/warnings`);
       
+      // Store historical water scheme data after successful CSV import
+      try {
+        console.log("Storing historical water scheme data from CSV...");
+        // Convert CSV records to format suitable for historical storage
+        const allProcessedRecords = [...recordsToInsert, ...recordsToUpdate];
+        await this.storeWaterSchemeHistoricalData(allProcessedRecords);
+        console.log("✅ Historical water scheme data stored successfully");
+      } catch (historicalError) {
+        console.error('Error storing historical water scheme data after CSV import:', historicalError);
+        errors.push('Failed to store historical water scheme data');
+      }
+      
       // Automatically store population data in tracking tables after import
       try {
         await this.storePopulationData();
@@ -5867,6 +5892,107 @@ export class PostgresStorage implements IStorage {
       console.error(`CSV import error:`, error);
       errors.push(`CSV import error: ${error instanceof Error ? error.message : String(error)}`);
       return { inserted, updated, removed, errors };
+    }
+  }
+
+  // Store historical water scheme data by unpacking multi-day records into individual entries
+  async storeWaterSchemeHistoricalData(importedData: any[]): Promise<void> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      console.log("Processing water scheme data for historical storage...");
+      
+      const uploadBatchId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const historicalRecords: InsertWaterSchemeDataHistory[] = [];
+      
+      for (const record of importedData) {
+        if (!record.scheme_id || !record.village_name) {
+          continue; // Skip records without required identifiers
+        }
+        
+        // Process water values (days 1-6)
+        for (let day = 1; day <= 6; day++) {
+          const waterDateField = `water_date_day${day}`;
+          const waterValueField = `water_value_day${day}`;
+          
+          const waterDate = record[waterDateField];
+          const waterValue = record[waterValueField];
+          
+          if (waterDate && waterValue !== null && waterValue !== undefined) {
+            historicalRecords.push({
+              region: record.region || null,
+              circle: record.circle || null,
+              division: record.division || null,
+              sub_division: record.sub_division || null,
+              block: record.block || null,
+              scheme_id: record.scheme_id,
+              scheme_name: record.scheme_name || null,
+              village_name: record.village_name,
+              population: record.population || null,
+              number_of_esr: record.number_of_esr || null,
+              data_date: waterDate,
+              water_value: waterValue,
+              lpcd_value: null, // No LPCD for water-only entries
+              upload_batch_id: uploadBatchId,
+              dashboard_url: record.dashboard_url || null
+            });
+          }
+        }
+        
+        // Process LPCD values (days 1-7)
+        for (let day = 1; day <= 7; day++) {
+          const lpcdDateField = `lpcd_date_day${day}`;
+          const lpcdValueField = `lpcd_value_day${day}`;
+          
+          const lpcdDate = record[lpcdDateField];
+          const lpcdValue = record[lpcdValueField];
+          
+          if (lpcdDate && lpcdValue !== null && lpcdValue !== undefined) {
+            historicalRecords.push({
+              region: record.region || null,
+              circle: record.circle || null,
+              division: record.division || null,
+              sub_division: record.sub_division || null,
+              block: record.block || null,
+              scheme_id: record.scheme_id,
+              scheme_name: record.scheme_name || null,
+              village_name: record.village_name,
+              population: record.population || null,
+              number_of_esr: record.number_of_esr || null,
+              data_date: lpcdDate,
+              water_value: null, // No water value for LPCD-only entries
+              lpcd_value: lpcdValue,
+              upload_batch_id: uploadBatchId,
+              dashboard_url: record.dashboard_url || null
+            });
+          }
+        }
+      }
+      
+      if (historicalRecords.length > 0) {
+        console.log(`Storing ${historicalRecords.length} historical water scheme records...`);
+        
+        // Insert historical records in batches to avoid memory issues
+        const historyBatchSize = 200;
+        for (let i = 0; i < historicalRecords.length; i += historyBatchSize) {
+          const batch = historicalRecords.slice(i, i + historyBatchSize);
+          
+          try {
+            await db.insert(waterSchemeDataHistory).values(batch);
+            console.log(`Stored historical batch ${Math.floor(i/historyBatchSize) + 1}/${Math.ceil(historicalRecords.length/historyBatchSize)}`);
+          } catch (historyError) {
+            console.error(`Error storing historical batch ${Math.floor(i/historyBatchSize) + 1}:`, historyError);
+            // Continue with other batches even if one fails
+          }
+        }
+        
+        console.log(`✅ Successfully stored ${historicalRecords.length} historical water scheme records with batch ID: ${uploadBatchId}`);
+      } else {
+        console.log("No historical records to store");
+      }
+    } catch (error) {
+      console.error('Error in storeWaterSchemeHistoricalData:', error);
+      throw error;
     }
   }
 
