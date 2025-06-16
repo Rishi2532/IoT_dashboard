@@ -1363,6 +1363,15 @@ const SchemeLpcdDashboard = () => {
                                         )}
                                       </div>
                                     </div>
+                                    
+                                    {/* Historical Data Chart */}
+                                    <div className="mt-6 border-t pt-6">
+                                      <HistoricalDataChart 
+                                        schemeId={scheme.scheme_id}
+                                        villageName={scheme.village_name}
+                                        region={scheme.region}
+                                      />
+                                    </div>
                                   </DialogContent>
                                 </Dialog>
                                 

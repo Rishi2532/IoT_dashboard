@@ -5454,7 +5454,7 @@ export class PostgresStorage implements IStorage {
           }
           
           // Calculate derived values (consistency metrics)
-          this.calculateDerivedValues(schemeData);
+          this.calculateSchemeMetrics(schemeData);
           
           // Generate dashboard URL if not present
           if (!schemeData.dashboard_url && schemeData.region && schemeData.circle && 
@@ -5637,7 +5637,7 @@ export class PostgresStorage implements IStorage {
             }
             
             // Calculate derived values (consistent zero, below/above 55 LPCD)
-            this.calculateDerivedValues(schemeData);
+            this.calculateSchemeMetrics(schemeData);
             
             // Generate dashboard URL if not present
             if (!schemeData.dashboard_url && schemeData.region && schemeData.circle && 
