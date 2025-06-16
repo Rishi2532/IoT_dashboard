@@ -5871,8 +5871,8 @@ export class PostgresStorage implements IStorage {
       try {
         console.log("Storing historical water scheme data from CSV...");
         // Convert CSV records to format suitable for historical storage
-        const allProcessedRecords = [...recordsToInsert, ...recordsToUpdate];
-        await this.storeWaterSchemeHistoricalData(allProcessedRecords);
+        const allImportedRecords = Array.from(recordsMap.values());
+        await this.storeWaterSchemeHistoricalData(allImportedRecords);
         console.log("✅ Historical water scheme data stored successfully");
       } catch (historicalError) {
         console.error('Error storing historical water scheme data after CSV import:', historicalError);
