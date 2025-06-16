@@ -205,6 +205,50 @@ export type InsertWaterSchemeData = z.infer<typeof insertWaterSchemeDataSchema>;
 export type UpdateWaterSchemeData = z.infer<typeof updateWaterSchemeDataSchema>;
 export type WaterSchemeData = typeof waterSchemeData.$inferSelect;
 
+// Water Scheme Data History table for permanent historical storage
+export const waterSchemeDataHistory = pgTable("water_scheme_data_history", {
+  id: serial("id").primaryKey(),
+  
+  // Location information
+  region: varchar("region", { length: 100 }),
+  circle: varchar("circle", { length: 100 }),
+  division: varchar("division", { length: 100 }),
+  sub_division: varchar("sub_division", { length: 100 }),
+  block: varchar("block", { length: 100 }),
+  
+  // Identification
+  scheme_id: varchar("scheme_id", { length: 100 }),
+  scheme_name: varchar("scheme_name", { length: 255 }),
+  village_name: varchar("village_name", { length: 255 }),
+  population: integer("population"),
+  number_of_esr: integer("number_of_esr"),
+  
+  // Single day data
+  data_date: varchar("data_date", { length: 15 }).notNull(),
+  water_value: decimal("water_value", { precision: 20, scale: 6 }),
+  lpcd_value: decimal("lpcd_value", { precision: 20, scale: 6 }),
+  
+  // Upload tracking
+  uploaded_at: timestamp("uploaded_at").defaultNow().notNull(),
+  upload_batch_id: varchar("upload_batch_id", { length: 50 }), // To group records from same CSV upload
+  
+  // Dashboard URL
+  dashboard_url: text("dashboard_url"),
+}, (table) => {
+  return {
+    // Unique constraint to ensure no duplicates for same village + date + upload
+    unique_village_date: unique().on(table.scheme_id, table.village_name, table.data_date, table.uploaded_at),
+  };
+});
+
+export const insertWaterSchemeDataHistorySchema = createInsertSchema(waterSchemeDataHistory).omit({
+  id: true,
+  uploaded_at: true,
+});
+
+export type InsertWaterSchemeDataHistory = z.infer<typeof insertWaterSchemeDataHistorySchema>;
+export type WaterSchemeDataHistory = typeof waterSchemeDataHistory.$inferSelect;
+
 // Chlorine Data table for ESR-level chlorine monitoring
 export const chlorineData = pgTable("chlorine_data", {
   // Location information

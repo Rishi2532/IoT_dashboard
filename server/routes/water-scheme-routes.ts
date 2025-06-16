@@ -1427,4 +1427,215 @@ router.get("/population-trends", async (req, res) => {
   }
 });
 
+// Get water scheme data history with date range functionality
+router.get('/history', async (req, res) => {
+  try {
+    const { scheme_id, village_name, start_date, end_date, region } = req.query;
+    
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      let query = `
+        SELECT 
+          *
+        FROM water_scheme_data_history 
+        WHERE 1=1
+      `;
+      
+      const queryParams: any[] = [];
+      let paramIndex = 1;
+      
+      if (scheme_id) {
+        query += ` AND scheme_id = $${paramIndex++}`;
+        queryParams.push(scheme_id);
+      }
+      
+      if (village_name) {
+        query += ` AND village_name = $${paramIndex++}`;
+        queryParams.push(village_name);
+      }
+      
+      if (region) {
+        query += ` AND region = $${paramIndex++}`;
+        queryParams.push(region);
+      }
+      
+      if (start_date) {
+        query += ` AND data_date >= $${paramIndex++}`;
+        queryParams.push(start_date);
+      }
+      
+      if (end_date) {
+        query += ` AND data_date <= $${paramIndex++}`;
+        queryParams.push(end_date);
+      }
+      
+      query += ` ORDER BY data_date DESC, uploaded_at DESC`;
+      
+      const result = await client.query(query, queryParams);
+      res.json(result.rows);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching water scheme data history:', error);
+    res.status(500).json({ error: 'Failed to fetch water scheme data history' });
+  }
+});
+
+// Get LPCD trends for a specific village over date range
+router.get('/lpcd-trends', async (req, res) => {
+  try {
+    const { scheme_id, village_name, start_date, end_date, days = 30 } = req.query;
+    
+    if (!scheme_id || !village_name) {
+      return res.status(400).json({ error: 'scheme_id and village_name are required' });
+    }
+    
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      let query = `
+        SELECT 
+          data_date,
+          lpcd_value,
+          water_value,
+          uploaded_at
+        FROM water_scheme_data_history 
+        WHERE scheme_id = $1 AND village_name = $2
+      `;
+      
+      const queryParams: any[] = [scheme_id, village_name];
+      let paramIndex = 3;
+      
+      if (start_date) {
+        query += ` AND data_date >= $${paramIndex++}`;
+        queryParams.push(start_date);
+      }
+      
+      if (end_date) {
+        query += ` AND data_date <= $${paramIndex++}`;
+        queryParams.push(end_date);
+      } else if (!start_date) {
+        // If no date range specified, get last X days
+        query += ` AND data_date >= (CURRENT_DATE - INTERVAL '${days} days')::text`;
+      }
+      
+      query += ` ORDER BY data_date ASC`;
+      
+      const result = await client.query(query, queryParams);
+      res.json(result.rows);
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error fetching LPCD trends:', error);
+    res.status(500).json({ error: 'Failed to fetch LPCD trends' });
+  }
+});
+
+// Export water scheme data history with date range
+router.get('/export/history', async (req, res) => {
+  try {
+    const { scheme_id, village_name, start_date, end_date, region, format = 'xlsx' } = req.query;
+    
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      let query = `
+        SELECT 
+          region,
+          circle,
+          division,
+          sub_division,
+          block,
+          scheme_id,
+          scheme_name,
+          village_name,
+          population,
+          number_of_esr,
+          data_date,
+          water_value,
+          lpcd_value,
+          uploaded_at,
+          upload_batch_id
+        FROM water_scheme_data_history 
+        WHERE 1=1
+      `;
+      
+      const queryParams: any[] = [];
+      let paramIndex = 1;
+      
+      if (scheme_id) {
+        query += ` AND scheme_id = $${paramIndex++}`;
+        queryParams.push(scheme_id);
+      }
+      
+      if (village_name) {
+        query += ` AND village_name = $${paramIndex++}`;
+        queryParams.push(village_name);
+      }
+      
+      if (region) {
+        query += ` AND region = $${paramIndex++}`;
+        queryParams.push(region);
+      }
+      
+      if (start_date) {
+        query += ` AND data_date >= $${paramIndex++}`;
+        queryParams.push(start_date);
+      }
+      
+      if (end_date) {
+        query += ` AND data_date <= $${paramIndex++}`;
+        queryParams.push(end_date);
+      }
+      
+      query += ` ORDER BY data_date DESC, village_name ASC`;
+      
+      const result = await client.query(query, queryParams);
+      
+      if (format === 'csv') {
+        // Generate CSV
+        const headers = Object.keys(result.rows[0] || {});
+        let csvContent = headers.join(',') + '\n';
+        
+        result.rows.forEach(row => {
+          const values = headers.map(header => {
+            const value = row[header];
+            return value !== null && value !== undefined ? `"${value}"` : '';
+          });
+          csvContent += values.join(',') + '\n';
+        });
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="water_scheme_history_${Date.now()}.csv"`);
+        res.send(csvContent);
+      } else {
+        // Generate Excel
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.json_to_sheet(result.rows);
+        XLSX.utils.book_append_sheet(wb, ws, 'Water_Scheme_History');
+        
+        const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+        
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="water_scheme_history_${Date.now()}.xlsx"`);
+        res.send(buffer);
+      }
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error exporting water scheme data history:', error);
+    res.status(500).json({ error: 'Failed to export water scheme data history' });
+  }
+});
+
 export default router;

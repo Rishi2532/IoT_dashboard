@@ -430,6 +430,42 @@ export async function initializeTables(db: any) {
       ON "pressure_history" ("scheme_id", "village_name", "esr_name", "pressure_date", "uploaded_at" DESC);
     `);
     
+    // Create water_scheme_data_history table for permanent historical storage
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "water_scheme_data_history" (
+        "id" SERIAL PRIMARY KEY,
+        "region" VARCHAR(100),
+        "circle" VARCHAR(100),
+        "division" VARCHAR(100),
+        "sub_division" VARCHAR(100),
+        "block" VARCHAR(100),
+        "scheme_id" VARCHAR(100),
+        "scheme_name" VARCHAR(255),
+        "village_name" VARCHAR(255),
+        "population" INTEGER,
+        "number_of_esr" INTEGER,
+        "data_date" VARCHAR(15) NOT NULL,
+        "water_value" DECIMAL(20,6),
+        "lpcd_value" DECIMAL(20,6),
+        "uploaded_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+        "upload_batch_id" VARCHAR(50),
+        "dashboard_url" TEXT,
+        UNIQUE("scheme_id", "village_name", "data_date", "uploaded_at")
+      );
+    `);
+    
+    // Create index on water_scheme_data_history for efficient date range queries
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS "idx_water_scheme_data_history_date_range" 
+      ON "water_scheme_data_history" ("data_date", "scheme_id", "village_name");
+    `);
+    
+    // Create index on water_scheme_data_history for efficient latest record queries
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS "idx_water_scheme_data_history_latest" 
+      ON "water_scheme_data_history" ("scheme_id", "village_name", "data_date", "uploaded_at" DESC);
+    `);
+    
     // Check if the users table has any records using raw SQL to avoid Drizzle ORM issues
     try {
       const usersResult = await db.execute(`SELECT COUNT(*) FROM "users"`);
