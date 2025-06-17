@@ -964,6 +964,33 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
       }
     }
     
+    // Store historical water scheme data after successful import
+    try {
+      console.log("Storing historical water scheme data from import...");
+      
+      // Get all the imported records for historical storage
+      const allImportedRecords = [];
+      for (const row of data) {
+        let record: any;
+        if (isExcel) {
+          record = mapExcelFields(row);
+        } else {
+          record = mapCsvFields(row);
+        }
+        
+        if (record.scheme_id && record.village_name) {
+          allImportedRecords.push(record);
+        }
+      }
+      
+      // Call the storage instance to store historical data
+      await storageInstance.storeWaterSchemeHistoricalData(allImportedRecords);
+      console.log("✅ Historical water scheme data stored successfully");
+    } catch (historicalError) {
+      console.error('Error storing historical water scheme data after import:', historicalError);
+      errors.push('Failed to store historical water scheme data');
+    }
+    
     return {
       message: `Successfully processed ${inserted + updated} records.`,
       inserted,
