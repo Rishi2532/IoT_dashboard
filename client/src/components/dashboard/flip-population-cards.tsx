@@ -740,7 +740,7 @@ export default function FlipPopulationCards({
                     >
                       {villageLpcdAbove55Change?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(villageLpcdAbove55Change?.value || 0)}
+                        {formatNumber(villageLpcdAbove55Change?.value || 0)} ({villageLpcdAbove55Change?.percentage?.toFixed(1) || "0.0"}%)
                       </span>
                     </div>
                   </div>
@@ -835,13 +835,13 @@ export default function FlipPopulationCards({
                     <div
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
                         villageLpcdBelow55Change?.isPositive
-                          ? "bg-yellow-100 text-yellow-700"
+                          ? "bg-red-100 text-red-700"
                           : "bg-green-100 text-green-700"
                       }`}
                     >
                       {villageLpcdBelow55Change?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(villageLpcdBelow55Change?.value || 0)}
+                        {formatNumber(villageLpcdBelow55Change?.value || 0)} ({villageLpcdBelow55Change?.percentage?.toFixed(1) || "0.0"}%)
                       </span>
                     </div>
                   </div>
