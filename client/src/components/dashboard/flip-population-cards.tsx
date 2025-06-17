@@ -395,13 +395,13 @@ export default function FlipPopulationCards({
                     <div
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
                         totalPopulationChange?.isPositive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-green-100 text-green-700"
                       }`}
                     >
                       {totalPopulationChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(totalPopulationChange?.value || 0)}
+                        {formatNumber(totalPopulationChange?.value || 0)} ({totalPopulationChange?.percentage?.toFixed(1) || "0.0"}%)
                       </span>
                     </div>
                   </div>
@@ -435,13 +435,13 @@ export default function FlipPopulationCards({
                     <div
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
                         totalVillagesChange?.isPositive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
+                          ? "bg-red-100 text-red-700"
+                          : "bg-green-100 text-green-700"
                       }`}
                     >
                       {totalVillagesChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(totalVillagesChange?.value || 0)}
+                        {formatNumber(totalVillagesChange?.value || 0)} ({totalVillagesChange?.percentage?.toFixed(1) || "0.0"}%)
                       </span>
                     </div>
                   </div>
@@ -487,7 +487,7 @@ export default function FlipPopulationCards({
                     >
                       {populationWaterChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(populationWaterChange?.value || 0)}
+                        {formatNumber(populationWaterChange?.value || 0)} ({populationWaterChange?.percentage?.toFixed(1) || "0.0"}%)
                       </span>
                     </div>
                   </div>
@@ -535,7 +535,7 @@ export default function FlipPopulationCards({
                     >
                       {villageWaterChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(villageWaterChange?.value || 0)}
+                        {formatNumber(villageWaterChange?.value || 0)} ({villageWaterChange?.percentage?.toFixed(1) || "0.0"}%)
                       </span>
                     </div>
                   </div>
@@ -587,7 +587,7 @@ export default function FlipPopulationCards({
                     >
                       {populationNoWaterChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(populationNoWaterChange?.value || 0)}
+                        {formatNumber(populationNoWaterChange?.value || 0)} ({populationNoWaterChange?.percentage?.toFixed(1) || "0.0"}%)
                       </span>
                     </div>
                   </div>
@@ -635,7 +635,7 @@ export default function FlipPopulationCards({
                     >
                       {villageNoWaterChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {villageNoWaterChange?.percentage.toFixed(1)}%
+                        {formatNumber(villageNoWaterChange?.value || 0)} ({villageNoWaterChange?.percentage?.toFixed(1) || "0.0"}%)
                       </span>
                     </div>
                   </div>
@@ -689,7 +689,7 @@ export default function FlipPopulationCards({
                     >
                       {populationLpcdAbove55Change?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(populationLpcdAbove55Change?.value || 0)}
+                        {formatNumber(populationLpcdAbove55Change?.value || 0)} ({populationLpcdAbove55Change?.percentage?.toFixed(1) || "0.0"}%)
                       </span>
                     </div>
                   </div>
@@ -789,11 +789,14 @@ export default function FlipPopulationCards({
                     <div
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
                         populationLpcdBelow55Change?.isPositive
-                          ? "bg-yellow-100 text-yellow-700"
+                          ? "bg-red-100 text-red-700"
                           : "bg-green-100 text-green-700"
                       }`}
                     >
                       {populationLpcdBelow55Change?.isPositive ? "▲" : "▼"}
+                      <span>
+                        {formatNumber(populationLpcdBelow55Change?.value || 0)} ({populationLpcdBelow55Change?.percentage?.toFixed(1) || "0.0"}%)
+                      </span>
                     </div>
                   </div>
                 </div>
