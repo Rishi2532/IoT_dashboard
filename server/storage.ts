@@ -2561,23 +2561,54 @@ export class PostgresStorage implements IStorage {
         return null;
       };
       
-      // Parse start and end dates for comparison
-      const startDateObj = new Date(startDate);
-      const endDateObj = new Date(endDate);
+      // Parse start and end dates for comparison - handle different input formats
+      let startDateObj: Date;
+      let endDateObj: Date;
+      
+      // Try to parse the input dates (they might be in DD-MM-YYYY format from frontend)
+      if (/^\d{4}-\d{2}-\d{2}$/.test(startDate)) {
+        startDateObj = new Date(startDate);
+      } else if (/^\d{2}-\d{2}-\d{4}$/.test(startDate)) {
+        // Handle DD-MM-YYYY format
+        const [day, month, year] = startDate.split('-');
+        startDateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      } else {
+        startDateObj = new Date(startDate);
+      }
+      
+      if (/^\d{4}-\d{2}-\d{2}$/.test(endDate)) {
+        endDateObj = new Date(endDate);
+      } else if (/^\d{2}-\d{2}-\d{4}$/.test(endDate)) {
+        // Handle DD-MM-YYYY format
+        const [day, month, year] = endDate.split('-');
+        endDateObj = new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+      } else {
+        endDateObj = new Date(endDate);
+      }
+      
+      // Set end date to end of day for inclusive filtering
+      endDateObj.setHours(23, 59, 59, 999);
+      
+      console.log(`Date range parsed: ${startDateObj.toISOString()} to ${endDateObj.toISOString()}`);
       
       // Filter results by date range
-      const filteredResults = results.filter(record => {
+      const filteredResults = results.filter((record: any) => {
         const recordDate = parseDate(record.chlorine_date);
-        if (!recordDate) return false;
+        if (!recordDate) {
+          console.log(`Invalid date format for record: ${record.chlorine_date}`);
+          return false;
+        }
         
         return recordDate >= startDateObj && recordDate <= endDateObj;
       });
+      
+      console.log(`After date filtering: ${filteredResults.length} records from ${results.length} total`);
       
       // Remove duplicates - keep only the most recent upload for each ESR + date combination
       const uniqueRecords = new Map<string, ChlorineHistory>();
       
       // Sort by upload time (most recent first) before deduplication
-      const sortedResults = filteredResults.sort((a, b) => {
+      const sortedResults = filteredResults.sort((a: any, b: any) => {
         if (!a.uploaded_at || !b.uploaded_at) return 0;
         return new Date(b.uploaded_at).getTime() - new Date(a.uploaded_at).getTime();
       });

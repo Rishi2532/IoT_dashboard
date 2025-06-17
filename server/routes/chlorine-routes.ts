@@ -491,11 +491,40 @@ router.get("/export/historical", async (req, res) => {
       return null;
     };
     
+    // Collect all unique dates and sort them chronologically
+    const uniqueDates = new Set<string>();
+    const dateObjects = new Map<string, Date>();
+    
+    filteredData.forEach(record => {
+      const formattedDate = formatDateForColumn(record.chlorine_date);
+      uniqueDates.add(formattedDate);
+      
+      // Store the parsed date object for sorting
+      const parsedDate = parseDate(record.chlorine_date);
+      if (parsedDate) {
+        dateObjects.set(formattedDate, parsedDate);
+      }
+    });
+    
+    // Sort dates chronologically
+    const sortedDates = Array.from(uniqueDates).sort((a, b) => {
+      const dateA = dateObjects.get(a);
+      const dateB = dateObjects.get(b);
+      
+      if (!dateA || !dateB) {
+        return a.localeCompare(b); // Fallback to string comparison
+      }
+      
+      return dateA.getTime() - dateB.getTime();
+    });
+    
+    console.log(`Sorted dates for export: ${sortedDates.slice(0, 5).join(', ')}...`);
+    
     filteredData.forEach(record => {
       const esrKey = `${record.scheme_id}_${record.village_name}_${record.esr_name}`;
       
       if (!esrMap.has(esrKey)) {
-        esrMap.set(esrKey, {
+        const baseData: any = {
           'Scheme ID': record.scheme_id,
           'Scheme Name': record.scheme_name,
           'Village Name': record.village_name,
@@ -505,16 +534,46 @@ router.get("/export/historical", async (req, res) => {
           'Division': record.division,
           'Sub Division': record.sub_division,
           'Block': record.block
+        };
+        
+        // Initialize all date columns with empty values in sorted order
+        sortedDates.forEach(date => {
+          baseData[date] = '';
         });
+        
+        esrMap.set(esrKey, baseData);
       }
       
-      // Add chlorine value for the specific date with clean column name
+      // Add chlorine value for the specific date
       const formattedDate = formatDateForColumn(record.chlorine_date);
-      esrMap.get(esrKey)[formattedDate] = parseFloat(record.chlorine_value as string) || 0;
+      const esrData = esrMap.get(esrKey);
+      if (esrData) {
+        esrData[formattedDate] = parseFloat(record.chlorine_value as string) || 0;
+      }
     });
     
-    // Convert map to array for Excel
-    const excelData = Array.from(esrMap.values());
+    // Convert map to array for Excel with proper column ordering
+    const excelData = Array.from(esrMap.values()).map((row: any) => {
+      const orderedRow: any = {};
+      
+      // First add the metadata columns
+      orderedRow['Scheme ID'] = row['Scheme ID'];
+      orderedRow['Scheme Name'] = row['Scheme Name'];
+      orderedRow['Village Name'] = row['Village Name'];
+      orderedRow['ESR Name'] = row['ESR Name'];
+      orderedRow['Region'] = row['Region'];
+      orderedRow['Circle'] = row['Circle'];
+      orderedRow['Division'] = row['Division'];
+      orderedRow['Sub Division'] = row['Sub Division'];
+      orderedRow['Block'] = row['Block'];
+      
+      // Then add date columns in chronological order
+      sortedDates.forEach(date => {
+        orderedRow[date] = row[date] || '';
+      });
+      
+      return orderedRow;
+    });
     
     // Create workbook and worksheet
     const workbook = XLSX.utils.book_new();
