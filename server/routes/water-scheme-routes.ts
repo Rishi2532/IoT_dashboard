@@ -1729,6 +1729,207 @@ router.get('/historical', async (req, res) => {
   }
 });
 
+// Download historical village LPCD data with date range filtering
+router.get('/download/village-lpcd-history', async (req, res) => {
+  try {
+    const { 
+      startDate, 
+      endDate, 
+      region, 
+      scheme_id, 
+      village_name,
+      minLpcd,
+      maxLpcd,
+      format = 'xlsx' 
+    } = req.query;
+    
+    if (!startDate || !endDate) {
+      return res.status(400).json({ 
+        error: 'startDate and endDate are required parameters (format: DD-MMM, e.g., 11-Jun)' 
+      });
+    }
+
+    const { Pool } = pg;
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      let query = `
+        SELECT 
+          region,
+          circle,
+          division,
+          sub_division,
+          block,
+          scheme_id,
+          scheme_name,
+          village_name,
+          population,
+          data_date,
+          lpcd_value,
+          water_value,
+          upload_batch_id,
+          uploaded_at
+        FROM water_scheme_data_history 
+        WHERE data_date >= $1 AND data_date <= $2
+      `;
+      
+      const queryParams = [startDate, endDate];
+      let paramIndex = 3;
+      
+      // Add region filter
+      if (region && region !== 'all') {
+        query += ` AND region = $${paramIndex++}`;
+        queryParams.push(region);
+      }
+      
+      // Add scheme filter
+      if (scheme_id) {
+        query += ` AND scheme_id = $${paramIndex++}`;
+        queryParams.push(scheme_id);
+      }
+      
+      // Add village filter
+      if (village_name) {
+        query += ` AND village_name = $${paramIndex++}`;
+        queryParams.push(village_name);
+      }
+      
+      // Add LPCD range filters
+      if (minLpcd) {
+        query += ` AND lpcd_value >= $${paramIndex++}`;
+        queryParams.push(Number(minLpcd));
+      }
+      
+      if (maxLpcd) {
+        query += ` AND lpcd_value <= $${paramIndex++}`;
+        queryParams.push(Number(maxLpcd));
+      }
+      
+      // Only include records with LPCD values
+      query += ` AND lpcd_value IS NOT NULL`;
+      query += ` ORDER BY data_date DESC, region ASC, village_name ASC`;
+      
+      const result = await client.query(query, queryParams);
+      
+      if (result.rows.length === 0) {
+        return res.status(404).json({ 
+          error: 'No LPCD data found for the specified date range and filters' 
+        });
+      }
+      
+      // Generate filename with date range
+      const filename = `Village_LPCD_History_${startDate}_to_${endDate}_${Date.now()}`;
+      
+      if (format === 'csv') {
+        // Generate CSV
+        const headers = [
+          'Region', 'Circle', 'Division', 'Sub Division', 'Block',
+          'Scheme ID', 'Scheme Name', 'Village Name', 'Population',
+          'Date', 'LPCD Value', 'Water Value', 'Upload Batch', 'Uploaded At'
+        ];
+        
+        let csvContent = headers.join(',') + '\n';
+        
+        result.rows.forEach(row => {
+          const values = [
+            row.region || '',
+            row.circle || '',
+            row.division || '',
+            row.sub_division || '',
+            row.block || '',
+            row.scheme_id || '',
+            row.scheme_name || '',
+            row.village_name || '',
+            row.population || '',
+            row.data_date || '',
+            row.lpcd_value || '',
+            row.water_value || '',
+            row.upload_batch_id || '',
+            row.uploaded_at || ''
+          ];
+          csvContent += values.map(v => `"${v}"`).join(',') + '\n';
+        });
+        
+        res.setHeader('Content-Type', 'text/csv');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
+        res.send(csvContent);
+      } else {
+        // Generate Excel with enhanced formatting
+        const wb = XLSX.utils.book_new();
+        
+        // Prepare data with proper headers
+        const excelData = result.rows.map(row => ({
+          'Region': row.region,
+          'Circle': row.circle,
+          'Division': row.division,
+          'Sub Division': row.sub_division,
+          'Block': row.block,
+          'Scheme ID': row.scheme_id,
+          'Scheme Name': row.scheme_name,
+          'Village Name': row.village_name,
+          'Population': row.population,
+          'Date': row.data_date,
+          'LPCD Value': row.lpcd_value,
+          'Water Value (ML)': row.water_value,
+          'Upload Batch': row.upload_batch_id,
+          'Uploaded At': row.uploaded_at
+        }));
+        
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        
+        // Set column widths
+        ws['!cols'] = [
+          { width: 15 }, // Region
+          { width: 15 }, // Circle
+          { width: 15 }, // Division
+          { width: 15 }, // Sub Division
+          { width: 15 }, // Block
+          { width: 12 }, // Scheme ID
+          { width: 25 }, // Scheme Name
+          { width: 20 }, // Village Name
+          { width: 12 }, // Population
+          { width: 12 }, // Date
+          { width: 12 }, // LPCD Value
+          { width: 15 }, // Water Value
+          { width: 20 }, // Upload Batch
+          { width: 20 }  // Uploaded At
+        ];
+        
+        XLSX.utils.book_append_sheet(wb, ws, 'Village LPCD History');
+        
+        // Add summary sheet
+        const summaryData = [
+          { 'Filter': 'Date Range', 'Value': `${startDate} to ${endDate}` },
+          { 'Filter': 'Region', 'Value': region || 'All Regions' },
+          { 'Filter': 'Total Records', 'Value': result.rows.length },
+          { 'Filter': 'Min LPCD Filter', 'Value': minLpcd || 'None' },
+          { 'Filter': 'Max LPCD Filter', 'Value': maxLpcd || 'None' },
+          { 'Filter': 'Generated At', 'Value': new Date().toISOString() }
+        ];
+        
+        const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+        summaryWs['!cols'] = [{ width: 20 }, { width: 30 }];
+        XLSX.utils.book_append_sheet(wb, summaryWs, 'Filter Summary');
+        
+        const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+        
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}.xlsx"`);
+        res.send(buffer);
+      }
+      
+      console.log(`Downloaded ${result.rows.length} historical LPCD records for date range ${startDate} to ${endDate}`);
+      
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error downloading village LPCD history:', error);
+    res.status(500).json({ error: 'Failed to download village LPCD history' });
+  }
+});
+
 // Populate water_scheme_data_history from current water_scheme_data
 router.post('/populate-history', async (req, res) => {
   try {
