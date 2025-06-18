@@ -347,7 +347,9 @@ export default function FlipPopulationCards({
 
     return (
       <div
-        className={`flex items-center gap-1 ${change.isPositive ? "text-green-200" : "text-red-200"}`}
+        className={`flex items-center gap-1 ${
+          change.isPositive ? "text-green-200" : "text-red-200"
+        }`}
       >
         <span className="text-sm font-bold">
           {change.isPositive ? "+" : "-"}
@@ -395,13 +397,15 @@ export default function FlipPopulationCards({
                     <div
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
                         totalPopulationChange?.isPositive
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
                       }`}
                     >
                       {totalPopulationChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(totalPopulationChange?.value || 0)} ({totalPopulationChange?.percentage?.toFixed(1) || "0.0"}%)
+                        {formatNumber(totalPopulationChange?.value || 0)} (
+                        {totalPopulationChange?.percentage?.toFixed(1) || "0.0"}
+                        %)
                       </span>
                     </div>
                   </div>
@@ -434,14 +438,16 @@ export default function FlipPopulationCards({
                   <div className="flex items-center gap-1">
                     <div
                       className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        totalVillagesChange?.isPositive
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
+                        totalPopulationChange?.isPositive
+                          ? "bg-green-100 text-green-700"
+                          : "bg-red-100 text-red-700"
                       }`}
                     >
-                      {totalVillagesChange?.isPositive ? "▲" : "▼"}
+                      {totalPopulationChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(totalVillagesChange?.value || 0)} ({totalVillagesChange?.percentage?.toFixed(1) || "0.0"}%)
+                        {formatNumber(totalPopulationChange?.value || 0)} (
+                        {totalPopulationChange?.percentage?.toFixed(1) || "0.0"}
+                        %)
                       </span>
                     </div>
                   </div>
@@ -487,7 +493,9 @@ export default function FlipPopulationCards({
                     >
                       {populationWaterChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(populationWaterChange?.value || 0)} ({populationWaterChange?.percentage?.toFixed(1) || "0.0"}%)
+                        {formatNumber(populationWaterChange?.value || 0)} (
+                        {populationWaterChange?.percentage?.toFixed(1) || "0.0"}
+                        %)
                       </span>
                     </div>
                   </div>
@@ -500,17 +508,19 @@ export default function FlipPopulationCards({
                     <Droplets className="h-3 w-3" />
                     <span>Coverage</span>
                   </div>
-                  <span className="font-medium text-emerald-600">
+                  {/* <span className="font-medium text-emerald-600">
                     {formatPercentage(
-                      populationStats.percent_population_with_water,
+                      populationStats.percent_population_with_water
                     )}
                     %
-                  </span>
+                  </span> */}
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
                     data={waterTrend || []}
-                    color="#10B981"
+                    color={
+                      populationWaterChange?.isPositive ? "#16A34A" : "#DC2626"
+                    }
                     height={32}
                     strokeWidth={2}
                   />
@@ -535,7 +545,8 @@ export default function FlipPopulationCards({
                     >
                       {villageWaterChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(villageWaterChange?.value || 0)} ({villageWaterChange?.percentage?.toFixed(1) || "0.0"}%)
+                        {formatNumber(villageWaterChange?.value || 0)} (
+                        {villageWaterChange?.percentage?.toFixed(1) || "0.0"}%)
                       </span>
                     </div>
                   </div>
@@ -548,15 +559,17 @@ export default function FlipPopulationCards({
                     <Droplets className="h-3 w-3" />
                     <span>Coverage</span>
                   </div>
-                  <span className="font-medium text-cyan-600">
+                  {/* <span className="font-medium text-cyan-600">
                     {formatPercentage(villageStats.percent_villages_with_water)}
                     %
-                  </span>
+                  </span> */}
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
                     data={waterTrend || []}
-                    color="#0891B2"
+                    color={
+                      populationWaterChange?.isPositive ? "#16A34A" : "#DC2626"
+                    }
                     height={32}
                     strokeWidth={2}
                   />
@@ -587,7 +600,10 @@ export default function FlipPopulationCards({
                     >
                       {populationNoWaterChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(populationNoWaterChange?.value || 0)} ({populationNoWaterChange?.percentage?.toFixed(1) || "0.0"}%)
+                        {formatNumber(populationNoWaterChange?.value || 0)} (
+                        {populationNoWaterChange?.percentage?.toFixed(1) ||
+                          "0.0"}
+                        %)
                       </span>
                     </div>
                   </div>
@@ -600,17 +616,21 @@ export default function FlipPopulationCards({
                     <AlertTriangle className="h-3 w-3" />
                     <span>No Access</span>
                   </div>
-                  <span className="font-medium text-red-600">
+                  {/* <span className="font-medium text-red-600">
                     {formatPercentage(
-                      populationStats.percent_population_no_water,
+                      populationStats.percent_population_no_water
                     )}
                     %
-                  </span>
+                  </span> */}
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
                     data={noWaterTrend || []}
-                    color="#DC2626"
+                    color={
+                      populationNoWaterChange?.isPositive
+                        ? "#DC2626"
+                        : "#16A34A" // red if ↑, green if ↓
+                    }
                     height={32}
                     strokeWidth={2}
                   />
@@ -635,7 +655,9 @@ export default function FlipPopulationCards({
                     >
                       {villageNoWaterChange?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(villageNoWaterChange?.value || 0)} ({villageNoWaterChange?.percentage?.toFixed(1) || "0.0"}%)
+                        {formatNumber(villageNoWaterChange?.value || 0)} (
+                        {villageNoWaterChange?.percentage?.toFixed(1) || "0.0"}
+                        %)
                       </span>
                     </div>
                   </div>
@@ -648,17 +670,21 @@ export default function FlipPopulationCards({
                     <AlertTriangle className="h-3 w-3" />
                     <span>No Access</span>
                   </div>
-                  <span className="font-medium text-orange-600">
+                  {/* <span className="font-medium text-orange-600">
                     {formatPercentage(
-                      villageStats.percent_villages_without_water,
+                      villageStats.percent_villages_without_water
                     )}
                     %
-                  </span>
+                  </span> */}
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
                     data={noWaterTrend || []}
-                    color="#EA580C"
+                    color={
+                      populationNoWaterChange?.isPositive
+                        ? "#DC2626"
+                        : "#16A34A" // red if ↑, green if ↓
+                    }
                     height={32}
                     strokeWidth={2}
                   />
@@ -689,7 +715,11 @@ export default function FlipPopulationCards({
                     >
                       {populationLpcdAbove55Change?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(populationLpcdAbove55Change?.value || 0)} ({populationLpcdAbove55Change?.percentage?.toFixed(1) || "0.0"}%)
+                        {formatNumber(populationLpcdAbove55Change?.value || 0)}{" "}
+                        (
+                        {populationLpcdAbove55Change?.percentage?.toFixed(1) ||
+                          "0.0"}
+                        %)
                       </span>
                     </div>
                   </div>
@@ -703,19 +733,23 @@ export default function FlipPopulationCards({
                     <Droplets className="h-3 w-3" />
                     <span>Adequate Supply</span>
                   </div>
-                  <span className="font-medium text-green-600">
+                  {/* <span className="font-medium text-green-600">
                     {formatPercentage(
                       (populationStats.population_lpcd_above_55 /
                         populationStats.total_population) *
-                        100,
+                        100
                     )}
                     %
-                  </span>
+                  </span> */}
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
                     data={lpcdTrend || []}
-                    color="#059669"
+                    color={
+                      populationLpcdAbove55Change?.isPositive
+                        ? "#16A34A"
+                        : "#DC2626"
+                    }
                     height={32}
                     strokeWidth={2}
                   />
@@ -740,7 +774,10 @@ export default function FlipPopulationCards({
                     >
                       {villageLpcdAbove55Change?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(villageLpcdAbove55Change?.value || 0)} ({villageLpcdAbove55Change?.percentage?.toFixed(1) || "0.0"}%)
+                        {formatNumber(villageLpcdAbove55Change?.value || 0)} (
+                        {villageLpcdAbove55Change?.percentage?.toFixed(1) ||
+                          "0.0"}
+                        %)
                       </span>
                     </div>
                   </div>
@@ -754,17 +791,21 @@ export default function FlipPopulationCards({
                     <Droplets className="h-3 w-3" />
                     <span>Adequate Supply</span>
                   </div>
-                  <span className="font-medium text-lime-600">
+                  {/* <span className="font-medium text-lime-600">
                     {formatPercentage(
-                      villageStats.percent_villages_lpcd_above_55,
+                      villageStats.percent_villages_lpcd_above_55
                     )}
                     %
-                  </span>
+                  </span> */}
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
                     data={lpcdTrend || []}
-                    color="#65A30D"
+                    color={
+                      populationLpcdAbove55Change?.isPositive
+                        ? "#16A34A"
+                        : "#DC2626"
+                    }
                     height={32}
                     strokeWidth={2}
                   />
@@ -795,7 +836,11 @@ export default function FlipPopulationCards({
                     >
                       {populationLpcdBelow55Change?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(populationLpcdBelow55Change?.value || 0)} ({populationLpcdBelow55Change?.percentage?.toFixed(1) || "0.0"}%)
+                        {formatNumber(populationLpcdBelow55Change?.value || 0)}{" "}
+                        (
+                        {populationLpcdBelow55Change?.percentage?.toFixed(1) ||
+                          "0.0"}
+                        %)
                       </span>
                     </div>
                   </div>
@@ -809,14 +854,18 @@ export default function FlipPopulationCards({
                     <AlertTriangle className="h-3 w-3" />
                     <span>Below Standard</span>
                   </div>
-                  <span>
+                  {/* <span>
                     {formatNumber(populationLpcdBelow55Change?.value || 0)}
-                  </span>
+                  </span> */}
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
                     data={lpcdBelow55Trend || []}
-                    color="#D97706"
+                    color={
+                      populationLpcdBelow55Change?.isPositive
+                        ? "#DC2626"
+                        : "#16A34A"
+                    }
                     height={32}
                     strokeWidth={2}
                   />
@@ -841,7 +890,10 @@ export default function FlipPopulationCards({
                     >
                       {villageLpcdBelow55Change?.isPositive ? "▲" : "▼"}
                       <span>
-                        {formatNumber(villageLpcdBelow55Change?.value || 0)} ({villageLpcdBelow55Change?.percentage?.toFixed(1) || "0.0"}%)
+                        {formatNumber(villageLpcdBelow55Change?.value || 0)} (
+                        {villageLpcdBelow55Change?.percentage?.toFixed(1) ||
+                          "0.0"}
+                        %)
                       </span>
                     </div>
                   </div>
@@ -850,31 +902,35 @@ export default function FlipPopulationCards({
                   {formatNumber(villageStats.villages_lpcd_below_55)}
                 </div>
                 <div className="text-xs text-slate-500 mb-2">
-                  <span className="font-medium text-orange-600">
+                  {/* <span className="font-medium text-orange-600">
                     {formatPercentage(
-                      villageStats.percent_villages_lpcd_below_55,
+                      villageStats.percent_villages_lpcd_below_55
                     )}
                     %
-                  </span>
+                  </span> */}
                 </div>
                 <div className="flex items-center justify-between text-xs text-slate-500">
                   <div className="flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3" />
                     <span>Below Standard</span>
                   </div>
-                  <span className="font-medium text-amber-600">
+                  {/* <span className="font-medium text-amber-600">
                     {formatPercentage(
                       (populationStats.population_lpcd_below_55 /
                         populationStats.total_population) *
-                        100,
+                        100
                     )}
                     %
-                  </span>
+                  </span> */}
                 </div>
                 <div className="mt-3 h-8 flex items-center justify-center">
                   <MiniLineChart
                     data={lpcdBelow55Trend || []}
-                    color="#EA580C"
+                    color={
+                      populationLpcdBelow55Change?.isPositive
+                        ? "#DC2626"
+                        : "#16A34A"
+                    }
                     height={32}
                     strokeWidth={2}
                   />
