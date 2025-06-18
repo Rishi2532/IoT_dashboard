@@ -1492,6 +1492,22 @@ const EnhancedLpcdDashboard = () => {
             </SelectContent>
           </Select>
 
+          {/* Historical Data Toggle */}
+          <Button
+            variant={showHistoricalData ? "default" : "outline"}
+            size="sm"
+            onClick={() => {
+              setShowHistoricalData(!showHistoricalData);
+              if (!showHistoricalData) {
+                trackFilterUsage("Historical Data View", "enabled");
+              }
+            }}
+            className="flex items-center gap-2"
+          >
+            <History className="h-4 w-4" />
+            {showHistoricalData ? "Current Data" : "Historical Data"}
+          </Button>
+
           {/* Action Buttons */}
           <div className="flex gap-2">
             <Button

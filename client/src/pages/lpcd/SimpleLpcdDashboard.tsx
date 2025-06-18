@@ -34,10 +34,12 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { TranslatedText } from '@/components/ui/translated-text';
 import { Separator } from '@/components/ui/separator';
-import { Filter, Download, FileSpreadsheet, MoreHorizontal, ChevronDown } from 'lucide-react';
+import { Filter, Download, FileSpreadsheet, MoreHorizontal, ChevronDown, Calendar, Download as DownloadIcon } from 'lucide-react';
 import * as XLSX from 'xlsx';
 
 // Import the Village Detail Dialog component
