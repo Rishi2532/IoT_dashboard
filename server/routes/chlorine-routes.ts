@@ -536,9 +536,9 @@ router.get("/export/historical", async (req, res) => {
           'Block': record.block
         };
         
-        // Initialize all date columns with empty values in sorted order
+        // Initialize all date columns with null values in sorted order
         sortedDates.forEach(date => {
-          baseData[date] = '';
+          baseData[date] = null;
         });
         
         esrMap.set(esrKey, baseData);
@@ -569,7 +569,7 @@ router.get("/export/historical", async (req, res) => {
       
       // Then add date columns in chronological order
       sortedDates.forEach(date => {
-        orderedRow[date] = row[date] || '';
+        orderedRow[date] = row[date] !== null && row[date] !== undefined ? row[date] : '';
       });
       
       return orderedRow;

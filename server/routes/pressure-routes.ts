@@ -460,7 +460,7 @@ router.get("/export/historical", async (req, res) => {
       
       // Then add date columns in chronological order
       sortedDates.forEach(date => {
-        orderedRow[date] = row[date] || '';
+        orderedRow[date] = row[date] !== null && row[date] !== undefined ? row[date] : '';
       });
       
       return orderedRow;
