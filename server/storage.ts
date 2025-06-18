@@ -6027,6 +6027,125 @@ export class PostgresStorage implements IStorage {
     }
   }
 
+  // Populate water_scheme_data_history from current water_scheme_data records
+  async populateHistoryFromCurrentData(): Promise<void> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      console.log("📊 Populating water_scheme_data_history from current water_scheme_data...");
+      
+      // Get all current water scheme data
+      const currentData = await db.select().from(waterSchemeData);
+      
+      if (currentData.length === 0) {
+        console.log("No water scheme data found to populate history");
+        return;
+      }
+      
+      const uploadBatchId = `batch_${Date.now()}_current_data`;
+      const historicalRecords: InsertWaterSchemeDataHistory[] = [];
+      
+      // Get current date in DD-MMM format
+      const now = new Date();
+      const currentDate = now.toLocaleDateString('en-GB', { 
+        day: '2-digit', 
+        month: 'short' 
+      });
+      
+      for (const record of currentData) {
+        if (!record.scheme_id || !record.village_name) {
+          continue; // Skip records without required identifiers
+        }
+        
+        // Process water values for each day (1-6)
+        for (let day = 1; day <= 6; day++) {
+          const waterDateField = `water_date_day${day}` as keyof typeof record;
+          const waterValueField = `water_value_day${day}` as keyof typeof record;
+          
+          const waterDate = record[waterDateField] as string;
+          const waterValue = record[waterValueField] as number;
+          
+          if (waterDate && waterValue !== null && waterValue !== undefined) {
+            // Calculate LPCD if we have population data
+            let lpcdValue = null;
+            if (record.population && record.population > 0 && waterValue > 0) {
+              lpcdValue = (waterValue * 1000) / record.population; // Convert to LPCD
+            }
+            
+            historicalRecords.push({
+              region: record.region || null,
+              circle: record.circle || null,
+              division: record.division || null,
+              sub_division: record.sub_division || null,
+              block: record.block || null,
+              scheme_id: record.scheme_id,
+              scheme_name: record.scheme_name || null,
+              village_name: record.village_name,
+              population: record.population || null,
+              number_of_esr: record.number_of_esr || null,
+              data_date: waterDate,
+              water_value: waterValue.toString(),
+              lpcd_value: lpcdValue ? lpcdValue.toString() : null,
+              upload_batch_id: uploadBatchId,
+              dashboard_url: record.dashboard_url || null
+            });
+          }
+        }
+        
+        // Also add current water values if they exist
+        if (record.current_water_value !== null && record.current_water_value !== undefined) {
+          let lpcdValue = null;
+          if (record.population && record.population > 0 && record.current_water_value > 0) {
+            lpcdValue = (record.current_water_value * 1000) / record.population;
+          }
+          
+          historicalRecords.push({
+            region: record.region || null,
+            circle: record.circle || null,
+            division: record.division || null,
+            sub_division: record.sub_division || null,
+            block: record.block || null,
+            scheme_id: record.scheme_id,
+            scheme_name: record.scheme_name || null,
+            village_name: record.village_name,
+            population: record.population || null,
+            number_of_esr: record.number_of_esr || null,
+            data_date: currentDate,
+            water_value: record.current_water_value.toString(),
+            lpcd_value: lpcdValue ? lpcdValue.toString() : null,
+            upload_batch_id: uploadBatchId,
+            dashboard_url: record.dashboard_url || null
+          });
+        }
+      }
+      
+      if (historicalRecords.length > 0) {
+        console.log(`Storing ${historicalRecords.length} historical records from current data...`);
+        
+        // Insert historical records in batches to avoid memory issues
+        const historyBatchSize = 200;
+        for (let i = 0; i < historicalRecords.length; i += historyBatchSize) {
+          const batch = historicalRecords.slice(i, i + historyBatchSize);
+          
+          try {
+            await db.insert(waterSchemeDataHistory).values(batch).onConflictDoNothing();
+            console.log(`Stored historical batch ${Math.floor(i/historyBatchSize) + 1}/${Math.ceil(historicalRecords.length/historyBatchSize)}`);
+          } catch (historyError) {
+            console.error(`Error storing historical batch ${Math.floor(i/historyBatchSize) + 1}:`, historyError);
+            // Continue with other batches even if one fails
+          }
+        }
+        
+        console.log(`✅ Successfully populated ${historicalRecords.length} historical records from current data with batch ID: ${uploadBatchId}`);
+      } else {
+        console.log("No historical records to populate from current data");
+      }
+    } catch (error) {
+      console.error('Error in populateHistoryFromCurrentData:', error);
+      throw error;
+    }
+  }
+
   // We're now using global variables instead of static class variables
   // This makes the data accessible across different instances and module reloads
 

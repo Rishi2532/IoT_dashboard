@@ -1729,4 +1729,24 @@ router.get('/historical', async (req, res) => {
   }
 });
 
+// Populate water_scheme_data_history from current water_scheme_data
+router.post('/populate-history', async (req, res) => {
+  try {
+    console.log('📊 Manual trigger to populate water_scheme_data_history from current data');
+    
+    await storageInstance.populateHistoryFromCurrentData();
+    
+    res.json({
+      success: true,
+      message: 'Successfully populated water_scheme_data_history from current data'
+    });
+  } catch (error) {
+    console.error('Error populating history from current data:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to populate history from current data'
+    });
+  }
+});
+
 export default router;
