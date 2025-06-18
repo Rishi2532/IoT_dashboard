@@ -520,6 +520,16 @@ router.get("/export/historical", async (req, res) => {
     
     console.log(`Sorted dates for export: ${sortedDates.slice(0, 5).join(', ')}...`);
     
+    // Log sample data to understand what values we're working with
+    const sampleRecords = filteredData.slice(0, 5);
+    console.log('Sample chlorine records:', sampleRecords.map(r => ({
+      scheme_id: r.scheme_id,
+      village_name: r.village_name,
+      esr_name: r.esr_name,
+      chlorine_value: r.chlorine_value,
+      chlorine_date: r.chlorine_date
+    })));
+    
     filteredData.forEach(record => {
       const esrKey = `${record.scheme_id}_${record.village_name}_${record.esr_name}`;
       
@@ -548,7 +558,14 @@ router.get("/export/historical", async (req, res) => {
       const formattedDate = formatDateForColumn(record.chlorine_date);
       const esrData = esrMap.get(esrKey);
       if (esrData) {
-        esrData[formattedDate] = parseFloat(record.chlorine_value as string) || 0;
+        const chlorineValue = record.chlorine_value as string;
+        const parsedValue = chlorineValue === '0' ? 0 : (parseFloat(chlorineValue) || null);
+        esrData[formattedDate] = parsedValue;
+        
+        // Debug logging for zero values
+        if (chlorineValue === '0' || parsedValue === 0) {
+          console.log(`Zero value found: original="${chlorineValue}", parsed=${parsedValue}, date=${formattedDate}`);
+        }
       }
     });
     

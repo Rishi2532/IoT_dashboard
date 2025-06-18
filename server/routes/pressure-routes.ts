@@ -439,7 +439,8 @@ router.get("/export/historical", async (req, res) => {
       const formattedDate = formatDateForColumn(record.measurement_date);
       const esrData = esrMap.get(esrKey);
       if (esrData) {
-        esrData[formattedDate] = parseFloat(record.pressure_value?.toString() || '0') || 0;
+        const pressureValue = record.pressure_value?.toString() || '0';
+        esrData[formattedDate] = pressureValue === '0' ? 0 : (parseFloat(pressureValue) || null);
       }
     });
     
