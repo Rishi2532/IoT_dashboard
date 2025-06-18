@@ -558,13 +558,13 @@ router.get("/export/historical", async (req, res) => {
       const formattedDate = formatDateForColumn(record.chlorine_date);
       const esrData = esrMap.get(esrKey);
       if (esrData) {
-        const chlorineValue = record.chlorine_value as string;
-        const parsedValue = chlorineValue === '0' ? 0 : (parseFloat(chlorineValue) || null);
-        esrData[formattedDate] = parsedValue;
-        
-        // Debug logging for zero values
-        if (chlorineValue === '0' || parsedValue === 0) {
-          console.log(`Zero value found: original="${chlorineValue}", parsed=${parsedValue}, date=${formattedDate}`);
+        const chlorineValue = record.chlorine_value;
+        // Handle both numeric and string zero values
+        if (chlorineValue === 0 || chlorineValue === '0') {
+          esrData[formattedDate] = 0;
+        } else {
+          const parsed = parseFloat(String(chlorineValue));
+          esrData[formattedDate] = isNaN(parsed) ? null : parsed;
         }
       }
     });
