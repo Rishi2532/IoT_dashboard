@@ -1025,8 +1025,29 @@ const PressureDashboard: React.FC = () => {
       params.append("startDate", historicalStartDate);
       params.append("endDate", historicalEndDate);
       
+      // Apply all current filters to the historical export
       if (selectedRegion && selectedRegion !== "all") {
         params.append("region", selectedRegion);
+      }
+      
+      if (searchQuery.trim() !== "") {
+        params.append("searchQuery", searchQuery.trim());
+      }
+      
+      if (commissionedFilter !== "all") {
+        params.append("commissioned", commissionedFilter);
+      }
+      
+      if (fullyCompletedFilter !== "all") {
+        params.append("fullyCompleted", fullyCompletedFilter);
+      }
+      
+      if (schemeStatusFilter !== "all") {
+        params.append("schemeStatus", schemeStatusFilter);
+      }
+      
+      if (selectedCardFilter !== "all") {
+        params.append("pressureRange", selectedCardFilter);
       }
 
       const queryString = params.toString();

@@ -315,7 +315,7 @@ router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res)
 // Export historical pressure data to Excel
 router.get("/export/historical", async (req, res) => {
   try {
-    const { startDate, endDate, region } = req.query;
+    const { startDate, endDate, region, searchQuery, commissioned, fullyCompleted, schemeStatus, pressureRange } = req.query;
     
     if (!startDate || !endDate) {
       return res.status(400).json({ error: "startDate and endDate are required" });
@@ -329,7 +329,95 @@ router.get("/export/historical", async (req, res) => {
     
     console.log("Historical pressure export request:", filter);
     
-    const historicalData = await storage.getHistoricalPressureData(filter);
+    // Get the raw historical data first
+    const rawHistoricalData = await storage.getHistoricalPressureData(filter);
+    
+    if (rawHistoricalData.length === 0) {
+      return res.status(404).json({ 
+        error: "No historical data found for the specified date range" 
+      });
+    }
+    
+    // Get scheme status data for filtering
+    let schemeStatusData: any[] = [];
+    try {
+      schemeStatusData = await storage.getAllSchemes();
+    } catch (error) {
+      console.warn("Could not fetch scheme status data for filtering:", error);
+    }
+    
+    // Create a map of scheme statuses for quick lookup
+    const schemeStatusMap = new Map();
+    schemeStatusData.forEach((status) => {
+      schemeStatusMap.set(status.scheme_id, status);
+    });
+    
+    // Apply filters to the historical data
+    let filteredHistoricalData = rawHistoricalData;
+    
+    // Apply search query filter
+    if (searchQuery && typeof searchQuery === 'string') {
+      const query = searchQuery.toLowerCase();
+      filteredHistoricalData = filteredHistoricalData.filter(item =>
+        item.scheme_name?.toLowerCase().includes(query) ||
+        item.region?.toLowerCase().includes(query) ||
+        item.village_name?.toLowerCase().includes(query) ||
+        item.esr_name?.toLowerCase().includes(query)
+      );
+    }
+    
+    // Apply commissioned status filter
+    if (commissioned && commissioned !== "all") {
+      filteredHistoricalData = filteredHistoricalData.filter(item => {
+        const status = schemeStatusMap.get(item.scheme_id);
+        return status && status.mjp_commissioned === commissioned;
+      });
+    }
+    
+    // Apply fully completed filter
+    if (fullyCompleted && fullyCompleted !== "all") {
+      filteredHistoricalData = filteredHistoricalData.filter(item => {
+        const status = schemeStatusMap.get(item.scheme_id);
+        return status && status.mjp_fully_completed === fullyCompleted;
+      });
+    }
+    
+    // Apply scheme status filter
+    if (schemeStatus && schemeStatus !== "all") {
+      filteredHistoricalData = filteredHistoricalData.filter(item => {
+        const status = schemeStatusMap.get(item.scheme_id);
+        if (!status) return false;
+        
+        if (schemeStatus === "Connected") {
+          return status.fully_completion_scheme_status !== "Not-Connected";
+        }
+        return status.fully_completion_scheme_status === schemeStatus;
+      });
+    }
+    
+    // Apply pressure range filter
+    if (pressureRange && pressureRange !== "all") {
+      filteredHistoricalData = filteredHistoricalData.filter(item => {
+        const value = parseFloat(String(item.pressure_value || 0));
+        
+        switch (pressureRange) {
+          case "below_0.2":
+            return value >= 0 && value < 0.2;
+          case "between_0.2_0.7":
+            return value >= 0.2 && value <= 0.7;
+          case "above_0.7":
+            return value > 0.7;
+          case "consistent_zero":
+            return value === 0;
+          default:
+            return true;
+        }
+      });
+    }
+    
+    console.log(`Filtered historical data from ${rawHistoricalData.length} to ${filteredHistoricalData.length} records`);
+    
+    const historicalData = filteredHistoricalData;
     
     if (historicalData.length === 0) {
       return res.status(404).json({ 
@@ -442,7 +530,7 @@ router.get("/export/historical", async (req, res) => {
         const rawValue = record.pressure_value;
         let numericValue: number | null = null;
         
-        if (rawValue === 0 || rawValue === '0' || rawValue === '0.0' || rawValue === '0.00') {
+        if (rawValue === 0 || String(rawValue) === '0' || String(rawValue) === '0.0' || String(rawValue) === '0.00') {
           numericValue = 0;
         } else if (rawValue != null) {
           const parsed = parseFloat(String(rawValue));
@@ -495,8 +583,34 @@ router.get("/export/historical", async (req, res) => {
     
     XLSX.utils.book_append_sheet(workbook, worksheet, "Pressure Historical Data");
     
-    // Generate filename
-    const fileName = `Pressure_Data_${region || 'all'}_${new Date().toISOString().split('T')[0]}_${Date.now()}.xlsx`;
+    // Generate filename with applied filters
+    let fileName = `Pressure_Historical_Data_${startDate}_to_${endDate}`;
+    
+    if (region && region !== "all") {
+      fileName += `_${region}`;
+    }
+    
+    if (searchQuery && typeof searchQuery === 'string') {
+      fileName += `_Search-${searchQuery.replace(/[^a-zA-Z0-9]/g, '')}`;
+    }
+    
+    if (commissioned && commissioned !== "all") {
+      fileName += `_Commissioned-${commissioned}`;
+    }
+    
+    if (fullyCompleted && fullyCompleted !== "all") {
+      fileName += `_FullyCompleted-${fullyCompleted}`;
+    }
+    
+    if (schemeStatus && schemeStatus !== "all") {
+      fileName += `_Status-${schemeStatus}`;
+    }
+    
+    if (pressureRange && pressureRange !== "all") {
+      fileName += `_Range-${pressureRange}`;
+    }
+    
+    fileName += `_${new Date().toISOString().split('T')[0]}.xlsx`;
     
     // Generate Excel buffer
     const buffer = XLSX.write(workbook, { 
