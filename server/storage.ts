@@ -5613,7 +5613,76 @@ export class PostgresStorage implements IStorage {
       // Store historical water scheme data after successful import
       try {
         console.log("Storing historical water scheme data...");
-        await this.storeWaterSchemeHistoricalData(jsonData);
+        
+        // Process the jsonData into the proper format for historical storage
+        const processedDataForHistory: any[] = [];
+        
+        for (const row of jsonData) {
+          const schemeData: Record<string, any> = {};
+          
+          if (hasPositionalColumns) {
+            // Handle positional format (column numbers as keys)
+            for (const [position, dbField] of Object.entries(this.positionalColumnMapping)) {
+              if (row[position] !== undefined) {
+                // Convert numeric fields properly
+                if (dbField.includes('value') || 
+                    dbField === 'population' || 
+                    dbField === 'number_of_esr' ||
+                    dbField.includes('count')) {
+                  schemeData[dbField] = this.getNumericValue(row[position]);
+                } else {
+                  schemeData[dbField] = row[position];
+                }
+              }
+            }
+          } else {
+            // Handle named header format
+            // First try exact column matches
+            for (const [excelHeader, dbField] of Object.entries(this.excelColumnMapping)) {
+              if (row[excelHeader] !== undefined) {
+                // Convert numeric fields properly
+                if (dbField.includes('value') || 
+                    dbField === 'population' || 
+                    dbField === 'number_of_esr' ||
+                    dbField.includes('count')) {
+                  schemeData[dbField] = this.getNumericValue(row[excelHeader]);
+                } else {
+                  schemeData[dbField] = row[excelHeader];
+                }
+              }
+            }
+            
+            // Try case-insensitive matching if regular mapping failed
+            if (!schemeData.scheme_id) {
+              for (const origHeader of Object.keys(row)) {
+                const lowerHeader = origHeader.toLowerCase();
+                // Find matching schema field
+                for (const [excelHeader, dbField] of Object.entries(this.excelColumnMapping)) {
+                  if (excelHeader.toLowerCase() === lowerHeader) {
+                    // Convert numeric fields properly
+                    if (dbField.includes('value') || 
+                        dbField === 'population' || 
+                        dbField === 'number_of_esr' ||
+                        dbField.includes('count')) {
+                      schemeData[dbField] = this.getNumericValue(row[origHeader]);
+                    } else {
+                      schemeData[dbField] = row[origHeader];
+                    }
+                    break;
+                  }
+                }
+              }
+            }
+          }
+          
+          // Only add records that have the required fields
+          if (schemeData.scheme_id && schemeData.village_name) {
+            processedDataForHistory.push(schemeData);
+          }
+        }
+        
+        console.log(`Processing ${processedDataForHistory.length} records for historical storage...`);
+        await this.storeWaterSchemeHistoricalData(processedDataForHistory);
         console.log("✅ Historical water scheme data stored successfully");
       } catch (historicalError) {
         console.error('Error storing historical water scheme data after Excel import:', historicalError);
