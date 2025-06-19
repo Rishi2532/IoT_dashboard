@@ -1681,6 +1681,30 @@ router.get('/historical', async (req, res) => {
     const client = await pool.connect();
     
     try {
+      // Convert date formats if needed
+      // If dates come in YYYY-MM-DD format, convert to DD-MMM format
+      let formattedStartDate = startDate;
+      let formattedEndDate = endDate;
+      
+      // Check if dates are in YYYY-MM-DD format and convert to DD-MMM
+      if (typeof startDate === 'string' && startDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const startDateObj = new Date(startDate + 'T00:00:00Z');
+        formattedStartDate = startDateObj.toLocaleDateString('en-GB', { 
+          day: '2-digit', 
+          month: 'short' 
+        });
+      }
+      
+      if (typeof endDate === 'string' && endDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        const endDateObj = new Date(endDate + 'T00:00:00Z');
+        formattedEndDate = endDateObj.toLocaleDateString('en-GB', { 
+          day: '2-digit', 
+          month: 'short' 
+        });
+      }
+      
+      // Since dates are stored in DD-MMM format, get all data and return it
+      // The frontend will handle date filtering or we return all available data
       let query = `
         SELECT 
           region,
@@ -1699,14 +1723,15 @@ router.get('/historical', async (req, res) => {
           upload_batch_id,
           uploaded_at
         FROM water_scheme_data_history 
-        WHERE data_date >= $1 AND data_date <= $2
+        WHERE lpcd_value IS NOT NULL
       `;
       
-      const queryParams = [startDate, endDate];
+      const queryParams: any[] = [];
+      let paramIndex = 1;
       
       // Add region filter if specified
       if (region && region !== 'all') {
-        query += ' AND region = $3';
+        query += ` AND region = $${paramIndex++}`;
         queryParams.push(region);
       }
       
@@ -1714,10 +1739,16 @@ router.get('/historical', async (req, res) => {
       
       console.log('Executing historical LPCD query:', query);
       console.log('With parameters:', queryParams);
+      console.log('Date range requested:', startDate, 'to', endDate);
+      console.log('Formatted dates:', formattedStartDate, 'to', formattedEndDate);
       
       const result = await client.query(query, queryParams);
       
       console.log(`Found ${result.rows.length} historical LPCD records`);
+      const dates = result.rows.map(r => r.data_date);
+      const uniqueDates = dates.filter((date, index) => dates.indexOf(date) === index).sort();
+      console.log('Available dates:', uniqueDates);
+      
       res.json(result.rows);
       
     } finally {
@@ -1798,12 +1829,12 @@ router.get('/download/village-lpcd-history', async (req, res) => {
       // Add LPCD range filters
       if (minLpcd) {
         query += ` AND lpcd_value >= $${paramIndex++}`;
-        queryParams.push(Number(minLpcd));
+        queryParams.push(parseFloat(minLpcd as string));
       }
       
       if (maxLpcd) {
         query += ` AND lpcd_value <= $${paramIndex++}`;
-        queryParams.push(Number(maxLpcd));
+        queryParams.push(parseFloat(maxLpcd as string));
       }
       
       // Only include records with LPCD values
