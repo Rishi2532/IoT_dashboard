@@ -1944,10 +1944,14 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           }
         });
         
-        // Create Excel data with dates as headers
-        const excelData = [];
+        // Debug: Check the structure of grouped data
+        console.log('Number of unique villages:', groupedData.size);
+        console.log('Available dates:', uniqueDates);
         
-        // Create headers
+        // Create Excel data with proper structure
+        const excelRows = [];
+        
+        // Create headers row
         const headers = [
           'Region', 'Circle', 'Division', 'Sub Division', 'Block',
           'Scheme ID', 'Scheme Name', 'Village Name', 'Population', 'Number of ESR'
@@ -1959,12 +1963,11 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           headers.push(`${date} LPCD Value`);
         });
         
-        // Add header row
-        excelData.push(headers);
+        excelRows.push(headers);
         
-        // Add data rows
+        // Create data rows - one row per village
         Array.from(groupedData.values()).forEach(village => {
-          const row = [
+          const dataRow = [
             village.region || '',
             village.circle || '',
             village.division || '',
@@ -1977,23 +1980,27 @@ router.get('/download/village-lpcd-history', async (req, res) => {
             village.number_of_esr || ''
           ];
           
-          // Add values for each date
+          // Add values for each date in order
           uniqueDates.forEach(date => {
             const dateData = village.dates.get(date);
             if (dateData) {
-              row.push(dateData.water_value || '');
-              row.push(dateData.lpcd_value || '');
+              dataRow.push(dateData.water_value !== null && dateData.water_value !== undefined ? dateData.water_value : '');
+              dataRow.push(dateData.lpcd_value !== null && dateData.lpcd_value !== undefined ? dateData.lpcd_value : '');
             } else {
-              row.push(''); // Water Value
-              row.push(''); // LPCD Value
+              dataRow.push(''); // Water Value
+              dataRow.push(''); // LPCD Value
             }
           });
           
-          excelData.push(row);
+          excelRows.push(dataRow);
         });
         
-        // Create worksheet from array of arrays
-        const ws = XLSX.utils.aoa_to_sheet(excelData);
+        console.log('Excel structure - Headers:', headers.length, 'columns');
+        console.log('Excel structure - Data rows:', excelRows.length - 1);
+        console.log('First data row length:', excelRows[1] ? excelRows[1].length : 'No data rows');
+        
+        // Create worksheet from the properly structured array
+        const ws = XLSX.utils.aoa_to_sheet(excelRows);
         
         // Set column widths
         const colWidths = [
