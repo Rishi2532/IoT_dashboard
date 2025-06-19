@@ -2073,6 +2073,7 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           scheme_name,
           village_name,
           population,
+          number_of_esr,
           data_date,
           lpcd_value,
           water_value,
@@ -2221,7 +2222,7 @@ router.get('/download/village-lpcd-history', async (req, res) => {
                 scheme_name: row.scheme_name || '',
                 village_name: row.village_name || '',
                 population: row.population || '',
-                number_of_esr: row.number_of_esr || ''
+                number_of_esr: row.number_of_esr || 0
               },
               dateValues: new Map()
             });
@@ -2282,7 +2283,6 @@ router.get('/download/village-lpcd-history', async (req, res) => {
         });
         
         console.log(`FINAL PIVOT: ${pivotRows.length - 1} villages, ${headerRow.length} columns total`);
-        console.log('First 12 headers:', headerRow.slice(0, 12));
         
         // Create worksheet from the pivot array
         const ws = XLSX.utils.aoa_to_sheet(pivotRows);
