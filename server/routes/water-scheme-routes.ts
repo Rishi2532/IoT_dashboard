@@ -812,6 +812,8 @@ async function processCsvFile(filePath: string) {
 // Import dashboard URL generation functions from auto-generate-dashboard-urls.ts
 import { generateVillageDashboardUrl, generateDashboardUrl } from '../auto-generate-dashboard-urls';
 
+
+
 // Update scheme_status table when status changes are detected
 async function updateSchemeStatusFromRecord(client: any, record: any) {
   try {
@@ -1060,7 +1062,7 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
     
     // Store historical water scheme data after successful import
     try {
-      console.log("Storing historical water scheme data from import...");
+      console.log("🔄 Storing historical water scheme data from CSV import...");
       
       // Get all the imported records for historical storage
       const allImportedRecords = [];
@@ -1077,11 +1079,121 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
         }
       }
       
-      // Call the storage instance to store historical data
-      await storageInstance.storeWaterSchemeHistoricalData(allImportedRecords);
-      console.log("✅ Historical water scheme data stored successfully");
+      console.log(`📊 Processing ${allImportedRecords.length} records for historical storage...`);
+      
+      if (allImportedRecords.length > 0) {
+        // Store historical data directly using PostgreSQL client
+        const uploadBatchId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const historicalRecords: any[] = [];
+        
+        for (const record of allImportedRecords) {
+          if (!record.scheme_id || !record.village_name) {
+            continue;
+          }
+          
+          // Process water values (days 1-6)
+          for (let day = 1; day <= 6; day++) {
+            const waterDateField = `water_date_day${day}`;
+            const waterValueField = `water_value_day${day}`;
+            
+            const waterDate = record[waterDateField];
+            const waterValue = record[waterValueField];
+            
+            if (waterDate && waterValue !== null && waterValue !== undefined && waterValue !== '') {
+              historicalRecords.push({
+                region: record.region || null,
+                circle: record.circle || null,
+                division: record.division || null,
+                sub_division: record.sub_division || null,
+                block: record.block || null,
+                scheme_id: record.scheme_id,
+                scheme_name: record.scheme_name || null,
+                village_name: record.village_name,
+                population: record.population || null,
+                number_of_esr: record.number_of_esr || null,
+                data_date: waterDate,
+                water_value: parseFloat(waterValue),
+                lpcd_value: null,
+                upload_batch_id: uploadBatchId,
+                dashboard_url: record.dashboard_url || null
+              });
+            }
+          }
+          
+          // Process LPCD values (days 1-7)
+          for (let day = 1; day <= 7; day++) {
+            const lpcdDateField = `lpcd_date_day${day}`;
+            const lpcdValueField = `lpcd_value_day${day}`;
+            
+            const lpcdDate = record[lpcdDateField];
+            const lpcdValue = record[lpcdValueField];
+            
+            if (lpcdDate && lpcdValue !== null && lpcdValue !== undefined && lpcdValue !== '') {
+              historicalRecords.push({
+                region: record.region || null,
+                circle: record.circle || null,
+                division: record.division || null,
+                sub_division: record.sub_division || null,
+                block: record.block || null,
+                scheme_id: record.scheme_id,
+                scheme_name: record.scheme_name || null,
+                village_name: record.village_name,
+                population: record.population || null,
+                number_of_esr: record.number_of_esr || null,
+                data_date: lpcdDate,
+                water_value: null,
+                lpcd_value: parseFloat(lpcdValue),
+                upload_batch_id: uploadBatchId,
+                dashboard_url: record.dashboard_url || null
+              });
+            }
+          }
+        }
+        
+        if (historicalRecords.length > 0) {
+          console.log(`Inserting ${historicalRecords.length} historical records into water_scheme_data_history...`);
+          
+          // Insert records in batches
+          const batchSize = 50;
+          for (let i = 0; i < historicalRecords.length; i += batchSize) {
+            const batch = historicalRecords.slice(i, i + batchSize);
+            
+            try {
+              // Build individual insert statements for each record
+              for (const histRecord of batch) {
+                const insertQuery = `
+                  INSERT INTO water_scheme_data_history 
+                  (region, circle, division, sub_division, block, scheme_id, scheme_name, village_name, 
+                   population, number_of_esr, data_date, water_value, lpcd_value, upload_batch_id, dashboard_url) 
+                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
+                `;
+                
+                const values = [
+                  histRecord.region, histRecord.circle, histRecord.division, histRecord.sub_division,
+                  histRecord.block, histRecord.scheme_id, histRecord.scheme_name, histRecord.village_name,
+                  histRecord.population, histRecord.number_of_esr, histRecord.data_date,
+                  histRecord.water_value, histRecord.lpcd_value, histRecord.upload_batch_id, histRecord.dashboard_url
+                ];
+                
+                await client.query(insertQuery, values);
+              }
+              
+              console.log(`✅ Inserted batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(historicalRecords.length/batchSize)} into water_scheme_data_history`);
+            } catch (batchError) {
+              console.error(`Error inserting historical batch ${Math.floor(i/batchSize) + 1}:`, batchError);
+            }
+          }
+          
+          console.log(`✅ Successfully stored ${historicalRecords.length} historical records with batch ID: ${uploadBatchId}`);
+        }
+        
+        console.log("✅ Historical water scheme data stored successfully in water_scheme_data_history table");
+      } else {
+        console.log("⚠️ No valid records found for historical storage");
+      }
     } catch (historicalError) {
-      console.error('Error storing historical water scheme data after import:', historicalError);
+      console.error('❌ Error storing historical water scheme data after import:', historicalError);
+      console.error('Historical error details:', historicalError);
       errors.push('Failed to store historical water scheme data');
     }
     
