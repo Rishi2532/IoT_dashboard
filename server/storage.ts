@@ -7231,10 +7231,26 @@ export class PostgresStorage implements IStorage {
         .from(pressureHistory);
       
       // Apply date range filter with proper date conversion
-      // Convert the filter dates to match the stored format and handle date comparison properly
+      // Convert input dates (YYYY-MM-DD) to match stored format (DD-Mon-YY) for comparison
+      const startDateConverted = new Date(filter.startDate);
+      const endDateConverted = new Date(filter.endDate);
+      
+      // Format dates to DD-Mon-YY format to match database
+      const formatToDBDate = (date: Date): string => {
+        const day = date.getDate().toString().padStart(2, '0');
+        const month = date.toLocaleString('en', { month: 'short' });
+        const year = date.getFullYear().toString().slice(-2);
+        return `${day}-${month}-${year}`;
+      };
+      
+      const startDBFormat = formatToDBDate(startDateConverted);
+      const endDBFormat = formatToDBDate(endDateConverted);
+      
+      console.log(`Filtering pressure history from ${startDBFormat} to ${endDBFormat}`);
+      
       const conditions = [
-        sql`TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY') >= DATE(${filter.startDate})`,
-        sql`TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY') <= DATE(${filter.endDate})`
+        sql`TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY') >= TO_DATE(${startDBFormat}, 'DD-Mon-YY')`,
+        sql`TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY') <= TO_DATE(${endDBFormat}, 'DD-Mon-YY')`
       ];
       
       // Apply optional filters
