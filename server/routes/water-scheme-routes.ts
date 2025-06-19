@@ -2043,15 +2043,25 @@ router.get('/download/village-lpcd-history', async (req, res) => {
     
     if (!startDate || !endDate) {
       return res.status(400).json({ 
-        error: 'startDate and endDate are required parameters (format: DD-MMM, e.g., 11-Jun)' 
+        error: 'startDate and endDate are required parameters (format: YYYY-MM-DD)' 
       });
     }
+
+    console.log(`Village LPCD historical export request: startDate=${startDate}, endDate=${endDate}, region=${region}`);
 
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
     
     try {
+      // Convert YYYY-MM-DD dates to Date objects for proper filtering
+      const startDateObj = new Date(startDate + 'T00:00:00Z');
+      const endDateObj = new Date(endDate + 'T23:59:59Z');
+      
+      console.log(`Date range: ${startDate} to ${endDate} (${startDateObj.toISOString()} to ${endDateObj.toISOString()})`);
+
+      // First get all historical data, then filter by date range in JavaScript
+      // since dates are stored in DD-MMM format which is hard to filter in SQL
       let query = `
         SELECT 
           region,
@@ -2069,11 +2079,11 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           upload_batch_id,
           uploaded_at
         FROM water_scheme_data_history 
-        WHERE data_date >= $1 AND data_date <= $2
+        WHERE lpcd_value IS NOT NULL
       `;
       
-      const queryParams = [startDate, endDate];
-      let paramIndex = 3;
+      const queryParams = [];
+      let paramIndex = 1;
       
       // Add region filter
       if (region && region !== 'all') {
@@ -2096,19 +2106,47 @@ router.get('/download/village-lpcd-history', async (req, res) => {
       // Add LPCD range filters
       if (minLpcd) {
         query += ` AND lpcd_value >= $${paramIndex++}`;
-        queryParams.push(parseFloat(String(minLpcd)));
+        queryParams.push(String(minLpcd));
       }
       
       if (maxLpcd) {
         query += ` AND lpcd_value <= $${paramIndex++}`;
-        queryParams.push(parseFloat(String(maxLpcd)));
+        queryParams.push(String(maxLpcd));
       }
       
-      // Only include records with LPCD values
-      query += ` AND lpcd_value IS NOT NULL`;
       query += ` ORDER BY data_date DESC, region ASC, village_name ASC`;
       
       const result = await client.query(query, queryParams);
+      
+      console.log(`Retrieved ${result.rows.length} total historical records from database`);
+      
+      // Helper function to parse DD-MMM date format to Date object
+      const parseDDMMMDate = (dateStr: any): Date | null => {
+        if (!dateStr || typeof dateStr !== 'string') return null;
+        try {
+          // Handle formats like "11-Jun", "15-Dec" etc.
+          const [day, month] = dateStr.split('-');
+          const currentYear = new Date().getFullYear();
+          const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                            'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+          const monthIndex = monthNames.indexOf(month);
+          if (monthIndex === -1) return null;
+          return new Date(currentYear, monthIndex, parseInt(day));
+        } catch (error) {
+          return null;
+        }
+      };
+      
+      // Filter results by date range
+      const filteredRows = result.rows.filter(row => {
+        const rowDate = parseDDMMMDate(row.data_date);
+        if (!rowDate) return false;
+        return rowDate >= startDateObj && rowDate <= endDateObj;
+      });
+      
+      console.log(`Filtered to ${filteredRows.length} records within date range`);
+      
+      const filteredResult = { ...result, rows: filteredRows };
       
       if (result.rows.length === 0) {
         return res.status(404).json({ 
@@ -2157,8 +2195,9 @@ router.get('/download/village-lpcd-history', async (req, res) => {
         const wb = XLSX.utils.book_new();
         
         // Get unique dates and sort them
-        const dates = result.rows.map(row => row.data_date);
-        const uniqueDates = [...new Set(dates)].sort();
+        const dates = filteredResult.rows.map(row => row.data_date);
+        const uniqueDatesSet = new Set(dates);
+        const uniqueDates = Array.from(uniqueDatesSet).sort();
         
         console.log('Creating proper pivot Excel structure');
         console.log('Unique dates found:', uniqueDates);
@@ -2167,7 +2206,7 @@ router.get('/download/village-lpcd-history', async (req, res) => {
         const villageData = new Map();
         
         // First pass: collect all village base information
-        result.rows.forEach(row => {
+        filteredResult.rows.forEach(row => {
           const villageKey = `${row.scheme_id}|${row.village_name}`;
           
           if (!villageData.has(villageKey)) {
@@ -2276,7 +2315,7 @@ router.get('/download/village-lpcd-history', async (req, res) => {
         const summaryData = [
           { 'Filter': 'Date Range', 'Value': `${startDate} to ${endDate}` },
           { 'Filter': 'Region', 'Value': region || 'All Regions' },
-          { 'Filter': 'Total Records', 'Value': result.rows.length },
+          { 'Filter': 'Total Records', 'Value': filteredResult.rows.length },
           { 'Filter': 'Min LPCD Filter', 'Value': minLpcd || 'None' },
           { 'Filter': 'Max LPCD Filter', 'Value': maxLpcd || 'None' },
           { 'Filter': 'Generated At', 'Value': new Date().toISOString() }
@@ -2293,7 +2332,7 @@ router.get('/download/village-lpcd-history', async (req, res) => {
         res.send(buffer);
       }
       
-      console.log(`Downloaded ${result.rows.length} historical LPCD records for date range ${startDate} to ${endDate}`);
+      console.log(`Downloaded ${filteredResult.rows.length} historical LPCD records for date range ${startDate} to ${endDate}`);
       
     } finally {
       client.release();
