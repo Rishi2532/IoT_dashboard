@@ -7230,15 +7230,17 @@ export class PostgresStorage implements IStorage {
         })
         .from(pressureHistory);
       
-      // Apply date range filter with proper date conversion
-      // Convert input dates (YYYY-MM-DD) to match stored format (DD-Mon-YY) for comparison
-      const startDateConverted = new Date(filter.startDate);
-      const endDateConverted = new Date(filter.endDate);
+      // Apply date range filter with improved date conversion
+      // Convert input dates (YYYY-MM-DD) to match stored format for comparison
+      const startDateConverted = new Date(filter.startDate + 'T00:00:00Z');
+      const endDateConverted = new Date(filter.endDate + 'T23:59:59Z');
       
-      // Format dates to DD-Mon-YY format to match database
+      // Format dates to DD-Mon-YY format to match database storage
       const formatToDBDate = (date: Date): string => {
         const day = date.getDate().toString().padStart(2, '0');
-        const month = date.toLocaleString('en', { month: 'short' });
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 
+                           'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const month = monthNames[date.getMonth()];
         const year = date.getFullYear().toString().slice(-2);
         return `${day}-${month}-${year}`;
       };
@@ -7246,11 +7248,50 @@ export class PostgresStorage implements IStorage {
       const startDBFormat = formatToDBDate(startDateConverted);
       const endDBFormat = formatToDBDate(endDateConverted);
       
-      console.log(`Filtering pressure history from ${startDBFormat} to ${endDBFormat}`);
+      console.log(`Filtering pressure history from ${filter.startDate} (${startDBFormat}) to ${filter.endDate} (${endDBFormat})`);
       
+      // Add pressure_value filter to only include valid data
+      const baseConditions = [
+        sql`${pressureHistory.pressure_value} IS NOT NULL`
+      ];
+      
+      // Use simplified date filtering approach for better compatibility
       const conditions = [
-        sql`TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY') >= TO_DATE(${startDBFormat}, 'DD-Mon-YY')`,
-        sql`TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY') <= TO_DATE(${endDBFormat}, 'DD-Mon-YY')`
+        ...baseConditions,
+        sql`(
+          CASE 
+            WHEN ${pressureHistory.pressure_date} ~ '^[0-9]{2}-[A-Za-z]{3}-[0-9]{2}$'
+            THEN (
+              EXTRACT(YEAR FROM TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY')) * 10000 + 
+              EXTRACT(MONTH FROM TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY')) * 100 + 
+              EXTRACT(DAY FROM TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY'))
+            ) >= (
+              EXTRACT(YEAR FROM TO_DATE(${filter.startDate}, 'YYYY-MM-DD')) * 10000 + 
+              EXTRACT(MONTH FROM TO_DATE(${filter.startDate}, 'YYYY-MM-DD')) * 100 + 
+              EXTRACT(DAY FROM TO_DATE(${filter.startDate}, 'YYYY-MM-DD'))
+            )
+            WHEN ${pressureHistory.pressure_date} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+            THEN TO_DATE(${pressureHistory.pressure_date}, 'YYYY-MM-DD') >= TO_DATE(${filter.startDate}, 'YYYY-MM-DD')
+            ELSE TRUE
+          END
+        )`,
+        sql`(
+          CASE 
+            WHEN ${pressureHistory.pressure_date} ~ '^[0-9]{2}-[A-Za-z]{3}-[0-9]{2}$'
+            THEN (
+              EXTRACT(YEAR FROM TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY')) * 10000 + 
+              EXTRACT(MONTH FROM TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY')) * 100 + 
+              EXTRACT(DAY FROM TO_DATE(${pressureHistory.pressure_date}, 'DD-Mon-YY'))
+            ) <= (
+              EXTRACT(YEAR FROM TO_DATE(${filter.endDate}, 'YYYY-MM-DD')) * 10000 + 
+              EXTRACT(MONTH FROM TO_DATE(${filter.endDate}, 'YYYY-MM-DD')) * 100 + 
+              EXTRACT(DAY FROM TO_DATE(${filter.endDate}, 'YYYY-MM-DD'))
+            )
+            WHEN ${pressureHistory.pressure_date} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+            THEN TO_DATE(${pressureHistory.pressure_date}, 'YYYY-MM-DD') <= TO_DATE(${filter.endDate}, 'YYYY-MM-DD')
+            ELSE TRUE
+          END
+        )`
       ];
       
       // Apply optional filters
