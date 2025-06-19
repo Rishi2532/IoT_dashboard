@@ -1916,6 +1916,8 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           }
           
           const village = groupedData.get(villageKey);
+          
+          // Initialize date entry if it doesn't exist
           if (!village.dates.has(row.data_date)) {
             village.dates.set(row.data_date, {
               water_value: null,
@@ -1924,11 +1926,21 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           }
           
           const dateData = village.dates.get(row.data_date);
-          if (row.water_value !== null && row.water_value !== undefined) {
-            dateData.water_value = row.water_value;
+          
+          // Update water value if it exists and is not null/empty
+          if (row.water_value !== null && row.water_value !== undefined && row.water_value !== '') {
+            // If there's already a value and this one is also valid, keep the non-zero one
+            if (dateData.water_value === null || dateData.water_value === '' || parseFloat(row.water_value) > 0) {
+              dateData.water_value = row.water_value;
+            }
           }
-          if (row.lpcd_value !== null && row.lpcd_value !== undefined) {
-            dateData.lpcd_value = row.lpcd_value;
+          
+          // Update LPCD value if it exists and is not null/empty
+          if (row.lpcd_value !== null && row.lpcd_value !== undefined && row.lpcd_value !== '') {
+            // If there's already a value and this one is also valid, keep the non-zero one
+            if (dateData.lpcd_value === null || dateData.lpcd_value === '' || parseFloat(row.lpcd_value) > 0) {
+              dateData.lpcd_value = row.lpcd_value;
+            }
           }
         });
         
