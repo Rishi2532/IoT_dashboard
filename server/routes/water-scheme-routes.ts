@@ -1886,70 +1886,100 @@ router.get('/download/village-lpcd-history', async (req, res) => {
         res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
         res.send(csvContent);
       } else {
-        // Generate Excel with dates as column headers using JSON approach
+        // Generate Excel with proper pivot structure - dates as headers
         const wb = XLSX.utils.book_new();
         
         // Get unique dates and sort them
         const dates = result.rows.map(row => row.data_date);
-        const uniqueDates = dates.filter((date, index) => dates.indexOf(date) === index).sort();
+        const uniqueDates = [...new Set(dates)].sort();
         
-        console.log('Creating Excel with JSON approach');
+        console.log('Creating proper pivot Excel structure');
         console.log('Unique dates found:', uniqueDates);
         
-        // Group data by village
-        const villageMap = new Map();
+        // Create village lookup map for consolidation
+        const villageData = new Map();
         
+        // First pass: collect all village base information
         result.rows.forEach(row => {
           const villageKey = `${row.scheme_id}|${row.village_name}`;
           
-          if (!villageMap.has(villageKey)) {
-            villageMap.set(villageKey, {
-              Region: row.region || '',
-              Circle: row.circle || '',
-              Division: row.division || '',
-              'Sub Division': row.sub_division || '',
-              Block: row.block || '',
-              'Scheme ID': row.scheme_id || '',
-              'Scheme Name': row.scheme_name || '',
-              'Village Name': row.village_name || '',
-              Population: row.population || '',
-              'Number of ESR': row.number_of_esr || ''
+          if (!villageData.has(villageKey)) {
+            villageData.set(villageKey, {
+              baseInfo: {
+                region: row.region || '',
+                circle: row.circle || '',
+                division: row.division || '',
+                sub_division: row.sub_division || '',
+                block: row.block || '',
+                scheme_id: row.scheme_id || '',
+                scheme_name: row.scheme_name || '',
+                village_name: row.village_name || '',
+                population: row.population || '',
+                number_of_esr: row.number_of_esr || ''
+              },
+              dateValues: new Map()
             });
           }
           
-          const village = villageMap.get(villageKey);
-          
-          // Add date-specific columns
-          const waterColumn = `${row.data_date} Water Value (ML)`;
-          const lpcdColumn = `${row.data_date} LPCD Value`;
-          
-          if (!village[waterColumn] && row.water_value !== null && row.water_value !== undefined) {
-            village[waterColumn] = row.water_value;
-          }
-          if (!village[lpcdColumn] && row.lpcd_value !== null && row.lpcd_value !== undefined) {
-            village[lpcdColumn] = row.lpcd_value;
-          }
-        });
-        
-        // Convert to array for Excel
-        const excelData = Array.from(villageMap.values());
-        
-        // Ensure all villages have all date columns (fill missing with empty strings)
-        uniqueDates.forEach(date => {
-          const waterColumn = `${date} Water Value (ML)`;
-          const lpcdColumn = `${date} LPCD Value`;
-          
-          excelData.forEach(village => {
-            if (!(waterColumn in village)) village[waterColumn] = '';
-            if (!(lpcdColumn in village)) village[lpcdColumn] = '';
+          // Store values for this date
+          villageData.get(villageKey).dateValues.set(row.data_date, {
+            water_value: row.water_value || '',
+            lpcd_value: row.lpcd_value || ''
           });
         });
         
-        console.log(`Created ${excelData.length} village records with pivot structure`);
-        console.log('Sample village keys:', Object.keys(excelData[0] || {}));
+        // Create the pivot table structure manually
+        const pivotRows = [];
         
-        // Create worksheet from JSON objects
-        const ws = XLSX.utils.json_to_sheet(excelData);
+        // Build header row
+        const headerRow = [
+          'Region', 'Circle', 'Division', 'Sub Division', 'Block',
+          'Scheme ID', 'Scheme Name', 'Village Name', 'Population', 'Number of ESR'
+        ];
+        
+        // Add date headers in pairs
+        uniqueDates.forEach(date => {
+          headerRow.push(`${date} Water Value (ML)`);
+          headerRow.push(`${date} LPCD Value`);
+        });
+        
+        pivotRows.push(headerRow);
+        
+        // Build data rows
+        villageData.forEach((village) => {
+          const dataRow = [
+            village.baseInfo.region,
+            village.baseInfo.circle,
+            village.baseInfo.division,
+            village.baseInfo.sub_division,
+            village.baseInfo.block,
+            village.baseInfo.scheme_id,
+            village.baseInfo.scheme_name,
+            village.baseInfo.village_name,
+            village.baseInfo.population,
+            village.baseInfo.number_of_esr
+          ];
+          
+          // Add date values in order
+          uniqueDates.forEach(date => {
+            const dateVal = village.dateValues.get(date);
+            if (dateVal) {
+              dataRow.push(dateVal.water_value);
+              dataRow.push(dateVal.lpcd_value);
+            } else {
+              dataRow.push(''); // Empty water value
+              dataRow.push(''); // Empty LPCD value
+            }
+          });
+          
+          pivotRows.push(dataRow);
+        });
+        
+        console.log(`FINAL PIVOT: ${pivotRows.length - 1} villages, ${headerRow.length} columns total`);
+        console.log('First 12 headers:', headerRow.slice(0, 12));
+        
+        // Create worksheet from the pivot array
+        const ws = XLSX.utils.aoa_to_sheet(pivotRows);
         
         // Set column widths
         const colWidths = [
