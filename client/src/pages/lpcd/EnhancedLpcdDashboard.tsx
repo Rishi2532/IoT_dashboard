@@ -955,98 +955,83 @@ const EnhancedLpcdDashboard = () => {
       });
   };
 
-  // Export historical LPCD data to Excel
-  const exportHistoricalData = () => {
-    if (historicalLpcdData.length === 0) {
+  // Export historical LPCD data to Excel from water_scheme_data_history table
+  const exportHistoricalData = async () => {
+    try {
+      // Build query parameters for the backend API that fetches from water_scheme_data_history
+      const params = new URLSearchParams();
+      params.append("startDate", historicalStartDate);
+      params.append("endDate", historicalEndDate);
+      params.append("format", "xlsx");
+      
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/water-scheme-data/download/village-lpcd-history?${queryString}`;
+
+      console.log("Downloading historical LPCD data from water_scheme_data_history table:", url);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to export historical LPCD data");
+      }
+
+      // Get the filename from response headers
+      const contentDisposition = response.headers.get('content-disposition');
+      let filename = `Village_LPCD_History_${historicalStartDate}_to_${historicalEndDate}.xlsx`;
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename="(.+)"/);
+        if (filenameMatch) {
+          filename = filenameMatch[1];
+        }
+      }
+
+      // Convert response to blob and trigger download
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+
+      // Track the export activity
+      trackDataExport(
+        "Village LPCD Historical Data",
+        filename,
+        0, // We don't know the count from server response
+        { 
+          dateRange: `${historicalStartDate} to ${historicalEndDate}`,
+          region: selectedRegion !== "all" ? selectedRegion : undefined 
+        },
+        {
+          exportSource: "lpcd_historical_dashboard",
+          startDate: historicalStartDate,
+          endDate: historicalEndDate,
+          dataSource: "water_scheme_data_history"
+        }
+      );
+
       toast({
-        title: "No Historical Data",
-        description: "No historical data available for the selected date range.",
+        title: "Export Successful",
+        description: `Historical LPCD data exported successfully from date range ${historicalStartDate} to ${historicalEndDate}`,
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Export error:", error);
+      toast({
+        title: "Export Failed",
+        description: error instanceof Error ? error.message : "Failed to export historical LPCD data",
         variant: "destructive",
       });
-      return;
     }
-
-    Promise.resolve()
-      .then(() => {
-        // Prepare historical data for export
-        const dataToExport = historicalLpcdData.map((record, index) => ({
-          "Sr. No.": index + 1,
-          "Region": record.region || "N/A",
-          "Circle": record.circle || "N/A",
-          "Division": record.division || "N/A",
-          "Sub Division": record.sub_division || "N/A",
-          "Block": record.block || "N/A",
-          "Scheme ID": record.scheme_id || "N/A",
-          "Scheme Name": record.scheme_name || "N/A",
-          "Village Name": record.village_name || "N/A",
-          "Population": record.population || "N/A",
-          "Number of ESR": record.number_of_esr || "N/A",
-          "Date": record.data_date || "N/A",
-          "Water Value (MLD)": record.water_value !== null ? record.water_value : "N/A",
-          "LPCD Value": record.lpcd_value !== null ? record.lpcd_value : "N/A",
-          "Upload Batch ID": record.upload_batch_id || "N/A",
-          "Uploaded At": record.uploaded_at ? new Date(record.uploaded_at).toLocaleString() : "N/A",
-        }));
-
-        // Create worksheet
-        const ws = XLSX.utils.json_to_sheet(dataToExport);
-
-        // Set column widths
-        const columns = [
-          { wch: 8 },  // Sr. No.
-          { wch: 15 }, // Region
-          { wch: 15 }, // Circle
-          { wch: 15 }, // Division
-          { wch: 18 }, // Sub Division
-          { wch: 12 }, // Block
-          { wch: 12 }, // Scheme ID
-          { wch: 25 }, // Scheme Name
-          { wch: 20 }, // Village Name
-          { wch: 12 }, // Population
-          { wch: 12 }, // Number of ESR
-          { wch: 12 }, // Date
-          { wch: 15 }, // Water Value
-          { wch: 12 }, // LPCD Value
-          { wch: 20 }, // Upload Batch ID
-          { wch: 18 }, // Uploaded At
-        ];
-        ws["!cols"] = columns;
-
-        // Create workbook
-        const wb = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(wb, ws, "Historical LPCD Data");
-
-        // Generate filename
-        let filename = "Historical_LPCD_Data";
-        if (selectedRegion !== "all") {
-          filename += `_${selectedRegion}`;
-        }
-        filename += `_${historicalStartDate}_to_${historicalEndDate}.xlsx`;
-
-        // Save file
-        XLSX.writeFile(wb, filename);
-
-        // Track the data export activity
-        trackDataExport("historical_lpcd_data", "xlsx", dataToExport.length, {
-          region_filter: selectedRegion !== "all" ? selectedRegion : null,
-          start_date: historicalStartDate,
-          end_date: historicalEndDate,
-          filename: filename
-        });
-
-        toast({
-          title: "Historical Export Successful",
-          description: `${dataToExport.length} historical records exported to Excel`,
-        });
-      })
-      .catch((error) => {
-        console.error("Error exporting historical data to Excel:", error);
-        toast({
-          title: "Export Failed",
-          description: "There was an error exporting historical data to Excel. Please try again.",
-          variant: "destructive",
-        });
-      });
   };
 
   const NoDataMessage = () => (

@@ -121,7 +121,22 @@ This is a comprehensive water infrastructure management platform for Maharashtra
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes
+
+### June 19, 2025
+- **Fixed Pressure Dashboard Historical Export**: Corrected date filtering to properly respect selected date ranges instead of downloading all data
+- **Enhanced LPCD Dashboard Export**: Updated village LPCD dashboard to fetch historical data from `water_scheme_data_history` table when date ranges are selected
+- **Improved CSV Import Functionality**: Enhanced CSV imports to automatically populate `water_scheme_data_history` table with individual date-value records for historical tracking
+- **Database Schema Enhancement**: Ensured proper storage of water and LPCD historical data with batch tracking and date-wise records
+
+### Technical Improvements
+- Fixed SQL date conversion for pressure history filtering (DD-Mon-YY format)
+- Updated LPCD export to use `/api/water-scheme-data/download/village-lpcd-history` endpoint
+- Enhanced historical data storage during CSV imports with proper error handling and batch processing
+- Improved scheme status updates during CSV imports
+
 ## Changelog
 
 Changelog:
 - June 14, 2025. Initial setup
+- June 19, 2025. Enhanced historical data export functionality and CSV import improvements
