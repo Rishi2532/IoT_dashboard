@@ -812,6 +812,93 @@ async function processCsvFile(filePath: string) {
 // Import dashboard URL generation functions from auto-generate-dashboard-urls.ts
 import { generateVillageDashboardUrl, generateDashboardUrl } from '../auto-generate-dashboard-urls';
 
+// Update scheme_status table when status changes are detected
+async function updateSchemeStatusFromRecord(client: any, record: any) {
+  try {
+    // Only proceed if we have status fields to update
+    if (!record.scheme_functional_status && !record.fully_completion_scheme_status) {
+      return;
+    }
+    
+    // Ensure we have the necessary identification fields
+    if (!record.scheme_id || !record.scheme_name || !record.block) {
+      return;
+    }
+    
+    console.log(`Checking scheme_status update for scheme: ${record.scheme_name}, block: ${record.block}`);
+    
+    // Check if scheme_status record exists for this scheme and block
+    const existingSchemeStatus = await client.query(
+      'SELECT * FROM scheme_status WHERE scheme_id = $1 AND block = $2',
+      [record.scheme_id, record.block]
+    );
+    
+    if (existingSchemeStatus.rows.length > 0) {
+      // Update existing scheme_status record
+      const updateFields: string[] = [];
+      const updateValues: any[] = [];
+      let paramIndex = 3; // Starting from $3 since $1 and $2 are for WHERE clause
+      
+      if (record.scheme_functional_status) {
+        updateFields.push(`scheme_functional_status = $${paramIndex}`);
+        updateValues.push(record.scheme_functional_status);
+        paramIndex++;
+      }
+      
+      if (record.fully_completion_scheme_status) {
+        updateFields.push(`fully_completion_scheme_status = $${paramIndex}`);
+        updateValues.push(record.fully_completion_scheme_status);
+        paramIndex++;
+      }
+      
+      if (updateFields.length > 0) {
+        const updateQuery = `
+          UPDATE scheme_status 
+          SET ${updateFields.join(', ')} 
+          WHERE scheme_id = $1 AND block = $2
+        `;
+        
+        const finalValues = [record.scheme_id, record.block, ...updateValues];
+        await client.query(updateQuery, finalValues);
+        
+        console.log(`✅ Updated scheme_status for scheme: ${record.scheme_name}, block: ${record.block}`);
+        console.log(`   - scheme_functional_status: ${record.scheme_functional_status || 'unchanged'}`);
+        console.log(`   - fully_completion_scheme_status: ${record.fully_completion_scheme_status || 'unchanged'}`);
+      }
+    } else {
+      // Create new scheme_status record if it doesn't exist
+      console.log(`Creating new scheme_status record for scheme: ${record.scheme_name}, block: ${record.block}`);
+      
+      const insertData = {
+        scheme_id: record.scheme_id,
+        scheme_name: record.scheme_name,
+        region: record.region || null,
+        circle: record.circle || null,
+        division: record.division || null,
+        sub_division: record.sub_division || null,
+        block: record.block,
+        scheme_functional_status: record.scheme_functional_status || null,
+        fully_completion_scheme_status: record.fully_completion_scheme_status || null
+      };
+      
+      const fields = Object.keys(insertData);
+      const insertQuery = `
+        INSERT INTO scheme_status (${fields.join(', ')}) 
+        VALUES (${fields.map((_, idx) => `$${idx + 1}`).join(', ')})
+      `;
+      
+      const insertValues = fields.map(field => (insertData as any)[field]);
+      await client.query(insertQuery, insertValues);
+      
+      console.log(`✅ Created new scheme_status record for scheme: ${record.scheme_name}, block: ${record.block}`);
+    }
+    
+  } catch (error: any) {
+    console.error(`Error updating scheme_status for scheme ${record.scheme_name}, block ${record.block}:`, error.message);
+    // Don't throw error to avoid breaking the import process
+  }
+}
+
 // Import data to database
 async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplate: boolean = false) {
   let inserted = 0;
@@ -919,6 +1006,10 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
                 
                 await client.query(updateQuery, updateValues);
                 updated++;
+                
+                // IMPORTANT: Update scheme_status table if status fields are present
+                await updateSchemeStatusFromRecord(client, batchRecord);
+                
               } else {
                 // For new records, generate dashboard URL if not already present
                 if (!batchRecord.dashboard_url) {
@@ -938,6 +1029,9 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
                 const insertValues = fields.map(field => batchRecord[field]);
                 await client.query(insertQuery, insertValues);
                 inserted++;
+                
+                // IMPORTANT: Update scheme_status table for new records too
+                await updateSchemeStatusFromRecord(client, batchRecord);
               }
             } catch (error: any) {
               // Handle specific errors but don't rollback the whole batch
@@ -1102,7 +1196,7 @@ function mapExcelFields(row: any) {
 function mapCsvFields(row: string[]) {
   const record: any = {};
   
-  // CSV column order
+  // CSV column order - extended to include scheme status fields
   const columnMapping = [
     'region',
     'circle',
@@ -1142,7 +1236,9 @@ function mapCsvFields(row: string[]) {
     'lpcd_date_day7',
     'consistent_zero_lpcd_for_a_week',
     'below_55_lpcd_count',
-    'above_55_lpcd_count'
+    'above_55_lpcd_count',
+    'scheme_functional_status',
+    'fully_completion_scheme_status'
   ];
   
   // Map fields based on column position
@@ -1174,6 +1270,14 @@ function mapCsvFields(row: string[]) {
         } else {
           record[field] = 0; // Default to 0 for null or undefined
         }
+      } else if (field === 'scheme_functional_status' || field === 'fully_completion_scheme_status') {
+        // Normalize status values
+        if (value !== null && value !== undefined) {
+          const status = String(value).trim();
+          record[field] = normalizeStatusValue(status);
+        } else {
+          record[field] = null;
+        }
       } else {
         // Keep as string but handle null/undefined
         record[field] = value !== null && value !== undefined ? String(value) : null;
@@ -1182,6 +1286,57 @@ function mapCsvFields(row: string[]) {
   });
   
   return record;
+}
+
+// Normalize status values to standard format
+function normalizeStatusValue(status: string): string {
+  const lowerStatus = status.toLowerCase().trim();
+  
+  // Standard status mapping
+  const statusMap: Record<string, string> = {
+    'not-connected': 'Not-Connected',
+    'not connected': 'Not-Connected',
+    'notconnected': 'Not-Connected',
+    'in progress': 'In Progress',
+    'inprogress': 'In Progress',
+    'partial': 'In Progress',
+    'fully completed': 'Fully-Completed',
+    'fully-completed': 'Fully-Completed',
+    'fullycompleted': 'Fully-Completed',
+    'completed': 'Fully-Completed',
+    'functional': 'Functional',
+    'non-functional': 'Non-Functional',
+    'non functional': 'Non-Functional',
+    'nonfunctional': 'Non-Functional'
+  };
+  
+  // Try exact match first
+  if (statusMap[lowerStatus]) {
+    return statusMap[lowerStatus];
+  }
+  
+  // Pattern matching for partial matches
+  if (lowerStatus.includes('not') && lowerStatus.includes('connect')) {
+    return 'Not-Connected';
+  }
+  if (lowerStatus.includes('progress') || lowerStatus.includes('partial')) {
+    return 'In Progress';
+  }
+  if (lowerStatus.includes('fully') && lowerStatus.includes('complet')) {
+    return 'Fully-Completed';
+  }
+  if (lowerStatus.includes('complet') && !lowerStatus.includes('non')) {
+    return 'Fully-Completed';
+  }
+  if (lowerStatus.includes('function') && !lowerStatus.includes('non')) {
+    return 'Functional';
+  }
+  if (lowerStatus.includes('non') && lowerStatus.includes('function')) {
+    return 'Non-Functional';
+  }
+  
+  // Return original if no match found
+  return status;
 }
 
 // Get water value trends for mini charts - Population WITH water (last 6 days)
@@ -1829,12 +1984,12 @@ router.get('/download/village-lpcd-history', async (req, res) => {
       // Add LPCD range filters
       if (minLpcd) {
         query += ` AND lpcd_value >= $${paramIndex++}`;
-        queryParams.push(parseFloat(minLpcd as string));
+        queryParams.push(parseFloat(String(minLpcd)));
       }
       
       if (maxLpcd) {
         query += ` AND lpcd_value <= $${paramIndex++}`;
-        queryParams.push(parseFloat(maxLpcd as string));
+        queryParams.push(parseFloat(String(maxLpcd)));
       }
       
       // Only include records with LPCD values
