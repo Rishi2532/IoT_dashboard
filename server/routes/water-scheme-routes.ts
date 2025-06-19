@@ -1886,121 +1886,70 @@ router.get('/download/village-lpcd-history', async (req, res) => {
         res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
         res.send(csvContent);
       } else {
-        // Generate Excel with dates as column headers
+        // Generate Excel with dates as column headers using JSON approach
         const wb = XLSX.utils.book_new();
         
         // Get unique dates and sort them
         const dates = result.rows.map(row => row.data_date);
         const uniqueDates = dates.filter((date, index) => dates.indexOf(date) === index).sort();
         
-        // Group data by village (scheme_id + village_name combination)
-        const groupedData = new Map();
+        console.log('Creating Excel with JSON approach');
+        console.log('Unique dates found:', uniqueDates);
+        
+        // Group data by village
+        const villageMap = new Map();
         
         result.rows.forEach(row => {
           const villageKey = `${row.scheme_id}|${row.village_name}`;
           
-          if (!groupedData.has(villageKey)) {
-            groupedData.set(villageKey, {
-              region: row.region,
-              circle: row.circle,
-              division: row.division,
-              sub_division: row.sub_division,
-              block: row.block,
-              scheme_id: row.scheme_id,
-              scheme_name: row.scheme_name,
-              village_name: row.village_name,
-              population: row.population,
-              number_of_esr: row.number_of_esr,
-              dates: new Map()
+          if (!villageMap.has(villageKey)) {
+            villageMap.set(villageKey, {
+              Region: row.region || '',
+              Circle: row.circle || '',
+              Division: row.division || '',
+              'Sub Division': row.sub_division || '',
+              Block: row.block || '',
+              'Scheme ID': row.scheme_id || '',
+              'Scheme Name': row.scheme_name || '',
+              'Village Name': row.village_name || '',
+              Population: row.population || '',
+              'Number of ESR': row.number_of_esr || ''
             });
           }
           
-          const village = groupedData.get(villageKey);
+          const village = villageMap.get(villageKey);
           
-          // Initialize date entry if it doesn't exist
-          if (!village.dates.has(row.data_date)) {
-            village.dates.set(row.data_date, {
-              water_value: null,
-              lpcd_value: null
-            });
+          // Add date-specific columns
+          const waterColumn = `${row.data_date} Water Value (ML)`;
+          const lpcdColumn = `${row.data_date} LPCD Value`;
+          
+          if (!village[waterColumn] && row.water_value !== null && row.water_value !== undefined) {
+            village[waterColumn] = row.water_value;
           }
-          
-          const dateData = village.dates.get(row.data_date);
-          
-          // Update water value if it exists and is not null/empty
-          if (row.water_value !== null && row.water_value !== undefined && row.water_value !== '') {
-            // If there's already a value and this one is also valid, keep the non-zero one
-            if (dateData.water_value === null || dateData.water_value === '' || parseFloat(row.water_value) > 0) {
-              dateData.water_value = row.water_value;
-            }
-          }
-          
-          // Update LPCD value if it exists and is not null/empty
-          if (row.lpcd_value !== null && row.lpcd_value !== undefined && row.lpcd_value !== '') {
-            // If there's already a value and this one is also valid, keep the non-zero one
-            if (dateData.lpcd_value === null || dateData.lpcd_value === '' || parseFloat(row.lpcd_value) > 0) {
-              dateData.lpcd_value = row.lpcd_value;
-            }
+          if (!village[lpcdColumn] && row.lpcd_value !== null && row.lpcd_value !== undefined) {
+            village[lpcdColumn] = row.lpcd_value;
           }
         });
         
-        // Debug: Check the structure of grouped data
-        console.log('Number of unique villages:', groupedData.size);
-        console.log('Available dates:', uniqueDates);
+        // Convert to array for Excel
+        const excelData = Array.from(villageMap.values());
         
-        // Create Excel data with proper structure
-        const excelRows = [];
-        
-        // Create headers row
-        const headers = [
-          'Region', 'Circle', 'Division', 'Sub Division', 'Block',
-          'Scheme ID', 'Scheme Name', 'Village Name', 'Population', 'Number of ESR'
-        ];
-        
-        // Add date headers (each date gets two columns: Water Value and LPCD Value)
+        // Ensure all villages have all date columns (fill missing with empty strings)
         uniqueDates.forEach(date => {
-          headers.push(`${date} Water Value (ML)`);
-          headers.push(`${date} LPCD Value`);
-        });
-        
-        excelRows.push(headers);
-        
-        // Create data rows - one row per village
-        Array.from(groupedData.values()).forEach(village => {
-          const dataRow = [
-            village.region || '',
-            village.circle || '',
-            village.division || '',
-            village.sub_division || '',
-            village.block || '',
-            village.scheme_id || '',
-            village.scheme_name || '',
-            village.village_name || '',
-            village.population || '',
-            village.number_of_esr || ''
-          ];
+          const waterColumn = `${date} Water Value (ML)`;
+          const lpcdColumn = `${date} LPCD Value`;
           
-          // Add values for each date in order
-          uniqueDates.forEach(date => {
-            const dateData = village.dates.get(date);
-            if (dateData) {
-              dataRow.push(dateData.water_value !== null && dateData.water_value !== undefined ? dateData.water_value : '');
-              dataRow.push(dateData.lpcd_value !== null && dateData.lpcd_value !== undefined ? dateData.lpcd_value : '');
-            } else {
-              dataRow.push(''); // Water Value
-              dataRow.push(''); // LPCD Value
-            }
+          excelData.forEach(village => {
+            if (!(waterColumn in village)) village[waterColumn] = '';
+            if (!(lpcdColumn in village)) village[lpcdColumn] = '';
           });
-          
-          excelRows.push(dataRow);
         });
         
-        console.log('Excel structure - Headers:', headers.length, 'columns');
-        console.log('Excel structure - Data rows:', excelRows.length - 1);
-        console.log('First data row length:', excelRows[1] ? excelRows[1].length : 'No data rows');
+        console.log(`Created ${excelData.length} village records with pivot structure`);
+        console.log('Sample village keys:', Object.keys(excelData[0] || {}));
         
-        // Create worksheet from the properly structured array
-        const ws = XLSX.utils.aoa_to_sheet(excelRows);
+        // Create worksheet from JSON objects
+        const ws = XLSX.utils.json_to_sheet(excelData);
         
         // Set column widths
         const colWidths = [
@@ -2024,7 +1973,7 @@ router.get('/download/village-lpcd-history', async (req, res) => {
         
         ws['!cols'] = colWidths;
         
-        XLSX.utils.book_append_sheet(wb, ws, 'Village LPCD History');
+        XLSX.utils.book_append_sheet(wb, ws, 'Pivot Data');
         
         // Add summary sheet
         const summaryData = [
