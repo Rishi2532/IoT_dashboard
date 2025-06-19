@@ -1990,7 +1990,7 @@ router.get('/historical', async (req, res) => {
           upload_batch_id,
           uploaded_at
         FROM water_scheme_data_history 
-        WHERE lpcd_value IS NOT NULL
+        WHERE (lpcd_value IS NOT NULL OR water_value IS NOT NULL)
       `;
       
       const queryParams: any[] = [];
@@ -2080,7 +2080,7 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           upload_batch_id,
           uploaded_at
         FROM water_scheme_data_history 
-        WHERE lpcd_value IS NOT NULL
+        WHERE (lpcd_value IS NOT NULL OR water_value IS NOT NULL)
       `;
       
       const queryParams = [];
@@ -2228,10 +2228,15 @@ router.get('/download/village-lpcd-history', async (req, res) => {
             });
           }
           
-          // Store values for this date
+          // Store values for this date, merging with existing data if present
+          const existingDateData = villageData.get(villageKey).dateValues.get(row.data_date) || {
+            water_value: '',
+            lpcd_value: ''
+          };
+          
           villageData.get(villageKey).dateValues.set(row.data_date, {
-            water_value: row.water_value || '',
-            lpcd_value: row.lpcd_value || ''
+            water_value: row.water_value || existingDateData.water_value || '',
+            lpcd_value: row.lpcd_value || existingDateData.lpcd_value || ''
           });
         });
         
