@@ -1886,31 +1886,105 @@ router.get('/download/village-lpcd-history', async (req, res) => {
         res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
         res.send(csvContent);
       } else {
-        // Generate Excel with enhanced formatting
+        // Generate Excel with dates as column headers
         const wb = XLSX.utils.book_new();
         
-        // Prepare data with proper headers
-        const excelData = result.rows.map(row => ({
-          'Region': row.region,
-          'Circle': row.circle,
-          'Division': row.division,
-          'Sub Division': row.sub_division,
-          'Block': row.block,
-          'Scheme ID': row.scheme_id,
-          'Scheme Name': row.scheme_name,
-          'Village Name': row.village_name,
-          'Population': row.population,
-          'Date': row.data_date,
-          'LPCD Value': row.lpcd_value,
-          'Water Value (ML)': row.water_value,
-          'Upload Batch': row.upload_batch_id,
-          'Uploaded At': row.uploaded_at
-        }));
+        // Get unique dates and sort them
+        const dates = result.rows.map(row => row.data_date);
+        const uniqueDates = dates.filter((date, index) => dates.indexOf(date) === index).sort();
         
-        const ws = XLSX.utils.json_to_sheet(excelData);
+        // Group data by village (scheme_id + village_name combination)
+        const groupedData = new Map();
+        
+        result.rows.forEach(row => {
+          const villageKey = `${row.scheme_id}|${row.village_name}`;
+          
+          if (!groupedData.has(villageKey)) {
+            groupedData.set(villageKey, {
+              region: row.region,
+              circle: row.circle,
+              division: row.division,
+              sub_division: row.sub_division,
+              block: row.block,
+              scheme_id: row.scheme_id,
+              scheme_name: row.scheme_name,
+              village_name: row.village_name,
+              population: row.population,
+              number_of_esr: row.number_of_esr,
+              dates: new Map()
+            });
+          }
+          
+          const village = groupedData.get(villageKey);
+          if (!village.dates.has(row.data_date)) {
+            village.dates.set(row.data_date, {
+              water_value: null,
+              lpcd_value: null
+            });
+          }
+          
+          const dateData = village.dates.get(row.data_date);
+          if (row.water_value !== null && row.water_value !== undefined) {
+            dateData.water_value = row.water_value;
+          }
+          if (row.lpcd_value !== null && row.lpcd_value !== undefined) {
+            dateData.lpcd_value = row.lpcd_value;
+          }
+        });
+        
+        // Create Excel data with dates as headers
+        const excelData = [];
+        
+        // Create headers
+        const headers = [
+          'Region', 'Circle', 'Division', 'Sub Division', 'Block',
+          'Scheme ID', 'Scheme Name', 'Village Name', 'Population', 'Number of ESR'
+        ];
+        
+        // Add date headers (each date gets two columns: Water Value and LPCD Value)
+        uniqueDates.forEach(date => {
+          headers.push(`${date} Water Value (ML)`);
+          headers.push(`${date} LPCD Value`);
+        });
+        
+        // Add header row
+        excelData.push(headers);
+        
+        // Add data rows
+        Array.from(groupedData.values()).forEach(village => {
+          const row = [
+            village.region || '',
+            village.circle || '',
+            village.division || '',
+            village.sub_division || '',
+            village.block || '',
+            village.scheme_id || '',
+            village.scheme_name || '',
+            village.village_name || '',
+            village.population || '',
+            village.number_of_esr || ''
+          ];
+          
+          // Add values for each date
+          uniqueDates.forEach(date => {
+            const dateData = village.dates.get(date);
+            if (dateData) {
+              row.push(dateData.water_value || '');
+              row.push(dateData.lpcd_value || '');
+            } else {
+              row.push(''); // Water Value
+              row.push(''); // LPCD Value
+            }
+          });
+          
+          excelData.push(row);
+        });
+        
+        // Create worksheet from array of arrays
+        const ws = XLSX.utils.aoa_to_sheet(excelData);
         
         // Set column widths
-        ws['!cols'] = [
+        const colWidths = [
           { width: 15 }, // Region
           { width: 15 }, // Circle
           { width: 15 }, // Division
@@ -1920,12 +1994,16 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           { width: 25 }, // Scheme Name
           { width: 20 }, // Village Name
           { width: 12 }, // Population
-          { width: 12 }, // Date
-          { width: 12 }, // LPCD Value
-          { width: 15 }, // Water Value
-          { width: 20 }, // Upload Batch
-          { width: 20 }  // Uploaded At
+          { width: 15 }  // Number of ESR
         ];
+        
+        // Add column widths for date columns
+        uniqueDates.forEach(() => {
+          colWidths.push({ width: 15 }); // Water Value
+          colWidths.push({ width: 12 }); // LPCD Value
+        });
+        
+        ws['!cols'] = colWidths;
         
         XLSX.utils.book_append_sheet(wb, ws, 'Village LPCD History');
         
