@@ -4945,17 +4945,93 @@ export class PostgresStorage implements IStorage {
   
   async updateWaterSchemeData(schemeId: string, data: UpdateWaterSchemeData): Promise<WaterSchemeData> {
     const db = await this.ensureInitialized();
+    
+    // Update the main record
     await db
       .update(waterSchemeData)
       .set(data)
       .where(eq(waterSchemeData.scheme_id, schemeId));
     
-    // Fetch and return the updated record
+    // Fetch the updated record
     const updated = await this.getWaterSchemeDataById(schemeId);
     if (!updated) {
       throw new Error(`Failed to retrieve updated water scheme data for scheme ID: ${schemeId}`);
     }
+    
+    // Automatically populate history table if water values were updated
+    const hasWaterData = updated.water_value_day1 || updated.water_value_day2 || 
+                        updated.water_value_day3 || updated.water_value_day4 || 
+                        updated.water_value_day5 || updated.water_value_day6;
+    
+    if (hasWaterData) {
+      try {
+        console.log(`📊 Auto-populating history for updated scheme: ${schemeId}`);
+        await this.populateHistoryForSingleRecord(updated);
+      } catch (historyError) {
+        console.error(`Warning: Failed to auto-populate history for scheme ${schemeId}:`, historyError);
+        // Don't fail the main update operation if history population fails
+      }
+    }
+    
     return updated;
+  }
+  
+  // Helper method to populate history for a single water scheme record
+  private async populateHistoryForSingleRecord(record: WaterSchemeData): Promise<void> {
+    const db = await this.ensureInitialized();
+    
+    if (!record.scheme_id || !record.village_name) {
+      return; // Skip records without required identifiers
+    }
+    
+    const uploadBatchId = `auto_batch_${Date.now()}_${record.scheme_id}`;
+    const historicalRecords: InsertWaterSchemeDataHistory[] = [];
+    
+    // Process water values for each day (1-6)
+    for (let day = 1; day <= 6; day++) {
+      const waterDateField = `water_date_day${day}` as keyof typeof record;
+      const waterValueField = `water_value_day${day}` as keyof typeof record;
+      
+      const waterDate = record[waterDateField] as string;
+      const waterValue = record[waterValueField] as number;
+      
+      if (waterDate && waterValue !== null && waterValue !== undefined) {
+        // Calculate LPCD if population is available
+        let lpcdValue: number | null = null;
+        if (record.population && record.population > 0) {
+          lpcdValue = Math.round((waterValue * 1000000) / record.population); // Convert ML to liters and divide by population
+        }
+        
+        historicalRecords.push({
+          region: record.region || null,
+          circle: record.circle || null,
+          division: record.division || null,
+          sub_division: record.sub_division || null,
+          block: record.block || null,
+          scheme_id: record.scheme_id,
+          scheme_name: record.scheme_name || null,
+          village_name: record.village_name,
+          population: record.population || null,
+          number_of_esr: record.number_of_esr || null,
+          data_date: waterDate,
+          water_value: waterValue,
+          lpcd_value: lpcdValue,
+          upload_batch_id: uploadBatchId,
+          dashboard_url: record.dashboard_url || null
+        });
+      }
+    }
+    
+    if (historicalRecords.length > 0) {
+      // Delete existing history records for this scheme to avoid duplicates
+      await db
+        .delete(waterSchemeDataHistory)
+        .where(eq(waterSchemeDataHistory.scheme_id, record.scheme_id));
+      
+      // Insert new historical records
+      await db.insert(waterSchemeDataHistory).values(historicalRecords);
+      console.log(`✅ Auto-populated ${historicalRecords.length} history records for scheme ${record.scheme_id}`);
+    }
   }
   
   async deleteWaterSchemeData(schemeId: string): Promise<boolean> {
