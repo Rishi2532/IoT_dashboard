@@ -494,6 +494,57 @@ export const insertUserLoginLogSchema = createInsertSchema(userLoginLogs).omit({
 export type InsertUserLoginLog = z.infer<typeof insertUserLoginLogSchema>;
 export type UserLoginLog = typeof userLoginLogs.$inferSelect;
 
+// Communication Status table for ESR equipment monitoring
+export const communicationStatus = pgTable("communication_status", {
+  id: serial("id").primaryKey(),
+  
+  // Geographic hierarchy
+  region: varchar("region", { length: 100 }),
+  circle: varchar("circle", { length: 100 }),
+  division: varchar("division", { length: 100 }),
+  sub_division: varchar("sub_division", { length: 100 }),
+  block: varchar("block", { length: 100 }),
+  
+  // Scheme and location details
+  scheme_id: varchar("scheme_id", { length: 100 }),
+  scheme_name: varchar("scheme_name", { length: 255 }),
+  village_name: varchar("village_name", { length: 255 }),
+  esr_name: varchar("esr_name", { length: 255 }),
+  
+  // Equipment connectivity status
+  chlorine_connected: varchar("chlorine_connected", { length: 20 }), // Connected/Not/N/A
+  pressure_connected: varchar("pressure_connected", { length: 20 }), // Connected/Not/N/A
+  flow_meter_connected: varchar("flow_meter_connected", { length: 20 }), // Connected/Not/N/A
+  
+  // Equipment operational status
+  chlorine_status: varchar("chlorine_status", { length: 20 }), // Online/Offline/N/A
+  pressure_status: varchar("pressure_status", { length: 20 }), // Online/Offline/N/A
+  flow_meter_status: varchar("flow_meter_status", { length: 20 }), // Online/Offline/N/A
+  
+  // Project completion status
+  completion_status: varchar("completion_status", { length: 30 }), // Fully Completed/In Progress/N/A
+  
+  // Data freshness indicators (1 = fresh <72h, 0 = stale >72h)
+  chlorine_fresh_data: integer("chlorine_fresh_data").default(0), // 0-72h indicator
+  chlorine_stale_data: integer("chlorine_stale_data").default(0), // >72h indicator
+  pressure_fresh_data: integer("pressure_fresh_data").default(0), // 0-72h indicator
+  pressure_stale_data: integer("pressure_stale_data").default(0), // >72h indicator
+  flow_meter_fresh_data: integer("flow_meter_fresh_data").default(0), // 0-72h indicator
+  flow_meter_stale_data: integer("flow_meter_stale_data").default(0), // >72h indicator
+  
+  // Upload tracking
+  uploaded_at: timestamp("uploaded_at").defaultNow().notNull(),
+  upload_batch_id: varchar("upload_batch_id", { length: 50 }),
+});
+
+export const insertCommunicationStatusSchema = createInsertSchema(communicationStatus).omit({
+  id: true,
+  uploaded_at: true,
+});
+
+export type InsertCommunicationStatus = z.infer<typeof insertCommunicationStatusSchema>;
+export type CommunicationStatus = typeof communicationStatus.$inferSelect;
+
 // User Activity Logs table for tracking user actions like file downloads
 export const userActivityLogs = pgTable("user_activity_logs", {
   id: serial("id").primaryKey(),

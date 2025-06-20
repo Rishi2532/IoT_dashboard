@@ -23,6 +23,7 @@ import {
   ChlorinePage,
 } from "./pages/chlorine";
 import { PressureDashboard, PressurePage } from "./pages/pressure";
+import CommunicationStatusPage from "./pages/CommunicationStatusPage";
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
@@ -162,6 +163,12 @@ function App() {
               <Route path="/pressure">
                 <ProtectedRoute>
                   <PressurePage />
+                </ProtectedRoute>
+              </Route>
+
+              <Route path="/communication">
+                <ProtectedRoute>
+                  <CommunicationStatusPage />
                 </ProtectedRoute>
               </Route>
 

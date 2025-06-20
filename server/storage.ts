@@ -9,6 +9,7 @@ import {
   chlorineHistory,
   pressureData,
   pressureHistory,
+  communicationStatus,
   reportFiles,
   userLoginLogs,
   userActivityLogs,
@@ -35,6 +36,8 @@ import {
   type UpdatePressureData,
   type PressureHistory,
   type InsertPressureHistory,
+  type CommunicationStatus,
+  type InsertCommunicationStatus,
   type ReportFile,
   type InsertReportFile,
   type UserLoginLog,
@@ -7338,6 +7341,405 @@ export class PostgresStorage implements IStorage {
       }));
     } catch (error) {
       console.error("Error in getHistoricalPressureData:", error);
+      throw error;
+    }
+  }
+
+  // Communication Status methods
+  async getCommunicationOverview(filters: {
+    region?: string;
+    circle?: string;
+    division?: string;
+    sub_division?: string;
+    block?: string;
+    data_freshness?: string;
+  }): Promise<any> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      let query = db.select().from(communicationStatus);
+      
+      // Apply geographic filters
+      const conditions = [];
+      if (filters.region) conditions.push(eq(communicationStatus.region, filters.region));
+      if (filters.circle) conditions.push(eq(communicationStatus.circle, filters.circle));
+      if (filters.division) conditions.push(eq(communicationStatus.division, filters.division));
+      if (filters.sub_division) conditions.push(eq(communicationStatus.sub_division, filters.sub_division));
+      if (filters.block) conditions.push(eq(communicationStatus.block, filters.block));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      const records = await query;
+      
+      // Apply data freshness filter if specified
+      let filteredRecords = records;
+      if (filters.data_freshness === 'fresh') {
+        filteredRecords = records.filter(record => 
+          record.chlorine_fresh_data === 1 || 
+          record.pressure_fresh_data === 1 || 
+          record.flow_meter_fresh_data === 1
+        );
+      } else if (filters.data_freshness === 'stale') {
+        filteredRecords = records.filter(record => 
+          record.chlorine_stale_data === 1 || 
+          record.pressure_stale_data === 1 || 
+          record.flow_meter_stale_data === 1
+        );
+      }
+      
+      // Calculate overview statistics
+      const overview = {
+        total_esrs: filteredRecords.length,
+        chlorine_analyzers: {
+          online: filteredRecords.filter(r => r.chlorine_status === 'Online').length,
+          offline: filteredRecords.filter(r => r.chlorine_status === 'Offline').length,
+          connected: filteredRecords.filter(r => r.chlorine_connected === 'Connected').length,
+          not_connected: filteredRecords.filter(r => r.chlorine_connected === 'Not').length,
+          fresh_data: filteredRecords.filter(r => r.chlorine_fresh_data === 1).length,
+          stale_data: filteredRecords.filter(r => r.chlorine_stale_data === 1).length,
+        },
+        pressure_transmitters: {
+          online: filteredRecords.filter(r => r.pressure_status === 'Online').length,
+          offline: filteredRecords.filter(r => r.pressure_status === 'Offline').length,
+          connected: filteredRecords.filter(r => r.pressure_connected === 'Connected').length,
+          not_connected: filteredRecords.filter(r => r.pressure_connected === 'Not').length,
+          fresh_data: filteredRecords.filter(r => r.pressure_fresh_data === 1).length,
+          stale_data: filteredRecords.filter(r => r.pressure_stale_data === 1).length,
+        },
+        flow_meters: {
+          online: filteredRecords.filter(r => r.flow_meter_status === 'Online').length,
+          offline: filteredRecords.filter(r => r.flow_meter_status === 'Offline').length,
+          connected: filteredRecords.filter(r => r.flow_meter_connected === 'Connected').length,
+          not_connected: filteredRecords.filter(r => r.flow_meter_connected === 'Not').length,
+          fresh_data: filteredRecords.filter(r => r.flow_meter_fresh_data === 1).length,
+          stale_data: filteredRecords.filter(r => r.flow_meter_stale_data === 1).length,
+        },
+        completion_status: {
+          fully_completed: filteredRecords.filter(r => r.completion_status === 'Fully Completed').length,
+          in_progress: filteredRecords.filter(r => r.completion_status === 'In Progress').length,
+          na: filteredRecords.filter(r => r.completion_status === 'N/A').length,
+        }
+      };
+      
+      return overview;
+    } catch (error) {
+      console.error("Error in getCommunicationOverview:", error);
+      throw error;
+    }
+  }
+
+  async getCommunicationFilters(filters: {
+    region?: string;
+    circle?: string;
+    division?: string;
+    sub_division?: string;
+  }): Promise<any> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      let query = db.select().from(communicationStatus);
+      
+      // Apply parent level filters
+      const conditions = [];
+      if (filters.region) conditions.push(eq(communicationStatus.region, filters.region));
+      if (filters.circle) conditions.push(eq(communicationStatus.circle, filters.circle));
+      if (filters.division) conditions.push(eq(communicationStatus.division, filters.division));
+      if (filters.sub_division) conditions.push(eq(communicationStatus.sub_division, filters.sub_division));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      const records = await query;
+      
+      return {
+        regions: [...new Set(records.map(r => r.region).filter(Boolean))].sort(),
+        circles: [...new Set(records.map(r => r.circle).filter(Boolean))].sort(),
+        divisions: [...new Set(records.map(r => r.division).filter(Boolean))].sort(),
+        sub_divisions: [...new Set(records.map(r => r.sub_division).filter(Boolean))].sort(),
+        blocks: [...new Set(records.map(r => r.block).filter(Boolean))].sort(),
+      };
+    } catch (error) {
+      console.error("Error in getCommunicationFilters:", error);
+      throw error;
+    }
+  }
+
+  async getCommunicationSchemes(filters: {
+    region?: string;
+    circle?: string;
+    division?: string;
+    sub_division?: string;
+    block?: string;
+    data_freshness?: string;
+  }): Promise<any> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      let query = db.select().from(communicationStatus);
+      
+      // Apply geographic filters
+      const conditions = [];
+      if (filters.region) conditions.push(eq(communicationStatus.region, filters.region));
+      if (filters.circle) conditions.push(eq(communicationStatus.circle, filters.circle));
+      if (filters.division) conditions.push(eq(communicationStatus.division, filters.division));
+      if (filters.sub_division) conditions.push(eq(communicationStatus.sub_division, filters.sub_division));
+      if (filters.block) conditions.push(eq(communicationStatus.block, filters.block));
+      
+      if (conditions.length > 0) {
+        query = query.where(and(...conditions));
+      }
+      
+      const records = await query;
+      
+      // Apply data freshness filter if specified
+      let filteredRecords = records;
+      if (filters.data_freshness === 'fresh') {
+        filteredRecords = records.filter(record => 
+          record.chlorine_fresh_data === 1 || 
+          record.pressure_fresh_data === 1 || 
+          record.flow_meter_fresh_data === 1
+        );
+      } else if (filters.data_freshness === 'stale') {
+        filteredRecords = records.filter(record => 
+          record.chlorine_stale_data === 1 || 
+          record.pressure_stale_data === 1 || 
+          record.flow_meter_stale_data === 1
+        );
+      }
+      
+      // Group by scheme to get unique schemes
+      const schemeMap = new Map();
+      
+      filteredRecords.forEach(record => {
+        const schemeKey = record.scheme_id || `${record.scheme_name}-${record.region}`;
+        
+        if (!schemeMap.has(schemeKey)) {
+          schemeMap.set(schemeKey, {
+            scheme_id: record.scheme_id,
+            scheme_name: record.scheme_name,
+            region: record.region,
+            circle: record.circle,
+            division: record.division,
+            sub_division: record.sub_division,
+            block: record.block,
+            completion_status: record.completion_status,
+            total_esrs: 0,
+            villages: new Set(),
+            communication_status: {
+              chlorine_online: 0,
+              chlorine_offline: 0,
+              pressure_online: 0,
+              pressure_offline: 0,
+              flow_meter_online: 0,
+              flow_meter_offline: 0,
+              fresh_data_count: 0,
+              stale_data_count: 0,
+            }
+          });
+        }
+        
+        const scheme = schemeMap.get(schemeKey);
+        scheme.total_esrs++;
+        if (record.village_name) scheme.villages.add(record.village_name);
+        
+        // Count equipment status
+        if (record.chlorine_status === 'Online') scheme.communication_status.chlorine_online++;
+        if (record.chlorine_status === 'Offline') scheme.communication_status.chlorine_offline++;
+        if (record.pressure_status === 'Online') scheme.communication_status.pressure_online++;
+        if (record.pressure_status === 'Offline') scheme.communication_status.pressure_offline++;
+        if (record.flow_meter_status === 'Online') scheme.communication_status.flow_meter_online++;
+        if (record.flow_meter_status === 'Offline') scheme.communication_status.flow_meter_offline++;
+        
+        // Count data freshness
+        if (record.chlorine_fresh_data === 1 || record.pressure_fresh_data === 1 || record.flow_meter_fresh_data === 1) {
+          scheme.communication_status.fresh_data_count++;
+        }
+        if (record.chlorine_stale_data === 1 || record.pressure_stale_data === 1 || record.flow_meter_stale_data === 1) {
+          scheme.communication_status.stale_data_count++;
+        }
+      });
+      
+      // Convert to array and add village count
+      const schemes = Array.from(schemeMap.values()).map(scheme => ({
+        ...scheme,
+        village_count: scheme.villages.size,
+        villages: undefined, // Remove the Set object
+      }));
+      
+      return schemes.sort((a, b) => (a.scheme_name || '').localeCompare(b.scheme_name || ''));
+    } catch (error) {
+      console.error("Error in getCommunicationSchemes:", error);
+      throw error;
+    }
+  }
+
+  async getSchemeCommunitationDetails(schemeId: string, dataFreshness?: string): Promise<any> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      let query = db.select().from(communicationStatus)
+        .where(eq(communicationStatus.scheme_id, schemeId));
+      
+      const records = await query;
+      
+      // Apply data freshness filter if specified
+      let filteredRecords = records;
+      if (dataFreshness === 'fresh') {
+        filteredRecords = records.filter(record => 
+          record.chlorine_fresh_data === 1 || 
+          record.pressure_fresh_data === 1 || 
+          record.flow_meter_fresh_data === 1
+        );
+      } else if (dataFreshness === 'stale') {
+        filteredRecords = records.filter(record => 
+          record.chlorine_stale_data === 1 || 
+          record.pressure_stale_data === 1 || 
+          record.flow_meter_stale_data === 1
+        );
+      }
+      
+      return {
+        scheme_info: records.length > 0 ? {
+          scheme_id: records[0].scheme_id,
+          scheme_name: records[0].scheme_name,
+          region: records[0].region,
+          circle: records[0].circle,
+          division: records[0].division,
+          sub_division: records[0].sub_division,
+          block: records[0].block,
+        } : null,
+        esrs: filteredRecords.map(record => ({
+          id: record.id,
+          village_name: record.village_name,
+          esr_name: record.esr_name,
+          chlorine_connected: record.chlorine_connected,
+          chlorine_status: record.chlorine_status,
+          pressure_connected: record.pressure_connected,
+          pressure_status: record.pressure_status,
+          flow_meter_connected: record.flow_meter_connected,
+          flow_meter_status: record.flow_meter_status,
+          completion_status: record.completion_status,
+          chlorine_fresh_data: record.chlorine_fresh_data,
+          chlorine_stale_data: record.chlorine_stale_data,
+          pressure_fresh_data: record.pressure_fresh_data,
+          pressure_stale_data: record.pressure_stale_data,
+          flow_meter_fresh_data: record.flow_meter_fresh_data,
+          flow_meter_stale_data: record.flow_meter_stale_data,
+        }))
+      };
+    } catch (error) {
+      console.error("Error in getSchemeCommunitationDetails:", error);
+      throw error;
+    }
+  }
+
+  async clearCommunicationStatus(): Promise<void> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      await db.delete(communicationStatus);
+      console.log("✅ Cleared all communication status data");
+    } catch (error) {
+      console.error("Error clearing communication status:", error);
+      throw error;
+    }
+  }
+
+  async importCommunicationStatusFromCSV(records: string[][]): Promise<{
+    inserted: number;
+    updated: number;
+    errors: string[];
+  }> {
+    const db = await this.ensureInitialized();
+    
+    let inserted = 0;
+    let updated = 0;
+    const errors: string[] = [];
+    const batchId = Date.now().toString();
+    
+    try {
+      console.log(`Processing ${records.length} communication status records...`);
+      
+      // Process records in batches
+      const batchSize = 100;
+      for (let i = 0; i < records.length; i += batchSize) {
+        const batch = records.slice(i, i + batchSize);
+        
+        for (const record of batch) {
+          try {
+            // Skip empty rows
+            if (!record || record.length === 0 || !record.some(cell => cell && cell.trim())) {
+              continue;
+            }
+            
+            // Map CSV columns based on the structure we analyzed
+            const communicationRecord: InsertCommunicationStatus = {
+              region: record[0]?.trim() || null,
+              circle: record[1]?.trim() || null,
+              division: record[2]?.trim() || null,
+              sub_division: record[3]?.trim() || null,
+              block: record[4]?.trim() || null,
+              scheme_id: record[5]?.trim() || null,
+              scheme_name: record[6]?.trim() || null,
+              village_name: record[7]?.trim() || null,
+              esr_name: record[8]?.trim() || null,
+              chlorine_connected: record[9]?.trim() || null,
+              pressure_connected: record[10]?.trim() || null,
+              flow_meter_connected: record[11]?.trim() || null,
+              chlorine_status: record[12]?.trim() || null,
+              pressure_status: record[13]?.trim() || null,
+              flow_meter_status: record[14]?.trim() || null,
+              completion_status: record[15]?.trim() || null,
+              chlorine_fresh_data: parseInt(record[16]) || 0,
+              chlorine_stale_data: parseInt(record[17]) || 0,
+              pressure_fresh_data: parseInt(record[18]) || 0,
+              pressure_stale_data: parseInt(record[19]) || 0,
+              flow_meter_fresh_data: parseInt(record[20]) || 0,
+              flow_meter_stale_data: parseInt(record[21]) || 0,
+              upload_batch_id: batchId,
+            };
+            
+            // Insert the record
+            await db.insert(communicationStatus).values(communicationRecord);
+            inserted++;
+            
+          } catch (recordError) {
+            console.error(`Error processing record ${i + batch.indexOf(record) + 1}:`, recordError);
+            errors.push(`Row ${i + batch.indexOf(record) + 1}: ${recordError instanceof Error ? recordError.message : 'Unknown error'}`);
+          }
+        }
+        
+        console.log(`✅ Processed batch ${Math.floor(i / batchSize) + 1}/${Math.ceil(records.length / batchSize)}`);
+      }
+      
+      console.log(`Communication status import completed: ${inserted} inserted, ${updated} updated, ${errors.length} errors`);
+      
+      return { inserted, updated, errors };
+    } catch (error) {
+      console.error("Error in importCommunicationStatusFromCSV:", error);
+      throw error;
+    }
+  }
+
+  async getCommunicationStats(): Promise<any> {
+    const db = await this.ensureInitialized();
+    
+    try {
+      const allRecords = await db.select().from(communicationStatus);
+      
+      return {
+        total_records: allRecords.length,
+        total_schemes: new Set(allRecords.map(r => r.scheme_id).filter(Boolean)).size,
+        total_villages: new Set(allRecords.map(r => r.village_name).filter(Boolean)).size,
+        total_esrs: allRecords.length,
+        regions: new Set(allRecords.map(r => r.region).filter(Boolean)).size,
+        last_update: allRecords.length > 0 ? allRecords[0].uploaded_at : null,
+      };
+    } catch (error) {
+      console.error("Error in getCommunicationStats:", error);
       throw error;
     }
   }

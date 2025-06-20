@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { cn } from "@/lib/utils";
-import { Home, GitBranchPlus, MapPin, BarChart2, Settings, ShieldCheck, Menu, X, Droplet, Gauge, Flame } from "lucide-react";
+import { Home, GitBranchPlus, MapPin, BarChart2, Settings, ShieldCheck, Menu, X, Droplet, Gauge, Flame, Wifi } from "lucide-react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -24,6 +24,7 @@ const navigationItems: NavigationItem[] = [
   { name: "Scheme LPCD", href: "/scheme-lpcd", icon: Droplet },
   { name: "Chlorine Monitoring", href: "/chlorine", prefix: "CL" },
   { name: "Pressure Monitoring", href: "/pressure", icon: Gauge },
+  { name: "Communication Status", href: "/communication", icon: Wifi },
   { name: "Settings", href: "/settings", icon: Settings },
 ];
 
