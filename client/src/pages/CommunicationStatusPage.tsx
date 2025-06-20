@@ -109,8 +109,8 @@ export default function CommunicationStatusPage() {
   };
 
   const getTimeBadge = (lessThan72h: string, moreThan72h: string) => {
-    const has72h = moreThan72h && moreThan72h.trim() !== '';
-    const hasLess72h = lessThan72h && lessThan72h.trim() !== '';
+    const has72h = moreThan72h === '1';
+    const hasLess72h = lessThan72h === '1';
     
     if (has72h && hasLess72h) {
       return (
@@ -160,6 +160,76 @@ export default function CommunicationStatusPage() {
           <p className="text-muted-foreground">Real-time monitoring of communication infrastructure across Maharashtra</p>
         </div>
       </div>
+
+      {/* Filters */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filter Communication Data</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Region" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                {filters?.regions?.map((region: string) => (
+                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedCircle} onValueChange={setSelectedCircle}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Circle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Circles</SelectItem>
+                {filters?.circles?.map((circle: string) => (
+                  <SelectItem key={circle} value={circle}>{circle}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedDivision} onValueChange={setSelectedDivision}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Division" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Divisions</SelectItem>
+                {filters?.divisions?.map((division: string) => (
+                  <SelectItem key={division} value={division}>{division}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedSubdivision} onValueChange={setSelectedSubdivision}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Sub Division" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sub Divisions</SelectItem>
+                {filters?.subdivisions?.map((subdivision: string) => (
+                  <SelectItem key={subdivision} value={subdivision}>{subdivision}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            <Select value={selectedBlock} onValueChange={setSelectedBlock}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Block" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Blocks</SelectItem>
+                {filters?.blocks?.map((block: string) => (
+                  <SelectItem key={block} value={block}>{block}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Overview Cards */}
       {!overviewLoading && overview && (
@@ -305,76 +375,6 @@ export default function CommunicationStatusPage() {
           ))}
         </div>
       )}
-
-      {/* Filters */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Filter Communication Data</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Region" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Regions</SelectItem>
-                {filters?.regions?.map((region: string) => (
-                  <SelectItem key={region} value={region}>{region}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Select value={selectedCircle} onValueChange={setSelectedCircle}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Circle" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Circles</SelectItem>
-                {filters?.circles?.map((circle: string) => (
-                  <SelectItem key={circle} value={circle}>{circle}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedDivision} onValueChange={setSelectedDivision}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Division" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Divisions</SelectItem>
-                {filters?.divisions?.map((division: string) => (
-                  <SelectItem key={division} value={division}>{division}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedSubdivision} onValueChange={setSelectedSubdivision}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Sub Division" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Sub Divisions</SelectItem>
-                {filters?.subdivisions?.map((subdivision: string) => (
-                  <SelectItem key={subdivision} value={subdivision}>{subdivision}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={selectedBlock} onValueChange={setSelectedBlock}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Block" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Blocks</SelectItem>
-                {filters?.blocks?.map((block: string) => (
-                  <SelectItem key={block} value={block}>{block}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </CardContent>
-      </Card>
 
       {/* Schemes List */}
       <Card>

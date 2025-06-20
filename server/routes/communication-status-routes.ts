@@ -39,12 +39,12 @@ router.get("/overview", async (req, res) => {
         chlorine_connected: sql<number>`sum(case when ${communicationStatus.chlorine_connected} = 'Connected' then 1 else 0 end)`,
         pressure_connected: sql<number>`sum(case when ${communicationStatus.pressure_connected} = 'Connected' then 1 else 0 end)`,
         flow_meter_connected: sql<number>`sum(case when ${communicationStatus.flow_meter_connected} = 'Connected' then 1 else 0 end)`,
-        chlorine_less_72h: sql<number>`sum(case when ${communicationStatus.chlorine_0h_72h} != '' and ${communicationStatus.chlorine_0h_72h} is not null then 1 else 0 end)`,
-        chlorine_more_72h: sql<number>`sum(case when ${communicationStatus.chlorine_72h} != '' and ${communicationStatus.chlorine_72h} is not null then 1 else 0 end)`,
-        pressure_less_72h: sql<number>`sum(case when ${communicationStatus.pressure_0h_72h} != '' and ${communicationStatus.pressure_0h_72h} is not null then 1 else 0 end)`,
-        pressure_more_72h: sql<number>`sum(case when ${communicationStatus.pressure_72h} != '' and ${communicationStatus.pressure_72h} is not null then 1 else 0 end)`,
-        flow_meter_less_72h: sql<number>`sum(case when ${communicationStatus.flow_meter_0h_72h} != '' and ${communicationStatus.flow_meter_0h_72h} is not null then 1 else 0 end)`,
-        flow_meter_more_72h: sql<number>`sum(case when ${communicationStatus.flow_meter_72h} != '' and ${communicationStatus.flow_meter_72h} is not null then 1 else 0 end)`,
+        chlorine_less_72h: sql<number>`sum(case when ${communicationStatus.chlorine_0h_72h} = '1' then 1 else 0 end)`,
+        chlorine_more_72h: sql<number>`sum(case when ${communicationStatus.chlorine_72h} = '1' then 1 else 0 end)`,
+        pressure_less_72h: sql<number>`sum(case when ${communicationStatus.pressure_0h_72h} = '1' then 1 else 0 end)`,
+        pressure_more_72h: sql<number>`sum(case when ${communicationStatus.pressure_72h} = '1' then 1 else 0 end)`,
+        flow_meter_less_72h: sql<number>`sum(case when ${communicationStatus.flow_meter_0h_72h} = '1' then 1 else 0 end)`,
+        flow_meter_more_72h: sql<number>`sum(case when ${communicationStatus.flow_meter_72h} = '1' then 1 else 0 end)`,
       })
       .from(communicationStatus)
       .where(whereClause);
