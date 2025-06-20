@@ -70,13 +70,18 @@ export default function CommunicationStatusPage() {
   const [selectedBlock, setSelectedBlock] = useState<string>("all");
 
   const { data: overview, isLoading: overviewLoading } = useQuery({
-    queryKey: ["/api/communication-status/overview", { 
-      region: selectedRegion, 
-      circle: selectedCircle, 
-      division: selectedDivision, 
-      subdivision: selectedSubdivision, 
-      block: selectedBlock 
-    }],
+    queryKey: ["/api/communication-status/overview", selectedRegion, selectedCircle, selectedDivision, selectedSubdivision, selectedBlock],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedRegion !== "all") params.set("region", selectedRegion);
+      if (selectedCircle !== "all") params.set("circle", selectedCircle);
+      if (selectedDivision !== "all") params.set("division", selectedDivision);
+      if (selectedSubdivision !== "all") params.set("subdivision", selectedSubdivision);
+      if (selectedBlock !== "all") params.set("block", selectedBlock);
+      
+      const response = await fetch(`/api/communication-status/overview?${params.toString()}`);
+      return response.json();
+    },
   });
 
   const { data: stats, isLoading: statsLoading } = useQuery({
@@ -84,17 +89,26 @@ export default function CommunicationStatusPage() {
   });
 
   const { data: schemes, isLoading: schemesLoading } = useQuery({
-    queryKey: ["/api/communication-status/schemes", { 
-      region: selectedRegion, 
-      circle: selectedCircle, 
-      division: selectedDivision, 
-      subdivision: selectedSubdivision, 
-      block: selectedBlock 
-    }],
+    queryKey: ["/api/communication-status/schemes", selectedRegion, selectedCircle, selectedDivision, selectedSubdivision, selectedBlock],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedRegion !== "all") params.set("region", selectedRegion);
+      if (selectedCircle !== "all") params.set("circle", selectedCircle);
+      if (selectedDivision !== "all") params.set("division", selectedDivision);
+      if (selectedSubdivision !== "all") params.set("subdivision", selectedSubdivision);
+      if (selectedBlock !== "all") params.set("block", selectedBlock);
+      
+      const response = await fetch(`/api/communication-status/schemes?${params.toString()}`);
+      return response.json();
+    },
   });
 
   const { data: filters } = useQuery({
     queryKey: ["/api/communication-status/filters"],
+    queryFn: async () => {
+      const response = await fetch("/api/communication-status/filters");
+      return response.json();
+    },
   });
 
   const getStatusBadge = (status: string) => {
