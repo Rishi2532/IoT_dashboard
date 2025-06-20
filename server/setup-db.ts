@@ -64,11 +64,11 @@ export function setupDatabase() {
     connectionString: process.env.DATABASE_URL
   };
   
-  // Only add SSL config in production and not for localhost/pgAdmin connections
+  // Add SSL config for cloud databases (like Neon)
   const isLocalHost = process.env.DATABASE_URL.includes('localhost') || 
                       process.env.DATABASE_URL.includes('127.0.0.1');
                       
-  if (process.env.NODE_ENV === 'production' && !isLocalHost) {
+  if (!isLocalHost) {
     poolConfig.ssl = {
       require: true,
       rejectUnauthorized: false, // Important for Neon DB connections
