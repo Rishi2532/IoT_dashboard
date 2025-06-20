@@ -24,6 +24,7 @@ import {
 } from "./pages/chlorine";
 import { PressureDashboard, PressurePage } from "./pages/pressure";
 import CommunicationStatusPage from "./pages/CommunicationStatusPage";
+import ImportCommunicationStatus from "./pages/admin/ImportCommunicationStatus";
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
@@ -194,6 +195,12 @@ function App() {
               <Route path="/admin/chlorine-import">
                 <ProtectedRoute requireAdmin={true}>
                   <ChlorineImport />
+                </ProtectedRoute>
+              </Route>
+
+              <Route path="/admin/communication-import">
+                <ProtectedRoute requireAdmin={true}>
+                  <ImportCommunicationStatus />
                 </ProtectedRoute>
               </Route>
 

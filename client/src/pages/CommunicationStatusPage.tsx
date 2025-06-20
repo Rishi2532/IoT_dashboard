@@ -1,339 +1,426 @@
-import { useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
-import { Wifi, WifiOff, Activity, Clock, Signal, SignalHigh, Database, Filter } from "lucide-react";
-import CommunicationOverviewCards from "@/components/communication/CommunicationOverviewCards";
-import CommunicationSchemesList from "@/components/communication/CommunicationSchemesList";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState } from "react";
+import { Activity, Zap, Droplets, BarChart3, Wifi, WifiOff, Clock, AlertTriangle } from "lucide-react";
+
+interface CommunicationOverview {
+  total_esrs: number;
+  chlorine_online: number;
+  pressure_online: number;
+  flow_meter_online: number;
+  chlorine_connected: number;
+  pressure_connected: number;
+  flow_meter_connected: number;
+  chlorine_less_72h: number;
+  chlorine_more_72h: number;
+  pressure_less_72h: number;
+  pressure_more_72h: number;
+  flow_meter_less_72h: number;
+  flow_meter_more_72h: number;
+}
+
+interface CommunicationStats {
+  region: string;
+  total_records: number;
+  total_schemes: number;
+  total_villages: number;
+  online_chlorine: number;
+  online_pressure: number;
+  online_flow_meter: number;
+}
+
+interface CommunicationScheme {
+  scheme_id: string;
+  scheme_name: string;
+  village_name: string;
+  esr_name: string;
+  region: string;
+  circle: string;
+  division: string;
+  sub_division: string;
+  block: string;
+  chlorine_status: string;
+  pressure_status: string;
+  flow_meter_status: string;
+  overall_status: string;
+  chlorine_0h_72h: string;
+  chlorine_72h: string;
+  pressure_0h_72h: string;
+  pressure_72h: string;
+  flow_meter_0h_72h: string;
+  flow_meter_72h: string;
+}
+
+interface FilterOptions {
+  regions: string[];
+  circles: string[];
+  divisions: string[];
+  subdivisions: string[];
+  blocks: string[];
+}
 
 export default function CommunicationStatusPage() {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
   const [selectedCircle, setSelectedCircle] = useState<string>("all");
   const [selectedDivision, setSelectedDivision] = useState<string>("all");
-  const [selectedSubDivision, setSelectedSubDivision] = useState<string>("all");
+  const [selectedSubdivision, setSelectedSubdivision] = useState<string>("all");
   const [selectedBlock, setSelectedBlock] = useState<string>("all");
-  const [dataFreshness, setDataFreshness] = useState<string>("all");
 
-  // Fetch filter options based on current selections
-  const { data: filterOptions } = useQuery({
-    queryKey: ["/api/communication/filters", selectedRegion, selectedCircle, selectedDivision, selectedSubDivision],
-    queryFn: async () => {
-      const params = new URLSearchParams();
-      if (selectedRegion !== "all") params.append("region", selectedRegion);
-      if (selectedCircle !== "all") params.append("circle", selectedCircle);
-      if (selectedDivision !== "all") params.append("division", selectedDivision);
-      if (selectedSubDivision !== "all") params.append("sub_division", selectedSubDivision);
-      
-      const response = await fetch(`/api/communication/filters?${params}`);
-      if (!response.ok) throw new Error("Failed to fetch filters");
-      return response.json();
-    },
+  const { data: overview, isLoading: overviewLoading } = useQuery({
+    queryKey: ["/api/communication-status/overview", { 
+      region: selectedRegion, 
+      circle: selectedCircle, 
+      division: selectedDivision, 
+      subdivision: selectedSubdivision, 
+      block: selectedBlock 
+    }],
   });
 
-  // Fetch communication statistics
-  const { data: stats } = useQuery({
-    queryKey: ["/api/communication/stats"],
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ["/api/communication-status/stats"],
   });
 
-  const resetFilters = () => {
-    setSelectedRegion("all");
-    setSelectedCircle("all");
-    setSelectedDivision("all");
-    setSelectedSubDivision("all");
-    setSelectedBlock("all");
-    setDataFreshness("all");
-  };
+  const { data: schemes, isLoading: schemesLoading } = useQuery({
+    queryKey: ["/api/communication-status/schemes", { 
+      region: selectedRegion, 
+      circle: selectedCircle, 
+      division: selectedDivision, 
+      subdivision: selectedSubdivision, 
+      block: selectedBlock 
+    }],
+  });
 
-  const getDataFreshnessIcon = (freshness: string) => {
-    switch (freshness) {
-      case "fresh":
-        return <SignalHigh className="h-4 w-4" />;
-      case "stale":
-        return <Clock className="h-4 w-4" />;
+  const { data: filters } = useQuery({
+    queryKey: ["/api/communication-status/filters"],
+  });
+
+  const getStatusBadge = (status: string) => {
+    switch (status?.toLowerCase()) {
+      case 'online':
+        return <Badge variant="default" className="bg-green-500"><Wifi className="w-3 h-3 mr-1" />Online</Badge>;
+      case 'offline':
+        return <Badge variant="destructive"><WifiOff className="w-3 h-3 mr-1" />Offline</Badge>;
       default:
-        return <Database className="h-4 w-4" />;
+        return <Badge variant="secondary">Unknown</Badge>;
     }
   };
 
-  const getDataFreshnessColor = (freshness: string) => {
-    switch (freshness) {
-      case "fresh":
-        return "bg-green-100 text-green-800 border-green-200";
-      case "stale":
-        return "bg-orange-100 text-orange-800 border-orange-200";
-      default:
-        return "bg-blue-100 text-blue-800 border-blue-200";
+  const getTimeBadge = (lessThan72h: string, moreThan72h: string) => {
+    const has72h = moreThan72h && moreThan72h.trim() !== '';
+    const hasLess72h = lessThan72h && lessThan72h.trim() !== '';
+    
+    if (has72h && hasLess72h) {
+      return (
+        <div className="flex space-x-1">
+          <Badge variant="outline" className="text-orange-600">
+            <Clock className="w-3 h-3 mr-1" />&lt;72h
+          </Badge>
+          <Badge variant="outline" className="text-red-600">
+            <AlertTriangle className="w-3 h-3 mr-1" />&gt;72h
+          </Badge>
+        </div>
+      );
+    } else if (has72h) {
+      return (
+        <Badge variant="outline" className="text-red-600">
+          <AlertTriangle className="w-3 h-3 mr-1" />&gt;72h
+        </Badge>
+      );
+    } else if (hasLess72h) {
+      return (
+        <Badge variant="outline" className="text-orange-600">
+          <Clock className="w-3 h-3 mr-1" />&lt;72h
+        </Badge>
+      );
     }
+    return <Badge variant="secondary">No Data</Badge>;
   };
+
+  // Get unique schemes to avoid duplicates
+  const uniqueSchemes = schemes?.reduce((acc: CommunicationScheme[], current: CommunicationScheme) => {
+    const existing = acc.find(item => 
+      item.scheme_id === current.scheme_id && 
+      item.village_name === current.village_name && 
+      item.esr_name === current.esr_name
+    );
+    if (!existing) {
+      acc.push(current);
+    }
+    return acc;
+  }, []) || [];
 
   return (
     <div className="container mx-auto p-6 space-y-6">
-      {/* Header Section */}
-      <div className="flex flex-col space-y-4">
+      <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Communication Status</h1>
-          <p className="text-muted-foreground">
-            Monitor ESR equipment communication status across Maharashtra water infrastructure
-          </p>
+          <h1 className="text-3xl font-bold">Communication Status Dashboard</h1>
+          <p className="text-muted-foreground">Real-time monitoring of communication infrastructure across Maharashtra</p>
         </div>
-
-        {/* Stats Summary */}
-        {stats && (
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <Card>
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Total ESRs</p>
-                    <p className="text-2xl font-bold">{stats.total_esrs?.toLocaleString() || '0'}</p>
-                  </div>
-                  <Database className="h-8 w-8 text-muted-foreground" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Schemes</p>
-                    <p className="text-2xl font-bold">{stats.total_schemes?.toLocaleString() || '0'}</p>
-                  </div>
-                  <Activity className="h-8 w-8 text-muted-foreground" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Villages</p>
-                    <p className="text-2xl font-bold">{stats.total_villages?.toLocaleString() || '0'}</p>
-                  </div>
-                  <Signal className="h-8 w-8 text-muted-foreground" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Regions</p>
-                    <p className="text-2xl font-bold">{stats.regions || '0'}</p>
-                  </div>
-                  <Wifi className="h-8 w-8 text-muted-foreground" />
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Last Update</p>
-                    <p className="text-sm font-bold">
-                      {stats.last_update ? new Date(stats.last_update).toLocaleDateString() : 'N/A'}
-                    </p>
-                  </div>
-                  <Clock className="h-8 w-8 text-muted-foreground" />
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        )}
       </div>
 
-      {/* Filters Section */}
+      {/* Overview Cards */}
+      {!overviewLoading && overview && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <BarChart3 className="w-5 h-5 mr-2 text-blue-500" />
+                Total ESRs
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{overview.total_esrs}</div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <Droplets className="w-5 h-5 mr-2 text-blue-400" />
+                Chlorine Sensors
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm">Online:</span>
+                  <span className="font-medium text-green-600">{overview.chlorine_online}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Connected:</span>
+                  <span className="font-medium">{overview.chlorine_connected}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">&lt;72h:</span>
+                  <span className="font-medium text-orange-600">{overview.chlorine_less_72h}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">&gt;72h:</span>
+                  <span className="font-medium text-red-600">{overview.chlorine_more_72h}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <Activity className="w-5 h-5 mr-2 text-orange-400" />
+                Pressure Sensors
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm">Online:</span>
+                  <span className="font-medium text-green-600">{overview.pressure_online}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Connected:</span>
+                  <span className="font-medium">{overview.pressure_connected}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">&lt;72h:</span>
+                  <span className="font-medium text-orange-600">{overview.pressure_less_72h}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">&gt;72h:</span>
+                  <span className="font-medium text-red-600">{overview.pressure_more_72h}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-lg flex items-center">
+                <Zap className="w-5 h-5 mr-2 text-green-400" />
+                Flow Meters
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="text-sm">Online:</span>
+                  <span className="font-medium text-green-600">{overview.flow_meter_online}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Connected:</span>
+                  <span className="font-medium">{overview.flow_meter_connected}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">&lt;72h:</span>
+                  <span className="font-medium text-orange-600">{overview.flow_meter_less_72h}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">&gt;72h:</span>
+                  <span className="font-medium text-red-600">{overview.flow_meter_more_72h}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {/* Regional Statistics */}
+      {!statsLoading && stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {stats.map((stat: CommunicationStats) => (
+            <Card key={stat.region} className="hover:shadow-lg transition-shadow">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">{stat.region}</CardTitle>
+                <CardDescription>
+                  {stat.total_schemes} schemes, {stat.total_villages} villages
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm flex items-center">
+                      <Droplets className="w-4 h-4 mr-1 text-blue-400" />
+                      Chlorine
+                    </span>
+                    <span className="text-sm font-medium">{stat.online_chlorine}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm flex items-center">
+                      <Activity className="w-4 h-4 mr-1 text-orange-400" />
+                      Pressure
+                    </span>
+                    <span className="text-sm font-medium">{stat.online_pressure}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm flex items-center">
+                      <Zap className="w-4 h-4 mr-1 text-green-400" />
+                      Flow Meter
+                    </span>
+                    <span className="text-sm font-medium">{stat.online_flow_meter}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {/* Filters */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Filter className="h-5 w-5" />
-            Filter Options
-          </CardTitle>
-          <CardDescription>
-            Filter communication status by geographic location and data freshness
-          </CardDescription>
+          <CardTitle>Filter Communication Data</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-4">
-            {/* Region Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Region</label>
-              <Select value={selectedRegion} onValueChange={(value) => {
-                setSelectedRegion(value);
-                setSelectedCircle("all");
-                setSelectedDivision("all");
-                setSelectedSubDivision("all");
-                setSelectedBlock("all");
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select region" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Regions</SelectItem>
-                  {filterOptions?.regions?.map((region: string) => (
-                    <SelectItem key={region} value={region}>{region}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Region" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Regions</SelectItem>
+                {filters?.regions?.map((region: string) => (
+                  <SelectItem key={region} value={region}>{region}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Select value={selectedCircle} onValueChange={setSelectedCircle}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Circle" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Circles</SelectItem>
+                {filters?.circles?.map((circle: string) => (
+                  <SelectItem key={circle} value={circle}>{circle}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {/* Circle Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Circle</label>
-              <Select value={selectedCircle} onValueChange={(value) => {
-                setSelectedCircle(value);
-                setSelectedDivision("all");
-                setSelectedSubDivision("all");
-                setSelectedBlock("all");
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select circle" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Circles</SelectItem>
-                  {filterOptions?.circles?.map((circle: string) => (
-                    <SelectItem key={circle} value={circle}>{circle}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={selectedDivision} onValueChange={setSelectedDivision}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Division" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Divisions</SelectItem>
+                {filters?.divisions?.map((division: string) => (
+                  <SelectItem key={division} value={division}>{division}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {/* Division Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Division</label>
-              <Select value={selectedDivision} onValueChange={(value) => {
-                setSelectedDivision(value);
-                setSelectedSubDivision("all");
-                setSelectedBlock("all");
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select division" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Divisions</SelectItem>
-                  {filterOptions?.divisions?.map((division: string) => (
-                    <SelectItem key={division} value={division}>{division}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <Select value={selectedSubdivision} onValueChange={setSelectedSubdivision}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Sub Division" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Sub Divisions</SelectItem>
+                {filters?.subdivisions?.map((subdivision: string) => (
+                  <SelectItem key={subdivision} value={subdivision}>{subdivision}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
 
-            {/* Sub Division Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Sub Division</label>
-              <Select value={selectedSubDivision} onValueChange={(value) => {
-                setSelectedSubDivision(value);
-                setSelectedBlock("all");
-              }}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select sub division" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Sub Divisions</SelectItem>
-                  {filterOptions?.sub_divisions?.map((subDiv: string) => (
-                    <SelectItem key={subDiv} value={subDiv}>{subDiv}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Block Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Block</label>
-              <Select value={selectedBlock} onValueChange={setSelectedBlock}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select block" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Blocks</SelectItem>
-                  {filterOptions?.blocks?.map((block: string) => (
-                    <SelectItem key={block} value={block}>{block}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Data Freshness Filter */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Data Freshness</label>
-              <Select value={dataFreshness} onValueChange={setDataFreshness}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select freshness" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Data</SelectItem>
-                  <SelectItem value="fresh">Fresh (&lt;72h)</SelectItem>
-                  <SelectItem value="stale">Stale (&gt;72h)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Active Filters Display */}
-          <div className="flex flex-wrap gap-2 mb-4">
-            {selectedRegion !== "all" && (
-              <Badge variant="outline" className="bg-blue-50">
-                Region: {selectedRegion}
-              </Badge>
-            )}
-            {selectedCircle !== "all" && (
-              <Badge variant="outline" className="bg-blue-50">
-                Circle: {selectedCircle}
-              </Badge>
-            )}
-            {selectedDivision !== "all" && (
-              <Badge variant="outline" className="bg-blue-50">
-                Division: {selectedDivision}
-              </Badge>
-            )}
-            {selectedSubDivision !== "all" && (
-              <Badge variant="outline" className="bg-blue-50">
-                Sub Division: {selectedSubDivision}
-              </Badge>
-            )}
-            {selectedBlock !== "all" && (
-              <Badge variant="outline" className="bg-blue-50">
-                Block: {selectedBlock}
-              </Badge>
-            )}
-            {dataFreshness !== "all" && (
-              <Badge variant="outline" className={getDataFreshnessColor(dataFreshness)}>
-                {getDataFreshnessIcon(dataFreshness)}
-                <span className="ml-1">
-                  {dataFreshness === "fresh" ? "Fresh Data" : "Stale Data"}
-                </span>
-              </Badge>
-            )}
-            {(selectedRegion !== "all" || selectedCircle !== "all" || selectedDivision !== "all" || 
-              selectedSubDivision !== "all" || selectedBlock !== "all" || dataFreshness !== "all") && (
-              <Button variant="ghost" size="sm" onClick={resetFilters}>
-                Clear All Filters
-              </Button>
-            )}
+            <Select value={selectedBlock} onValueChange={setSelectedBlock}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select Block" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Blocks</SelectItem>
+                {filters?.blocks?.map((block: string) => (
+                  <SelectItem key={block} value={block}>{block}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </CardContent>
       </Card>
 
-      {/* Overview Cards */}
-      <CommunicationOverviewCards
-        region={selectedRegion}
-        circle={selectedCircle}
-        division={selectedDivision}
-        subDivision={selectedSubDivision}
-        block={selectedBlock}
-        dataFreshness={dataFreshness}
-      />
-
       {/* Schemes List */}
-      <CommunicationSchemesList
-        region={selectedRegion}
-        circle={selectedCircle}
-        division={selectedDivision}
-        subDivision={selectedSubDivision}
-        block={selectedBlock}
-        dataFreshness={dataFreshness}
-      />
+      <Card>
+        <CardHeader>
+          <CardTitle>Scheme Communication Status</CardTitle>
+          <CardDescription>
+            Detailed view of communication status for each scheme and ESR
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {schemesLoading ? (
+            <div className="text-center py-8">Loading scheme data...</div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Scheme Name</TableHead>
+                  <TableHead>Village</TableHead>
+                  <TableHead>ESR Name</TableHead>
+                  <TableHead>Chlorine</TableHead>
+                  <TableHead>Pressure</TableHead>
+                  <TableHead>Flow Meter</TableHead>
+                  <TableHead>Time Status</TableHead>
+                  <TableHead>Overall</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {uniqueSchemes.map((scheme: CommunicationScheme, index: number) => (
+                  <TableRow key={`${scheme.scheme_id}-${scheme.village_name}-${scheme.esr_name}-${index}`}>
+                    <TableCell className="font-medium">{scheme.scheme_name}</TableCell>
+                    <TableCell>{scheme.village_name}</TableCell>
+                    <TableCell>{scheme.esr_name}</TableCell>
+                    <TableCell>{getStatusBadge(scheme.chlorine_status)}</TableCell>
+                    <TableCell>{getStatusBadge(scheme.pressure_status)}</TableCell>
+                    <TableCell>{getStatusBadge(scheme.flow_meter_status)}</TableCell>
+                    <TableCell>
+                      {getTimeBadge(scheme.chlorine_0h_72h, scheme.chlorine_72h)}
+                    </TableCell>
+                    <TableCell>{getStatusBadge(scheme.overall_status)}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
