@@ -37,6 +37,7 @@ import translationRoutes from "./routes/translation";
 import schemeLpcdRoutes from "./routes/scheme-lpcd-routes";
 import reportsRoutes from "./routes/reports";
 import populationRoutes from "./routes/population-routes";
+import esrRoutes from "./routes/esr-routes";
 
 const exec = promisify(cp.exec);
 
@@ -110,6 +111,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Mount population tracking routes
   app.use("/api/population-tracking", populationRoutes);
+  
+  // Mount ESR monitoring routes
+  app.use("/api/esr", esrRoutes);
 
   // Register endpoint
   app.post("/api/auth/register", async (req, res) => {

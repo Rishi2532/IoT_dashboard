@@ -308,6 +308,52 @@ export type InsertChlorineData = z.infer<typeof insertChlorineDataSchema>;
 export type UpdateChlorineData = z.infer<typeof updateChlorineDataSchema>;
 export type ChlorineData = typeof chlorineData.$inferSelect;
 
+// ESR Monitoring table for real-time infrastructure status
+export const esrMonitoring = pgTable("esr_monitoring", {
+  id: serial("id").primaryKey(),
+  
+  // Location information
+  region_name: varchar("region_name", { length: 100 }),
+  circle: varchar("circle", { length: 100 }),
+  division: varchar("division", { length: 100 }),
+  sub_division: varchar("sub_division", { length: 100 }),
+  block: varchar("block", { length: 100 }),
+  
+  // Identification
+  scheme_id: varchar("scheme_id", { length: 100 }),
+  scheme_name: varchar("scheme_name", { length: 255 }),
+  village_name: varchar("village_name", { length: 255 }),
+  esr_name: varchar("esr_name", { length: 255 }),
+  
+  // Sensor connectivity status
+  chlorine_connected: integer("chlorine_connected").default(0),
+  pressure_connected: integer("pressure_connected").default(0),
+  flow_meter_connected: integer("flow_meter_connected").default(0),
+  
+  // Real-time status
+  chlorine_status: varchar("chlorine_status", { length: 50 }),
+  pressure_status: varchar("pressure_status", { length: 50 }),
+  flow_meter_status: varchar("flow_meter_status", { length: 50 }),
+  overall_status: varchar("overall_status", { length: 50 }),
+  
+  // Timestamps
+  last_updated: timestamp("last_updated").defaultNow(),
+  created_at: timestamp("created_at").defaultNow(),
+}, (table) => {
+  return {
+    unique_esr: unique().on(table.scheme_id, table.village_name, table.esr_name),
+  };
+});
+
+export const insertESRMonitoringSchema = createInsertSchema(esrMonitoring).omit({
+  id: true,
+  created_at: true,
+  last_updated: true,
+});
+
+export type InsertESRMonitoring = z.infer<typeof insertESRMonitoringSchema>;
+export type ESRMonitoring = typeof esrMonitoring.$inferSelect;
+
 // Chlorine History table for permanent historical storage
 export const chlorineHistory = pgTable("chlorine_history", {
   id: serial("id").primaryKey(),
