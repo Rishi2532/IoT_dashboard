@@ -14,6 +14,9 @@ interface CommunicationOverview {
   chlorine_connected: number;
   pressure_connected: number;
   flow_meter_connected: number;
+  chlorine_offline: number;
+  pressure_offline: number;
+  flow_meter_offline: number;
   chlorine_less_72h: number;
   chlorine_more_72h: number;
   pressure_less_72h: number;
@@ -278,11 +281,15 @@ export default function CommunicationStatusPage() {
                   <span className="font-medium">{overview.chlorine_connected}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">&lt;72h:</span>
+                  <span className="text-sm">Offline:</span>
+                  <span className="font-medium text-red-500">{overview.chlorine_offline}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground ml-2">&lt;72h:</span>
                   <span className="font-medium text-orange-600">{overview.chlorine_less_72h}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">&gt;72h:</span>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground ml-2">&gt;72h:</span>
                   <span className="font-medium text-red-600">{overview.chlorine_more_72h}</span>
                 </div>
               </div>
@@ -307,11 +314,15 @@ export default function CommunicationStatusPage() {
                   <span className="font-medium">{overview.pressure_connected}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">&lt;72h:</span>
+                  <span className="text-sm">Offline:</span>
+                  <span className="font-medium text-red-500">{overview.pressure_offline}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground ml-2">&lt;72h:</span>
                   <span className="font-medium text-orange-600">{overview.pressure_less_72h}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">&gt;72h:</span>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground ml-2">&gt;72h:</span>
                   <span className="font-medium text-red-600">{overview.pressure_more_72h}</span>
                 </div>
               </div>
@@ -336,11 +347,15 @@ export default function CommunicationStatusPage() {
                   <span className="font-medium">{overview.flow_meter_connected}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm">&lt;72h:</span>
+                  <span className="text-sm">Offline:</span>
+                  <span className="font-medium text-red-500">{overview.flow_meter_offline}</span>
+                </div>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground ml-2">&lt;72h:</span>
                   <span className="font-medium text-orange-600">{overview.flow_meter_less_72h}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">&gt;72h:</span>
+                <div className="flex justify-between text-xs">
+                  <span className="text-muted-foreground ml-2">&gt;72h:</span>
                   <span className="font-medium text-red-600">{overview.flow_meter_more_72h}</span>
                 </div>
               </div>
