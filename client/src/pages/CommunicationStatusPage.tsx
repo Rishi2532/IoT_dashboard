@@ -3,8 +3,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useState } from "react";
-import { Activity, Zap, Droplets, BarChart3, Wifi, WifiOff, Clock, AlertTriangle } from "lucide-react";
+import { Activity, Zap, Droplets, BarChart3, Wifi, WifiOff, Clock, AlertTriangle, TrendingUp, TrendingDown, CheckCircle2, XCircle, Gauge } from "lucide-react";
 
 interface CommunicationOverview {
   total_esrs: number;
@@ -71,6 +72,8 @@ export default function CommunicationStatusPage() {
   const [selectedDivision, setSelectedDivision] = useState<string>("all");
   const [selectedSubdivision, setSelectedSubdivision] = useState<string>("all");
   const [selectedBlock, setSelectedBlock] = useState<string>("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const itemsPerPage = 10;
 
   const { data: overview, isLoading: overviewLoading } = useQuery({
     queryKey: ["/api/communication-status/overview", selectedRegion, selectedCircle, selectedDivision, selectedSubdivision, selectedBlock],
