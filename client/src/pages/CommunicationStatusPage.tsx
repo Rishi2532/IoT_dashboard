@@ -172,6 +172,16 @@ export default function CommunicationStatusPage() {
     return acc;
   }, []) || [];
 
+  // Pagination calculations
+  const totalItems = uniqueSchemes.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentSchemes = uniqueSchemes.slice(startIndex, endIndex);
+
+  // Reset page when filters change
+  const resetPage = () => setCurrentPage(1);
+
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex justify-between items-center">
@@ -188,7 +198,7 @@ export default function CommunicationStatusPage() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+            <Select value={selectedRegion} onValueChange={(value) => {setSelectedRegion(value); resetPage();}}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Region" />
               </SelectTrigger>
@@ -200,7 +210,7 @@ export default function CommunicationStatusPage() {
               </SelectContent>
             </Select>
             
-            <Select value={selectedCircle} onValueChange={setSelectedCircle}>
+            <Select value={selectedCircle} onValueChange={(value) => {setSelectedCircle(value); resetPage();}}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Circle" />
               </SelectTrigger>
@@ -212,7 +222,7 @@ export default function CommunicationStatusPage() {
               </SelectContent>
             </Select>
 
-            <Select value={selectedDivision} onValueChange={setSelectedDivision}>
+            <Select value={selectedDivision} onValueChange={(value) => {setSelectedDivision(value); resetPage();}}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Division" />
               </SelectTrigger>
@@ -224,7 +234,7 @@ export default function CommunicationStatusPage() {
               </SelectContent>
             </Select>
 
-            <Select value={selectedSubdivision} onValueChange={setSelectedSubdivision}>
+            <Select value={selectedSubdivision} onValueChange={(value) => {setSelectedSubdivision(value); resetPage();}}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Sub Division" />
               </SelectTrigger>
@@ -236,7 +246,7 @@ export default function CommunicationStatusPage() {
               </SelectContent>
             </Select>
 
-            <Select value={selectedBlock} onValueChange={setSelectedBlock}>
+            <Select value={selectedBlock} onValueChange={(value) => {setSelectedBlock(value); resetPage();}}>
               <SelectTrigger>
                 <SelectValue placeholder="Select Block" />
               </SelectTrigger>
@@ -251,115 +261,159 @@ export default function CommunicationStatusPage() {
         </CardContent>
       </Card>
 
-      {/* Overview Cards */}
+      {/* Enhanced Overview Cards */}
       {!overviewLoading && overview && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <Card>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {/* Total ESRs Card */}
+          <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-blue-50 via-white to-blue-50">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-blue-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center">
-                <BarChart3 className="w-5 h-5 mr-2 text-blue-500" />
-                Total ESRs
+              <CardTitle className="text-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-2 bg-blue-500/10 rounded-lg mr-3">
+                    <BarChart3 className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <span className="text-blue-900">Total ESRs</span>
+                </div>
+                <TrendingUp className="w-4 h-4 text-blue-500" />
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{overview.total_esrs}</div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">{overview.total_esrs}</div>
+              <div className="text-sm text-blue-600/70">Infrastructure Units</div>
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Chlorine Sensors Card */}
+          <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-cyan-50 via-white to-cyan-50">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center">
-                <Droplets className="w-5 h-5 mr-2 text-blue-400" />
-                Chlorine Sensors
+              <CardTitle className="text-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-2 bg-cyan-500/10 rounded-lg mr-3">
+                    <Droplets className="w-5 h-5 text-cyan-600" />
+                  </div>
+                  <span className="text-cyan-900">Chlorine Sensors</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <CheckCircle2 className="w-3 h-3 text-green-500" />
+                  <span className="text-xs text-green-600 font-medium">
+                    {((overview.chlorine_online / (overview.chlorine_online + overview.chlorine_offline || 1)) * 100).toFixed(0)}%
+                  </span>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm">Online:</span>
-                  <span className="font-medium text-green-600">{overview.chlorine_online}</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium">Online</span>
+                  </div>
+                  <span className="text-xl font-bold text-green-600">{overview.chlorine_online}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Connected:</span>
-                  <span className="font-medium">{overview.chlorine_connected}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="text-sm font-medium">Offline</span>
+                  </div>
+                  <span className="text-xl font-bold text-red-600">{overview.chlorine_offline}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Offline:</span>
-                  <span className="font-medium text-red-500">{overview.chlorine_offline}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground ml-2">&lt;72h:</span>
-                  <span className="font-medium text-orange-600">{overview.chlorine_less_72h}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground ml-2">&gt;72h:</span>
-                  <span className="font-medium text-red-600">{overview.chlorine_more_72h}</span>
+                <div className="border-t pt-2 mt-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-orange-600">Fresh: {overview.chlorine_less_72h}</span>
+                    <span className="text-red-600">Stale: {overview.chlorine_more_72h}</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Pressure Sensors Card */}
+          <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-orange-50 via-white to-orange-50">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-orange-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center">
-                <Activity className="w-5 h-5 mr-2 text-orange-400" />
-                Pressure Sensors
+              <CardTitle className="text-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-2 bg-orange-500/10 rounded-lg mr-3">
+                    <Gauge className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <span className="text-orange-900">Pressure Sensors</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <CheckCircle2 className="w-3 h-3 text-green-500" />
+                  <span className="text-xs text-green-600 font-medium">
+                    {((overview.pressure_online / (overview.pressure_online + overview.pressure_offline || 1)) * 100).toFixed(0)}%
+                  </span>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm">Online:</span>
-                  <span className="font-medium text-green-600">{overview.pressure_online}</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium">Online</span>
+                  </div>
+                  <span className="text-xl font-bold text-green-600">{overview.pressure_online}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Connected:</span>
-                  <span className="font-medium">{overview.pressure_connected}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="text-sm font-medium">Offline</span>
+                  </div>
+                  <span className="text-xl font-bold text-red-600">{overview.pressure_offline}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Offline:</span>
-                  <span className="font-medium text-red-500">{overview.pressure_offline}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground ml-2">&lt;72h:</span>
-                  <span className="font-medium text-orange-600">{overview.pressure_less_72h}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground ml-2">&gt;72h:</span>
-                  <span className="font-medium text-red-600">{overview.pressure_more_72h}</span>
+                <div className="border-t pt-2 mt-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-orange-600">Fresh: {overview.pressure_less_72h}</span>
+                    <span className="text-red-600">Stale: {overview.pressure_more_72h}</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          {/* Flow Meters Card */}
+          <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-green-50 via-white to-green-50">
+            <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/10 rounded-full -mr-10 -mt-10"></div>
             <CardHeader className="pb-3">
-              <CardTitle className="text-lg flex items-center">
-                <Zap className="w-5 h-5 mr-2 text-green-400" />
-                Flow Meters
+              <CardTitle className="text-lg flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="p-2 bg-green-500/10 rounded-lg mr-3">
+                    <Zap className="w-5 h-5 text-green-600" />
+                  </div>
+                  <span className="text-green-900">Flow Meters</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <CheckCircle2 className="w-3 h-3 text-green-500" />
+                  <span className="text-xs text-green-600 font-medium">
+                    {((overview.flow_meter_online / (overview.flow_meter_online + overview.flow_meter_offline || 1)) * 100).toFixed(0)}%
+                  </span>
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="text-sm">Online:</span>
-                  <span className="font-medium text-green-600">{overview.flow_meter_online}</span>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                    <span className="text-sm font-medium">Online</span>
+                  </div>
+                  <span className="text-xl font-bold text-green-600">{overview.flow_meter_online}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Connected:</span>
-                  <span className="font-medium">{overview.flow_meter_connected}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                    <span className="text-sm font-medium">Offline</span>
+                  </div>
+                  <span className="text-xl font-bold text-red-600">{overview.flow_meter_offline}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm">Offline:</span>
-                  <span className="font-medium text-red-500">{overview.flow_meter_offline}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground ml-2">&lt;72h:</span>
-                  <span className="font-medium text-orange-600">{overview.flow_meter_less_72h}</span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-muted-foreground ml-2">&gt;72h:</span>
-                  <span className="font-medium text-red-600">{overview.flow_meter_more_72h}</span>
+                <div className="border-t pt-2 mt-2">
+                  <div className="flex justify-between text-xs">
+                    <span className="text-orange-600">Fresh: {overview.flow_meter_less_72h}</span>
+                    <span className="text-red-600">Stale: {overview.flow_meter_more_72h}</span>
+                  </div>
                 </div>
               </div>
             </CardContent>
@@ -408,10 +462,20 @@ export default function CommunicationStatusPage() {
         </div>
       )}
 
-      {/* Schemes List */}
+      {/* Schemes List with Pagination */}
       <Card>
         <CardHeader>
-          <CardTitle>Scheme Communication Status</CardTitle>
+          <CardTitle className="flex items-center justify-between">
+            <div>
+              <span>Scheme Communication Status</span>
+              <span className="text-sm font-normal text-muted-foreground ml-2">
+                ({totalItems} records)
+              </span>
+            </div>
+            <div className="text-sm text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </div>
+          </CardTitle>
           <CardDescription>
             Detailed view of communication status for each scheme and ESR
           </CardDescription>
@@ -420,36 +484,97 @@ export default function CommunicationStatusPage() {
           {schemesLoading ? (
             <div className="text-center py-8">Loading scheme data...</div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Scheme Name</TableHead>
-                  <TableHead>Village</TableHead>
-                  <TableHead>ESR Name</TableHead>
-                  <TableHead>Chlorine</TableHead>
-                  <TableHead>Pressure</TableHead>
-                  <TableHead>Flow Meter</TableHead>
-                  <TableHead>Time Status</TableHead>
-                  <TableHead>Overall</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {uniqueSchemes.map((scheme: CommunicationScheme, index: number) => (
-                  <TableRow key={`${scheme.scheme_id}-${scheme.village_name}-${scheme.esr_name}-${index}`}>
-                    <TableCell className="font-medium">{scheme.scheme_name}</TableCell>
-                    <TableCell>{scheme.village_name}</TableCell>
-                    <TableCell>{scheme.esr_name}</TableCell>
-                    <TableCell>{getStatusBadge(scheme.chlorine_status)}</TableCell>
-                    <TableCell>{getStatusBadge(scheme.pressure_status)}</TableCell>
-                    <TableCell>{getStatusBadge(scheme.flow_meter_status)}</TableCell>
-                    <TableCell>
-                      {getTimeBadge(scheme.chlorine_0h_72h, scheme.chlorine_72h)}
-                    </TableCell>
-                    <TableCell>{getStatusBadge(scheme.overall_status)}</TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Scheme Name</TableHead>
+                    <TableHead>Village</TableHead>
+                    <TableHead>ESR Name</TableHead>
+                    <TableHead>Chlorine</TableHead>
+                    <TableHead>Pressure</TableHead>
+                    <TableHead>Flow Meter</TableHead>
+                    <TableHead>Time Status</TableHead>
+                    <TableHead>Overall</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {currentSchemes.length > 0 ? (
+                    currentSchemes.map((scheme: CommunicationScheme, index: number) => (
+                      <TableRow key={`${scheme.scheme_id}-${scheme.village_name}-${scheme.esr_name}-${index}`}>
+                        <TableCell className="font-medium">{scheme.scheme_name}</TableCell>
+                        <TableCell>{scheme.village_name}</TableCell>
+                        <TableCell>{scheme.esr_name}</TableCell>
+                        <TableCell>{getStatusBadge(scheme.chlorine_status)}</TableCell>
+                        <TableCell>{getStatusBadge(scheme.pressure_status)}</TableCell>
+                        <TableCell>{getStatusBadge(scheme.flow_meter_status)}</TableCell>
+                        <TableCell>
+                          {getTimeBadge(scheme.chlorine_0h_72h, scheme.chlorine_72h)}
+                        </TableCell>
+                        <TableCell>{getStatusBadge(scheme.overall_status)}</TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                        No communication data found for the selected filters
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between space-x-2 py-4">
+                  <div className="text-sm text-muted-foreground">
+                    Showing {startIndex + 1} to {Math.min(endIndex, totalItems)} of {totalItems} entries
+                  </div>
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious 
+                          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                          className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                      
+                      {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                        let pageNum: number;
+                        if (totalPages <= 5) {
+                          pageNum = i + 1;
+                        } else if (currentPage <= 3) {
+                          pageNum = i + 1;
+                        } else if (currentPage >= totalPages - 2) {
+                          pageNum = totalPages - 4 + i;
+                        } else {
+                          pageNum = currentPage - 2 + i;
+                        }
+                        
+                        return (
+                          <PaginationItem key={`page-${pageNum}`}>
+                            <PaginationLink
+                              onClick={() => setCurrentPage(pageNum)}
+                              isActive={currentPage === pageNum}
+                              className="cursor-pointer"
+                            >
+                              {pageNum}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+                      
+                      <PaginationItem>
+                        <PaginationNext 
+                          onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                          className={currentPage === totalPages ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
