@@ -160,7 +160,7 @@ export default function CommunicationStatusPage() {
   };
 
   // Get unique schemes to avoid duplicates
-  const uniqueSchemes = schemes?.reduce((acc: CommunicationScheme[], current: CommunicationScheme) => {
+  const uniqueSchemes = Array.isArray(schemes) ? schemes.reduce((acc: CommunicationScheme[], current: CommunicationScheme) => {
     const existing = acc.find(item => 
       item.scheme_id === current.scheme_id && 
       item.village_name === current.village_name && 
@@ -170,7 +170,7 @@ export default function CommunicationStatusPage() {
       acc.push(current);
     }
     return acc;
-  }, []) || [];
+  }, []) : [];
 
   // Pagination calculations
   const totalItems = uniqueSchemes.length;

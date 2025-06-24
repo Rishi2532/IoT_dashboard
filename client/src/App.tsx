@@ -204,6 +204,12 @@ function App() {
                 </ProtectedRoute>
               </Route>
 
+              <Route path="/admin/import-communication-status">
+                <ProtectedRoute requireAdmin={true}>
+                  <ImportCommunicationStatus />
+                </ProtectedRoute>
+              </Route>
+
               <Route path="/admin/manage-reports">
                 <ProtectedRoute requireAdmin={true}>
                   <ManageReports />
