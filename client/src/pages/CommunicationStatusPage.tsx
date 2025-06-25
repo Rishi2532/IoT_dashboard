@@ -6,7 +6,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
 import { useState } from "react";
 import { Activity, Zap, Droplets, BarChart3, Wifi, WifiOff, Clock, AlertTriangle, TrendingUp, TrendingDown, CheckCircle2, XCircle, Gauge } from "lucide-react";
-import AppLayout from "@/components/layout/AppLayout";
 
 interface CommunicationOverview {
   total_esrs: number;
@@ -66,8 +65,6 @@ interface FilterOptions {
   subdivisions: string[];
   blocks: string[];
 }
-
-
 
 export default function CommunicationStatusPage() {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -186,8 +183,13 @@ export default function CommunicationStatusPage() {
   const resetPage = () => setCurrentPage(1);
 
   return (
-    <AppLayout>
-      <div className="p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Communication Status Dashboard</h1>
+          <p className="text-muted-foreground">Real-time monitoring of communication infrastructure across Maharashtra</p>
+        </div>
+      </div>
 
       {/* Filters */}
       <Card>
@@ -574,9 +576,8 @@ export default function CommunicationStatusPage() {
               )}
             </>
           )}
-          </CardContent>
-        </Card>
-      </div>
-    </AppLayout>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
