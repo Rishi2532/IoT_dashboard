@@ -38,6 +38,7 @@ import { Toaster } from "./components/ui/toaster";
 import { CurrentDate } from "./components/dashboard/CurrentDate";
 import Header from "./components/dashboard/header";
 import RegionFilterExample from "./components/chatbot/RegionFilterExample";
+import AppLayout from "./components/layout/AppLayout";
 function App() {
   const [location] = useLocation();
 
@@ -114,56 +115,76 @@ function App() {
               {/* User protected routes */}
               <Route path="/dashboard">
                 <ProtectedRoute>
-                  <Dashboard />
+                  <AppLayout>
+                    <Dashboard />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
               <Route path="/schemes">
                 <ProtectedRoute>
-                  <Schemes />
+                  <AppLayout>
+                    <Schemes />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
               <Route path="/regions">
                 <ProtectedRoute>
-                  <Regions />
+                  <AppLayout>
+                    <Regions />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
               <Route path="/reports">
                 <ProtectedRoute>
-                  <Reports />
+                  <AppLayout>
+                    <Reports />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
               <Route path="/settings">
                 <ProtectedRoute>
-                  <Settings />
+                  <AppLayout>
+                    <Settings />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
               <Route path="/lpcd">
                 <ProtectedRoute>
-                  <LpcdPage />
+                  <AppLayout>
+                    <LpcdPage />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               <Route path="/scheme-lpcd">
                 <ProtectedRoute>
-                  <SchemeLpcdPage />
+                  <AppLayout>
+                    <SchemeLpcdPage />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               <Route path="/chlorine">
                 <ProtectedRoute>
-                  <ChlorinePage />
+                  <AppLayout>
+                    <ChlorinePage />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               <Route path="/chlorine/import">
                 <ProtectedRoute>
-                  <ChlorineImport />
+                  <AppLayout>
+                    <ChlorineImport />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               <Route path="/pressure">
                 <ProtectedRoute>
-                  <PressurePage />
+                  <AppLayout>
+                    <PressurePage />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
@@ -175,50 +196,66 @@ function App() {
 
               <Route path="/map-preview">
                 <ProtectedRoute>
-                  <MapPreviewPage />
+                  <AppLayout>
+                    <MapPreviewPage />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               {/* Admin protected routes */}
               <Route path="/admin/dashboard">
                 <ProtectedRoute requireAdmin={true}>
-                  <AdminDashboard />
+                  <AppLayout>
+                    <AdminDashboard />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               <Route path="/admin/import-data">
                 <ProtectedRoute requireAdmin={true}>
-                  <ImportDataPage />
+                  <AppLayout>
+                    <ImportDataPage />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               <Route path="/admin/chlorine-import">
                 <ProtectedRoute requireAdmin={true}>
-                  <ChlorineImport />
+                  <AppLayout>
+                    <ChlorineImport />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               <Route path="/admin/communication-import">
                 <ProtectedRoute requireAdmin={true}>
-                  <ImportCommunicationStatus />
+                  <AppLayout>
+                    <ImportCommunicationStatus />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               <Route path="/admin/import-communication-status">
                 <ProtectedRoute requireAdmin={true}>
-                  <ImportCommunicationStatus />
+                  <AppLayout>
+                    <ImportCommunicationStatus />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               <Route path="/admin/manage-reports">
                 <ProtectedRoute requireAdmin={true}>
-                  <ManageReports />
+                  <AppLayout>
+                    <ManageReports />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
               <Route path="/admin/login-logs">
                 <ProtectedRoute requireAdmin={true}>
-                  <LoginLogsPage />
+                  <AppLayout>
+                    <LoginLogsPage />
+                  </AppLayout>
                 </ProtectedRoute>
               </Route>
 
