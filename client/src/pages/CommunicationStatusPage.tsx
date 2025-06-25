@@ -4,8 +4,11 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Pagination, PaginationContent, PaginationItem, PaginationLink, PaginationNext, PaginationPrevious } from "@/components/ui/pagination";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { useState } from "react";
-import { Activity, Zap, Droplets, BarChart3, Wifi, WifiOff, Clock, AlertTriangle, TrendingUp, TrendingDown, CheckCircle2, XCircle, Gauge } from "lucide-react";
+import { Activity, Zap, Droplets, BarChart3, Wifi, WifiOff, Clock, AlertTriangle, TrendingUp, TrendingDown, CheckCircle2, XCircle, Gauge, Menu, Home, Settings, FileText, Users, Database, Upload } from "lucide-react";
+import { Link } from "wouter";
 
 interface CommunicationOverview {
   total_esrs: number;
@@ -65,6 +68,129 @@ interface FilterOptions {
   subdivisions: string[];
   blocks: string[];
 }
+
+// Sidebar Component
+const Sidebar = () => {
+  return (
+    <div className="w-64 bg-white shadow-lg h-full">
+      <div className="p-6">
+        <div className="flex items-center mb-8">
+          <Activity className="h-8 w-8 text-blue-600 mr-3" />
+          <h2 className="text-xl font-bold text-gray-800">Navigation</h2>
+        </div>
+        
+        <nav className="space-y-2">
+          <Link href="/dashboard">
+            <Button variant="ghost" className="w-full justify-start">
+              <Home className="h-4 w-4 mr-3" />
+              Dashboard
+            </Button>
+          </Link>
+          
+          <Link href="/communication">
+            <Button variant="default" className="w-full justify-start bg-blue-600">
+              <Activity className="h-4 w-4 mr-3" />
+              Communication Status
+            </Button>
+          </Link>
+          
+          <Link href="/schemes">
+            <Button variant="ghost" className="w-full justify-start">
+              <Database className="h-4 w-4 mr-3" />
+              Schemes
+            </Button>
+          </Link>
+          
+          <Link href="/regions">
+            <Button variant="ghost" className="w-full justify-start">
+              <BarChart3 className="h-4 w-4 mr-3" />
+              Regions
+            </Button>
+          </Link>
+          
+          <Link href="/lpcd">
+            <Button variant="ghost" className="w-full justify-start">
+              <Droplets className="h-4 w-4 mr-3" />
+              LPCD Analysis
+            </Button>
+          </Link>
+          
+          <Link href="/chlorine">
+            <Button variant="ghost" className="w-full justify-start">
+              <Zap className="h-4 w-4 mr-3" />
+              Chlorine Data
+            </Button>
+          </Link>
+          
+          <Link href="/pressure">
+            <Button variant="ghost" className="w-full justify-start">
+              <Gauge className="h-4 w-4 mr-3" />
+              Pressure Data
+            </Button>
+          </Link>
+          
+          <div className="pt-4 border-t border-gray-200 mt-4">
+            <p className="text-xs text-gray-500 mb-2 font-medium">ADMIN</p>
+            <Link href="/admin/dashboard">
+              <Button variant="ghost" className="w-full justify-start">
+                <Settings className="h-4 w-4 mr-3" />
+                Admin Dashboard
+              </Button>
+            </Link>
+            
+            <Link href="/admin/import-communication-status">
+              <Button variant="ghost" className="w-full justify-start">
+                <Upload className="h-4 w-4 mr-3" />
+                Import Communication Data
+              </Button>
+            </Link>
+          </div>
+        </nav>
+      </div>
+    </div>
+  );
+};
+
+// Header Component
+const Header = () => {
+  return (
+    <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="md:hidden mr-4">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="p-0">
+              <Sidebar />
+            </SheetContent>
+          </Sheet>
+          
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Communication Status Dashboard</h1>
+            <p className="text-sm text-gray-600">Monitor ESR communication infrastructure across Maharashtra</p>
+          </div>
+        </div>
+        
+        <div className="flex items-center space-x-3">
+          <Badge variant="secondary" className="bg-green-100 text-green-800">
+            <Wifi className="h-3 w-3 mr-1" />
+            System Online
+          </Badge>
+          
+          <Link href="/admin/import-communication-status">
+            <Button variant="outline" size="sm">
+              <Upload className="h-4 w-4 mr-2" />
+              Import Data
+            </Button>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export default function CommunicationStatusPage() {
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -183,13 +309,19 @@ export default function CommunicationStatusPage() {
   const resetPage = () => setCurrentPage(1);
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold">Communication Status Dashboard</h1>
-          <p className="text-muted-foreground">Real-time monitoring of communication infrastructure across Maharashtra</p>
-        </div>
+    <div className="flex h-screen bg-gray-50">
+      {/* Sidebar - Hidden on mobile */}
+      <div className="hidden md:block">
+        <Sidebar />
       </div>
+      
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <Header />
+        
+        {/* Page Content */}
+        <div className="flex-1 overflow-auto p-6 space-y-6">
 
       {/* Filters */}
       <Card>
@@ -576,8 +708,10 @@ export default function CommunicationStatusPage() {
               )}
             </>
           )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+        </div>
+      </div>
     </div>
   );
 }

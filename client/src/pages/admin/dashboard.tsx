@@ -22,7 +22,8 @@ import {
   Cog,
   List,
   Droplets,
-  Gauge
+  Gauge,
+  Activity
 } from 'lucide-react';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
 import ProtectedRoute from '@/components/auth/protected-route';
@@ -31,6 +32,7 @@ import SchemeImporter from '@/components/admin/scheme-importer';
 import LpcdImport from '@/pages/lpcd/LpcdImport';
 import { ChlorineImport } from '@/pages/chlorine';
 import { PressureImportContent } from '@/pages/pressure';
+import ImportCommunicationStatus from '@/pages/admin/ImportCommunicationStatus';
 import {
   Table,
   TableHeader,
@@ -619,7 +621,7 @@ export default function AdminDashboard() {
 
         <div className="px-6">
           <Tabs defaultValue="region-import" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-7 mb-6">
+            <TabsList className="grid w-full grid-cols-8 mb-6">
               <TabsTrigger value="region-import" className="flex items-center">
                 <Database className="h-4 w-4 mr-2" />
                 Import Region Data
@@ -639,6 +641,10 @@ export default function AdminDashboard() {
               <TabsTrigger value="pressure-import" className="flex items-center">
                 <Gauge className="h-4 w-4 mr-2" />
                 Import Pressure Data
+              </TabsTrigger>
+              <TabsTrigger value="communication-import" className="flex items-center">
+                <Activity className="h-4 w-4 mr-2" />
+                Import Communication Data
               </TabsTrigger>
               <TabsTrigger value="manage-schemes" className="flex items-center">
                 <Cog className="h-4 w-4 mr-2" />
@@ -696,6 +702,20 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <PressureImportContent />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="communication-import" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Import Communication Status Data</CardTitle>
+                  <CardDescription>
+                    Upload CSV files containing communication infrastructure status data for ESRs across Maharashtra.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ImportCommunicationStatus />
                 </CardContent>
               </Card>
             </TabsContent>
