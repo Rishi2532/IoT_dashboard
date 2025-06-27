@@ -19,18 +19,29 @@ interface HierarchyNode {
   children?: HierarchyNode[];
 }
 
+interface RegionData {
+  region_id: number;
+  region_name: string;
+  total_schemes_integrated: number;
+  fully_completed_schemes: number;
+  total_villages_integrated: number;
+  fully_completed_villages: number;
+  total_esr_integrated: number;
+  fully_completed_esr: number;
+}
+
 export default function ZoomableCirclePacking() {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentNode, setCurrentNode] = useState<any>(null);
   
-  // Fetch scheme status data
-  const { data: schemeStatus, isLoading, error } = useQuery<SchemeData[]>({ 
-    queryKey: ["/api/scheme-status"] 
+  // Fetch regions data which has the correct scheme counts
+  const { data: regions, isLoading, error } = useQuery<RegionData[]>({ 
+    queryKey: ["/api/regions"] 
   });
 
   useEffect(() => {
-    if (!svgRef.current || !containerRef.current || isLoading || !schemeStatus || !Array.isArray(schemeStatus)) {
+    if (!svgRef.current || !containerRef.current || isLoading || !regions || !Array.isArray(regions)) {
       return;
     }
 
@@ -40,51 +51,29 @@ export default function ZoomableCirclePacking() {
     const height = 600;
     const margin = 20;
 
-    // Process data by region
-    const regionStats = new Map<string, {
-      totalSchemes: number;
-      completedSchemes: number;
-      inProgressSchemes: number;
-    }>();
-    
-    schemeStatus.forEach((scheme: SchemeData) => {
-      const region = scheme.region || 'Unknown';
-      if (!regionStats.has(region)) {
-        regionStats.set(region, {
-          totalSchemes: 0,
-          completedSchemes: 0,
-          inProgressSchemes: 0
-        });
-      }
-      
-      const stats = regionStats.get(region)!;
-      stats.totalSchemes += 1;
-      
-      if (scheme.completion_status === 'Fully Completed') {
-        stats.completedSchemes += 1;
-      } else {
-        stats.inProgressSchemes += 1;
-      }
-    });
-
-    // Build hierarchy - Maharashtra as root with regions as children
+    // Build hierarchy using correct regions data
     const hierarchyData: HierarchyNode = {
       name: "Maharashtra",
-      children: Array.from(regionStats.entries()).map(([regionName, stats]) => ({
-        name: regionName,
-        children: [
-          ...(stats.completedSchemes > 0 ? [{
-            name: stats.completedSchemes.toString(),
-            value: stats.completedSchemes,
-            type: "completed"
-          }] : []),
-          ...(stats.inProgressSchemes > 0 ? [{
-            name: stats.inProgressSchemes.toString(),
-            value: stats.inProgressSchemes,
-            type: "progress"
-          }] : [])
-        ]
-      })).filter(region => region.children.length > 0)
+      children: regions.map((region: RegionData) => {
+        const completedSchemes = region.fully_completed_schemes;
+        const inProgressSchemes = region.total_schemes_integrated - region.fully_completed_schemes;
+        
+        return {
+          name: region.region_name,
+          children: [
+            ...(completedSchemes > 0 ? [{
+              name: completedSchemes.toString(),
+              value: completedSchemes,
+              type: "completed"
+            }] : []),
+            ...(inProgressSchemes > 0 ? [{
+              name: inProgressSchemes.toString(),
+              value: inProgressSchemes,
+              type: "progress"
+            }] : [])
+          ]
+        };
+      }).filter(region => region.children.length > 0)
     };
 
     // Clear previous chart
@@ -143,7 +132,7 @@ export default function ZoomableCirclePacking() {
       .attr("transform", (d: any) => `translate(${d.x}, ${d.y})`)
       .style("cursor", "pointer");
 
-    // Add circles
+    // Add circles with improved interaction
     nodes.append("circle")
       .attr("r", (d: any) => d.r)
       .style("fill", (d: any) => colorScale(d))
@@ -153,57 +142,73 @@ export default function ZoomableCirclePacking() {
       .on("mouseover", function(event, d: any) {
         d3.select(this)
           .style("opacity", 1)
-          .style("stroke-width", 3);
+          .style("stroke-width", 3)
+          .style("filter", "drop-shadow(0px 2px 6px rgba(0,0,0,0.3))");
+        
+        // Show tooltip-like information
+        if (d.depth === 1) {
+          const region = regions?.find(r => r.region_name === d.data.name);
+          if (region) {
+            console.log(`${region.region_name}: ${region.fully_completed_schemes}/${region.total_schemes_integrated} schemes completed`);
+          }
+        }
       })
       .on("mouseout", function(event, d: any) {
         d3.select(this)
           .style("opacity", 0.8)
-          .style("stroke-width", 2);
+          .style("stroke-width", 2)
+          .style("filter", "none");
       })
       .on("click", function(event, d: any) {
         event.stopPropagation();
         zoomToNode(d);
       });
 
-    // Add text labels - only show numbers for leaf nodes
-    nodes.append("text")
-      .attr("dy", "0.3em")
+    // Add scheme count numbers only (clean display)
+    nodes.filter((d: any) => !d.children) // Only leaf nodes (scheme counts)
+      .append("text")
+      .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
       .style("font-size", (d: any) => {
-        if (d.r < 15) return "0px"; // Hide text for very small circles
-        if (d.r < 25) return "10px";
-        if (d.r < 40) return "12px";
-        if (d.r < 60) return "14px";
-        return "16px";
+        if (d.r < 15) return "0px";
+        if (d.r < 25) return "12px";
+        if (d.r < 40) return "16px";
+        return "20px";
       })
       .style("font-weight", "bold")
-      .style("fill", "#333")
+      .style("fill", "#fff")
+      .style("text-shadow", "1px 1px 2px rgba(0,0,0,0.5)")
+      .style("pointer-events", "none")
+      .style("user-select", "none")
+      .text((d: any) => d.data.name);
+
+    // Add creative region labels with better positioning
+    nodes.filter((d: any) => d.depth === 1)
+      .append("text")
+      .attr("dy", (d: any) => d.r > 80 ? "-0.8em" : "0em")
+      .attr("text-anchor", "middle")
+      .style("font-size", (d: any) => {
+        if (d.r < 50) return "0px";
+        if (d.r < 80) return "11px";
+        return "13px";
+      })
+      .style("font-weight", "600")
+      .style("fill", "#fff")
+      .style("text-shadow", "1px 1px 3px rgba(0,0,0,0.7)")
       .style("pointer-events", "none")
       .style("user-select", "none")
       .text((d: any) => {
-        // Show only numbers for leaf nodes (actual scheme counts)
-        if (d.children) {
-          // For parent nodes, show region names only if they fit
-          if (d.depth === 1 && d.r > 60) {
-            return d.data.name;
-          }
-          return "";
-        }
-        // For leaf nodes, show the number
-        return d.data.name;
+        // Creative short names for regions
+        const regionShortNames: { [key: string]: string } = {
+          "Nagpur": "NGP",
+          "Pune": "PNE", 
+          "Nashik": "NSK",
+          "Amravati": "AMR",
+          "Konkan": "KNK",
+          "Chhatrapati Sambhajinagar": "CSN"
+        };
+        return regionShortNames[d.data.name] || d.data.name.substring(0, 3).toUpperCase();
       });
-
-    // Add region labels as separate text for better visibility
-    nodes.filter((d: any) => d.depth === 1)
-      .append("text")
-      .attr("dy", "-0.5em")
-      .attr("text-anchor", "middle")
-      .style("font-size", (d: any) => Math.min(d.r / 4, 14) + "px")
-      .style("font-weight", "normal")
-      .style("fill", "#fff")
-      .style("pointer-events", "none")
-      .style("user-select", "none")
-      .text((d: any) => d.r > 40 ? d.data.name : "");
 
     // Zoom to node function
     function zoomToNode(d: d3.HierarchyCircularNode<HierarchyNode>) {
@@ -234,7 +239,7 @@ export default function ZoomableCirclePacking() {
       setCurrentNode(root);
     });
 
-  }, [schemeStatus, isLoading]);
+  }, [regions, isLoading]);
 
   if (isLoading) {
     return (
