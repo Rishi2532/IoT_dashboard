@@ -123,6 +123,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### June 27, 2025
+- **Circle Packing Visualization Fix**: Fixed complete circle packing graph display issue where only half the visualization was showing and numbers were not visible
+- **API Endpoint Addition**: Added missing `/api/scheme-status` endpoint that was causing "No data available" error in circle packing component
+- **Data Visualization Enhancement**: Updated circle packing component to properly display full Maharashtra water infrastructure hierarchy with visible numbers showing actual scheme counts per region (e.g., Amaravati: 21 total schemes with 4 completed)
+- **Component Architecture**: Created SimpleFixedCirclePacking component with proper SVG sizing, text positioning, and D3.js integration for reliable data visualization
+
 ### June 24, 2025
 - **Communication Status Enhancement**: Enhanced communication status cards with attractive gradient backgrounds, visual status indicators, and percentage displays for better user experience
 - **Pagination Implementation**: Added pagination to communication status scheme list (10 items per page) to handle large datasets efficiently
