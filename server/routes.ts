@@ -863,6 +863,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to aggregate scheme data" });
     }
   });
+
+  // Get all scheme status data
+  app.get("/api/scheme-status", async (req, res) => {
+    try {
+      console.log("Fetching all scheme status data");
+      const schemes = await storage.getAllSchemes();
+      
+      // Transform scheme data to include completion status
+      const schemeStatusData = schemes.map(scheme => ({
+        scheme_id: scheme.scheme_id,
+        scheme_name: scheme.scheme_name,
+        region: scheme.region,
+        circle: scheme.circle,
+        division: scheme.division,
+        sub_division: scheme.sub_division,
+        block: scheme.block,
+        completion_status: scheme.fully_completion_scheme_status || 
+                          (scheme.mjp_fully_completed === 'Fully Completed' ? 'Fully Completed' : 'In Progress'),
+        total_villages: scheme.total_villages_integrated || 0,
+        completed_villages: scheme.fully_completed_villages || 0,
+        total_esr: scheme.total_esr_integrated || 0,
+        completed_esr: scheme.no_fully_completed_esr || 0
+      }));
+      
+      console.log(`Returning ${schemeStatusData.length} scheme status records`);
+      res.json(schemeStatusData);
+    } catch (error) {
+      console.error("Error fetching scheme status:", error);
+      res.status(500).json({ message: "Failed to fetch scheme status" });
+    }
+  });
   
   // Get schemes by geographic filter (region, division, subdivision, circle, block)
   app.get("/api/schemes/geographic", async (req, res) => {

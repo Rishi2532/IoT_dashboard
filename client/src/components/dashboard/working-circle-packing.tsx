@@ -7,9 +7,16 @@ export default function WorkingCirclePacking() {
   const svgRef = useRef<SVGSVGElement>(null);
   
   // Fetch all required data
-  const { data: regions, isLoading: regionsLoading } = useQuery({ queryKey: ["/api/regions"] });
-  const { data: schemeStatus, isLoading: schemeStatusLoading } = useQuery({ queryKey: ["/api/scheme-status"] });
-  const { data: waterSchemeData, isLoading: waterSchemeDataLoading } = useQuery({ queryKey: ["/api/water-scheme-data"] });
+  const { data: regions, isLoading: regionsLoading, error: regionsError } = useQuery({ queryKey: ["/api/regions"] });
+  const { data: schemeStatus, isLoading: schemeStatusLoading, error: schemeStatusError } = useQuery({ queryKey: ["/api/scheme-status"] });
+  const { data: waterSchemeData, isLoading: waterSchemeDataLoading, error: waterSchemeDataError } = useQuery({ queryKey: ["/api/water-scheme-data"] });
+
+  // Debug logging
+  console.log('Circle Packing Data Debug:', {
+    regions: { data: regions, loading: regionsLoading, error: regionsError },
+    schemeStatus: { data: schemeStatus, loading: schemeStatusLoading, error: schemeStatusError },
+    waterSchemeData: { data: waterSchemeData, loading: waterSchemeDataLoading, error: waterSchemeDataError }
+  });
 
   useEffect(() => {
     if (!svgRef.current || regionsLoading || schemeStatusLoading || waterSchemeDataLoading || !regions || !schemeStatus || !waterSchemeData) {
@@ -228,7 +235,17 @@ export default function WorkingCirclePacking() {
         <CardContent>
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
-              <p className="text-muted-foreground">No data available</p>
+              <p className="text-muted-foreground">
+                Data Status: 
+                Regions: {regions ? '✓' : '✗'} | 
+                Schemes: {schemeStatus ? '✓' : '✗'} | 
+                Water Data: {waterSchemeData ? '✓' : '✗'}
+              </p>
+              {(regionsError || schemeStatusError || waterSchemeDataError) && (
+                <p className="text-red-500 text-sm mt-2">
+                  Errors: {[regionsError, schemeStatusError, waterSchemeDataError].filter(Boolean).map(e => e?.message).join(', ')}
+                </p>
+              )}
             </div>
           </div>
         </CardContent>
