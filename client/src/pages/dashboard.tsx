@@ -11,7 +11,7 @@ import FlipPopulationCards from "@/components/dashboard/flip-population-cards";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";
-import SimpleFixedCirclePacking from "@/components/dashboard/simple-fixed-circle-packing";
+import ZoomableCirclePacking from "@/components/dashboard/zoomable-circle-packing";
 import ChatbotComponent, {
   FilterContextProvider,
 } from "@/components/chatbot/ChatbotComponent";
@@ -718,7 +718,7 @@ export default function Dashboard() {
 
       {/* Circle Packing Visualization */}
       <div className="mb-4 sm:mb-6">
-        <SimpleFixedCirclePacking />
+        <ZoomableCirclePacking />
       </div>
 
       {/* Enhanced Schemes Table with title and styling */}
