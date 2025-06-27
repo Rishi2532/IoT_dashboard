@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 
-export default function SimpleCirclePacking() {
+export default function WorkingCirclePacking() {
   const svgRef = useRef<SVGSVGElement>(null);
   
   // Fetch all required data
@@ -11,22 +11,8 @@ export default function SimpleCirclePacking() {
   const { data: schemeStatus, isLoading: schemeStatusLoading } = useQuery({ queryKey: ["/api/scheme-status"] });
   const { data: waterSchemeData, isLoading: waterSchemeDataLoading } = useQuery({ queryKey: ["/api/water-scheme-data"] });
 
-  // Debug data loading
-  console.log('Circle Packing Debug:', {
-    regions: regions ? `${Array.isArray(regions) ? regions.length : 'not array'}` : 'null',
-    schemeStatus: schemeStatus ? `${Array.isArray(schemeStatus) ? schemeStatus.length : 'not array'}` : 'null',
-    waterSchemeData: waterSchemeData ? `${Array.isArray(waterSchemeData) ? waterSchemeData.length : 'not array'}` : 'null',
-    loading: { regionsLoading, schemeStatusLoading, waterSchemeDataLoading }
-  });
-
   useEffect(() => {
-    if (!svgRef.current || !regions || !schemeStatus || !waterSchemeData) {
-      console.log('Circle packing waiting for data:', { 
-        svgRef: !!svgRef.current, 
-        regions: !!regions, 
-        schemeStatus: !!schemeStatus, 
-        waterSchemeData: !!waterSchemeData 
-      });
+    if (!svgRef.current || regionsLoading || schemeStatusLoading || waterSchemeDataLoading || !regions || !schemeStatus || !waterSchemeData) {
       return;
     }
 
@@ -38,38 +24,47 @@ export default function SimpleCirclePacking() {
     const schemeStatusArray = Array.isArray(schemeStatus) ? schemeStatus : [];
     const waterSchemeArray = Array.isArray(waterSchemeData) ? waterSchemeData : [];
 
-    // Build hierarchy data exactly as specified
+    // Build hierarchy data with actual counts
     const hierarchyData = {
       name: "Maharashtra Water Infrastructure",
-      type: 'root',
-      children: regionsArray.map((region: any) => ({
-        name: region.region_name || 'Unknown Region',
-        type: 'region',
-        children: [{
-          name: "Water Schemes",
-          type: 'schemes',
+      children: regionsArray.map((region: any) => {
+        // Count completed schemes for this region
+        const completedSchemes = schemeStatusArray.filter((s: any) => 
+          s.region === region.region_name && 
+          s.completion_status === 'Fully Completed'
+        ).length;
+
+        // Count villages with LPCD > 55 for this region
+        const highLpcdVillages = waterSchemeArray.filter((w: any) => {
+          const lpcdValues = [
+            parseFloat(w.lpcd_value_day1 || '0'),
+            parseFloat(w.lpcd_value_day2 || '0'),
+            parseFloat(w.lpcd_value_day3 || '0'),
+            parseFloat(w.lpcd_value_day4 || '0'),
+            parseFloat(w.lpcd_value_day5 || '0'),
+            parseFloat(w.lpcd_value_day6 || '0'),
+            parseFloat(w.lpcd_value_day7 || '0')
+          ];
+          const maxLpcd = Math.max(...lpcdValues);
+          return w.region === region.region_name && maxLpcd > 55;
+        }).length;
+
+        return {
+          name: region.region_name,
           children: [
             {
-              name: "Fully Completed Schemes",
-              type: 'completed',
-              value: schemeStatusArray
-                .filter((s: any) => s.region === region.region_name && s.completion_status === 'Fully Completed')
-                .length
+              name: `Completed Schemes: ${completedSchemes}`,
+              value: completedSchemes || 1,
+              type: 'completed'
             },
             {
-              name: "Villages LPCD > 55 (Not Fully Completed)",
-              type: 'lpcd_high',
-              value: waterSchemeArray
-                .filter((w: any) => 
-                  w.region === region.region_name && 
-                  parseFloat(w.lpcd_value || '0') > 55 &&
-                  schemeStatusArray.find((s: any) => s.scheme_id === w.scheme_id)?.completion_status !== 'Fully Completed'
-                )
-                .length
+              name: `High LPCD Villages: ${highLpcdVillages}`,
+              value: highLpcdVillages || 1,
+              type: 'lpcd_high'
             }
           ]
-        }]
-      }))
+        };
+      })
     };
 
     // Clear previous chart
@@ -77,7 +72,7 @@ export default function SimpleCirclePacking() {
 
     // Create hierarchy and pack layout
     const root: any = d3.hierarchy(hierarchyData)
-      .sum((d: any) => d.value || 10)
+      .sum((d: any) => d.value || 1)
       .sort((a: any, b: any) => (b.value || 0) - (a.value || 0));
 
     const pack = d3.pack()
@@ -91,16 +86,13 @@ export default function SimpleCirclePacking() {
       .attr("viewBox", `0 0 ${width} ${height}`)
       .style("cursor", "pointer");
 
-    // Color scheme based on type
+    // Color scheme
     const getColor = (d: any) => {
-      switch (d.data.type) {
-        case 'root': return '#e3f2fd';
-        case 'region': return '#2196f3';
-        case 'schemes': return '#1976d2';
-        case 'completed': return '#4caf50';
-        case 'lpcd_high': return '#ff9800';
-        default: return '#90caf9';
-      }
+      if (d.depth === 0) return '#e3f2fd'; // Root
+      if (d.depth === 1) return '#2196f3'; // Regions
+      if (d.data.type === 'completed') return '#4caf50'; // Green for completed
+      if (d.data.type === 'lpcd_high') return '#ff9800'; // Orange for high LPCD
+      return '#90caf9';
     };
 
     // Initial zoom state
@@ -120,8 +112,9 @@ export default function SimpleCirclePacking() {
       .on("mouseover", function(event: any, d: any) { 
         d3.select(this).attr("stroke-width", 3).attr("fill-opacity", 1);
         
-        // Create simple tooltip
+        // Simple tooltip
         const tooltip = d3.select("body").append("div")
+          .attr("class", "d3-tooltip")
           .style("position", "absolute")
           .style("background", "rgba(0,0,0,0.8)")
           .style("color", "white")
@@ -133,16 +126,13 @@ export default function SimpleCirclePacking() {
           .style("opacity", 0);
 
         tooltip.transition().duration(200).style("opacity", 1);
-        tooltip.html(`<strong>${d.data.name}</strong><br/>${d.data.value !== undefined ? `Count: ${d.data.value}` : 'Container'}`)
+        tooltip.html(`<strong>${d.data.name}</strong>`)
           .style("left", (event.pageX + 10) + "px")
           .style("top", (event.pageY - 28) + "px");
       })
       .on("mouseout", function() { 
         d3.select(this).attr("stroke-width", 2).attr("fill-opacity", 0.8);
-        d3.selectAll("div").filter(function() {
-          return d3.select(this).style("position") === "absolute" && 
-                 d3.select(this).style("background") === "rgba(0, 0, 0, 0.8)";
-        }).remove();
+        d3.selectAll(".d3-tooltip").remove();
       })
       .on("click", (event: any, d: any) => {
         if (focus !== d) {
@@ -164,24 +154,12 @@ export default function SimpleCirclePacking() {
       .style("fill", "#000")
       .style("font-weight", "500")
       .text((d: any) => {
-        const words = d.data.name.split(' ');
-        return words.length > 2 ? words.slice(0, 2).join(' ') + '...' : d.data.name;
+        if (d.depth <= 1) {
+          const words = d.data.name.split(' ');
+          return words.length > 2 ? words.slice(0, 2).join(' ') + '...' : d.data.name;
+        }
+        return d.data.name;
       });
-
-    // Add value labels for leaf nodes
-    const valueLabel = svg.append("g")
-      .style("font", "14px sans-serif")
-      .attr("pointer-events", "none")
-      .attr("text-anchor", "middle")
-      .selectAll("text")
-      .data(root.descendants().filter((d: any) => !d.children && d.data.value !== undefined))
-      .join("text")
-      .style("fill-opacity", (d: any) => d.parent?.parent === root ? 1 : 0)
-      .style("display", (d: any) => d.parent?.parent === root ? "inline" : "none")
-      .style("fill", "#fff")
-      .style("font-weight", "bold")
-      .attr("dy", "0.3em")
-      .text((d: any) => d.data.value || 0);
 
     // Zoom functionality
     function zoomTo(v: any) {
@@ -189,7 +167,6 @@ export default function SimpleCirclePacking() {
       view = v;
 
       label.attr("transform", (d: any) => `translate(${((d.x || 0) - v[0]) * k},${((d.y || 0) - v[1]) * k})`);
-      valueLabel.attr("transform", (d: any) => `translate(${((d.x || 0) - v[0]) * k},${((d.y || 0) - v[1]) * k})`);
       node.attr("transform", (d: any) => `translate(${((d.x || 0) - v[0]) * k},${((d.y || 0) - v[1]) * k})`);
       node.attr("r", (d: any) => (d.r || 0) * k);
     }
@@ -198,8 +175,7 @@ export default function SimpleCirclePacking() {
       focus = d;
       
       const transition = svg.transition().duration(750);
-      
-      const targetView: [number, number, number] = [focus.x || 0, focus.y || 0, (focus.r || 0) * 2];
+      const targetView: [number, number, number] = [d.x || 0, d.y || 0, (d.r || 0) * 2];
       const i = d3.interpolateZoom(view as [number, number, number], targetView);
       
       transition.tween("zoom", () => {
@@ -210,11 +186,6 @@ export default function SimpleCirclePacking() {
         .filter((d: any) => d.parent === focus || d.parent === focus.parent)
         .transition(transition as any)
         .style("fill-opacity", (d: any) => d.parent === focus ? 1 : 0);
-
-      valueLabel
-        .filter((d: any) => d.parent?.parent === focus)
-        .transition(transition as any)
-        .style("fill-opacity", 1);
     }
 
     // Initialize zoom
@@ -228,9 +199,9 @@ export default function SimpleCirclePacking() {
       }
     });
 
-  }, [regions, schemeStatus, waterSchemeData]);
+  }, [regions, schemeStatus, waterSchemeData, regionsLoading, schemeStatusLoading, waterSchemeDataLoading]);
 
-  if (regionsLoading || schemeStatusLoading || waterSchemeDataLoading || !regions || !schemeStatus || !waterSchemeData) {
+  if (regionsLoading || schemeStatusLoading || waterSchemeDataLoading) {
     return (
       <Card className="w-full">
         <CardHeader>
@@ -240,17 +211,24 @@ export default function SimpleCirclePacking() {
           <div className="flex items-center justify-center h-96">
             <div className="text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-muted-foreground">
-                Loading water infrastructure data...
-                <br />
-                <span className="text-xs">
-                  Regions: {regionsLoading ? 'Loading...' : regions ? 'Ready' : 'Missing'}
-                  {' | '}
-                  Schemes: {schemeStatusLoading ? 'Loading...' : schemeStatus ? 'Ready' : 'Missing'}
-                  {' | '}
-                  Water Data: {waterSchemeDataLoading ? 'Loading...' : waterSchemeData ? 'Ready' : 'Missing'}
-                </span>
-              </p>
+              <p className="text-muted-foreground">Loading water infrastructure data...</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!regions || !schemeStatus || !waterSchemeData) {
+    return (
+      <Card className="w-full">
+        <CardHeader>
+          <CardTitle>Water Infrastructure Hierarchy</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-center h-96">
+            <div className="text-center">
+              <p className="text-muted-foreground">No data available</p>
             </div>
           </div>
         </CardContent>
@@ -263,7 +241,7 @@ export default function SimpleCirclePacking() {
       <CardHeader>
         <CardTitle>Water Infrastructure Hierarchy</CardTitle>
         <p className="text-sm text-muted-foreground">
-          Click any circle to zoom in. Green = Fully Completed Schemes, Orange = High LPCD Villages (Not Completed)
+          Click any circle to zoom in. Green = Completed Schemes, Orange = High LPCD Villages
         </p>
       </CardHeader>
       <CardContent>
@@ -278,10 +256,6 @@ export default function SimpleCirclePacking() {
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
             <span>Regions</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <div className="w-4 h-4 bg-blue-700 rounded-full"></div>
-            <span>Schemes Container</span>
           </div>
           <div className="flex items-center space-x-2">
             <div className="w-4 h-4 bg-green-500 rounded-full"></div>
