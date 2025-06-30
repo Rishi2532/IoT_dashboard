@@ -17,10 +17,31 @@ interface SunburstNode {
 }
 
 const SunburstPage: React.FC = () => {
-  const { data: sunburstData, isLoading, error } = useQuery<SunburstNode>({
+  const { data: sunburstData, isLoading, error, refetch } = useQuery<SunburstNode>({
     queryKey: ['/api/sunburst-data'],
-    refetchInterval: 30000, // Refresh every 30 seconds
+    staleTime: 0, // Always consider data stale
+    gcTime: 0, // Don't cache data
+    refetchOnMount: true,
+    refetchOnWindowFocus: true,
   });
+
+  // Force refresh on component mount
+  React.useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  // Debug logging
+  React.useEffect(() => {
+    if (sunburstData) {
+      console.log('Sunburst data received:', sunburstData);
+      console.log('Number of regions:', sunburstData.children?.length || 0);
+      if (sunburstData.children) {
+        sunburstData.children.forEach(region => {
+          console.log(`Region ${region.name}: ${region.children?.length || 0} schemes`);
+        });
+      }
+    }
+  }, [sunburstData]);
 
   if (isLoading) {
     return (

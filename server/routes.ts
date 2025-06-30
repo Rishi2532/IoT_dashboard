@@ -3760,8 +3760,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get hierarchical data for sunburst visualization
-  app.get("/api/sunburst-data", async (req, res) => {
+  // Get hierarchical data for sunburst visualization (v2 - fresh data)
+  app.get("/api/sunburst-data-v2", async (req, res) => {
     try {
       console.log('Fetching sunburst data...');
       

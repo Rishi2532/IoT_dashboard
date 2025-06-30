@@ -34,6 +34,8 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
 
   useEffect(() => {
     if (data && svgRef.current) {
+      console.log('ZoomableSunburst: Creating visualization with data:', data);
+      console.log('ZoomableSunburst: Number of regions in data:', data.children?.length || 0);
       createSunburst(data);
     }
   }, [data, width, height]);
@@ -60,6 +62,9 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
   };
 
   const createSunburst = (rootData: SunburstNode) => {
+    console.log('ZoomableSunburst: Creating sunburst with data:', rootData);
+    console.log('ZoomableSunburst: Root children count:', rootData.children?.length);
+    
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
@@ -72,6 +77,8 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
     const hierarchy = d3.hierarchy(rootData)
       .sum((d: any) => d.value || 1)
       .sort((a, b) => (b.value || 0) - (a.value || 0));
+    
+    console.log('ZoomableSunburst: Hierarchy children count:', hierarchy.children?.length);
 
     // Create partition layout
     const partition = d3.partition<SunburstNode>()
