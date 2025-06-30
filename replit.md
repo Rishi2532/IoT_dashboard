@@ -123,6 +123,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### June 30, 2025
+- **Zoomable Sunburst Visualization Implementation**: Built complete interactive hierarchical sunburst chart showing Maharashtra water infrastructure from state level down to individual villages
+- **Complete Data Integration**: Fixed API to display all 6 regions (Amravati, Chhatrapati Sambhajinagar, Konkan, Nagpur, Nashik, Pune) with 101 total schemes and 998 village records
+- **Click-to-Zoom Functionality**: Implemented proper centering and zoom behavior where clicking on regions centers the circle on that region and shows detailed breakdown of schemes and villages
+- **Interactive Navigation**: Added breadcrumb navigation, tooltips with population and LPCD data, and color-coded status indicators for water infrastructure hierarchy
+- **Performance Optimization**: Limited villages per scheme to 20 for visualization performance while maintaining complete scheme coverage
+
 ### June 27, 2025
 - **Circle Packing Visualization Fix**: Fixed complete circle packing graph display issue where only half the visualization was showing and numbers were not visible
 - **API Endpoint Addition**: Added missing `/api/scheme-status` endpoint that was causing "No data available" error in circle packing component

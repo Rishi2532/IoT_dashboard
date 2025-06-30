@@ -181,22 +181,54 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
       .style('cursor', 'pointer')
       .on('click', clicked);
 
-    // Click handler for zoom functionality
+    // Click handler for zoom functionality with proper centering
     function clicked(event: any, p: any) {
+      // Update parent for center circle
       parent.datum(p.parent || root);
 
+      // Calculate the new scale and transform for proper centering
+      const angleRange = p.x1 - p.x0;
+      const centerAngle = (p.x0 + p.x1) / 2;
+      
+      // Normalize to make clicked segment take full circle
       root.each((d: any) => {
+        // Calculate new angular positions relative to clicked segment
+        const normalizedX0 = (d.x0 - p.x0) / angleRange;
+        const normalizedX1 = (d.x1 - p.x0) / angleRange;
+        
         d.target = {
-          x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
-          x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+          x0: normalizedX0 * 2 * Math.PI,
+          x1: normalizedX1 * 2 * Math.PI,
           y0: Math.max(0, d.y0 - p.depth),
           y1: Math.max(0, d.y1 - p.depth)
         };
       });
 
-      // Recreate the visualization with new focus - simpler approach
+      // Animate to new positions with smooth transition
+      const t = svg.transition().duration(750);
+      
+      // Update paths
+      path.transition(t as any)
+        .attrTween('d', (d: any) => {
+          const i = d3.interpolate(d.current, d.target);
+          return (t: number) => {
+            d.current = i(t);
+            return arc(d.current) || '';
+          };
+        })
+        .attr('fill-opacity', (d: any) => arcVisible(d.target) ? (d.children ? 0.6 : 0.4) : 0)
+        .attr('pointer-events', (d: any) => arcVisible(d.target) ? 'auto' : 'none');
+
+      // Update labels
+      label.transition(t as any)
+        .attr('fill-opacity', (d: any) => +labelVisible(d.target))
+        .attrTween('transform', (d: any) => {
+          const i = d3.interpolate(d.current, d.target);
+          return (t: number) => labelTransform(i(t)) || '';
+        });
+
+      // Update current state for each node
       setTimeout(() => {
-        // Update current data for each node
         root.each((d: any) => {
           d.current = d.target;
         });

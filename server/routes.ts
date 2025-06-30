@@ -3770,10 +3770,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Found ${allWaterData.length} water scheme records`);
       
+      // Debug: Check unique regions in data
+      const uniqueRegions = [...new Set(allWaterData.map(row => row.region).filter(Boolean))];
+      console.log(`Unique regions found: ${uniqueRegions.join(', ')}`);
+      
       // Build hierarchical structure
       const regionMap = new Map();
       
-      allWaterData.slice(0, 500).forEach((row: any) => {
+      // Process all data to include all regions and schemes
+      allWaterData.forEach((row: any) => {
         const regionName = row.region;
         const schemeName = row.scheme_name;
         const villageName = row.village_name;
@@ -3805,15 +3810,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const scheme = region.children.get(schemeName);
         
-        // Add village
-        scheme.children.push({
-          name: villageName,
-          type: "village",
-          lpcd: row.lpcd || 0,
-          population: row.population || 0,
-          status: row.lpcd && row.lpcd > 55 ? "Adequate" : row.lpcd === 0 ? "No Supply" : "Below Standard",
-          value: row.population || 1
-        });
+        // Add village (limit villages per scheme for visualization performance)
+        if (scheme.children.length < 20) {
+          scheme.children.push({
+            name: villageName,
+            type: "village",
+            lpcd: row.lpcd || 0,
+            population: row.population || 0,
+            status: row.lpcd && row.lpcd > 55 ? "Adequate" : row.lpcd === 0 ? "No Supply" : "Below Standard",
+            value: row.population || 1
+          });
+        }
         
         scheme.value += 1;
         region.value += 1;
