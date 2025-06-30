@@ -1,6 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import ZoomableSunburst from '@/components/ZoomableSunburst';
+import { ZoomableSunburst } from '@/components/ZoomableSunburst';
 import { Loader2 } from 'lucide-react';
 
 interface SunburstNode {
