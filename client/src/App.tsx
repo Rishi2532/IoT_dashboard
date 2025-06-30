@@ -174,6 +174,12 @@ function App() {
                 </ProtectedRoute>
               </Route>
 
+              <Route path="/communication-status">
+                <ProtectedRoute>
+                  <CommunicationStatusPage />
+                </ProtectedRoute>
+              </Route>
+
               <Route path="/map-preview">
                 <ProtectedRoute>
                   <MapPreviewPage />

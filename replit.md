@@ -126,6 +126,8 @@ Preferred communication style: Simple, everyday language.
 ### June 30, 2025
 - **Communication Status Table Fix**: Fixed missing communication_status table that was causing CSV import failures in the admin panel
 - **Database Schema Permanence**: Updated database initialization to include communication_status table with proper schema matching the application requirements
+- **Regional Data Consolidation Fix**: Fixed duplicate Amravati region entries caused by UTF-8 BOM characters, now shows single consolidated entry (230 ESRs)
+- **UTF-8 BOM Prevention**: Enhanced CSV import process to automatically remove UTF-8 BOM characters and trim whitespace to prevent future data duplication
 - **API Endpoint Restoration**: Fixed sunburst data API endpoint that was being intercepted by frontend routing, now returns proper hierarchical JSON data
 - **Complete Database Setup**: Ensured all required tables are created automatically for new users, preventing import errors when remixing the application
 - **Zoomable Sunburst Visualization Implementation**: Built complete interactive hierarchical sunburst chart showing Maharashtra water infrastructure from state level down to individual villages

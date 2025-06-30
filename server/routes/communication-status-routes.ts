@@ -210,8 +210,14 @@ router.post("/import", upload.single('file'), async (req, res) => {
     const db = await getDB();
     const filePath = req.file.path;
     
-    // Read and parse CSV
-    const fileContent = fs.readFileSync(filePath, 'utf8');
+    // Read and parse CSV with UTF-8 BOM cleanup
+    let fileContent = fs.readFileSync(filePath, 'utf8');
+    
+    // Remove UTF-8 BOM if present
+    if (fileContent.charCodeAt(0) === 0xFEFF) {
+      fileContent = fileContent.slice(1);
+    }
+    
     const records: any[] = [];
     
     const parser = csv.parse({
@@ -242,28 +248,28 @@ router.post("/import", upload.single('file'), async (req, res) => {
     for (let i = 0; i < records.length; i += batchSize) {
       const batch = records.slice(i, i + batchSize);
       const insertData = batch.map(row => ({
-        region: row[0] || '',
-        circle: row[1] || '',
-        division: row[2] || '',
-        sub_division: row[3] || '',
-        block: row[4] || '',
-        scheme_id: row[5] || '',
-        scheme_name: row[6] || '',
-        village_name: row[7] || '',
-        esr_name: row[8] || '',
-        chlorine_connected: row[9] || '',
-        pressure_connected: row[10] || '',
-        flow_meter_connected: row[11] || '',
-        chlorine_status: row[12] || '',
-        pressure_status: row[13] || '',
-        flow_meter_status: row[14] || '',
-        overall_status: row[15] || '',
-        chlorine_0h_72h: row[16] || '',
-        chlorine_72h: row[17] || '',
-        pressure_0h_72h: row[18] || '',
-        pressure_72h: row[19] || '',
-        flow_meter_0h_72h: row[20] || '',
-        flow_meter_72h: row[21] || '',
+        region: (row[0] || '').replace(/^\uFEFF/, '').trim(),
+        circle: (row[1] || '').trim(),
+        division: (row[2] || '').trim(),
+        sub_division: (row[3] || '').trim(),
+        block: (row[4] || '').trim(),
+        scheme_id: (row[5] || '').trim(),
+        scheme_name: (row[6] || '').trim(),
+        village_name: (row[7] || '').trim(),
+        esr_name: (row[8] || '').trim(),
+        chlorine_connected: (row[9] || '').trim(),
+        pressure_connected: (row[10] || '').trim(),
+        flow_meter_connected: (row[11] || '').trim(),
+        chlorine_status: (row[12] || '').trim(),
+        pressure_status: (row[13] || '').trim(),
+        flow_meter_status: (row[14] || '').trim(),
+        overall_status: (row[15] || '').trim(),
+        chlorine_0h_72h: (row[16] || '').trim(),
+        chlorine_72h: (row[17] || '').trim(),
+        pressure_0h_72h: (row[18] || '').trim(),
+        pressure_72h: (row[19] || '').trim(),
+        flow_meter_0h_72h: (row[20] || '').trim(),
+        flow_meter_72h: (row[21] || '').trim(),
       }));
 
       await db.insert(communicationStatus).values(insertData);
