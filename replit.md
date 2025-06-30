@@ -124,6 +124,10 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### June 30, 2025
+- **Communication Status Table Fix**: Fixed missing communication_status table that was causing CSV import failures in the admin panel
+- **Database Schema Permanence**: Updated database initialization to include communication_status table with proper schema matching the application requirements
+- **API Endpoint Restoration**: Fixed sunburst data API endpoint that was being intercepted by frontend routing, now returns proper hierarchical JSON data
+- **Complete Database Setup**: Ensured all required tables are created automatically for new users, preventing import errors when remixing the application
 - **Zoomable Sunburst Visualization Implementation**: Built complete interactive hierarchical sunburst chart showing Maharashtra water infrastructure from state level down to individual villages
 - **Complete Data Integration**: Fixed API to display all 6 regions (Amravati, Chhatrapati Sambhajinagar, Konkan, Nagpur, Nashik, Pune) with 101 total schemes and 998 village records
 - **Click-to-Zoom Functionality**: Implemented proper centering and zoom behavior where clicking on regions centers the circle on that region and shows detailed breakdown of schemes and villages

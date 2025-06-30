@@ -541,6 +541,49 @@ export async function initializeTables(db: any) {
       );
     `);
     
+    // Create communication_status table for ESR sensor connectivity monitoring
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "communication_status" (
+        "id" SERIAL PRIMARY KEY,
+        "region" VARCHAR(100),
+        "circle" VARCHAR(100),
+        "division" VARCHAR(100),
+        "sub_division" VARCHAR(100),
+        "block" VARCHAR(100),
+        "scheme_id" VARCHAR(100),
+        "scheme_name" VARCHAR(255),
+        "village_name" VARCHAR(255),
+        "esr_name" VARCHAR(255),
+        "chlorine_connected" VARCHAR(10),
+        "pressure_connected" VARCHAR(10),
+        "flow_meter_connected" VARCHAR(10),
+        "chlorine_status" VARCHAR(20),
+        "pressure_status" VARCHAR(20),
+        "flow_meter_status" VARCHAR(20),
+        "overall_status" VARCHAR(20),
+        "chlorine_0h_72h" VARCHAR(20),
+        "chlorine_72h" VARCHAR(20),
+        "pressure_0h_72h" VARCHAR(20),
+        "pressure_72h" VARCHAR(20),
+        "flow_meter_0h_72h" VARCHAR(20),
+        "flow_meter_72h" VARCHAR(20),
+        "uploaded_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE("scheme_id", "village_name", "esr_name")
+      );
+    `);
+
+    // Create index on communication_status for efficient queries
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS "idx_communication_status_region" 
+      ON "communication_status" ("region");
+    `);
+
+    await db.execute(`
+      CREATE INDEX IF NOT EXISTS "idx_communication_status_scheme" 
+      ON "communication_status" ("scheme_id");
+    `);
+    
     console.log("Database tables initialized successfully");
   } catch (error) {
     console.error("Error initializing database tables:", error);
