@@ -32,7 +32,7 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>(['Maharashtra']);
-  const radius = Math.min(width, height) / 6; // Perfect circle proportions
+  const radius = Math.min(width, height) / 2.5; // Better proportions for visibility
 
   useEffect(() => {
     if (data && svgRef.current) {
@@ -104,21 +104,21 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
 
     // Create partition layout for full circle
     const partition = d3.partition<SunburstNode>()
-      .size([2 * Math.PI, radius]);
+      .size([2 * Math.PI, 4]);
 
     const root = partition(hierarchy);
     
     // Add current property to each node for transitions
     root.each((d: any) => d.current = d);
 
-    // Create arc generator for perfect rings
+    // Create arc generator with proper scaling
     const arc = d3.arc<any>()
       .startAngle(d => d.x0)
       .endAngle(d => d.x1)
       .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
-      .padRadius(radius * 0.5)
-      .innerRadius(d => Math.max(0, d.y0 * 60))
-      .outerRadius(d => Math.max(d.y0 * 60, d.y1 * 60 - 1));
+      .padRadius(radius * 0.1)
+      .innerRadius(d => Math.max(0, d.y0 * radius / 4))
+      .outerRadius(d => Math.max(d.y0 * radius / 4, d.y1 * radius / 4 - 1));
 
     // Create tooltip
     const tooltip = d3.select('body')
@@ -141,7 +141,7 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
     const labelVisible = (d: any) => d.y1 <= 4 && d.y0 >= 0 && (d.x1 - d.x0) > 0.1;
     const labelTransform = (d: any) => {
       const angle = (d.x0 + d.x1) / 2 * 180 / Math.PI;
-      const r = (d.y0 + d.y1) / 2 * 60;
+      const r = (d.y0 + d.y1) / 2 * radius / 4;
       const rotate = angle < 180 ? angle - 90 : angle + 90;
       return `rotate(${rotate}) translate(${r},0) rotate(${angle < 180 ? 0 : 180})`;
     };
@@ -217,7 +217,7 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
     // Add center circle for zoom out
     const parent = g.append('circle')
       .datum(root)
-      .attr('r', radius)
+      .attr('r', radius / 8)
       .attr('fill', 'none')
       .attr('pointer-events', 'all')
       .style('cursor', 'pointer')
