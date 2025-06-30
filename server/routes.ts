@@ -11,6 +11,7 @@ import {
   InsertSchemeStatus,
   insertWaterSchemeDataSchema,
   waterSchemeData,
+  schemeStatuses,
   InsertWaterSchemeData,
   UpdateWaterSchemeData,
 } from "@shared/schema";
@@ -3851,24 +3852,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get hierarchical data for sunburst visualization (v2 - fresh data)
+  // Enhanced sunburst data with scheme completion numbers and LPCD categorization
   app.get("/api/sunburst-data-v2", async (req, res) => {
     try {
-      console.log('Fetching sunburst data...');
+      console.log('Building enhanced sunburst with real completion numbers and LPCD categories...');
       
-      // Get hierarchical data using existing storage methods
+      // Get actual data from database
       const allWaterData = await storage.getAllWaterSchemeData();
+      const allSchemeStatuses = await storage.getAllSchemes();
       
-      console.log(`Found ${allWaterData.length} water scheme records`);
+      console.log(`Found ${allWaterData.length} water scheme records and ${allSchemeStatuses.length} status records`);
       
-      // Debug: Check unique regions in data
-      const uniqueRegions = [...new Set(allWaterData.map(row => row.region).filter(Boolean))];
-      console.log(`Unique regions found: ${uniqueRegions.join(', ')}`);
+      // Build completion status map for schemes
+      const completionMap = new Map();
+      allSchemeStatuses.forEach((scheme: any) => {
+        if (scheme.region && scheme.scheme_name) {
+          const key = `${scheme.region}-${scheme.scheme_name}`;
+          const isFullyCompleted = scheme.mjp_fully_completed === 'Yes';
+          const isPartiallyCompleted = scheme.mjp_commissioned === 'Yes' && !isFullyCompleted;
+          
+          completionMap.set(key, {
+            fullyCompleted: isFullyCompleted,
+            partiallyCompleted: isPartiallyCompleted,
+            status: isFullyCompleted ? 'Fully Completed' : isPartiallyCompleted ? 'Partially Completed' : 'In Progress'
+          });
+        }
+      });
       
-      // Build hierarchical structure
-      const regionMap = new Map();
+      // Build region-based hierarchy with LPCD categorization
+      const regionData = new Map();
       
-      // Process all data to include all regions and schemes
       allWaterData.forEach((row: any) => {
         const regionName = row.region;
         const schemeName = row.scheme_name;
@@ -3876,64 +3889,182 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (!regionName || !schemeName || !villageName) return;
         
-        // Initialize region if not exists
-        if (!regionMap.has(regionName)) {
-          regionMap.set(regionName, {
+        // Initialize region
+        if (!regionData.has(regionName)) {
+          regionData.set(regionName, {
             name: regionName,
-            type: "region",
-            children: new Map(),
-            value: 0
+            fullyCompletedSchemes: new Map(),
+            partiallyCompletedSchemes: new Map(),
+            inProgressSchemes: new Map()
           });
         }
         
-        const region = regionMap.get(regionName);
+        const region = regionData.get(regionName);
+        const completionKey = `${regionName}-${schemeName}`;
+        const completion = completionMap.get(completionKey) || { status: 'In Progress' };
         
-        // Initialize scheme if not exists
-        if (!region.children.has(schemeName)) {
-          region.children.set(schemeName, {
+        // Select appropriate schemes map
+        let schemesMap;
+        if (completion.fullyCompleted) {
+          schemesMap = region.fullyCompletedSchemes;
+        } else if (completion.partiallyCompleted) {
+          schemesMap = region.partiallyCompletedSchemes;
+        } else {
+          schemesMap = region.inProgressSchemes;
+        }
+        
+        // Initialize scheme
+        if (!schemesMap.has(schemeName)) {
+          schemesMap.set(schemeName, {
             name: schemeName,
-            type: "scheme",
-            status: "Active",
-            children: [],
-            value: 0
+            status: completion.status,
+            villagesAbove55: [],
+            villagesBelow55: []
           });
         }
         
-        const scheme = region.children.get(schemeName);
+        const scheme = schemesMap.get(schemeName);
         
-        // Add village (limit villages per scheme for visualization performance)
-        if (scheme.children.length < 20) {
-          scheme.children.push({
-            name: villageName,
-            type: "village",
-            lpcd: row.lpcd || 0,
-            population: row.population || 0,
-            status: row.lpcd && row.lpcd > 55 ? "Adequate" : row.lpcd === 0 ? "No Supply" : "Below Standard",
-            value: row.population || 1
-          });
+        // Calculate LPCD and categorize village
+        const lpcd = parseFloat(row.lpcd_value_day1) || parseFloat(row.lpcd_value_day2) || parseFloat(row.lpcd_value_day3) || 0;
+        const village = {
+          name: villageName,
+          type: "village",
+          lpcd: lpcd,
+          population: row.population || 0,
+          value: row.population || 1
+        };
+        
+        if (lpcd > 55) {
+          scheme.villagesAbove55.push(village);
+        } else {
+          scheme.villagesBelow55.push(village);
         }
-        
-        scheme.value += 1;
-        region.value += 1;
       });
       
-      // Convert maps to arrays
-      const regions = Array.from(regionMap.values()).map(region => ({
-        ...region,
-        children: Array.from(region.children.values())
-      }));
-      
+      // Convert to sunburst structure
+      const regions = Array.from(regionData.values()).map((region: any) => {
+        const completionCategories = [];
+        
+        // Add Fully Completed category
+        if (region.fullyCompletedSchemes.size > 0) {
+          const schemes = Array.from(region.fullyCompletedSchemes.values()).map((scheme: any) => ({
+            name: scheme.name,
+            type: "scheme",
+            children: [
+              {
+                name: `Villages > 55 LPCD (${scheme.villagesAbove55.length})`,
+                type: "lpcd-category",
+                color: "#22c55e",
+                children: scheme.villagesAbove55.slice(0, 10),
+                value: scheme.villagesAbove55.length
+              },
+              {
+                name: `Villages ≤ 55 LPCD (${scheme.villagesBelow55.length})`,
+                type: "lpcd-category",
+                color: "#ef4444",
+                children: scheme.villagesBelow55.slice(0, 10),
+                value: scheme.villagesBelow55.length
+              }
+            ],
+            value: scheme.villagesAbove55.length + scheme.villagesBelow55.length
+          }));
+          
+          completionCategories.push({
+            name: `Fully Completed (${region.fullyCompletedSchemes.size})`,
+            type: "completion-category",
+            color: "#10b981",
+            children: schemes,
+            value: schemes.reduce((acc: number, s: any) => acc + s.value, 0)
+          });
+        }
+        
+        // Add Partially Completed category
+        if (region.partiallyCompletedSchemes.size > 0) {
+          const schemes = Array.from(region.partiallyCompletedSchemes.values()).map((scheme: any) => ({
+            name: scheme.name,
+            type: "scheme",
+            children: [
+              {
+                name: `Villages > 55 LPCD (${scheme.villagesAbove55.length})`,
+                type: "lpcd-category",
+                color: "#22c55e",
+                children: scheme.villagesAbove55.slice(0, 10),
+                value: scheme.villagesAbove55.length
+              },
+              {
+                name: `Villages ≤ 55 LPCD (${scheme.villagesBelow55.length})`,
+                type: "lpcd-category",
+                color: "#ef4444",
+                children: scheme.villagesBelow55.slice(0, 10),
+                value: scheme.villagesBelow55.length
+              }
+            ],
+            value: scheme.villagesAbove55.length + scheme.villagesBelow55.length
+          }));
+          
+          completionCategories.push({
+            name: `Partially Completed (${region.partiallyCompletedSchemes.size})`,
+            type: "completion-category",
+            color: "#f59e0b",
+            children: schemes,
+            value: schemes.reduce((acc: number, s: any) => acc + s.value, 0)
+          });
+        }
+        
+        // Add In Progress category
+        if (region.inProgressSchemes.size > 0) {
+          const schemes = Array.from(region.inProgressSchemes.values()).map((scheme: any) => ({
+            name: scheme.name,
+            type: "scheme",
+            children: [
+              {
+                name: `Villages > 55 LPCD (${scheme.villagesAbove55.length})`,
+                type: "lpcd-category",
+                color: "#22c55e",
+                children: scheme.villagesAbove55.slice(0, 10),
+                value: scheme.villagesAbove55.length
+              },
+              {
+                name: `Villages ≤ 55 LPCD (${scheme.villagesBelow55.length})`,
+                type: "lpcd-category",
+                color: "#ef4444",
+                children: scheme.villagesBelow55.slice(0, 10),
+                value: scheme.villagesBelow55.length
+              }
+            ],
+            value: scheme.villagesAbove55.length + scheme.villagesBelow55.length
+          }));
+          
+          completionCategories.push({
+            name: `In Progress (${region.inProgressSchemes.size})`,
+            type: "completion-category",
+            color: "#94a3b8",
+            children: schemes,
+            value: schemes.reduce((acc: number, s: any) => acc + s.value, 0)
+          });
+        }
+        
+        return {
+          name: region.name,
+          type: "region",
+          children: completionCategories,
+          value: completionCategories.reduce((acc: number, c: any) => acc + c.value, 0)
+        };
+      });
+
       const sunburstData = {
         name: "Maharashtra",
         type: "root",
-        children: regions
+        children: regions,
+        value: regions.reduce((acc: number, r: any) => acc + r.value, 0)
       };
-      
-      console.log(`Built sunburst data with ${regions.length} regions, total schemes: ${regions.reduce((acc, r) => acc + r.children.length, 0)}`);
+
+      console.log(`Built real sunburst data with ${regions.length} regions showing actual completion numbers and LPCD categorization`);
       res.json(sunburstData);
     } catch (error) {
-      console.error("Error fetching sunburst data:", error);
-      res.status(500).json({ message: "Failed to fetch sunburst data" });
+      console.error("Error building real sunburst data:", error);
+      res.status(500).json({ message: "Failed to build sunburst data" });
     }
   });
 

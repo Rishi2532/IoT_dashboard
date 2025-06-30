@@ -14,7 +14,9 @@ interface SunburstNode {
   region?: string;
   scheme?: string;
   village?: string;
-  type: 'root' | 'region' | 'scheme' | 'village';
+  type: 'root' | 'region' | 'scheme' | 'village' | 'completion-category' | 'lpcd-category';
+  category?: string;
+  color?: string;
 }
 
 interface ZoomableSunburstProps {
@@ -41,23 +43,40 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
   }, [data, width, height]);
 
   const getNodeColor = (node: any) => {
+    // Use explicit color from data if available
+    if (node.data.color) {
+      return node.data.color;
+    }
+
     const statusColors = {
-      'Completed': '#10b981',
-      'In Progress': '#f59e0b', 
-      'Not Started': '#ef4444',
+      'Fully Completed': '#10b981',
+      'Partially Completed': '#f59e0b', 
+      'In Progress': '#ef4444',
       'default': '#6b7280'
     };
 
     const typeColors = {
       'root': '#1f2937',
       'region': '#3b82f6',
+      'completion-category': '#7c3aed',
       'scheme': '#8b5cf6',
+      'lpcd-category': '#059669',
       'village': '#06b6d4'
     };
+
+    const categoryColors = {
+      'Above 55 LPCD': '#22c55e',
+      'Below 55 LPCD': '#ef4444'
+    };
+
+    if (node.data.category) {
+      return categoryColors[node.data.category as keyof typeof categoryColors] || statusColors.default;
+    }
 
     if (node.data.status) {
       return statusColors[node.data.status as keyof typeof statusColors] || statusColors.default;
     }
+    
     return typeColors[node.data.type as keyof typeof typeColors] || statusColors.default;
   };
 

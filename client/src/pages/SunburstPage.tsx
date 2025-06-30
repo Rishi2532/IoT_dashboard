@@ -13,12 +13,14 @@ interface SunburstNode {
   region?: string;
   scheme?: string;
   village?: string;
-  type: 'root' | 'region' | 'scheme' | 'village';
+  type: 'root' | 'region' | 'scheme' | 'village' | 'completion-category' | 'lpcd-category';
+  category?: string;
+  color?: string;
 }
 
 const SunburstPage: React.FC = () => {
   const { data: sunburstData, isLoading, error, refetch } = useQuery<SunburstNode>({
-    queryKey: ['/api/sunburst-data'],
+    queryKey: ['/api/sunburst-data-v2'],
     staleTime: 0, // Always consider data stale
     gcTime: 0, // Don't cache data
     refetchOnMount: true,
