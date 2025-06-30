@@ -27,12 +27,12 @@ interface ZoomableSunburstProps {
 
 export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
   data,
-  width = 900,
-  height = 700
+  width = 800,
+  height = 800
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>(['Maharashtra']);
-  const radius = Math.min(width, height) / 5; // Increased radius for better visibility
+  const radius = Math.min(width, height) / 6; // Perfect circle proportions
 
   useEffect(() => {
     if (data && svgRef.current) {
@@ -87,7 +87,10 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
     const svg = d3.select(svgRef.current);
     svg.selectAll("*").remove();
 
-    svg.attr('width', width).attr('height', height);
+    svg.attr('width', width)
+       .attr('height', height)
+       .attr('viewBox', `0 0 ${width} ${height}`)
+       .style('font', '10px Arial, sans-serif');
     
     const g = svg.append('g')
       .attr('transform', `translate(${width / 2}, ${height / 2})`);
@@ -99,23 +102,23 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
     
     console.log('ZoomableSunburst: Hierarchy children count:', hierarchy.children?.length);
 
-    // Create partition layout
+    // Create partition layout for full circle
     const partition = d3.partition<SunburstNode>()
-      .size([2 * Math.PI, hierarchy.height + 1]);
+      .size([2 * Math.PI, radius]);
 
     const root = partition(hierarchy);
     
     // Add current property to each node for transitions
     root.each((d: any) => d.current = d);
 
-    // Create arc generator with better spacing
+    // Create arc generator for perfect rings
     const arc = d3.arc<any>()
       .startAngle(d => d.x0)
       .endAngle(d => d.x1)
-      .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.01))
-      .padRadius(radius * 1.5)
-      .innerRadius(d => Math.max(0, d.y0 * radius))
-      .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius - 2));
+      .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
+      .padRadius(radius * 0.5)
+      .innerRadius(d => Math.max(0, d.y0 * 60))
+      .outerRadius(d => Math.max(d.y0 * 60, d.y1 * 60 - 1));
 
     // Create tooltip
     const tooltip = d3.select('body')
@@ -133,13 +136,14 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
       .style('opacity', 0)
       .style('z-index', 1000);
 
-    // Helper functions for better visibility
-    const arcVisible = (d: any) => d.y1 <= 3 && d.y0 >= 1 && d.x1 > d.x0;
-    const labelVisible = (d: any) => d.y1 <= 3 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.02;
+    // Helper functions for perfect visibility
+    const arcVisible = (d: any) => d.y1 <= 4 && d.y0 >= 0 && d.x1 > d.x0;
+    const labelVisible = (d: any) => d.y1 <= 4 && d.y0 >= 0 && (d.x1 - d.x0) > 0.1;
     const labelTransform = (d: any) => {
-      const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
-      const y = (d.y0 + d.y1) / 2 * radius;
-      return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+      const angle = (d.x0 + d.x1) / 2 * 180 / Math.PI;
+      const r = (d.y0 + d.y1) / 2 * 60;
+      const rotate = angle < 180 ? angle - 90 : angle + 90;
+      return `rotate(${rotate}) translate(${r},0) rotate(${angle < 180 ? 0 : 180})`;
     };
 
     // Draw arcs
