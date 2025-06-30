@@ -3763,40 +3763,75 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Get hierarchical data for sunburst visualization
   app.get("/api/sunburst-data", async (req, res) => {
     try {
-      // Get all regions with their schemes and villages
-      const regionsData = await storage.getAllRegions();
-      const schemesData = await storage.getAllSchemes();
-      const villagesData = await storage.getAllWaterSchemeData();
+      console.log('Fetching sunburst data...');
+      
+      // Get hierarchical data using existing storage methods
+      const allWaterData = await storage.getAllWaterSchemeData();
+      
+      console.log(`Found ${allWaterData.length} water scheme records`);
       
       // Build hierarchical structure
+      const regionMap = new Map();
+      
+      allWaterData.slice(0, 500).forEach((row: any) => {
+        const regionName = row.region;
+        const schemeName = row.scheme_name;
+        const villageName = row.village_name;
+        
+        if (!regionName || !schemeName || !villageName) return;
+        
+        // Initialize region if not exists
+        if (!regionMap.has(regionName)) {
+          regionMap.set(regionName, {
+            name: regionName,
+            type: "region",
+            children: new Map(),
+            value: 0
+          });
+        }
+        
+        const region = regionMap.get(regionName);
+        
+        // Initialize scheme if not exists
+        if (!region.children.has(schemeName)) {
+          region.children.set(schemeName, {
+            name: schemeName,
+            type: "scheme",
+            status: "Active",
+            children: [],
+            value: 0
+          });
+        }
+        
+        const scheme = region.children.get(schemeName);
+        
+        // Add village
+        scheme.children.push({
+          name: villageName,
+          type: "village",
+          lpcd: row.lpcd || 0,
+          population: row.population || 0,
+          status: row.lpcd && row.lpcd > 55 ? "Adequate" : row.lpcd === 0 ? "No Supply" : "Below Standard",
+          value: row.population || 1
+        });
+        
+        scheme.value += 1;
+        region.value += 1;
+      });
+      
+      // Convert maps to arrays
+      const regions = Array.from(regionMap.values()).map(region => ({
+        ...region,
+        children: Array.from(region.children.values())
+      }));
+      
       const sunburstData = {
         name: "Maharashtra",
-        type: "root" as const,
-        children: regionsData.map((region: any) => ({
-          name: region.name,
-          type: "region" as const,
-          value: region.total_schemes || 1,
-          children: schemesData
-            .filter((scheme: any) => scheme.region === region.name)
-            .map((scheme: any) => ({
-              name: scheme.scheme_name,
-              type: "scheme" as const,
-              status: scheme.scheme_status,
-              value: villagesData.filter((village: any) => village.scheme_name === scheme.scheme_name).length || 1,
-              children: villagesData
-                .filter((village: any) => village.scheme_name === scheme.scheme_name)
-                .map((village: any) => ({
-                  name: village.village_name,
-                  type: "village" as const,
-                  lpcd: village.lpcd || 0,
-                  population: village.population || 0,
-                  status: village.lpcd && village.lpcd > 55 ? "Adequate" : village.lpcd === 0 ? "No Supply" : "Below Standard",
-                  value: village.population || 1
-                }))
-            }))
-        }))
+        type: "root",
+        children: regions
       };
       
+      console.log(`Built sunburst data with ${regions.length} regions, total schemes: ${regions.reduce((acc, r) => acc + r.children.length, 0)}`);
       res.json(sunburstData);
     } catch (error) {
       console.error("Error fetching sunburst data:", error);
