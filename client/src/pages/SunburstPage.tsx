@@ -95,8 +95,8 @@ const SunburstPage: React.FC = () => {
           Infrastructure Hierarchy Visualization
         </h1>
         <p className="text-gray-600">
-          Interactive exploration of Maharashtra's water infrastructure from regions down to individual villages.
-          Click segments to zoom in and explore deeper levels of the hierarchy.
+          3-ring hierarchy: Region → Completion Status (Fully/Partially Completed schemes) → LPCD Categories (Villages &gt;55 LPCD / &lt;55 LPCD).
+          Click segments to zoom in and explore deeper levels.
         </p>
       </div>
 
@@ -122,12 +122,11 @@ const SunburstPage: React.FC = () => {
             <div>
               <h3 className="font-medium mb-2">Color Coding</h3>
               <ul className="space-y-1 text-gray-600">
-                <li>• Green: Completed schemes/Adequate LPCD</li>
-                <li>• Amber: In Progress schemes</li>
-                <li>• Red: Not Started/Below Standard LPCD</li>
-                <li>• Blue: Regional level</li>
-                <li>• Purple: Scheme level</li>
-                <li>• Cyan: Village level</li>
+                <li>• Blue: Regional level (outer ring)</li>
+                <li>• Green: Fully Completed schemes</li>
+                <li>• Amber: Partially Completed schemes</li>
+                <li>• Green: Villages &gt;55 LPCD (adequate)</li>
+                <li>• Red: Villages &lt;55 LPCD (below standard)</li>
               </ul>
             </div>
           </div>

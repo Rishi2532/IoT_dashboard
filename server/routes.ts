@@ -3852,10 +3852,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Enhanced sunburst data with scheme completion numbers and LPCD categorization
+  // 3-Ring Sunburst: Region → Completion Status → LPCD Categories
   app.get("/api/sunburst-data-v2", async (req, res) => {
     try {
-      console.log('Building enhanced sunburst with real completion numbers and LPCD categories...');
+      console.log('Building 3-ring sunburst: Region → Completion Status → LPCD Categories...');
       
       // Get actual data from database
       const allWaterData = await storage.getAllWaterSchemeData();
@@ -3879,192 +3879,150 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      // Build region-based hierarchy with LPCD categorization
+      // Build region-based hierarchy with completion status and LPCD categorization
       const regionData = new Map();
       
       allWaterData.forEach((row: any) => {
         const regionName = row.region;
         const schemeName = row.scheme_name;
         const villageName = row.village_name;
+        const lpcdValue = parseFloat(row.lpcd_value_day1) || parseFloat(row.lpcd_value_day2) || parseFloat(row.lpcd_value_day3) || 0;
         
         if (!regionName || !schemeName || !villageName) return;
         
-        // Initialize region
+        // Get scheme completion status
+        const schemeKey = `${regionName}-${schemeName}`;
+        const completionInfo = completionMap.get(schemeKey) || { 
+          fullyCompleted: false, 
+          partiallyCompleted: false, 
+          status: 'In Progress' 
+        };
+        
+        // Initialize region if not exists
         if (!regionData.has(regionName)) {
           regionData.set(regionName, {
             name: regionName,
-            fullyCompletedSchemes: new Map(),
-            partiallyCompletedSchemes: new Map(),
-            inProgressSchemes: new Map()
+            type: "region",
+            schemes: new Map(),
+            completionStats: {
+              'Fully Completed': { above55: 0, below55: 0, schemeCount: 0 },
+              'Partially Completed': { above55: 0, below55: 0, schemeCount: 0 }
+            }
           });
         }
         
         const region = regionData.get(regionName);
-        const completionKey = `${regionName}-${schemeName}`;
-        const completion = completionMap.get(completionKey) || { status: 'In Progress' };
         
-        // Select appropriate schemes map
-        let schemesMap;
-        if (completion.fullyCompleted) {
-          schemesMap = region.fullyCompletedSchemes;
-        } else if (completion.partiallyCompleted) {
-          schemesMap = region.partiallyCompletedSchemes;
-        } else {
-          schemesMap = region.inProgressSchemes;
-        }
-        
-        // Initialize scheme
-        if (!schemesMap.has(schemeName)) {
-          schemesMap.set(schemeName, {
+        // Track scheme-level data for counting unique schemes
+        if (!region.schemes.has(schemeName)) {
+          region.schemes.set(schemeName, {
             name: schemeName,
-            status: completion.status,
-            villagesAbove55: [],
-            villagesBelow55: []
+            status: completionInfo.status,
+            isFullyCompleted: completionInfo.fullyCompleted,
+            isPartiallyCompleted: completionInfo.partiallyCompleted
           });
+          
+          // Count unique schemes by completion status
+          if (completionInfo.fullyCompleted) {
+            region.completionStats['Fully Completed'].schemeCount++;
+          } else if (completionInfo.partiallyCompleted) {
+            region.completionStats['Partially Completed'].schemeCount++;
+          }
         }
         
-        const scheme = schemesMap.get(schemeName);
+        // Categorize villages by LPCD and scheme completion status
+        const isAbove55 = lpcdValue >= 55;
         
-        // Calculate LPCD and categorize village
-        const lpcd = parseFloat(row.lpcd_value_day1) || parseFloat(row.lpcd_value_day2) || parseFloat(row.lpcd_value_day3) || 0;
-        const village = {
-          name: villageName,
-          type: "village",
-          lpcd: lpcd,
-          population: row.population || 0,
-          value: row.population || 1
-        };
-        
-        if (lpcd > 55) {
-          scheme.villagesAbove55.push(village);
-        } else {
-          scheme.villagesBelow55.push(village);
+        if (completionInfo.fullyCompleted) {
+          if (isAbove55) {
+            region.completionStats['Fully Completed'].above55++;
+          } else {
+            region.completionStats['Fully Completed'].below55++;
+          }
+        } else if (completionInfo.partiallyCompleted) {
+          if (isAbove55) {
+            region.completionStats['Partially Completed'].above55++;
+          } else {
+            region.completionStats['Partially Completed'].below55++;
+          }
         }
       });
       
-      // Convert to sunburst structure
-      const regions = Array.from(regionData.values()).map((region: any) => {
+      // Convert to 3-ring hierarchical structure for sunburst
+      const regions = Array.from(regionData.values()).map((regionInfo: any) => {
         const completionCategories = [];
         
-        // Add Fully Completed category
-        if (region.fullyCompletedSchemes.size > 0) {
-          const schemes = Array.from(region.fullyCompletedSchemes.values()).map((scheme: any) => ({
-            name: scheme.name,
-            type: "scheme",
-            children: [
-              {
-                name: `Villages > 55 LPCD (${scheme.villagesAbove55.length})`,
-                type: "lpcd-category",
-                color: "#22c55e",
-                children: scheme.villagesAbove55.slice(0, 10),
-                value: scheme.villagesAbove55.length
-              },
-              {
-                name: `Villages ≤ 55 LPCD (${scheme.villagesBelow55.length})`,
-                type: "lpcd-category",
-                color: "#ef4444",
-                children: scheme.villagesBelow55.slice(0, 10),
-                value: scheme.villagesBelow55.length
-              }
-            ],
-            value: scheme.villagesAbove55.length + scheme.villagesBelow55.length
-          }));
+        // Ring 2: Completion Status Categories (only show if they have schemes)
+        ['Fully Completed', 'Partially Completed'].forEach(completionStatus => {
+          const stats = regionInfo.completionStats[completionStatus];
+          const totalVillages = stats.above55 + stats.below55;
           
-          completionCategories.push({
-            name: `Fully Completed (${region.fullyCompletedSchemes.size})`,
-            type: "completion-category",
-            color: "#10b981",
-            children: schemes,
-            value: schemes.reduce((acc: number, s: any) => acc + s.value, 0)
-          });
-        }
+          if (stats.schemeCount > 0 && totalVillages > 0) {
+            const lpcdCategories = [];
+            
+            // Ring 3: LPCD Categories (only show if they have villages)
+            if (stats.above55 > 0) {
+              lpcdCategories.push({
+                name: `Villages >55 LPCD (${stats.above55})`,
+                type: "lpcd-category", 
+                category: "Above 55 LPCD",
+                color: "#22c55e",
+                value: stats.above55,
+                children: []
+              });
+            }
+            
+            if (stats.below55 > 0) {
+              lpcdCategories.push({
+                name: `Villages <55 LPCD (${stats.below55})`,
+                type: "lpcd-category",
+                category: "Below 55 LPCD",
+                color: "#ef4444", 
+                value: stats.below55,
+                children: []
+              });
+            }
+            
+            completionCategories.push({
+              name: `${completionStatus} (${stats.schemeCount} schemes)`,
+              type: "completion-category",
+              status: completionStatus,
+              color: completionStatus === 'Fully Completed' ? "#10b981" : "#f59e0b",
+              value: totalVillages,
+              children: lpcdCategories
+            });
+          }
+        });
         
-        // Add Partially Completed category
-        if (region.partiallyCompletedSchemes.size > 0) {
-          const schemes = Array.from(region.partiallyCompletedSchemes.values()).map((scheme: any) => ({
-            name: scheme.name,
-            type: "scheme",
-            children: [
-              {
-                name: `Villages > 55 LPCD (${scheme.villagesAbove55.length})`,
-                type: "lpcd-category",
-                color: "#22c55e",
-                children: scheme.villagesAbove55.slice(0, 10),
-                value: scheme.villagesAbove55.length
-              },
-              {
-                name: `Villages ≤ 55 LPCD (${scheme.villagesBelow55.length})`,
-                type: "lpcd-category",
-                color: "#ef4444",
-                children: scheme.villagesBelow55.slice(0, 10),
-                value: scheme.villagesBelow55.length
-              }
-            ],
-            value: scheme.villagesAbove55.length + scheme.villagesBelow55.length
-          }));
-          
-          completionCategories.push({
-            name: `Partially Completed (${region.partiallyCompletedSchemes.size})`,
-            type: "completion-category",
-            color: "#f59e0b",
-            children: schemes,
-            value: schemes.reduce((acc: number, s: any) => acc + s.value, 0)
-          });
-        }
-        
-        // Add In Progress category
-        if (region.inProgressSchemes.size > 0) {
-          const schemes = Array.from(region.inProgressSchemes.values()).map((scheme: any) => ({
-            name: scheme.name,
-            type: "scheme",
-            children: [
-              {
-                name: `Villages > 55 LPCD (${scheme.villagesAbove55.length})`,
-                type: "lpcd-category",
-                color: "#22c55e",
-                children: scheme.villagesAbove55.slice(0, 10),
-                value: scheme.villagesAbove55.length
-              },
-              {
-                name: `Villages ≤ 55 LPCD (${scheme.villagesBelow55.length})`,
-                type: "lpcd-category",
-                color: "#ef4444",
-                children: scheme.villagesBelow55.slice(0, 10),
-                value: scheme.villagesBelow55.length
-              }
-            ],
-            value: scheme.villagesAbove55.length + scheme.villagesBelow55.length
-          }));
-          
-          completionCategories.push({
-            name: `In Progress (${region.inProgressSchemes.size})`,
-            type: "completion-category",
-            color: "#94a3b8",
-            children: schemes,
-            value: schemes.reduce((acc: number, s: any) => acc + s.value, 0)
-          });
-        }
+        const totalRegionVillages = Object.values(regionInfo.completionStats).reduce((sum: number, stat: any) => 
+          sum + stat.above55 + stat.below55, 0);
         
         return {
-          name: region.name,
+          name: regionInfo.name,
           type: "region",
-          children: completionCategories,
-          value: completionCategories.reduce((acc: number, c: any) => acc + c.value, 0)
+          color: "#3b82f6",
+          value: totalRegionVillages,
+          children: completionCategories
         };
-      });
+      }).filter(region => region.value > 0); // Only include regions with data
 
       const sunburstData = {
         name: "Maharashtra",
         type: "root",
+        color: "#1f2937",
         children: regions,
         value: regions.reduce((acc: number, r: any) => acc + r.value, 0)
       };
 
-      console.log(`Built real sunburst data with ${regions.length} regions showing actual completion numbers and LPCD categorization`);
+      console.log(`Built 3-ring sunburst with ${regions.length} regions:`);
+      regions.forEach(region => {
+        console.log(`  ${region.name}: ${region.children.length} completion categories, ${region.value} total villages`);
+      });
+      
       res.json(sunburstData);
     } catch (error) {
-      console.error("Error building real sunburst data:", error);
-      res.status(500).json({ message: "Failed to build sunburst data" });
+      console.error("Error building 3-ring sunburst data:", error);
+      res.status(500).json({ message: "Failed to build sunburst data", error: error.message });
     }
   });
 
