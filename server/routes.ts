@@ -3760,6 +3760,97 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get hierarchical data for sunburst visualization
+  app.get("/api/sunburst-data", async (req, res) => {
+    try {
+      console.log('Fetching sunburst data...');
+      
+      // Get hierarchical data using existing storage methods
+      const allWaterData = await storage.getAllWaterSchemeData();
+      
+      console.log(`Found ${allWaterData.length} water scheme records`);
+      
+      // Debug: Check unique regions in data
+      const uniqueRegions = [...new Set(allWaterData.map(row => row.region).filter(Boolean))];
+      console.log(`Unique regions found: ${uniqueRegions.join(', ')}`);
+      
+      // Build hierarchical structure
+      const regionMap = new Map();
+      
+      // Process all data to include all regions and schemes
+      allWaterData.forEach((row: any) => {
+        const regionName = row.region;
+        const schemeName = row.scheme_name;
+        const villageName = row.village_name;
+        
+        if (!regionName || !schemeName || !villageName) return;
+        
+        // Initialize region if not exists
+        if (!regionMap.has(regionName)) {
+          regionMap.set(regionName, {
+            name: regionName,
+            type: "region",
+            children: new Map(),
+            value: 0
+          });
+        }
+        
+        const region = regionMap.get(regionName);
+        
+        // Initialize scheme if not exists
+        if (!region.children.has(schemeName)) {
+          region.children.set(schemeName, {
+            name: schemeName,
+            type: "scheme",
+            status: "Active",
+            children: [],
+            value: 0
+          });
+        }
+        
+        const scheme = region.children.get(schemeName);
+        
+        // Add village (limit villages per scheme for visualization performance)
+        if (scheme.children.length < 20) {
+          scheme.children.push({
+            name: villageName,
+            type: "village",
+            lpcd: row.lpcd_value_day1 || row.lpcd_value_day2 || row.lpcd_value_day3 || 0,
+            population: row.population || 0,
+            status: (row.lpcd_value_day1 || row.lpcd_value_day2 || row.lpcd_value_day3) && 
+                   (row.lpcd_value_day1 || row.lpcd_value_day2 || row.lpcd_value_day3) > 55 ? 
+                   "Adequate" : 
+                   (row.lpcd_value_day1 || row.lpcd_value_day2 || row.lpcd_value_day3) === 0 ? 
+                   "No Supply" : "Below Standard",
+            value: row.population || 1
+          });
+        }
+        
+        scheme.value += 1;
+        region.value += 1;
+      });
+      
+      // Convert maps to arrays
+      const regions = Array.from(regionMap.values()).map(region => ({
+        ...region,
+        children: Array.from(region.children.values())
+      }));
+      
+      const sunburstData = {
+        name: "Maharashtra",
+        type: "root",
+        children: regions,
+        value: regions.reduce((acc, r) => acc + r.value, 0)
+      };
+      
+      console.log(`Built sunburst data with ${regions.length} regions, total schemes: ${regions.reduce((acc, r) => acc + r.children.length, 0)}`);
+      res.json(sunburstData);
+    } catch (error) {
+      console.error("Error fetching sunburst data:", error);
+      res.status(500).json({ message: "Failed to fetch sunburst data" });
+    }
+  });
+
   // Get hierarchical data for sunburst visualization (v2 - fresh data)
   app.get("/api/sunburst-data-v2", async (req, res) => {
     try {
