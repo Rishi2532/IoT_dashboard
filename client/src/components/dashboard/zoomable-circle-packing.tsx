@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import * as d3 from 'd3';
+import React, { useEffect, useRef, useState } from "react";
+import * as d3 from "d3";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
 
@@ -22,6 +22,7 @@ interface HierarchyNode {
 interface RegionData {
   region_id: number;
   region_name: string;
+  F;
   total_schemes_integrated: number;
   fully_completed_schemes: number;
   total_villages_integrated: number;
@@ -34,14 +35,24 @@ export default function ZoomableCirclePacking() {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [currentNode, setCurrentNode] = useState<any>(null);
-  
+
   // Fetch regions data which has the correct scheme counts
-  const { data: regions, isLoading, error } = useQuery<RegionData[]>({ 
-    queryKey: ["/api/regions"] 
+  const {
+    data: regions,
+    isLoading,
+    error,
+  } = useQuery<RegionData[]>({
+    queryKey: ["/api/regions"],
   });
 
   useEffect(() => {
-    if (!svgRef.current || !containerRef.current || isLoading || !regions || !Array.isArray(regions)) {
+    if (
+      !svgRef.current ||
+      !containerRef.current ||
+      isLoading ||
+      !regions ||
+      !Array.isArray(regions)
+    ) {
       return;
     }
 
@@ -54,26 +65,37 @@ export default function ZoomableCirclePacking() {
     // Build hierarchy using correct regions data
     const hierarchyData: HierarchyNode = {
       name: "Maharashtra",
-      children: regions.map((region: RegionData) => {
-        const completedSchemes = region.fully_completed_schemes;
-        const inProgressSchemes = region.total_schemes_integrated - region.fully_completed_schemes;
-        
-        return {
-          name: region.region_name,
-          children: [
-            ...(completedSchemes > 0 ? [{
-              name: completedSchemes.toString(),
-              value: completedSchemes,
-              type: "completed"
-            }] : []),
-            ...(inProgressSchemes > 0 ? [{
-              name: inProgressSchemes.toString(),
-              value: inProgressSchemes,
-              type: "progress"
-            }] : [])
-          ]
-        };
-      }).filter(region => region.children.length > 0)
+      children: regions
+        .map((region: RegionData) => {
+          const completedSchemes = region.fully_completed_schemes;
+          const inProgressSchemes =
+            region.total_schemes_integrated - region.fully_completed_schemes;
+
+          return {
+            name: region.region_name,
+            children: [
+              ...(completedSchemes > 0
+                ? [
+                    {
+                      name: completedSchemes.toString(),
+                      value: completedSchemes,
+                      type: "completed",
+                    },
+                  ]
+                : []),
+              ...(inProgressSchemes > 0
+                ? [
+                    {
+                      name: inProgressSchemes.toString(),
+                      value: inProgressSchemes,
+                      type: "progress",
+                    },
+                  ]
+                : []),
+            ],
+          };
+        })
+        .filter((region) => region.children.length > 0),
     };
 
     // Clear previous chart
@@ -81,19 +103,22 @@ export default function ZoomableCirclePacking() {
     svg.selectAll("*").remove();
 
     // Set up SVG
-    svg.attr("width", width)
-       .attr("height", height)
-       .attr("viewBox", `0 0 ${width} ${height}`)
-       .style("background", "linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%)")
-       .style("border-radius", "12px");
+    svg
+      .attr("width", width)
+      .attr("height", height)
+      .attr("viewBox", `0 0 ${width} ${height}`)
+      .style("background", "linear-gradient(135deg, #e0f2fe 0%, #b3e5fc 100%)")
+      .style("border-radius", "12px");
 
     // Create hierarchy
-    const root = d3.hierarchy(hierarchyData)
+    const root = d3
+      .hierarchy(hierarchyData)
       .sum((d: any) => d.value || 0)
       .sort((a: any, b: any) => (b.value || 0) - (a.value || 0));
 
     // Pack layout
-    const pack = d3.pack<HierarchyNode>()
+    const pack = d3
+      .pack<HierarchyNode>()
       .size([width - margin * 2, height - margin * 2])
       .padding(6);
 
@@ -109,22 +134,26 @@ export default function ZoomableCirclePacking() {
     };
 
     // Create container group
-    const container = svg.append("g")
+    const container = svg
+      .append("g")
       .attr("transform", `translate(${margin}, ${margin})`);
 
     // Zoom behavior
-    const zoom = d3.zoom<SVGSVGElement, unknown>()
+    const zoom = d3
+      .zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.5, 10])
       .on("zoom", (event) => {
-        container.attr("transform", 
-          `translate(${margin + event.transform.x}, ${margin + event.transform.y}) scale(${event.transform.k})`
+        container.attr(
+          "transform",
+          `translate(${margin + event.transform.x}, ${margin + event.transform.y}) scale(${event.transform.k})`,
         );
       });
 
     svg.call(zoom);
 
     // Create nodes
-    const nodes = container.selectAll("g")
+    const nodes = container
+      .selectAll("g")
       .data(root.descendants())
       .enter()
       .append("g")
@@ -133,39 +162,43 @@ export default function ZoomableCirclePacking() {
       .style("cursor", "pointer");
 
     // Add circles with improved interaction
-    nodes.append("circle")
+    nodes
+      .append("circle")
       .attr("r", (d: any) => d.r)
       .style("fill", (d: any) => colorScale(d))
       .style("stroke", "#fff")
       .style("stroke-width", 2)
       .style("opacity", 0.8)
-      .on("mouseover", function(event, d: any) {
+      .on("mouseover", function (event, d: any) {
         d3.select(this)
           .style("opacity", 1)
           .style("stroke-width", 3)
           .style("filter", "drop-shadow(0px 2px 6px rgba(0,0,0,0.3))");
-        
+
         // Show tooltip-like information
         if (d.depth === 1) {
-          const region = regions?.find(r => r.region_name === d.data.name);
+          const region = regions?.find((r) => r.region_name === d.data.name);
           if (region) {
-            console.log(`${region.region_name}: ${region.fully_completed_schemes}/${region.total_schemes_integrated} schemes completed`);
+            console.log(
+              `${region.region_name}: ${region.fully_completed_schemes}/${region.total_schemes_integrated} schemes completed`,
+            );
           }
         }
       })
-      .on("mouseout", function(event, d: any) {
+      .on("mouseout", function (event, d: any) {
         d3.select(this)
           .style("opacity", 0.8)
           .style("stroke-width", 2)
           .style("filter", "none");
       })
-      .on("click", function(event, d: any) {
+      .on("click", function (event, d: any) {
         event.stopPropagation();
         zoomToNode(d);
       });
 
     // Add scheme count numbers only (clean display)
-    nodes.filter((d: any) => !d.children) // Only leaf nodes (scheme counts)
+    nodes
+      .filter((d: any) => !d.children) // Only leaf nodes (scheme counts)
       .append("text")
       .attr("dy", "0.35em")
       .attr("text-anchor", "middle")
@@ -183,9 +216,10 @@ export default function ZoomableCirclePacking() {
       .text((d: any) => d.data.name);
 
     // Add creative region labels with better positioning
-    nodes.filter((d: any) => d.depth === 1)
+    nodes
+      .filter((d: any) => d.depth === 1)
       .append("text")
-      .attr("dy", (d: any) => d.r > 80 ? "-0.8em" : "0em")
+      .attr("dy", (d: any) => (d.r > 80 ? "-0.8em" : "0em"))
       .attr("text-anchor", "middle")
       .style("font-size", (d: any) => {
         if (d.r < 50) return "0px";
@@ -200,14 +234,17 @@ export default function ZoomableCirclePacking() {
       .text((d: any) => {
         // Creative short names for regions
         const regionShortNames: { [key: string]: string } = {
-          "Nagpur": "NGP",
-          "Pune": "PNE", 
-          "Nashik": "NSK",
-          "Amravati": "AMR",
-          "Konkan": "KNK",
-          "Chhatrapati Sambhajinagar": "CSN"
+          Nagpur: "NAGPUR",
+          Pune: "PUNE",
+          Nashik: "NASHIK",
+          Amravati: "AMRAVATI",
+          Konkan: "KONKAN",
+          "Chhatrapati Sambhajinagar": "CSN",
         };
-        return regionShortNames[d.data.name] || d.data.name.substring(0, 3).toUpperCase();
+        return (
+          regionShortNames[d.data.name] ||
+          d.data.name.substring(0, 3).toUpperCase()
+        );
       });
 
     // Zoom to node function
@@ -216,13 +253,12 @@ export default function ZoomableCirclePacking() {
       const x = -d.x * scale + width / 2;
       const y = -d.y * scale + height / 2;
 
-      svg.transition()
+      svg
+        .transition()
         .duration(750)
         .call(
           zoom.transform,
-          d3.zoomIdentity
-            .translate(x - margin, y - margin)
-            .scale(scale)
+          d3.zoomIdentity.translate(x - margin, y - margin).scale(scale),
         );
 
       setCurrentNode(d);
@@ -233,12 +269,9 @@ export default function ZoomableCirclePacking() {
 
     // Reset zoom on background click
     svg.on("click", () => {
-      svg.transition()
-        .duration(750)
-        .call(zoom.transform, d3.zoomIdentity);
+      svg.transition().duration(750).call(zoom.transform, d3.zoomIdentity);
       setCurrentNode(root);
     });
-
   }, [regions, isLoading]);
 
   if (isLoading) {
@@ -279,13 +312,17 @@ export default function ZoomableCirclePacking() {
       <CardHeader>
         <CardTitle>Water Infrastructure Hierarchy</CardTitle>
         <p className="text-sm text-gray-600">
-          Circle size represents the number of schemes. Green = Completed, Orange = In Progress. Click to zoom.
+          Circle size represents the number of schemes. Green = Completed,
+          Orange = In Progress. Click to zoom.
         </p>
       </CardHeader>
       <CardContent>
         <div ref={containerRef} className="w-full relative">
-          <svg ref={svgRef} className="w-full border rounded-lg shadow-lg"></svg>
-          
+          <svg
+            ref={svgRef}
+            className="w-full border rounded-lg shadow-lg"
+          ></svg>
+
           {/* Legend */}
           <div className="mt-4 flex items-center justify-center space-x-6 text-sm">
             <div className="flex items-center space-x-2">
