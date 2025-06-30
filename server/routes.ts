@@ -3868,8 +3868,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       allSchemeStatuses.forEach((scheme: any) => {
         if (scheme.region && scheme.scheme_name) {
           const key = `${scheme.region}-${scheme.scheme_name}`;
-          const isFullyCompleted = scheme.mjp_fully_completed === 'Yes';
-          const isPartiallyCompleted = scheme.mjp_commissioned === 'Yes' && !isFullyCompleted;
+          const isFullyCompleted = scheme.mjp_fully_completed === 'Completed' && scheme.mjp_commissioned === 'Yes';
+          const isPartiallyCompleted = scheme.mjp_commissioned === 'Yes' && scheme.mjp_fully_completed !== 'Completed';
           
           completionMap.set(key, {
             fullyCompleted: isFullyCompleted,

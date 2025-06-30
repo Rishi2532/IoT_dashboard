@@ -27,12 +27,12 @@ interface ZoomableSunburstProps {
 
 export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
   data,
-  width = 800,
-  height = 600
+  width = 900,
+  height = 700
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const [breadcrumbs, setBreadcrumbs] = useState<string[]>(['Maharashtra']);
-  const radius = Math.min(width, height) / 6;
+  const radius = Math.min(width, height) / 5; // Increased radius for better visibility
 
   useEffect(() => {
     if (data && svgRef.current) {
@@ -108,14 +108,14 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
     // Add current property to each node for transitions
     root.each((d: any) => d.current = d);
 
-    // Create arc generator
+    // Create arc generator with better spacing
     const arc = d3.arc<any>()
       .startAngle(d => d.x0)
       .endAngle(d => d.x1)
-      .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
+      .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.01))
       .padRadius(radius * 1.5)
-      .innerRadius(d => d.y0 * radius)
-      .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius - 1));
+      .innerRadius(d => Math.max(0, d.y0 * radius))
+      .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius - 2));
 
     // Create tooltip
     const tooltip = d3.select('body')
@@ -133,9 +133,9 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
       .style('opacity', 0)
       .style('z-index', 1000);
 
-    // Helper functions
+    // Helper functions for better visibility
     const arcVisible = (d: any) => d.y1 <= 3 && d.y0 >= 1 && d.x1 > d.x0;
-    const labelVisible = (d: any) => d.y1 <= 3 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.03;
+    const labelVisible = (d: any) => d.y1 <= 3 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.02;
     const labelTransform = (d: any) => {
       const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
       const y = (d.y0 + d.y1) / 2 * radius;
@@ -182,7 +182,7 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
     path.filter((d: any) => d.children)
       .on('click', clicked);
 
-    // Add labels
+    // Add labels with better visibility
     const label = g.append('g')
       .attr('pointer-events', 'none')
       .attr('text-anchor', 'middle')
@@ -193,10 +193,22 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
       .attr('dy', '0.35em')
       .attr('fill-opacity', (d: any) => +labelVisible(d.current))
       .attr('transform', (d: any) => labelTransform(d.current))
-      .style('font-size', '10px')
+      .style('font-size', (d: any) => {
+        // Dynamic font size based on arc size
+        const arcLength = (d.x1 - d.x0) * radius;
+        if (arcLength > 60) return '12px';
+        if (arcLength > 40) return '10px';
+        return '8px';
+      })
       .style('font-weight', 'bold')
       .style('fill', 'white')
-      .text((d: any) => d.data.name);
+      .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.8)')
+      .text((d: any) => {
+        // Truncate long names for better visibility
+        const name = d.data.name;
+        const maxLength = 25;
+        return name.length > maxLength ? name.substring(0, maxLength) + '...' : name;
+      });
 
     // Add center circle for zoom out
     const parent = g.append('circle')
