@@ -3760,6 +3760,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get hierarchical data for sunburst visualization
+  app.get("/api/sunburst-data", async (req, res) => {
+    try {
+      // Get all regions with their schemes and villages
+      const regionsData = await storage.getAllRegions();
+      const schemesData = await storage.getAllSchemes();
+      const villagesData = await storage.getAllWaterSchemeData();
+      
+      // Build hierarchical structure
+      const sunburstData = {
+        name: "Maharashtra",
+        type: "root" as const,
+        children: regionsData.map((region: any) => ({
+          name: region.name,
+          type: "region" as const,
+          value: region.total_schemes || 1,
+          children: schemesData
+            .filter((scheme: any) => scheme.region === region.name)
+            .map((scheme: any) => ({
+              name: scheme.scheme_name,
+              type: "scheme" as const,
+              status: scheme.scheme_status,
+              value: villagesData.filter((village: any) => village.scheme_name === scheme.scheme_name).length || 1,
+              children: villagesData
+                .filter((village: any) => village.scheme_name === scheme.scheme_name)
+                .map((village: any) => ({
+                  name: village.village_name,
+                  type: "village" as const,
+                  lpcd: village.lpcd || 0,
+                  population: village.population || 0,
+                  status: village.lpcd && village.lpcd > 55 ? "Adequate" : village.lpcd === 0 ? "No Supply" : "Below Standard",
+                  value: village.population || 1
+                }))
+            }))
+        }))
+      };
+      
+      res.json(sunburstData);
+    } catch (error) {
+      console.error("Error fetching sunburst data:", error);
+      res.status(500).json({ message: "Failed to fetch sunburst data" });
+    }
+  });
+
   // For Replit, we need to listen on port 5000 
   // as this is the port Replit expects
   let server: Server = createHttpServer(app);

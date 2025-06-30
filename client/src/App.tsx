@@ -25,6 +25,7 @@ import {
 import { PressureDashboard, PressurePage } from "./pages/pressure";
 import CommunicationStatusPage from "./pages/CommunicationStatusPage";
 import ImportCommunicationStatus from "./pages/admin/ImportCommunicationStatus";
+import SunburstPage from "./pages/SunburstPage";
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
 import { FilterContextProvider } from "./components/chatbot/ChatbotComponent";
@@ -176,6 +177,12 @@ function App() {
               <Route path="/map-preview">
                 <ProtectedRoute>
                   <MapPreviewPage />
+                </ProtectedRoute>
+              </Route>
+
+              <Route path="/sunburst">
+                <ProtectedRoute>
+                  <SunburstPage />
                 </ProtectedRoute>
               </Route>
 
