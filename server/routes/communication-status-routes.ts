@@ -292,4 +292,116 @@ router.post("/import", upload.single('file'), async (req, res) => {
   }
 });
 
+// Download communication status data as CSV/Excel
+router.get("/download", async (req, res) => {
+  try {
+    const db = await getDB();
+    const region = req.query.region as string;
+    const circle = req.query.circle as string;
+    const division = req.query.division as string;
+    const subdivision = req.query.subdivision as string;
+    const block = req.query.block as string;
+    const search = req.query.search as string;
+
+    // Build filter conditions
+    const conditions = [];
+    if (region && region !== 'all') conditions.push(eq(communicationStatus.region, region));
+    if (circle && circle !== 'all') conditions.push(eq(communicationStatus.circle, circle));
+    if (division && division !== 'all') conditions.push(eq(communicationStatus.division, division));
+    if (subdivision && subdivision !== 'all') conditions.push(eq(communicationStatus.sub_division, subdivision));
+    if (block && block !== 'all') conditions.push(eq(communicationStatus.block, block));
+
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+    // Fetch data with filters
+    let data = await db
+      .select()
+      .from(communicationStatus)
+      .where(whereClause)
+      .orderBy(asc(communicationStatus.region), asc(communicationStatus.scheme_name));
+
+    // Apply search filter if provided
+    if (search) {
+      const searchLower = search.toLowerCase().trim();
+      data = data.filter((record: any) =>
+        record.scheme_name?.toLowerCase().includes(searchLower) ||
+        record.village_name?.toLowerCase().includes(searchLower) ||
+        record.esr_name?.toLowerCase().includes(searchLower) ||
+        record.scheme_id?.toLowerCase().includes(searchLower) ||
+        record.region?.toLowerCase().includes(searchLower) ||
+        record.circle?.toLowerCase().includes(searchLower) ||
+        record.division?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Create CSV content
+    const headers = [
+      'Region',
+      'Circle',
+      'Division',
+      'Sub Division',
+      'Block',
+      'Scheme ID',
+      'Scheme Name',
+      'Village Name',
+      'ESR Name',
+      'Chlorine Connected',
+      'Pressure Connected',
+      'Flow Meter Connected',
+      'Chlorine Status',
+      'Pressure Status',
+      'Flow Meter Status',
+      'Overall Status',
+      'Chlorine 0h-72h',
+      'Chlorine >72h',
+      'Pressure 0h-72h',
+      'Pressure >72h',
+      'Flow Meter 0h-72h',
+      'Flow Meter >72h'
+    ];
+
+    const csvRows = [
+      headers.join(','),
+      ...data.map((record: any) => [
+        record.region || '',
+        record.circle || '',
+        record.division || '',
+        record.sub_division || '',
+        record.block || '',
+        record.scheme_id || '',
+        `"${(record.scheme_name || '').replace(/"/g, '""')}"`,
+        `"${(record.village_name || '').replace(/"/g, '""')}"`,
+        `"${(record.esr_name || '').replace(/"/g, '""')}"`,
+        record.chlorine_connected || '',
+        record.pressure_connected || '',
+        record.flow_meter_connected || '',
+        record.chlorine_status || '',
+        record.pressure_status || '',
+        record.flow_meter_status || '',
+        record.overall_status || '',
+        record.chlorine_0h_72h || '',
+        record.chlorine_72h || '',
+        record.pressure_0h_72h || '',
+        record.pressure_72h || '',
+        record.flow_meter_0h_72h || '',
+        record.flow_meter_72h || ''
+      ].join(','))
+    ];
+
+    const csvContent = csvRows.join('\n');
+
+    // Set headers for file download
+    const filename = `communication_status_${new Date().toISOString().split('T')[0]}.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.setHeader('Content-Length', csvContent.length);
+
+    res.send(csvContent);
+
+  } catch (error) {
+    console.error("Error downloading communication status data:", error);
+    res.status(500).json({ error: "Failed to download communication status data" });
+  }
+});
+
 export default router;

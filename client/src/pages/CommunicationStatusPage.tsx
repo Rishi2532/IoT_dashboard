@@ -30,7 +30,9 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { useState } from "react";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { useState, useMemo } from "react";
 import {
   Activity,
   Zap,
@@ -45,6 +47,9 @@ import {
   CheckCircle2,
   XCircle,
   Gauge,
+  Search,
+  Download,
+  Filter,
 } from "lucide-react";
 import DashboardLayout from "@/components/dashboard/dashboard-layout";
 interface CommunicationOverview {
@@ -112,6 +117,7 @@ export default function CommunicationStatusPage() {
   const [selectedDivision, setSelectedDivision] = useState<string>("all");
   const [selectedSubdivision, setSelectedSubdivision] = useState<string>("all");
   const [selectedBlock, setSelectedBlock] = useState<string>("all");
+  const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
 
@@ -176,6 +182,48 @@ export default function CommunicationStatusPage() {
       return response.json();
     },
   });
+
+  // Filter schemes based on search term
+  const filteredSchemes = useMemo(() => {
+    if (!schemes || !searchTerm.trim()) return schemes || [];
+    
+    const searchLower = searchTerm.toLowerCase().trim();
+    return schemes.filter((scheme: CommunicationScheme) =>
+      scheme.scheme_name?.toLowerCase().includes(searchLower) ||
+      scheme.village_name?.toLowerCase().includes(searchLower) ||
+      scheme.esr_name?.toLowerCase().includes(searchLower) ||
+      scheme.scheme_id?.toLowerCase().includes(searchLower) ||
+      scheme.region?.toLowerCase().includes(searchLower) ||
+      scheme.circle?.toLowerCase().includes(searchLower) ||
+      scheme.division?.toLowerCase().includes(searchLower)
+    );
+  }, [schemes, searchTerm]);
+
+  // Excel download functionality
+  const handleExcelDownload = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (selectedRegion !== "all") params.set("region", selectedRegion);
+      if (selectedCircle !== "all") params.set("circle", selectedCircle);
+      if (selectedDivision !== "all") params.set("division", selectedDivision);
+      if (selectedSubdivision !== "all") params.set("subdivision", selectedSubdivision);
+      if (selectedBlock !== "all") params.set("block", selectedBlock);
+      if (searchTerm.trim()) params.set("search", searchTerm.trim());
+
+      // Create a download endpoint URL
+      const url = `/api/communication-status/download?${params.toString()}`;
+      
+      // Trigger download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `communication_status_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error('Error downloading Excel file:', error);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status?.toLowerCase()) {
@@ -252,12 +300,28 @@ export default function CommunicationStatusPage() {
       )
     : [];
 
+  // Apply search filter to unique schemes
+  const searchFilteredSchemes = useMemo(() => {
+    if (!searchTerm.trim()) return uniqueSchemes;
+    
+    const searchLower = searchTerm.toLowerCase().trim();
+    return uniqueSchemes.filter((scheme: CommunicationScheme) =>
+      scheme.scheme_name?.toLowerCase().includes(searchLower) ||
+      scheme.village_name?.toLowerCase().includes(searchLower) ||
+      scheme.esr_name?.toLowerCase().includes(searchLower) ||
+      scheme.scheme_id?.toLowerCase().includes(searchLower) ||
+      scheme.region?.toLowerCase().includes(searchLower) ||
+      scheme.circle?.toLowerCase().includes(searchLower) ||
+      scheme.division?.toLowerCase().includes(searchLower)
+    );
+  }, [uniqueSchemes, searchTerm]);
+
   // Pagination calculations
-  const totalItems = uniqueSchemes.length;
+  const totalItems = searchFilteredSchemes.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
-  const currentSchemes = uniqueSchemes.slice(startIndex, endIndex);
+  const currentSchemes = searchFilteredSchemes.slice(startIndex, endIndex);
 
   // Reset page when filters change
   const resetPage = () => setCurrentPage(1);
@@ -661,6 +725,33 @@ export default function CommunicationStatusPage() {
             <CardDescription>
               Detailed view of communication status for each scheme and ESR
             </CardDescription>
+            
+            {/* Search and Download Controls */}
+            <div className="flex gap-4 items-center mt-4">
+              <div className="flex-1 max-w-sm">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search schemes, villages, ESRs..."
+                    value={searchTerm}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1); // Reset to first page when searching
+                    }}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              
+              <Button
+                onClick={handleExcelDownload}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                <Download className="h-4 w-4" />
+                Export Excel
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
             {schemesLoading ? (
