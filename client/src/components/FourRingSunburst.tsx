@@ -28,6 +28,49 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
   const svgRef = useRef<SVGSVGElement>(null);
   const radius = Math.min(width, height) / 2 - 10;
   const [focusedNode, setFocusedNode] = useState<any>(null);
+  const partitionedRootRef = useRef<any>(null);
+  const gRef = useRef<any>(null);
+
+  // Zoom function accessible from component level
+  const zoomTo = (p: any) => {
+    if (!gRef.current || !partitionedRootRef.current) return;
+    
+    setFocusedNode(p);
+    
+    const transition = gRef.current.transition()
+      .duration(750);
+
+    // Update path opacity based on focus
+    transition.selectAll("path")
+      .style("opacity", (d: any) => {
+        if (p === partitionedRootRef.current) {
+          return 1;
+        } else if (d === p || (d.parent && d.parent === p) || (d.parent && d.parent && d.parent.parent === p)) {
+          return 1;
+        } else {
+          return 0.3;
+        }
+      });
+
+    // Update label opacity
+    transition.selectAll("text")
+      .style("opacity", (d: any) => {
+        if (p === partitionedRootRef.current) {
+          return 1;
+        } else if (d === p || (d.parent && d.parent === p) || (d.parent && d.parent && d.parent.parent === p)) {
+          return 1;
+        } else {
+          return 0.3;
+        }
+      });
+  };
+
+  // Reset zoom function
+  const resetZoom = () => {
+    if (partitionedRootRef.current) {
+      zoomTo(partitionedRootRef.current);
+    }
+  };
 
   useEffect(() => {
     if (!data || !svgRef.current) return;
@@ -49,6 +92,9 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
     const g = svg.append('g')
       .attr('transform', `translate(${width / 2}, ${height / 2})`);
 
+    // Store g reference for zoom functionality
+    gRef.current = g;
+
     // Create the partition layout
     const partition = d3.partition<SunburstNode>()
       .size([2 * Math.PI, radius]);
@@ -59,9 +105,14 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
 
     // Apply partition layout - this adds x0, x1, y0, y1 properties
     const partitionedRoot = partition(root);
+
+    // Store partitioned root reference for zoom functionality
+    partitionedRootRef.current = partitionedRoot;
     
-    // Keep track of current focus for zooming
-    let focus = partitionedRoot;
+    // Initialize focused node if not set
+    if (!focusedNode) {
+      setFocusedNode(partitionedRoot);
+    }
 
     // Create arc generator for the 4 rings
     const arc = d3.arc<any>()
@@ -118,47 +169,7 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
       .style('opacity', 0)
       .style('z-index', 1000);
 
-    // Function to zoom to a specific node
-    const zoomTo = (p: any) => {
-      focus = p;
-      setFocusedNode(p);
-      
-      // Simple zoom implementation - just highlight the focused region and children
-      const transition = g.transition()
-        .duration(750);
 
-      // Update path opacity based on focus
-      transition.selectAll("path")
-        .style("opacity", (d: any) => {
-          if (p === partitionedRoot) {
-            // If clicked on center, show all
-            return 1;
-          } else if (d === p || (d.parent && d.parent === p) || (d.parent && d.parent.parent === p)) {
-            // Show the focused region and its children
-            return 1;
-          } else {
-            // Dim other regions
-            return 0.3;
-          }
-        });
-
-      // Update label opacity
-      transition.selectAll("text")
-        .style("opacity", (d: any) => {
-          if (p === partitionedRoot) {
-            return 1;
-          } else if (d === p || (d.parent && d.parent === p) || (d.parent && d.parent.parent === p)) {
-            return 1;
-          } else {
-            return 0.3;
-          }
-        });
-    };
-
-    // Reset zoom function
-    const resetZoom = () => {
-      zoomTo(partitionedRoot);
-    };
 
     // Create arcs using partitioned data
     const arcs = g.selectAll('path')
@@ -172,7 +183,7 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
       .on('click', function(event, d: any) {
         // Only zoom on ring 1 (regions) or center
         if (d.depth <= 1) {
-          zoomTo(d === focus ? partitionedRoot : d);
+          zoomTo(d === focusedNode ? partitionedRootRef.current : d);
         }
       })
       .on('mouseover', function(event, d: any) {
@@ -270,7 +281,7 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
         <CardTitle className="flex items-center justify-between">
           Maharashtra Water Infrastructure Hierarchy
           {focusedNode && focusedNode.data?.type !== 'root' && (
-            <Button variant="outline" size="sm" onClick={() => zoomTo(partitionedRoot)}>
+            <Button variant="outline" size="sm" onClick={resetZoom}>
               Reset View
             </Button>
           )}
