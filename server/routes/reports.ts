@@ -367,4 +367,349 @@ router.delete("/:id", requireAdmin, async (req: any, res) => {
   }
 });
 
+// Overall report download endpoints for complete data export
+import * as XLSX from 'xlsx';
+import pg from 'pg';
+
+const { Pool } = pg;
+
+// Download overall chlorine report
+router.get('/download/overall-chlorine', async (req, res) => {
+  try {
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      // Get all chlorine data
+      const result = await client.query(`
+        SELECT 
+          region, circle, division, sub_division, block,
+          scheme_id, scheme_name, village_name, esr_name,
+          chlorine_value_1, chlorine_value_2, chlorine_value_3, chlorine_value_4,
+          chlorine_value_5, chlorine_value_6, chlorine_value_7,
+          chlorine_date_day_1, chlorine_date_day_2, chlorine_date_day_3, chlorine_date_day_4,
+          chlorine_date_day_5, chlorine_date_day_6, chlorine_date_day_7,
+          number_of_consistent_zero_value_in_chlorine,
+          chlorine_less_than_02_mgl, chlorine_between_02_05_mgl, chlorine_greater_than_05_mgl
+        FROM chlorine_data
+        ORDER BY region, scheme_id, village_name, esr_name
+      `);
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Convert data for Excel
+      const excelData = result.rows.map(row => ({
+        'Region': row.region,
+        'Circle': row.circle,
+        'Division': row.division,
+        'Sub Division': row.sub_division,
+        'Block': row.block,
+        'Scheme ID': row.scheme_id,
+        'Scheme Name': row.scheme_name,
+        'Village Name': row.village_name,
+        'ESR Name': row.esr_name,
+        'Chlorine Day 1': row.chlorine_value_1,
+        'Chlorine Day 2': row.chlorine_value_2,
+        'Chlorine Day 3': row.chlorine_value_3,
+        'Chlorine Day 4': row.chlorine_value_4,
+        'Chlorine Day 5': row.chlorine_value_5,
+        'Chlorine Day 6': row.chlorine_value_6,
+        'Chlorine Day 7': row.chlorine_value_7,
+        'Date Day 1': row.chlorine_date_day_1,
+        'Date Day 2': row.chlorine_date_day_2,
+        'Date Day 3': row.chlorine_date_day_3,
+        'Date Day 4': row.chlorine_date_day_4,
+        'Date Day 5': row.chlorine_date_day_5,
+        'Date Day 6': row.chlorine_date_day_6,
+        'Date Day 7': row.chlorine_date_day_7,
+        'Consistent Zero Values': row.number_of_consistent_zero_value_in_chlorine,
+        'Less than 0.2 mg/l': row.chlorine_less_than_02_mgl,
+        'Between 0.2-0.5 mg/l': row.chlorine_between_02_05_mgl,
+        'Greater than 0.5 mg/l': row.chlorine_greater_than_05_mgl
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Chlorine Data');
+      
+      // Add summary sheet
+      const summaryData = [
+        { 'Report Type': 'Overall Chlorine Report' },
+        { 'Generated At': new Date().toISOString() },
+        { 'Total Records': result.rows.length },
+        { 'Data Source': 'Maharashtra Water Infrastructure Platform' }
+      ];
+      const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, summaryWs, 'Report Summary');
+
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      
+      const filename = `Overall_Chlorine_Report_${new Date().toISOString().split('T')[0]}`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}.xlsx"`);
+      res.send(buffer);
+      
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error downloading overall chlorine report:', error);
+    res.status(500).json({ error: 'Failed to download chlorine report' });
+  }
+});
+
+// Download overall pressure report
+router.get('/download/overall-pressure', async (req, res) => {
+  try {
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      // Get all pressure data
+      const result = await client.query(`
+        SELECT 
+          region, circle, division, sub_division, block,
+          scheme_id, scheme_name, village_name, esr_name,
+          pressure_value_1, pressure_value_2, pressure_value_3, pressure_value_4,
+          pressure_value_5, pressure_value_6, pressure_value_7,
+          pressure_date_day_1, pressure_date_day_2, pressure_date_day_3, pressure_date_day_4,
+          pressure_date_day_5, pressure_date_day_6, pressure_date_day_7,
+          number_of_consistent_zero_value_in_pressure,
+          pressure_less_than_02_bar, pressure_between_02_07_bar, pressure_greater_than_07_bar
+        FROM pressure_data
+        ORDER BY region, scheme_id, village_name, esr_name
+      `);
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Convert data for Excel
+      const excelData = result.rows.map(row => ({
+        'Region': row.region,
+        'Circle': row.circle,
+        'Division': row.division,
+        'Sub Division': row.sub_division,
+        'Block': row.block,
+        'Scheme ID': row.scheme_id,
+        'Scheme Name': row.scheme_name,
+        'Village Name': row.village_name,
+        'ESR Name': row.esr_name,
+        'Pressure Day 1': row.pressure_value_1,
+        'Pressure Day 2': row.pressure_value_2,
+        'Pressure Day 3': row.pressure_value_3,
+        'Pressure Day 4': row.pressure_value_4,
+        'Pressure Day 5': row.pressure_value_5,
+        'Pressure Day 6': row.pressure_value_6,
+        'Pressure Day 7': row.pressure_value_7,
+        'Date Day 1': row.pressure_date_day_1,
+        'Date Day 2': row.pressure_date_day_2,
+        'Date Day 3': row.pressure_date_day_3,
+        'Date Day 4': row.pressure_date_day_4,
+        'Date Day 5': row.pressure_date_day_5,
+        'Date Day 6': row.pressure_date_day_6,
+        'Date Day 7': row.pressure_date_day_7,
+        'Consistent Zero Values': row.number_of_consistent_zero_value_in_pressure,
+        'Less than 0.2 bar': row.pressure_less_than_02_bar,
+        'Between 0.2-0.7 bar': row.pressure_between_02_07_bar,
+        'Greater than 0.7 bar': row.pressure_greater_than_07_bar
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Pressure Data');
+      
+      // Add summary sheet
+      const summaryData = [
+        { 'Report Type': 'Overall Pressure Report' },
+        { 'Generated At': new Date().toISOString() },
+        { 'Total Records': result.rows.length },
+        { 'Data Source': 'Maharashtra Water Infrastructure Platform' }
+      ];
+      const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, summaryWs, 'Report Summary');
+
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      
+      const filename = `Overall_Pressure_Report_${new Date().toISOString().split('T')[0]}`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}.xlsx"`);
+      res.send(buffer);
+      
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error downloading overall pressure report:', error);
+    res.status(500).json({ error: 'Failed to download pressure report' });
+  }
+});
+
+// Download overall water consumption report
+router.get('/download/overall-water-consumption', async (req, res) => {
+  try {
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      // Get all water consumption data
+      const result = await client.query(`
+        SELECT 
+          region, circle, division, sub_division, block,
+          scheme_id, scheme_name, village_name, population, number_of_esr,
+          water_value_day1, water_value_day2, water_value_day3, 
+          water_value_day4, water_value_day5, water_value_day6,
+          water_date_day1, water_date_day2, water_date_day3, 
+          water_date_day4, water_date_day5, water_date_day6
+        FROM water_scheme_data
+        WHERE water_value_day1 IS NOT NULL OR water_value_day2 IS NOT NULL 
+           OR water_value_day3 IS NOT NULL OR water_value_day4 IS NOT NULL
+           OR water_value_day5 IS NOT NULL OR water_value_day6 IS NOT NULL
+        ORDER BY region, scheme_id, village_name
+      `);
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Convert data for Excel
+      const excelData = result.rows.map(row => ({
+        'Region': row.region,
+        'Circle': row.circle,
+        'Division': row.division,
+        'Sub Division': row.sub_division,
+        'Block': row.block,
+        'Scheme ID': row.scheme_id,
+        'Scheme Name': row.scheme_name,
+        'Village Name': row.village_name,
+        'Population': row.population,
+        'Number of ESR': row.number_of_esr,
+        'Water Day 1': row.water_value_day1,
+        'Water Day 2': row.water_value_day2,
+        'Water Day 3': row.water_value_day3,
+        'Water Day 4': row.water_value_day4,
+        'Water Day 5': row.water_value_day5,
+        'Water Day 6': row.water_value_day6,
+        'Date Day 1': row.water_date_day1,
+        'Date Day 2': row.water_date_day2,
+        'Date Day 3': row.water_date_day3,
+        'Date Day 4': row.water_date_day4,
+        'Date Day 5': row.water_date_day5,
+        'Date Day 6': row.water_date_day6
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      XLSX.utils.book_append_sheet(wb, ws, 'Water Consumption Data');
+      
+      // Add summary sheet
+      const summaryData = [
+        { 'Report Type': 'Overall Water Consumption Report' },
+        { 'Generated At': new Date().toISOString() },
+        { 'Total Records': result.rows.length },
+        { 'Data Source': 'Maharashtra Water Infrastructure Platform' }
+      ];
+      const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, summaryWs, 'Report Summary');
+
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      
+      const filename = `Overall_Water_Consumption_Report_${new Date().toISOString().split('T')[0]}`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}.xlsx"`);
+      res.send(buffer);
+      
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error downloading overall water consumption report:', error);
+    res.status(500).json({ error: 'Failed to download water consumption report' });
+  }
+});
+
+// Download overall LPCD report
+router.get('/download/overall-lpcd', async (req, res) => {
+  try {
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const client = await pool.connect();
+    
+    try {
+      // Get all LPCD data
+      const result = await client.query(`
+        SELECT 
+          region, circle, division, sub_division, block,
+          scheme_id, scheme_name, village_name, population, number_of_esr,
+          lpcd_value_day1, lpcd_value_day2, lpcd_value_day3, 
+          lpcd_value_day4, lpcd_value_day5, lpcd_value_day6, lpcd_value_day7,
+          lpcd_date_day1, lpcd_date_day2, lpcd_date_day3, 
+          lpcd_date_day4, lpcd_date_day5, lpcd_date_day6, lpcd_date_day7,
+          consistent_zero_lpcd_for_a_week, below_55_lpcd_count, above_55_lpcd_count
+        FROM water_scheme_data
+        WHERE lpcd_value_day1 IS NOT NULL OR lpcd_value_day2 IS NOT NULL 
+           OR lpcd_value_day3 IS NOT NULL OR lpcd_value_day4 IS NOT NULL
+           OR lpcd_value_day5 IS NOT NULL OR lpcd_value_day6 IS NOT NULL
+           OR lpcd_value_day7 IS NOT NULL
+        ORDER BY region, scheme_id, village_name
+      `);
+
+      // Create workbook
+      const wb = XLSX.utils.book_new();
+      
+      // Convert data for Excel
+      const excelData = result.rows.map(row => ({
+        'Region': row.region,
+        'Circle': row.circle,
+        'Division': row.division,
+        'Sub Division': row.sub_division,
+        'Block': row.block,
+        'Scheme ID': row.scheme_id,
+        'Scheme Name': row.scheme_name,
+        'Village Name': row.village_name,
+        'Population': row.population,
+        'Number of ESR': row.number_of_esr,
+        'LPCD Day 1': row.lpcd_value_day1,
+        'LPCD Day 2': row.lpcd_value_day2,
+        'LPCD Day 3': row.lpcd_value_day3,
+        'LPCD Day 4': row.lpcd_value_day4,
+        'LPCD Day 5': row.lpcd_value_day5,
+        'LPCD Day 6': row.lpcd_value_day6,
+        'LPCD Day 7': row.lpcd_value_day7,
+        'Date Day 1': row.lpcd_date_day1,
+        'Date Day 2': row.lpcd_date_day2,
+        'Date Day 3': row.lpcd_date_day3,
+        'Date Day 4': row.lpcd_date_day4,
+        'Date Day 5': row.lpcd_date_day5,
+        'Date Day 6': row.lpcd_date_day6,
+        'Date Day 7': row.lpcd_date_day7,
+        'Consistent Zero LPCD for Week': row.consistent_zero_lpcd_for_a_week,
+        'Below 55 LPCD Count': row.below_55_lpcd_count,
+        'Above 55 LPCD Count': row.above_55_lpcd_count
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(excelData);
+      XLSX.utils.book_append_sheet(wb, ws, 'LPCD Data');
+      
+      // Add summary sheet
+      const summaryData = [
+        { 'Report Type': 'Overall LPCD Report' },
+        { 'Generated At': new Date().toISOString() },
+        { 'Total Records': result.rows.length },
+        { 'Data Source': 'Maharashtra Water Infrastructure Platform' }
+      ];
+      const summaryWs = XLSX.utils.json_to_sheet(summaryData);
+      XLSX.utils.book_append_sheet(wb, summaryWs, 'Report Summary');
+
+      const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
+      
+      const filename = `Overall_LPCD_Report_${new Date().toISOString().split('T')[0]}`;
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}.xlsx"`);
+      res.send(buffer);
+      
+    } finally {
+      client.release();
+    }
+  } catch (error) {
+    console.error('Error downloading overall LPCD report:', error);
+    res.status(500).json({ error: 'Failed to download LPCD report' });
+  }
+});
+
 export default router;

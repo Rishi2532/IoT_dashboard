@@ -1,11 +1,12 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { File, FileDown, Loader2, FileText } from 'lucide-react';
+import { File, FileDown, Loader2, FileText, Download, Database, Droplets, BarChart3, Activity } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'wouter';
 import DashboardLayout from '@/components/dashboard/dashboard-layout';
 import { useComprehensiveActivityTracker } from '@/hooks/use-comprehensive-activity-tracker';
+import { useToast } from '@/hooks/use-toast';
 
 // Admin-only button that only shows for admin users
 function AdminOnlyButton() {
@@ -70,11 +71,57 @@ const REPORT_TYPES = [
 // Reports page for users to download Excel reports
 function ReportsPage() {
   const { trackFileDownload, trackPageVisit } = useComprehensiveActivityTracker();
+  const { toast } = useToast();
 
   // Track page visit on component mount
   React.useEffect(() => {
     trackPageVisit("Reports Page");
   }, [trackPageVisit]);
+
+  // Handle overall report downloads
+  const handleOverallReportDownload = async (reportType: string, reportName: string) => {
+    try {
+      const response = await fetch(`/api/reports/download/overall-${reportType}`);
+      
+      if (!response.ok) {
+        throw new Error(`Failed to download ${reportName}`);
+      }
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.style.display = 'none';
+      a.href = url;
+      a.download = `Overall_${reportName.replace(/\s+/g, '_')}_Report_${new Date().toISOString().split('T')[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      
+      // Track the download
+      trackFileDownload(
+        `Overall_${reportName}_Report`,
+        'xlsx',
+        'overall_reports_section',
+        {
+          reportType: reportType,
+          reportName: reportName
+        }
+      );
+      
+      toast({
+        title: "Download Started",
+        description: `${reportName} report is being downloaded`,
+      });
+    } catch (error) {
+      console.error('Error downloading overall report:', error);
+      toast({
+        title: "Download Failed",
+        description: `Failed to download ${reportName} report. Please try again.`,
+        variant: "destructive",
+      });
+    }
+  };
 
   // Fetch all available report files
   const { data: reportFiles, isLoading, error } = useQuery({
@@ -125,6 +172,118 @@ function ReportsPage() {
         </div>
         {/* Admin-only link to manage reports - Only show for admins */}
         <AdminOnlyButton />
+      </div>
+
+      {/* Overall Report Downloads Section */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+          <Download className="h-6 w-6" />
+          Overall Data Reports
+        </h2>
+        <p className="text-gray-600 mb-6">
+          Download complete datasets directly from the database in Excel format
+        </p>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Droplets className="h-5 w-5 text-blue-600" />
+                Chlorine Data
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Complete chlorine analyzer readings and quality metrics
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => handleOverallReportDownload('chlorine', 'Chlorine Data')}
+                className="w-full"
+                variant="outline"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <BarChart3 className="h-5 w-5 text-green-600" />
+                Pressure Data
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Water pressure measurements and distribution network data
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => handleOverallReportDownload('pressure', 'Pressure Data')}
+                className="w-full"
+                variant="outline"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Database className="h-5 w-5 text-purple-600" />
+                Water Consumption
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Complete water consumption data across all regions
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => handleOverallReportDownload('water-consumption', 'Water Consumption')}
+                className="w-full"
+                variant="outline"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card className="hover:shadow-md transition-shadow">
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Activity className="h-5 w-5 text-orange-600" />
+                LPCD Data
+              </CardTitle>
+              <CardDescription className="text-sm">
+                Liters Per Capita Daily statistics and analysis
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                onClick={() => handleOverallReportDownload('lpcd', 'LPCD')}
+                className="w-full"
+                variant="outline"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Download
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+
+      {/* Uploaded Reports Section */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+          <FileText className="h-6 w-6" />
+          Uploaded Reports
+        </h2>
+        <p className="text-gray-600 mb-6">
+          Download the latest uploaded Excel report files with all formatting preserved
+        </p>
       </div>
 
       <div className="py-6">
