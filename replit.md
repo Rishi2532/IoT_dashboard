@@ -123,18 +123,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 1, 2025
+- **Sunburst Visualization Removal**: Completely removed all zoomable sunburst graph functionality per user request
+- **Code Cleanup**: Deleted all sunburst-related components, pages, API endpoints, and navigation links
+- **Sidebar Navigation Update**: Removed "Hierarchy View" link from sidebar navigation menu
+- **Application Stability**: Ensured platform continues working properly after removing sunburst features
+
 ### June 30, 2025
 - **Communication Status Table Fix**: Fixed missing communication_status table that was causing CSV import failures in the admin panel
 - **Database Schema Permanence**: Updated database initialization to include communication_status table with proper schema matching the application requirements
 - **Regional Data Consolidation Fix**: Fixed duplicate Amravati region entries caused by UTF-8 BOM characters, now shows single consolidated entry (230 ESRs)
 - **UTF-8 BOM Prevention**: Enhanced CSV import process to automatically remove UTF-8 BOM characters and trim whitespace to prevent future data duplication
-- **API Endpoint Restoration**: Fixed sunburst data API endpoint that was being intercepted by frontend routing, now returns proper hierarchical JSON data
 - **Complete Database Setup**: Ensured all required tables are created automatically for new users, preventing import errors when remixing the application
-- **Zoomable Sunburst Visualization Implementation**: Built complete interactive hierarchical sunburst chart showing Maharashtra water infrastructure from state level down to individual villages
-- **Complete Data Integration**: Fixed API to display all 6 regions (Amravati, Chhatrapati Sambhajinagar, Konkan, Nagpur, Nashik, Pune) with 101 total schemes and 998 village records
-- **Click-to-Zoom Functionality**: Implemented proper centering and zoom behavior where clicking on regions centers the circle on that region and shows detailed breakdown of schemes and villages
-- **Interactive Navigation**: Added breadcrumb navigation, tooltips with population and LPCD data, and color-coded status indicators for water infrastructure hierarchy
-- **Performance Optimization**: Limited villages per scheme to 20 for visualization performance while maintaining complete scheme coverage
 
 ### June 27, 2025
 - **Circle Packing Visualization Fix**: Fixed complete circle packing graph display issue where only half the visualization was showing and numbers were not visible

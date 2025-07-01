@@ -20,7 +20,7 @@ const navigationItems: NavigationItem[] = [
   { name: "Schemes", href: "/schemes", icon: GitBranchPlus },
   { name: "Regions", href: "/regions", icon: MapPin },
   { name: "Reports", href: "/reports", icon: BarChart2 },
-  { name: "Hierarchy View", href: "/sunburst", icon: PieChart },
+
   { name: "Village LPCD", href: "/lpcd", icon: Droplet },
   { name: "Scheme LPCD", href: "/scheme-lpcd", icon: Droplet },
   { name: "Chlorine Monitoring", href: "/chlorine", prefix: "CL" },

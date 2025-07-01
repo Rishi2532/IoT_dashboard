@@ -12,8 +12,7 @@ import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";
 import ZoomableCirclePacking from "@/components/dashboard/zoomable-circle-packing";
-import SimpleSunburst from "@/components/dashboard/simple-sunburst";
-import { EnhancedZoomableSunburst } from "@/components/EnhancedZoomableSunburst";
+
 
 import ChatbotComponent, {
   FilterContextProvider,
@@ -726,10 +725,7 @@ export default function Dashboard() {
         <ZoomableCirclePacking />
       </div>
 
-      {/* Enhanced Sunburst Visualization */}
-      <div className="mb-4 sm:mb-6">
-        <SimpleSunburst />
-      </div>
+
 
       {/* Enhanced Schemes Table with title and styling */}
       <div className="bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md mb-4 sm:mb-6">
