@@ -108,6 +108,11 @@ router.get("/type/:reportType", async (req, res) => {
       "pressure",
       "village_level",
       "scheme_level",
+      // Overall report types
+      "overall_chlorine",
+      "overall_pressure", 
+      "overall_water_consumption",
+      "overall_lpcd",
     ];
 
     if (!validReportTypes.includes(reportType)) {
@@ -260,6 +265,11 @@ router.post(
         "pressure",
         "village_level",
         "scheme_level",
+        // Overall report types
+        "overall_chlorine",
+        "overall_pressure", 
+        "overall_water_consumption",
+        "overall_lpcd",
       ];
 
       if (!validReportTypes.includes(report_type)) {

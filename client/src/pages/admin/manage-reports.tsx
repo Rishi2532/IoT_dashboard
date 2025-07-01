@@ -36,6 +36,14 @@ const REPORT_TYPES = [
   { id: 'scheme_level', name: 'Scheme Level Datalink Report' },
 ];
 
+// Overall Report File Types (same functionality as above but for overall reports)
+const OVERALL_REPORT_TYPES = [
+  { id: 'overall_chlorine', name: 'Overall Chlorine Report' },
+  { id: 'overall_pressure', name: 'Overall Pressure Report' },
+  { id: 'overall_water_consumption', name: 'Overall Water Consumption Report' },
+  { id: 'overall_lpcd', name: 'Overall LPCD Report' },
+];
+
 // Admin page for managing report files
 const ManageReports = () => {
   const [isUploading, setIsUploading] = useState(false);
@@ -256,6 +264,51 @@ const ManageReports = () => {
         </CardContent>
       </Card>
 
+      {/* Overall Reports Upload Section */}
+      <Card>
+        <CardContent className="pt-6">
+          <h2 className="text-xl font-semibold mb-4">Upload Overall Data Reports</h2>
+          <p className="text-gray-600 mb-6">
+            Upload Excel files for overall data reports (chlorine, pressure, water consumption, LPCD)
+          </p>
+          <div className="space-y-4">
+            {OVERALL_REPORT_TYPES.map((type) => (
+              <div key={type.id} className="flex items-center p-4 border rounded-lg">
+                <div className="flex-grow">
+                  <p className="font-medium">{type.name}</p>
+                  <p className="text-sm text-gray-500">
+                    {Array.isArray(reportFiles) && reportFiles.some((file: any) => file.report_type === type.id)
+                      ? 'File uploaded'
+                      : 'No file uploaded'}
+                  </p>
+                </div>
+                <div>
+                  <Label
+                    htmlFor={`file-upload-${type.id}`}
+                    className="cursor-pointer inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-background bg-primary text-primary-foreground hover:bg-primary/90 h-10 py-2 px-4"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Upload className="w-4 h-4 mr-2" />
+                    )}
+                    Upload
+                  </Label>
+                  <input
+                    id={`file-upload-${type.id}`}
+                    type="file"
+                    accept=".xlsx,.xls"
+                    className="sr-only"
+                    onChange={(e) => handleFileUpload(e, type.id)}
+                    disabled={isUploading}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="pt-6">
           <h2 className="text-xl font-semibold mb-4">Uploaded Report Files</h2>
@@ -286,7 +339,9 @@ const ManageReports = () => {
                 {Array.isArray(reportFiles) && reportFiles.map((file: any) => (
                   <TableRow key={file.id}>
                     <TableCell className="font-medium">
-                      {REPORT_TYPES.find(t => t.id === file.report_type)?.name || file.report_type}
+                      {REPORT_TYPES.find(t => t.id === file.report_type)?.name || 
+                       OVERALL_REPORT_TYPES.find(t => t.id === file.report_type)?.name || 
+                       file.report_type}
                     </TableCell>
                     <TableCell>{file.original_name}</TableCell>
                     <TableCell>{new Date(file.upload_date).toLocaleDateString()}</TableCell>
