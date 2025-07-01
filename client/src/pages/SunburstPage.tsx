@@ -1,26 +1,22 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ZoomableSunburst } from '@/components/ZoomableSunburst';
+import { FourRingSunburst } from '@/components/FourRingSunburst';
 import { Loader2 } from 'lucide-react';
 
 interface SunburstNode {
   name: string;
-  value?: number;
+  value: number;
+  actualValue?: number;
   children?: SunburstNode[];
-  status?: string;
-  lpcd?: number;
-  population?: number;
-  region?: string;
-  scheme?: string;
-  village?: string;
-  type: 'root' | 'region' | 'scheme' | 'village' | 'completion-category' | 'lpcd-category';
-  category?: string;
+  type: 'root' | 'region' | 'completion-category' | 'lpcd-category';
   color?: string;
+  status?: string;
+  category?: string;
 }
 
 const SunburstPage: React.FC = () => {
   const { data: sunburstData, isLoading, error, refetch } = useQuery<SunburstNode>({
-    queryKey: ['/api/sunburst-data-v2'],
+    queryKey: ['/api/sunburst-data-v3'],
     staleTime: 0, // Always consider data stale
     gcTime: 0, // Don't cache data
     refetchOnMount: true,
@@ -101,7 +97,7 @@ const SunburstPage: React.FC = () => {
       </div>
 
       <div className="grid gap-6">
-        <ZoomableSunburst 
+        <FourRingSunburst 
           data={sunburstData} 
           width={800} 
           height={600} 

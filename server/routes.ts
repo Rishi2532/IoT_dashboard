@@ -3853,9 +3853,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // 3-Ring Sunburst: Region → Completion Status → LPCD Categories
-  app.get("/api/sunburst-data-v2", async (req, res) => {
+  // New 4-ring sunburst according to user specifications
+  app.get("/api/sunburst-data-v3", async (req, res) => {
     try {
-      console.log('Building 3-ring sunburst: Region → Completion Status → LPCD Categories...');
+      console.log('Building 4-ring sunburst: Maharashtra → Regions → Completion Status → LPCD Categories...');
       
       // Get actual data from database
       const allWaterData = await storage.getAllWaterSchemeData();
@@ -3948,80 +3949,98 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       });
       
-      // Convert to 3-ring hierarchical structure for sunburst
-      const regions = Array.from(regionData.values()).map((regionInfo: any) => {
+      // Ensure we have exactly 6 regions as specified
+      const expectedRegions = ['Amravati', 'Nashik', 'Nagpur', 'Chhatrapati Sambhajinagar', 'Pune', 'Konkan'];
+      
+      // Add missing regions with empty data if they don't exist
+      expectedRegions.forEach(regionName => {
+        if (!regionData.has(regionName)) {
+          regionData.set(regionName, {
+            name: regionName,
+            type: "region",
+            schemes: new Map(),
+            completionStats: {
+              'Fully Completed': { above55: 0, below55: 0, schemeCount: 0 },
+              'Partially Completed': { above55: 0, below55: 0, schemeCount: 0 }
+            }
+          });
+        }
+      });
+      
+      // Convert to 4-ring hierarchical structure for sunburst
+      const regions = expectedRegions.map(regionName => {
+        const regionInfo = regionData.get(regionName);
         const completionCategories = [];
         
-        // Ring 2: Completion Status Categories (only show if they have schemes)
+        // Ring 3: Completion Status Categories (always show both, even if empty)
         ['Fully Completed', 'Partially Completed'].forEach(completionStatus => {
           const stats = regionInfo.completionStats[completionStatus];
           const totalVillages = stats.above55 + stats.below55;
           
-          if (stats.schemeCount > 0 && totalVillages > 0) {
-            const lpcdCategories = [];
-            
-            // Ring 3: LPCD Categories (only show if they have villages)
-            if (stats.above55 > 0) {
-              lpcdCategories.push({
-                name: `${stats.above55}`,
-                type: "lpcd-category", 
-                category: "Above 55 LPCD",
-                color: "#22c55e",
-                value: stats.above55,
-                children: []
-              });
-            }
-            
-            if (stats.below55 > 0) {
-              lpcdCategories.push({
-                name: `${stats.below55}`,
-                type: "lpcd-category",
-                category: "Below 55 LPCD",
-                color: "#ef4444", 
-                value: stats.below55,
-                children: []
-              });
-            }
-            
-            completionCategories.push({
-              name: `${completionStatus} (${stats.schemeCount} schemes)`,
-              type: "completion-category",
-              status: completionStatus,
-              color: completionStatus === 'Fully Completed' ? "#10b981" : "#f59e0b",
-              value: totalVillages,
-              children: lpcdCategories
-            });
-          }
+          const lpcdCategories = [];
+          
+          // Ring 4: LPCD Categories (always show both categories with proper proportions)
+          lpcdCategories.push({
+            name: `>55 LPCD`,
+            type: "lpcd-category", 
+            category: "Above 55 LPCD",
+            color: "#22c55e",
+            value: Math.max(1, stats.above55), // Minimum value of 1 for visualization
+            actualValue: stats.above55,
+            children: []
+          });
+          
+          lpcdCategories.push({
+            name: `<55 LPCD`,
+            type: "lpcd-category",
+            category: "Below 55 LPCD",
+            color: "#ef4444", 
+            value: Math.max(1, stats.below55), // Minimum value of 1 for visualization
+            actualValue: stats.below55,
+            children: []
+          });
+          
+          completionCategories.push({
+            name: completionStatus,
+            type: "completion-category",
+            status: completionStatus,
+            color: completionStatus === 'Fully Completed' ? "#10b981" : "#f59e0b",
+            value: Math.max(2, totalVillages), // Minimum value for equal splits
+            actualValue: totalVillages,
+            children: lpcdCategories
+          });
         });
         
         const totalRegionVillages = Object.values(regionInfo.completionStats).reduce((sum: number, stat: any) => 
           sum + stat.above55 + stat.below55, 0);
         
         return {
-          name: regionInfo.name,
+          name: regionName,
           type: "region",
           color: "#3b82f6",
-          value: totalRegionVillages,
+          value: 1, // Equal slice sizes for balanced visualization as requested
+          actualValue: totalRegionVillages,
           children: completionCategories
         };
-      }).filter(region => region.value > 0); // Only include regions with data
+      }); // Include all 6 regions always for equal slices
 
+      // Build the 4-ring sunburst data structure
       const sunburstData = {
         name: "Maharashtra",
         type: "root",
         color: "#1f2937",
         children: regions,
-        value: regions.reduce((acc: number, r: any) => acc + r.value, 0)
+        value: regions.length // 6 equal regions
       };
 
-      console.log(`Built 3-ring sunburst with ${regions.length} regions:`);
+      console.log(`Built 4-ring sunburst with ${regions.length} regions (Maharashtra → 6 Regions → Completion Status → LPCD Categories):`);
       regions.forEach(region => {
-        console.log(`  ${region.name}: ${region.children.length} completion categories, ${region.value} total villages`);
+        console.log(`  ${region.name}: ${region.children.length} completion categories, actual villages: ${region.actualValue}`);
       });
       
       res.json(sunburstData);
     } catch (error) {
-      console.error("Error building 3-ring sunburst data:", error);
+      console.error("Error building 4-ring sunburst data:", error);
       res.status(500).json({ message: "Failed to build sunburst data", error: error.message });
     }
   });
