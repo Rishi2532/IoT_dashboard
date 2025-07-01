@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { EnhancedZoomableSunburst } from '@/components/EnhancedZoomableSunburst';
+import { SimpleEnhancedSunburst } from '@/components/SimpleEnhancedSunburst';
 import { FourRingSunburst } from '@/components/FourRingSunburst';
 import { Loader2 } from 'lucide-react';
 
@@ -98,7 +99,7 @@ const SunburstPage: React.FC = () => {
       </div>
 
       <div className="grid gap-6">
-        <EnhancedZoomableSunburst 
+        <FourRingSunburst 
           data={sunburstData} 
           width={900} 
           height={900} 
