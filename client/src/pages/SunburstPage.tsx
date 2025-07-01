@@ -1,7 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { EnhancedZoomableSunburst } from '@/components/EnhancedZoomableSunburst';
-import { SimpleEnhancedSunburst } from '@/components/SimpleEnhancedSunburst';
+import { TrueZoomableSunburst } from '@/components/TrueZoomableSunburst';
 import { FourRingSunburst } from '@/components/FourRingSunburst';
 import { Loader2 } from 'lucide-react';
 
