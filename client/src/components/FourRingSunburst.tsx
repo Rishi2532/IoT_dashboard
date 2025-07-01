@@ -45,7 +45,7 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
       .style("opacity", (d: any) => {
         if (p === partitionedRootRef.current) {
           return 1;
-        } else if (d === p || (d.parent && d.parent === p) || (d.parent && d.parent && d.parent.parent === p)) {
+        } else if (d === p || (d?.parent && d.parent === p) || (d?.parent?.parent && d.parent.parent === p)) {
           return 1;
         } else {
           return 0.3;
@@ -57,7 +57,7 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
       .style("opacity", (d: any) => {
         if (p === partitionedRootRef.current) {
           return 1;
-        } else if (d === p || (d.parent && d.parent === p) || (d.parent && d.parent && d.parent.parent === p)) {
+        } else if (d === p || (d?.parent && d.parent === p) || (d?.parent?.parent && d.parent.parent === p)) {
           return 1;
         } else {
           return 0.3;
