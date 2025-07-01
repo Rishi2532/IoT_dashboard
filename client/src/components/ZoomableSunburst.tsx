@@ -111,12 +111,11 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
     // Add current property to each node for transitions
     root.each((d: any) => d.current = d);
 
-    // Create arc generator with proper scaling
+    // Create arc generator with NO padding for complete circle
     const arc = d3.arc<any>()
       .startAngle(d => d.x0)
       .endAngle(d => d.x1)
-      .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
-      .padRadius(radius * 0.1)
+      .padAngle(0) // Remove all padding to eliminate gaps
       .innerRadius(d => Math.max(0, d.y0 * radius / 4))
       .outerRadius(d => Math.max(d.y0 * radius / 4, d.y1 * radius / 4 - 1));
 
@@ -208,6 +207,15 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
       .style('fill', 'white')
       .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.8)')
       .text((d: any) => {
+        // For LPCD categories, show only the numbers, not full names
+        if (d.data.type === 'lpcd-category') {
+          if (d.data.name.includes('>55')) {
+            return `>55 LPCD (${d.data.value})`;
+          } else if (d.data.name.includes('<55')) {
+            return `<55 LPCD (${d.data.value})`;
+          }
+        }
+        
         // Truncate long names for better visibility
         const name = d.data.name;
         const maxLength = 25;
