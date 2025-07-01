@@ -3963,7 +3963,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             // Ring 3: LPCD Categories (only show if they have villages)
             if (stats.above55 > 0) {
               lpcdCategories.push({
-                name: `Villages >55 LPCD (${stats.above55})`,
+                name: `${stats.above55}`,
                 type: "lpcd-category", 
                 category: "Above 55 LPCD",
                 color: "#22c55e",
@@ -3974,7 +3974,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             
             if (stats.below55 > 0) {
               lpcdCategories.push({
-                name: `Villages <55 LPCD (${stats.below55})`,
+                name: `${stats.below55}`,
                 type: "lpcd-category",
                 category: "Below 55 LPCD",
                 color: "#ef4444", 

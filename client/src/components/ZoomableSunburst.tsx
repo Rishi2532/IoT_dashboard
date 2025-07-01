@@ -207,12 +207,12 @@ export const ZoomableSunburst: React.FC<ZoomableSunburstProps> = ({
       .style('fill', 'white')
       .style('text-shadow', '1px 1px 2px rgba(0,0,0,0.8)')
       .text((d: any) => {
-        // For LPCD categories, show only the numbers, not full names
+        // For LPCD categories, show only the numeric values
         if (d.data.type === 'lpcd-category') {
           if (d.data.name.includes('>55')) {
-            return `>55 LPCD (${d.data.value})`;
+            return `${d.data.value}`;
           } else if (d.data.name.includes('<55')) {
-            return `<55 LPCD (${d.data.value})`;
+            return `${d.data.value}`;
           }
         }
         
