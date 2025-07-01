@@ -144,39 +144,18 @@ router.get("/type/:reportType", async (req, res) => {
       return res.status(404).json({ error: "Report file not found" });
     }
 
-    // Send the file
-    const filePath = latestFile.file_path;
-    console.log(`Attempting to download file from path: ${filePath}`);
-
-    if (!fs.existsSync(filePath)) {
-      console.error(`File not found at path: ${filePath}`);
-
-      // Try alternative location (handle both Replit and VS Code paths)
-      const fileName = path.basename(filePath);
-      const altPaths = [
-        path.join("/tmp/reports", fileName),
-        path.join(__dirname, "..", "..", "uploads", "reports", fileName),
-        path.join(process.cwd(), "uploads", "reports", fileName),
-      ];
-
-      console.log(`Trying alternative paths: ${altPaths.join(", ")}`);
-
-      // Find first existing alternative path
-      const existingPath = altPaths.find((p) => fs.existsSync(p));
-
-      if (existingPath) {
-        console.log(`Found file at alternative path: ${existingPath}`);
-        return res.download(existingPath, latestFile.original_name);
-      }
-
-      return res.status(404).json({
-        error: "File not found on server",
-        path: filePath,
-        tried: altPaths,
-      });
-    }
-
-    res.download(filePath, latestFile.original_name);
+    // Return file metadata as JSON instead of downloading the file
+    console.log(`Found file metadata for report type: ${reportType}`);
+    
+    res.json({
+      id: latestFile.id,
+      file_name: latestFile.file_name,
+      original_name: latestFile.original_name,
+      file_path: latestFile.file_path,
+      report_type: latestFile.report_type,
+      upload_date: latestFile.upload_date,
+      file_size: latestFile.file_size
+    });
   } catch (error) {
     console.error("Error retrieving report file:", error);
     res.status(500).json({ error: "Failed to retrieve report file" });
