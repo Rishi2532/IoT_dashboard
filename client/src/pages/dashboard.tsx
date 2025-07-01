@@ -13,6 +13,8 @@ import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";
 import ZoomableCirclePacking from "@/components/dashboard/zoomable-circle-packing";
 import SimpleSunburst from "@/components/dashboard/simple-sunburst";
+import { EnhancedZoomableSunburst } from "@/components/EnhancedZoomableSunburst";
+
 import ChatbotComponent, {
   FilterContextProvider,
 } from "@/components/chatbot/ChatbotComponent";
@@ -34,6 +36,8 @@ import { useGeoFilter } from "@/contexts/GeoFilterContext";
 import { useGeographicFilteredSchemes } from "@/hooks/useGeographicFilteredData";
 // Import GeoJSON data for our map
 import getMaharashtraGeoJson from "@/lib/maharashtra-geojson";
+
+
 
 export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState("all");
@@ -722,7 +726,7 @@ export default function Dashboard() {
         <ZoomableCirclePacking />
       </div>
 
-      {/* Sunburst Visualization */}
+      {/* Enhanced Sunburst Visualization */}
       <div className="mb-4 sm:mb-6">
         <SimpleSunburst />
       </div>
