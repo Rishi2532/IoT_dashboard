@@ -124,6 +124,11 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### July 1, 2025
+- **Overall Report Download System**: Added comprehensive overall report download functionality with 4 new report types (Chlorine, Pressure, Water Consumption, LPCD)
+- **Smart Download Logic**: Implemented intelligent system that checks for uploaded files first, then falls back to database generation
+- **Upload Management Enhancement**: Added dedicated "Upload Overall Data Reports" section in manage reports with same functionality as existing reports
+- **Dynamic UI Indicators**: Updated report cards to show whether uploaded files are available or data will be generated from database
+- **Backend API Extensions**: Enhanced report routes to handle overall report types with proper validation and file management
 - **Sunburst Visualization Removal**: Completely removed all zoomable sunburst graph functionality per user request
 - **Code Cleanup**: Deleted all sunburst-related components, pages, API endpoints, and navigation links
 - **Sidebar Navigation Update**: Removed "Hierarchy View" link from sidebar navigation menu
