@@ -78,9 +78,51 @@ function ReportsPage() {
     trackPageVisit("Reports Page");
   }, [trackPageVisit]);
 
-  // Handle overall report downloads
+  // Handle overall report downloads - check for uploaded file first, then fallback to database generation
   const handleOverallReportDownload = async (reportType: string, reportName: string) => {
     try {
+      // First, check if there's an uploaded file for this overall report type
+      const overallReportId = `overall_${reportType.replace('-', '_')}`;
+      const uploadedFileResponse = await fetch(`/api/reports/type/${overallReportId}`);
+      
+      if (uploadedFileResponse.ok) {
+        // There's an uploaded file, download it instead
+        const fileData = await uploadedFileResponse.json();
+        const downloadResponse = await fetch(`/api/reports/${fileData.id}`);
+        
+        if (downloadResponse.ok) {
+          const blob = await downloadResponse.blob();
+          const url = window.URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.style.display = 'none';
+          a.href = url;
+          a.download = fileData.original_name;
+          document.body.appendChild(a);
+          a.click();
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
+          // Track the download
+          trackFileDownload(
+            fileData.original_name,
+            'xlsx',
+            'overall_reports_section',
+            {
+              reportType: overallReportId,
+              reportName: reportName,
+              source: 'uploaded_file'
+            }
+          );
+          
+          toast({
+            title: "Download Started",
+            description: `${reportName} report (uploaded file) is being downloaded`,
+          });
+          return;
+        }
+      }
+      
+      // No uploaded file, fallback to database generation
       const response = await fetch(`/api/reports/download/overall-${reportType}`);
       
       if (!response.ok) {
@@ -105,13 +147,14 @@ function ReportsPage() {
         'overall_reports_section',
         {
           reportType: reportType,
-          reportName: reportName
+          reportName: reportName,
+          source: 'database_generated'
         }
       );
       
       toast({
         title: "Download Started",
-        description: `${reportName} report is being downloaded`,
+        description: `${reportName} report (from database) is being downloaded`,
       });
     } catch (error) {
       console.error('Error downloading overall report:', error);
@@ -138,6 +181,12 @@ function ReportsPage() {
       .sort((a: any, b: any) => new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime());
     
     return typeReports.length > 0 ? typeReports[0] : null;
+  };
+
+  // Check if overall report has uploaded file
+  const hasOverallReportFile = (reportType: string) => {
+    const overallReportId = `overall_${reportType.replace('-', '_')}`;
+    return getLatestReportByType(overallReportId) !== null;
   };
 
   // Handle download with enhanced activity tracking
@@ -192,7 +241,10 @@ function ReportsPage() {
                 Chlorine Data
               </CardTitle>
               <CardDescription className="text-sm">
-                Complete chlorine analyzer readings and quality metrics
+                {hasOverallReportFile('chlorine') 
+                  ? 'Uploaded file available - will download your uploaded Excel file'
+                  : 'Generated from database - complete chlorine analyzer readings and quality metrics'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -202,7 +254,7 @@ function ReportsPage() {
                 variant="outline"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Download
+                {hasOverallReportFile('chlorine') ? 'Download Uploaded File' : 'Generate from Database'}
               </Button>
             </CardContent>
           </Card>
@@ -214,7 +266,10 @@ function ReportsPage() {
                 Pressure Data
               </CardTitle>
               <CardDescription className="text-sm">
-                Water pressure measurements and distribution network data
+                {hasOverallReportFile('pressure') 
+                  ? 'Uploaded file available - will download your uploaded Excel file'
+                  : 'Generated from database - water pressure measurements and distribution network data'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -224,7 +279,7 @@ function ReportsPage() {
                 variant="outline"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Download
+                {hasOverallReportFile('pressure') ? 'Download Uploaded File' : 'Generate from Database'}
               </Button>
             </CardContent>
           </Card>
@@ -236,7 +291,10 @@ function ReportsPage() {
                 Water Consumption
               </CardTitle>
               <CardDescription className="text-sm">
-                Complete water consumption data across all regions
+                {hasOverallReportFile('water-consumption') 
+                  ? 'Uploaded file available - will download your uploaded Excel file'
+                  : 'Generated from database - complete water consumption data across all regions'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -246,7 +304,7 @@ function ReportsPage() {
                 variant="outline"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Download
+                {hasOverallReportFile('water-consumption') ? 'Download Uploaded File' : 'Generate from Database'}
               </Button>
             </CardContent>
           </Card>
@@ -258,7 +316,10 @@ function ReportsPage() {
                 LPCD Data
               </CardTitle>
               <CardDescription className="text-sm">
-                Liters Per Capita Daily statistics and analysis
+                {hasOverallReportFile('lpcd') 
+                  ? 'Uploaded file available - will download your uploaded Excel file'
+                  : 'Generated from database - liters Per Capita Daily statistics and analysis'
+                }
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -268,7 +329,7 @@ function ReportsPage() {
                 variant="outline"
               >
                 <Download className="h-4 w-4 mr-2" />
-                Download
+                {hasOverallReportFile('lpcd') ? 'Download Uploaded File' : 'Generate from Database'}
               </Button>
             </CardContent>
           </Card>
