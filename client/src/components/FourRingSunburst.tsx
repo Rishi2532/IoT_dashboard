@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 
 interface SunburstNode {
   name: string;
@@ -26,6 +27,7 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const radius = Math.min(width, height) / 2 - 10;
+  const [focusedNode, setFocusedNode] = useState<any>(null);
 
   useEffect(() => {
     if (!data || !svgRef.current) return;
@@ -57,6 +59,9 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
 
     // Apply partition layout - this adds x0, x1, y0, y1 properties
     const partitionedRoot = partition(root);
+    
+    // Keep track of current focus for zooming
+    let focus = partitionedRoot;
 
     // Create arc generator for the 4 rings
     const arc = d3.arc<any>()
@@ -113,6 +118,48 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
       .style('opacity', 0)
       .style('z-index', 1000);
 
+    // Function to zoom to a specific node
+    const zoomTo = (p: any) => {
+      focus = p;
+      setFocusedNode(p);
+      
+      // Simple zoom implementation - just highlight the focused region and children
+      const transition = g.transition()
+        .duration(750);
+
+      // Update path opacity based on focus
+      transition.selectAll("path")
+        .style("opacity", (d: any) => {
+          if (p === partitionedRoot) {
+            // If clicked on center, show all
+            return 1;
+          } else if (d === p || (d.parent && d.parent === p) || (d.parent && d.parent.parent === p)) {
+            // Show the focused region and its children
+            return 1;
+          } else {
+            // Dim other regions
+            return 0.3;
+          }
+        });
+
+      // Update label opacity
+      transition.selectAll("text")
+        .style("opacity", (d: any) => {
+          if (p === partitionedRoot) {
+            return 1;
+          } else if (d === p || (d.parent && d.parent === p) || (d.parent && d.parent.parent === p)) {
+            return 1;
+          } else {
+            return 0.3;
+          }
+        });
+    };
+
+    // Reset zoom function
+    const resetZoom = () => {
+      zoomTo(partitionedRoot);
+    };
+
     // Create arcs using partitioned data
     const arcs = g.selectAll('path')
       .data(partitionedRoot.descendants())
@@ -122,6 +169,12 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
       .style('stroke', '#fff')
       .style('stroke-width', 1)
       .style('cursor', 'pointer')
+      .on('click', function(event, d: any) {
+        // Only zoom on ring 1 (regions) or center
+        if (d.depth <= 1) {
+          zoomTo(d === focus ? partitionedRoot : d);
+        }
+      })
       .on('mouseover', function(event, d: any) {
         // Highlight segment
         d3.select(this).style('stroke-width', 2);
@@ -134,6 +187,7 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
           if (d.data.actualValue !== undefined) {
             content += `<br/>Villages: ${d.data.actualValue}`;
           }
+          content += `<br/><em>Click to zoom</em>`;
         } else if (d.depth === 2) {
           content += `<br/>Status: ${d.data.status}`;
           if (d.data.actualValue !== undefined) {
@@ -198,10 +252,45 @@ export const FourRingSunburst: React.FC<FourRingSunburstProps> = ({
     }
   };
 
+  // Helper function to get breadcrumb path
+  const getBreadcrumbPath = (node: any): string[] => {
+    if (!node || node.data?.type === 'root') {
+      return ['Maharashtra'];
+    }
+    const path = ['Maharashtra'];
+    if (node.data?.type === 'region') {
+      path.push(node.data.name);
+    }
+    return path;
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle>Maharashtra Water Infrastructure Hierarchy</CardTitle>
+        <CardTitle className="flex items-center justify-between">
+          Maharashtra Water Infrastructure Hierarchy
+          {focusedNode && focusedNode.data?.type !== 'root' && (
+            <Button variant="outline" size="sm" onClick={() => zoomTo(partitionedRoot)}>
+              Reset View
+            </Button>
+          )}
+        </CardTitle>
+        
+        {/* Breadcrumb Navigation */}
+        {focusedNode && (
+          <div className="flex items-center space-x-2 text-sm text-muted-foreground mb-2">
+            <span>Current View:</span>
+            {getBreadcrumbPath(focusedNode).map((item, index, arr) => (
+              <span key={index} className="flex items-center">
+                <span className={index === arr.length - 1 ? "font-medium text-foreground" : ""}>
+                  {item}
+                </span>
+                {index < arr.length - 1 && <span className="mx-1">→</span>}
+              </span>
+            ))}
+          </div>
+        )}
+        
         <div className="text-sm text-muted-foreground">
           <div className="grid grid-cols-2 gap-4 mt-2">
             <div>
