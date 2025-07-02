@@ -78,9 +78,7 @@ export default function ZoomableSunburst() {
           scheme.completion_status.trim() !== ''
         );
 
-        // Use the total_schemes_integrated from regions table for the region display value
-        const regionSchemeCount = region.total_schemes_integrated || regionSchemes.length;
-        console.log(`Region ${region.region_name}: ${regionSchemeCount} total schemes (${regionSchemes.length} connected)`);
+        console.log(`Region ${region.region_name}: ${regionSchemes.length} connected schemes`);
 
         // Group by circle - filter out null/undefined circles and give meaningful names
         const circleGroups = d3.group(regionSchemes, d => {
@@ -91,8 +89,7 @@ export default function ZoomableSunburst() {
         });
 
         return {
-          name: `${region.region_name} (${regionSchemeCount})`,
-          value: regionSchemeCount, // Use the total schemes from regions table
+          name: region.region_name,
           children: Array.from(circleGroups, ([circleName, circleSchemes]) => {
             // Split schemes by completion status
             const completedSchemes = circleSchemes.filter(scheme => 
@@ -225,8 +222,10 @@ export default function ZoomableSunburst() {
     const arc = d3.arc<any>()
         .startAngle(d => d.x0)
         .endAngle(d => d.x1)
+        .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
+        .padRadius(radius * 1.5)
         .innerRadius(d => d.y0 * radius)
-        .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius));
+        .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius - 1));
 
     // Create the SVG container
     const svg = d3.select(svgRef.current)
