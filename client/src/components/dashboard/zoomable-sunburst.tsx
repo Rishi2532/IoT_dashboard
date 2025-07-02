@@ -226,7 +226,7 @@ export default function ZoomableSunburst() {
         .startAngle(d => d.x0)
         .endAngle(d => d.x1)
         .innerRadius(d => d.y0 * radius)
-        .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius - 1));
+        .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius));
 
     // Create the SVG container
     const svg = d3.select(svgRef.current)
