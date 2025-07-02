@@ -17,6 +17,7 @@ import ForgotPasswordPage from "./pages/forgot-password";
 import LpcdPage from "./pages/LpcdPage";
 import SchemeLpcdPage from "./pages/SchemeLpcdPage";
 import MapPreviewPage from "./pages/map-preview";
+import HierarchyPage from "./pages/HierarchyPage";
 import {
   ChlorineDashboard,
   ChlorineImport,
@@ -183,6 +184,12 @@ function App() {
               <Route path="/map-preview">
                 <ProtectedRoute>
                   <MapPreviewPage />
+                </ProtectedRoute>
+              </Route>
+
+              <Route path="/hierarchy">
+                <ProtectedRoute>
+                  <HierarchyPage />
                 </ProtectedRoute>
               </Route>
 

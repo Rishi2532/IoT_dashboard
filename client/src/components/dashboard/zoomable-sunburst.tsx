@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import * as d3 from 'd3';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery } from "@tanstack/react-query";
+import type { WaterSchemeData as SharedWaterSchemeData } from '@shared/schema';
 
 interface RegionData {
   region_id: number;
@@ -24,16 +25,7 @@ interface SchemeData {
   completed_villages: number;
 }
 
-interface WaterSchemeData {
-  id?: number;
-  scheme_name: string;
-  village_name: string;
-  region: string;
-  circle: string;
-  below_55_lpcd_count: number;
-  above_55_lpcd_count: number;
-  population: number;
-}
+type WaterSchemeData = SharedWaterSchemeData;
 
 interface HierarchyNode {
   name: string;
@@ -118,14 +110,37 @@ export default function ZoomableSunburst() {
 
             // Function to calculate LPCD performance for schemes
             const calculateLPCDPerformance = (schemes: SchemeData[]) => {
-              const schemeNames = schemes.map(s => s.scheme_name);
+              const schemeNames = schemes.map(s => s.scheme_name).filter(name => name != null);
               const relevantWaterData = waterSchemeArray.filter(wd => 
-                schemeNames.includes(wd.scheme_name)
+                wd.scheme_name && schemeNames.includes(wd.scheme_name)
               );
 
-              // Sum up the LPCD counts from all villages in these schemes
-              const highLPCD = relevantWaterData.reduce((sum, wd) => sum + (wd.above_55_lpcd_count || 0), 0);
-              const lowLPCD = relevantWaterData.reduce((sum, wd) => sum + (wd.below_55_lpcd_count || 0), 0);
+              // Use same logic as LPCD dashboard: deduplicate villages and use day 7 LPCD values
+              const uniqueVillages = new Map();
+              
+              relevantWaterData.forEach(wd => {
+                const key = `${wd.village_name}|${wd.region}`;
+                if (!uniqueVillages.has(key)) {
+                  uniqueVillages.set(key, {
+                    village_name: wd.village_name,
+                    region: wd.region,
+                    lpcd_value_day7: wd.lpcd_value_day7
+                  });
+                }
+              });
+
+              let highLPCD = 0;
+              let lowLPCD = 0;
+              
+              uniqueVillages.forEach(village => {
+                const lpcdDay7 = village.lpcd_value_day7;
+                if (lpcdDay7 && lpcdDay7 > 55) {
+                  highLPCD++;
+                } else if (lpcdDay7 !== undefined && lpcdDay7 !== null && lpcdDay7 >= 0) {
+                  // Includes both below 55 and zero LPCD (matches dashboard logic)
+                  lowLPCD++;
+                }
+              });
 
               return {
                 high: highLPCD,
