@@ -72,9 +72,12 @@ export default function ZoomableSunburst() {
     const root: HierarchyNode = {
       name: "Maharashtra",
       children: regionsArray.map(region => {
-        // Get all schemes for this region
+        // Get all schemes for this region - only include connected schemes
         const regionSchemes = schemeStatusArray.filter(scheme => 
-          scheme.region === region.region_name
+          scheme.region === region.region_name &&
+          scheme.completion_status &&
+          scheme.completion_status !== 'Not-Connected' &&
+          scheme.completion_status.trim() !== ''
         );
 
         // Group by circle - filter out null/undefined circles and give meaningful names
