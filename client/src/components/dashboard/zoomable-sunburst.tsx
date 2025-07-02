@@ -77,8 +77,13 @@ export default function ZoomableSunburst() {
           scheme.region === region.region_name
         );
 
-        // Group by circle
-        const circleGroups = d3.group(regionSchemes, d => d.circle || 'Unknown Circle');
+        // Group by circle - filter out null/undefined circles and give meaningful names
+        const circleGroups = d3.group(regionSchemes, d => {
+          if (!d.circle || d.circle.trim() === '' || d.circle.toLowerCase() === 'null' || d.circle.toLowerCase() === 'na') {
+            return 'Other Circles';
+          }
+          return d.circle.trim();
+        });
 
         return {
           name: region.region_name,
