@@ -78,7 +78,9 @@ export default function ZoomableSunburst() {
           scheme.completion_status.trim() !== ''
         );
 
-        console.log(`Region ${region.region_name}: ${regionSchemes.length} connected schemes`);
+        // Use the total_schemes_integrated from regions table for the region display value
+        const regionSchemeCount = region.total_schemes_integrated || regionSchemes.length;
+        console.log(`Region ${region.region_name}: ${regionSchemeCount} total schemes (${regionSchemes.length} connected)`);
 
         // Group by circle - filter out null/undefined circles and give meaningful names
         const circleGroups = d3.group(regionSchemes, d => {
@@ -89,7 +91,8 @@ export default function ZoomableSunburst() {
         });
 
         return {
-          name: region.region_name,
+          name: `${region.region_name} (${regionSchemeCount})`,
+          value: regionSchemeCount, // Use the total schemes from regions table
           children: Array.from(circleGroups, ([circleName, circleSchemes]) => {
             // Split schemes by completion status
             const completedSchemes = circleSchemes.filter(scheme => 
