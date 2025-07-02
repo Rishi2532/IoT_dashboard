@@ -265,10 +265,9 @@ export default function ZoomableSunburst() {
         .style("cursor", "pointer")
         .on("click", clicked);
 
-    // Add tooltips
-    const format = d3.format(",d");
+    // Add tooltips (without numbers)
     path.append("title")
-        .text((d: any) => `${d.ancestors().map((d: any) => d.data.name).reverse().join("/")}\n${format(d.value || 0)}`);
+        .text((d: any) => `${d.ancestors().map((d: any) => d.data.name).reverse().join("/")}`);
 
     // Add labels
     const label = svg.append("g")
