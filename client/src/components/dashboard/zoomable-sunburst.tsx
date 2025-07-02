@@ -94,6 +94,12 @@ export default function ZoomableSunburst() {
               scheme.completion_status !== 'Fully Completed'
             );
 
+            // Only include circles that have connected schemes (Fully Completed + In Progress)
+            const totalConnectedSchemes = completedSchemes.length + inProgressSchemes.length;
+            if (totalConnectedSchemes === 0) {
+              return null; // Skip circles with no connected schemes
+            }
+
             // Function to calculate LPCD performance for schemes
             const calculateLPCDPerformance = (schemes: SchemeData[]) => {
               const schemeNames = schemes.map(s => s.scheme_name);
@@ -119,22 +125,24 @@ export default function ZoomableSunburst() {
               name: circleName,
               children: [
                 {
-                  name: "Fully Completed",
+                  name: `Fully Completed (${completedSchemes.length})`,
+                  value: completedSchemes.length,
                   children: [
-                    { name: ">55 LPCD", value: completedLPCD.high },
-                    { name: "≤55 LPCD", value: completedLPCD.low }
+                    { name: `>55 LPCD (${completedLPCD.high})`, value: completedLPCD.high },
+                    { name: `≤55 LPCD (${completedLPCD.low})`, value: completedLPCD.low }
                   ]
                 },
                 {
-                  name: "In Progress", 
+                  name: `In Progress (${inProgressSchemes.length})`, 
+                  value: inProgressSchemes.length,
                   children: [
-                    { name: ">55 LPCD", value: inProgressLPCD.high },
-                    { name: "≤55 LPCD", value: inProgressLPCD.low }
+                    { name: `>55 LPCD (${inProgressLPCD.high})`, value: inProgressLPCD.high },
+                    { name: `≤55 LPCD (${inProgressLPCD.low})`, value: inProgressLPCD.low }
                   ]
                 }
               ]
             };
-          })
+          }).filter(Boolean) // Remove null entries (circles with no connected schemes)
         };
       })
     };
@@ -181,7 +189,7 @@ export default function ZoomableSunburst() {
 
     // Create the SVG container
     const svg = d3.select(svgRef.current)
-        .attr("viewBox", [-width / 2, -height / 2, width, width])
+        .attr("viewBox", `${-width / 2} ${-height / 2} ${width} ${width}`)
         .style("font", "10px sans-serif");
 
     // Helper functions
