@@ -168,7 +168,7 @@ export default function ZoomableSunburst() {
     d3.select(svgRef.current).selectAll("*").remove();
 
     // Chart dimensions
-    const width = 928;
+    const width = 600;
     const height = width;
     const radius = width / 6;
 
