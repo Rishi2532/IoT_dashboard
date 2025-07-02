@@ -39,14 +39,11 @@ interface HierarchyNode {
   name: string;
   value?: number;
   children?: HierarchyNode[];
-  color?: string;
 }
 
 export default function ZoomableSunburst() {
   const svgRef = useRef<SVGSVGElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [breadcrumb, setBreadcrumb] = useState<string[]>(['Maharashtra']);
-  const [currentRoot, setCurrentRoot] = useState<any>(null);
 
   // Fetch all required data
   const { data: regions, isLoading: regionsLoading } = useQuery<RegionData[]>({
@@ -63,7 +60,7 @@ export default function ZoomableSunburst() {
 
   const isLoading = regionsLoading || schemeStatusLoading || waterSchemeDataLoading;
 
-  // Build hierarchy data with proper colors
+  // Build hierarchy data
   const buildHierarchyData = (): HierarchyNode | null => {
     if (!regions || !schemeStatus || !waterSchemeData) return null;
 
@@ -71,16 +68,10 @@ export default function ZoomableSunburst() {
     const schemeStatusArray = Array.isArray(schemeStatus) ? schemeStatus : [];
     const waterSchemeArray = Array.isArray(waterSchemeData) ? waterSchemeData : [];
 
-    // Color schemes for different levels
-    const regionColors = ['#8B5CF6', '#06B6D4', '#10B981', '#F59E0B', '#EF4444', '#EC4899'];
-    const statusColors = { 'Fully Completed': '#22C55E', 'In Progress': '#F97316' };
-    const lPCDColors = { '>55 LPCD': '#16A34A', '≤55 LPCD': '#DC2626' };
-
     // Build the hierarchy: Maharashtra -> Regions -> Circles -> Status -> LPCD Performance
     const root: HierarchyNode = {
       name: "Maharashtra",
-      color: '#1F2937',
-      children: regionsArray.map((region, regionIndex) => {
+      children: regionsArray.map(region => {
         // Get all schemes for this region
         const regionSchemes = schemeStatusArray.filter(scheme => 
           scheme.region === region.region_name
@@ -91,7 +82,6 @@ export default function ZoomableSunburst() {
 
         return {
           name: region.region_name,
-          color: regionColors[regionIndex % regionColors.length],
           children: Array.from(circleGroups, ([circleName, circleSchemes]) => {
             // Split schemes by completion status
             const completedSchemes = circleSchemes.filter(scheme => 
@@ -127,38 +117,19 @@ export default function ZoomableSunburst() {
 
             return {
               name: circleName,
-              color: d3.interpolateViridis(Math.random()),
               children: [
                 {
                   name: "Fully Completed",
-                  color: statusColors['Fully Completed'],
                   children: [
-                    { 
-                      name: ">55 LPCD", 
-                      value: completedLPCD.high,
-                      color: lPCDColors['>55 LPCD']
-                    },
-                    { 
-                      name: "≤55 LPCD", 
-                      value: completedLPCD.low,
-                      color: lPCDColors['≤55 LPCD']
-                    }
+                    { name: ">55 LPCD", value: completedLPCD.high },
+                    { name: "≤55 LPCD", value: completedLPCD.low }
                   ]
                 },
                 {
-                  name: "In Progress",
-                  color: statusColors['In Progress'],
+                  name: "In Progress", 
                   children: [
-                    { 
-                      name: ">55 LPCD", 
-                      value: inProgressLPCD.high,
-                      color: lPCDColors['>55 LPCD']
-                    },
-                    { 
-                      name: "≤55 LPCD", 
-                      value: inProgressLPCD.low,
-                      color: lPCDColors['≤55 LPCD']
-                    }
+                    { name: ">55 LPCD", value: inProgressLPCD.high },
+                    { name: "≤55 LPCD", value: inProgressLPCD.low }
                   ]
                 }
               ]
@@ -174,163 +145,140 @@ export default function ZoomableSunburst() {
   useEffect(() => {
     if (!svgRef.current || !containerRef.current || isLoading) return;
 
-    const hierarchyData = buildHierarchyData();
-    if (!hierarchyData) return;
+    const data = buildHierarchyData();
+    if (!data) return;
 
     // Clear previous content
     d3.select(svgRef.current).selectAll("*").remove();
 
-    // Container dimensions
-    const containerWidth = containerRef.current.offsetWidth;
-    const width = Math.max(800, containerWidth);
-    const height = 600;
-    const radius = Math.min(width, height) / 2 - 60;
+    // Chart dimensions
+    const width = 928;
+    const height = width;
+    const radius = width / 6;
 
-    // Create SVG
-    const svg = d3.select(svgRef.current)
-      .attr("width", width)
-      .attr("height", height);
+    // Create the color scale
+    const color = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, (data.children?.length || 0) + 1));
 
-    const g = svg.append("g")
-      .attr("transform", `translate(${width / 2}, ${height / 2})`);
+    // Compute the layout
+    const hierarchy = d3.hierarchy(data)
+        .sum(d => d.value || 0)
+        .sort((a, b) => (b.value || 0) - (a.value || 0));
+    
+    const root = d3.partition()
+        .size([2 * Math.PI, hierarchy.height + 1])
+        (hierarchy);
+    
+    root.each((d: any) => d.current = d);
 
-    // Create hierarchy
-    const root = d3.hierarchy(currentRoot || hierarchyData)
-      .sum(d => d.value || 0)
-      .sort((a, b) => (b.value || 0) - (a.value || 0));
-
-    // Create partition
-    const partition = d3.partition<HierarchyNode>()
-      .size([2 * Math.PI, radius]);
-
-    partition(root);
-
-    // Arc generator
+    // Create the arc generator
     const arc = d3.arc<any>()
-      .startAngle(d => d.x0)
-      .endAngle(d => d.x1)
-      .innerRadius(d => Math.sqrt(d.y0))
-      .outerRadius(d => Math.sqrt(d.y1));
+        .startAngle(d => d.x0)
+        .endAngle(d => d.x1)
+        .padAngle(d => Math.min((d.x1 - d.x0) / 2, 0.005))
+        .padRadius(radius * 1.5)
+        .innerRadius(d => d.y0 * radius)
+        .outerRadius(d => Math.max(d.y0 * radius, d.y1 * radius - 1));
 
-    // Create arcs
-    const arcs = g.selectAll("path")
-      .data(root.descendants())
-      .enter()
-      .append("path")
-      .attr("d", arc)
-      .style("fill", d => {
-        if (d.data.color) return d3.color(d.data.color)?.toString() || '#6B7280';
-        // Fallback color based on depth
-        const colors = ['#1F2937', '#8B5CF6', '#06B6D4', '#10B981', '#F59E0B'];
-        return colors[d.depth] || '#6B7280';
-      })
-      .style("stroke", "#fff")
-      .style("stroke-width", 2)
-      .style("cursor", d => d.children ? "pointer" : "default")
-      .style("opacity", 0.8)
-      .on("click", (event, d) => {
-        if (d.children) {
-          zoomTo(d);
-        }
-      })
-      .on("mouseover", function(event, d) {
-        d3.select(this).style("opacity", 1);
-        
-        // Show tooltip
-        const tooltip = d3.select("body").append("div")
-          .attr("class", "sunburst-tooltip")
-          .style("position", "absolute")
-          .style("background", "rgba(0, 0, 0, 0.9)")
-          .style("color", "white")
-          .style("padding", "12px")
-          .style("border-radius", "8px")
-          .style("font-size", "14px")
-          .style("font-weight", "500")
-          .style("pointer-events", "none")
-          .style("z-index", "1000")
-          .style("box-shadow", "0 4px 12px rgba(0, 0, 0, 0.3)");
+    // Create the SVG container
+    const svg = d3.select(svgRef.current)
+        .attr("viewBox", [-width / 2, -height / 2, width, width])
+        .style("font", "10px sans-serif");
 
-        tooltip.html(`
-          <div><strong>${d.data.name}</strong></div>
-          ${d.value ? `<div>Count: ${d.value}</div>` : ''}
-          ${d.children ? '<div style="margin-top: 8px; font-size: 12px; opacity: 0.8;">Click to zoom in</div>' : ''}
-        `)
-          .style("left", (event.pageX + 15) + "px")
-          .style("top", (event.pageY - 15) + "px");
-      })
-      .on("mouseout", function() {
-        d3.select(this).style("opacity", 0.8);
-        d3.selectAll(".sunburst-tooltip").remove();
-      });
-
-    // Add text labels
-    const texts = g.selectAll("text")
-      .data(root.descendants().filter(d => d.depth > 0 && (d.x1 - d.x0) > 0.05))
-      .enter()
-      .append("text")
-      .attr("transform", d => {
-        const angle = (d.x0 + d.x1) / 2;
-        const radius = (Math.sqrt(d.y0) + Math.sqrt(d.y1)) / 2;
-        let rotation = (angle * 180 / Math.PI) - 90;
-        
-        // Flip text if it would be upside down
-        if (rotation > 90) rotation -= 180;
-        
-        return `translate(${Math.sin(angle) * radius}, ${-Math.cos(angle) * radius}) rotate(${rotation})`;
-      })
-      .style("text-anchor", "middle")
-      .style("font-size", d => {
-        // Dynamic font size based on segment size and depth
-        const segmentSize = d.x1 - d.x0;
-        const baseSize = Math.max(8, Math.min(14, segmentSize * 100));
-        return `${baseSize}px`;
-      })
-      .style("font-weight", "600")
-      .style("fill", "#000")
-      .style("pointer-events", "none")
-      .text(d => {
-        const segmentSize = d.x1 - d.x0;
-        let text = d.data.name;
-        
-        // Show count for leaf nodes
-        if (!d.children && d.value) {
-          text += ` (${d.value})`;
-        }
-        
-        // Truncate long text for small segments
-        if (segmentSize < 0.1 && text.length > 8) {
-          text = text.substring(0, 8) + '...';
-        }
-        
-        return text;
-      });
-
-    // Zoom function
-    const zoomTo = (node: any) => {
-      // Update breadcrumb
-      const pathArray = [];
-      let current = node;
-      while (current) {
-        pathArray.unshift(current.data.name);
-        current = current.parent;
-      }
-      setBreadcrumb(pathArray);
-      setCurrentRoot(node.data);
-    };
-
-    if (!currentRoot) {
-      setCurrentRoot(hierarchyData);
+    // Helper functions
+    function arcVisible(d: any) {
+      return d.y1 <= 3 && d.y0 >= 1 && d.x1 > d.x0;
     }
 
-  }, [isLoading, regions, schemeStatus, waterSchemeData, currentRoot]);
-
-  // Handle breadcrumb click
-  const handleBreadcrumbClick = (index: number) => {
-    if (index === 0) {
-      setBreadcrumb(['Maharashtra']);
-      setCurrentRoot(null);
+    function labelVisible(d: any) {
+      return d.y1 <= 3 && d.y0 >= 1 && (d.y1 - d.y0) * (d.x1 - d.x0) > 0.03;
     }
-  };
+
+    function labelTransform(d: any) {
+      const x = (d.x0 + d.x1) / 2 * 180 / Math.PI;
+      const y = (d.y0 + d.y1) / 2 * radius;
+      return `rotate(${x - 90}) translate(${y},0) rotate(${x < 180 ? 0 : 180})`;
+    }
+
+    // Append the arcs
+    const path = svg.append("g")
+      .selectAll("path")
+      .data(root.descendants().slice(1))
+      .join("path")
+        .attr("fill", (d: any) => { 
+          while (d.depth > 1) d = d.parent; 
+          return color(d.data.name); 
+        })
+        .attr("fill-opacity", (d: any) => arcVisible(d.current) ? (d.children ? 0.6 : 0.4) : 0)
+        .attr("pointer-events", (d: any) => arcVisible(d.current) ? "auto" : "none")
+        .attr("d", (d: any) => arc(d.current));
+
+    // Add click functionality
+    path.filter((d: any) => d.children)
+        .style("cursor", "pointer")
+        .on("click", clicked);
+
+    // Add tooltips
+    const format = d3.format(",d");
+    path.append("title")
+        .text((d: any) => `${d.ancestors().map((d: any) => d.data.name).reverse().join("/")}\n${format(d.value || 0)}`);
+
+    // Add labels
+    const label = svg.append("g")
+        .attr("pointer-events", "none")
+        .attr("text-anchor", "middle")
+        .style("user-select", "none")
+      .selectAll("text")
+      .data(root.descendants().slice(1))
+      .join("text")
+        .attr("dy", "0.35em")
+        .attr("fill-opacity", (d: any) => +labelVisible(d.current))
+        .attr("transform", (d: any) => labelTransform(d.current))
+        .text((d: any) => d.data.name);
+
+    // Add center circle for navigation
+    const parent = svg.append("circle")
+        .datum(root)
+        .attr("r", radius)
+        .attr("fill", "none")
+        .attr("pointer-events", "all")
+        .on("click", clicked);
+
+    // Handle zoom on click
+    function clicked(event: any, p: any) {
+      parent.datum(p.parent || root);
+
+      root.each((d: any) => d.target = {
+        x0: Math.max(0, Math.min(1, (d.x0 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+        x1: Math.max(0, Math.min(1, (d.x1 - p.x0) / (p.x1 - p.x0))) * 2 * Math.PI,
+        y0: Math.max(0, d.y0 - p.depth),
+        y1: Math.max(0, d.y1 - p.depth)
+      });
+
+      const t = svg.transition().duration(event.altKey ? 7500 : 750);
+
+      // Transition the data on all arcs, even the ones that aren't visible,
+      // so that if this transition is interrupted, entering arcs will start
+      // the next transition from the desired position.
+      path.transition(t)
+          .tween("data", (d: any) => {
+            const i = d3.interpolate(d.current, d.target);
+            return (t: number) => d.current = i(t);
+          })
+        .filter(function(d: any) {
+          return +(this as any).getAttribute("fill-opacity") || arcVisible(d.target);
+        })
+          .attr("fill-opacity", (d: any) => arcVisible(d.target) ? (d.children ? 0.6 : 0.4) : 0)
+          .attr("pointer-events", (d: any) => arcVisible(d.target) ? "auto" : "none")
+          .attrTween("d", (d: any) => () => arc(d.current));
+
+      label.filter(function(d: any) {
+          return +(this as any).getAttribute("fill-opacity") || labelVisible(d.target);
+        }).transition(t)
+          .attr("fill-opacity", (d: any) => +labelVisible(d.target))
+          .attrTween("transform", (d: any) => () => labelTransform(d.current));
+    }
+
+  }, [isLoading, regions, schemeStatus, waterSchemeData]);
 
   if (isLoading) {
     return (
@@ -357,30 +305,10 @@ export default function ZoomableSunburst() {
         <p className="text-sm text-gray-600">
           Interactive exploration: Maharashtra → Regions → Circles → Status → LPCD Performance. Click segments to zoom in.
         </p>
-        
-        {/* Breadcrumb Navigation */}
-        <div className="flex items-center space-x-2 text-sm">
-          <span className="text-gray-500">Path:</span>
-          {breadcrumb.map((item, index) => (
-            <React.Fragment key={index}>
-              {index > 0 && <span className="text-gray-400">→</span>}
-              <button
-                onClick={() => handleBreadcrumbClick(index)}
-                className={`px-3 py-1 rounded-md transition-colors ${
-                  index === breadcrumb.length - 1
-                    ? 'bg-blue-100 text-blue-800 font-semibold'
-                    : 'text-blue-600 hover:bg-blue-50'
-                }`}
-              >
-                {item}
-              </button>
-            </React.Fragment>
-          ))}
-        </div>
       </CardHeader>
       <CardContent>
-        <div ref={containerRef} className="w-full">
-          <svg ref={svgRef} className="drop-shadow-lg"></svg>
+        <div ref={containerRef} className="w-full flex justify-center">
+          <svg ref={svgRef} className="max-w-full h-auto"></svg>
         </div>
         
         {/* Legend */}
