@@ -19,19 +19,19 @@ interface SchemeData {
   scheme_name: string;
   region: string;
   circle: string;
-  completion_status: string;
-  total_villages: number;
-  completed_villages: number;
+  fully_completion_scheme_status: string;
+  total_villages_integrated: number;
+  fully_completed_villages: number;
 }
 
 interface WaterSchemeData {
-  id: number;
+  id?: number;
   scheme_name: string;
   village_name: string;
   region: string;
   circle: string;
-  lpcd: number;
-  water_available: number;
+  below_55_lpcd_count: number;
+  above_55_lpcd_count: number;
   population: number;
 }
 
@@ -75,9 +75,9 @@ export default function ZoomableSunburst() {
         // Get all schemes for this region - only include connected schemes
         const regionSchemes = schemeStatusArray.filter(scheme => 
           scheme.region === region.region_name &&
-          scheme.completion_status &&
-          scheme.completion_status !== 'Not-Connected' &&
-          scheme.completion_status.trim() !== ''
+          scheme.fully_completion_scheme_status &&
+          scheme.fully_completion_scheme_status !== 'Not-Connected' &&
+          scheme.fully_completion_scheme_status.trim() !== ''
         );
 
         // Group by circle - filter out null/undefined circles and give meaningful names
@@ -93,13 +93,13 @@ export default function ZoomableSunburst() {
           children: Array.from(circleGroups, ([circleName, circleSchemes]) => {
             // Split schemes by completion status
             const completedSchemes = circleSchemes.filter(scheme => 
-              scheme.completion_status === 'Completed' || 
-              scheme.completion_status === 'Fully Completed'
+              scheme.fully_completion_scheme_status === 'Completed' || 
+              scheme.fully_completion_scheme_status === 'Fully Completed'
             );
             
             const inProgressSchemes = circleSchemes.filter(scheme => 
-              scheme.completion_status !== 'Completed' && 
-              scheme.completion_status !== 'Fully Completed'
+              scheme.fully_completion_scheme_status !== 'Completed' && 
+              scheme.fully_completion_scheme_status !== 'Fully Completed'
             );
 
             // Only include circles that have connected schemes (Fully Completed + In Progress)
@@ -112,18 +112,17 @@ export default function ZoomableSunburst() {
             const calculateLPCDPerformance = (schemes: SchemeData[]) => {
               const schemeNames = schemes.map(s => s.scheme_name);
               const relevantWaterData = waterSchemeArray.filter(wd => 
-                schemeNames.includes(wd.scheme_name) && 
-                wd.lpcd && 
-                wd.lpcd > 0
+                schemeNames.includes(wd.scheme_name)
               );
 
-              const highLPCD = relevantWaterData.filter(wd => wd.lpcd > 55);
-              const lowLPCD = relevantWaterData.filter(wd => wd.lpcd <= 55);
+              // Sum up the LPCD counts from all villages in these schemes
+              const highLPCD = relevantWaterData.reduce((sum, wd) => sum + (wd.above_55_lpcd_count || 0), 0);
+              const lowLPCD = relevantWaterData.reduce((sum, wd) => sum + (wd.below_55_lpcd_count || 0), 0);
 
               return {
-                high: highLPCD.length,
-                low: lowLPCD.length,
-                total: relevantWaterData.length
+                high: highLPCD,
+                low: lowLPCD,
+                total: highLPCD + lowLPCD
               };
             };
 
