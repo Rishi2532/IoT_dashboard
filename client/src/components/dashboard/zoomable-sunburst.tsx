@@ -90,6 +90,7 @@ export default function ZoomableSunburst() {
 
         return {
           name: region.region_name,
+          value: regionSchemes.length, // Set the region value to the total number of schemes in this region
           children: Array.from(circleGroups, ([circleName, circleSchemes]) => {
             // Split schemes by completion status
             const completedSchemes = circleSchemes.filter(scheme => 
@@ -108,44 +109,56 @@ export default function ZoomableSunburst() {
               return null; // Skip circles with no connected schemes
             }
 
-            // Function to calculate LPCD performance for schemes
+            // Function to calculate LPCD performance for schemes (scheme-based counting)
             const calculateLPCDPerformance = (schemes: SchemeData[]) => {
               const schemeNames = schemes.map(s => s.scheme_name).filter(name => name != null);
               const relevantWaterData = waterSchemeArray.filter(wd => 
                 wd.scheme_name && schemeNames.includes(wd.scheme_name)
               );
 
-              // Use same logic as LPCD dashboard: deduplicate villages and use day 7 LPCD values
-              const uniqueVillages = new Map();
+              // For each scheme, determine if it has good or poor LPCD performance
+              let highLPCDSchemes = 0;
+              let lowLPCDSchemes = 0;
               
-              relevantWaterData.forEach(wd => {
-                const key = `${wd.village_name}|${wd.region}`;
-                if (!uniqueVillages.has(key)) {
-                  uniqueVillages.set(key, {
-                    village_name: wd.village_name,
-                    region: wd.region,
-                    lpcd_value_day7: wd.lpcd_value_day7
-                  });
+              schemes.forEach(scheme => {
+                // Get water data for this specific scheme
+                const schemeWaterData = relevantWaterData.filter(wd => wd.scheme_name === scheme.scheme_name);
+                
+                if (schemeWaterData.length === 0) {
+                  // No water data for this scheme - count as scheme with no data
+                  return;
                 }
-              });
 
-              let highLPCD = 0;
-              let lowLPCD = 0;
-              
-              uniqueVillages.forEach(village => {
-                const lpcdDay7 = village.lpcd_value_day7;
-                if (lpcdDay7 && lpcdDay7 > 55) {
-                  highLPCD++;
-                } else if (lpcdDay7 !== undefined && lpcdDay7 !== null && lpcdDay7 >= 0) {
-                  // Includes both below 55 and zero LPCD (matches dashboard logic)
-                  lowLPCD++;
+                // Calculate average LPCD for villages in this scheme
+                const validLPCDValues = schemeWaterData
+                  .map(wd => {
+                    const value = wd.lpcd_value_day7;
+                    if (typeof value === 'string') {
+                      const parsed = parseFloat(value);
+                      return isNaN(parsed) ? null : parsed;
+                    }
+                    return value;
+                  })
+                  .filter((lpcd): lpcd is number => lpcd !== undefined && lpcd !== null && lpcd >= 0);
+                
+                if (validLPCDValues.length === 0) {
+                  // No valid LPCD data for this scheme
+                  return;
+                }
+
+                const avgLPCD = validLPCDValues.reduce((sum, lpcd) => sum + lpcd, 0) / validLPCDValues.length;
+                
+                if (avgLPCD > 55) {
+                  highLPCDSchemes++;
+                } else {
+                  lowLPCDSchemes++;
                 }
               });
 
               return {
-                high: highLPCD,
-                low: lowLPCD,
-                total: highLPCD + lowLPCD
+                high: highLPCDSchemes,
+                low: lowLPCDSchemes,
+                total: highLPCDSchemes + lowLPCDSchemes
               };
             };
 
@@ -154,15 +167,17 @@ export default function ZoomableSunburst() {
 
             return {
               name: circleName,
+              value: circleSchemes.length, // Set circle value to total schemes in this circle
               children: [
                 {
                   name: `Fully Completed (${completedSchemes.length})`,
                   value: completedSchemes.length,
                   children: completedLPCD.total > 0 ? [
                     ...(completedLPCD.high > 0 ? [{ name: `>55 LPCD (${completedLPCD.high})`, value: completedLPCD.high }] : []),
-                    ...(completedLPCD.low > 0 ? [{ name: `≤55 LPCD (${completedLPCD.low})`, value: completedLPCD.low }] : [])
-                  ].concat(completedLPCD.high === 0 && completedLPCD.low === 0 ? [{ name: `No LPCD Data`, value: 1 }] : []) : [
-                    { name: `No LPCD Data`, value: 1 }
+                    ...(completedLPCD.low > 0 ? [{ name: `≤55 LPCD (${completedLPCD.low})`, value: completedLPCD.low }] : []),
+                    ...((completedSchemes.length - completedLPCD.total) > 0 ? [{ name: `No LPCD Data (${completedSchemes.length - completedLPCD.total})`, value: completedSchemes.length - completedLPCD.total }] : [])
+                  ] : [
+                    { name: `No LPCD Data (${completedSchemes.length})`, value: completedSchemes.length }
                   ]
                 },
                 {
@@ -170,9 +185,10 @@ export default function ZoomableSunburst() {
                   value: inProgressSchemes.length,
                   children: inProgressLPCD.total > 0 ? [
                     ...(inProgressLPCD.high > 0 ? [{ name: `>55 LPCD (${inProgressLPCD.high})`, value: inProgressLPCD.high }] : []),
-                    ...(inProgressLPCD.low > 0 ? [{ name: `≤55 LPCD (${inProgressLPCD.low})`, value: inProgressLPCD.low }] : [])
-                  ].concat(inProgressLPCD.high === 0 && inProgressLPCD.low === 0 ? [{ name: `No LPCD Data`, value: 1 }] : []) : [
-                    { name: `No LPCD Data`, value: 1 }
+                    ...(inProgressLPCD.low > 0 ? [{ name: `≤55 LPCD (${inProgressLPCD.low})`, value: inProgressLPCD.low }] : []),
+                    ...((inProgressSchemes.length - inProgressLPCD.total) > 0 ? [{ name: `No LPCD Data (${inProgressSchemes.length - inProgressLPCD.total})`, value: inProgressSchemes.length - inProgressLPCD.total }] : [])
+                  ] : [
+                    { name: `No LPCD Data (${inProgressSchemes.length})`, value: inProgressSchemes.length }
                   ]
                 }
               ]
