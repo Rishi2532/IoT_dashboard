@@ -19,9 +19,9 @@ interface SchemeData {
   scheme_name: string;
   region: string;
   circle: string;
-  fully_completion_scheme_status: string;
-  total_villages_integrated: number;
-  fully_completed_villages: number;
+  completion_status: string;
+  total_villages: number;
+  completed_villages: number;
 }
 
 interface WaterSchemeData {
@@ -68,6 +68,12 @@ export default function ZoomableSunburst() {
     const schemeStatusArray = Array.isArray(schemeStatus) ? schemeStatus : [];
     const waterSchemeArray = Array.isArray(waterSchemeData) ? waterSchemeData : [];
 
+    console.log('Building hierarchy with:', {
+      regions: regionsArray.length,
+      schemes: schemeStatusArray.length,
+      waterData: waterSchemeArray.length
+    });
+
     // Build the hierarchy: Maharashtra -> Regions -> Circles -> Status -> LPCD Performance
     const root: HierarchyNode = {
       name: "Maharashtra",
@@ -75,10 +81,12 @@ export default function ZoomableSunburst() {
         // Get all schemes for this region - only include connected schemes
         const regionSchemes = schemeStatusArray.filter(scheme => 
           scheme.region === region.region_name &&
-          scheme.fully_completion_scheme_status &&
-          scheme.fully_completion_scheme_status !== 'Not-Connected' &&
-          scheme.fully_completion_scheme_status.trim() !== ''
+          scheme.completion_status &&
+          scheme.completion_status !== 'Not-Connected' &&
+          scheme.completion_status.trim() !== ''
         );
+
+        console.log(`Region ${region.region_name}: ${regionSchemes.length} connected schemes`);
 
         // Group by circle - filter out null/undefined circles and give meaningful names
         const circleGroups = d3.group(regionSchemes, d => {
@@ -93,13 +101,13 @@ export default function ZoomableSunburst() {
           children: Array.from(circleGroups, ([circleName, circleSchemes]) => {
             // Split schemes by completion status
             const completedSchemes = circleSchemes.filter(scheme => 
-              scheme.fully_completion_scheme_status === 'Completed' || 
-              scheme.fully_completion_scheme_status === 'Fully Completed'
+              scheme.completion_status === 'Completed' || 
+              scheme.completion_status === 'Fully Completed'
             );
             
             const inProgressSchemes = circleSchemes.filter(scheme => 
-              scheme.fully_completion_scheme_status !== 'Completed' && 
-              scheme.fully_completion_scheme_status !== 'Fully Completed'
+              scheme.completion_status !== 'Completed' && 
+              scheme.completion_status !== 'Fully Completed'
             );
 
             // Only include circles that have connected schemes (Fully Completed + In Progress)
@@ -166,7 +174,12 @@ export default function ZoomableSunburst() {
     if (!svgRef.current || !containerRef.current || isLoading) return;
 
     const data = buildHierarchyData();
-    if (!data) return;
+    if (!data) {
+      console.log('No hierarchy data generated');
+      return;
+    }
+    
+    console.log('Generated hierarchy data:', data);
 
     // Clear previous content
     d3.select(svgRef.current).selectAll("*").remove();
