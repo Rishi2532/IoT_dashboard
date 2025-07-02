@@ -121,8 +121,9 @@ export default function ZoomableSunburst() {
               const lowLPCD = relevantWaterData.filter(wd => wd.lpcd <= 55);
 
               return {
-                high: Math.max(highLPCD.length, 1),
-                low: Math.max(lowLPCD.length, 1)
+                high: highLPCD.length,
+                low: lowLPCD.length,
+                total: relevantWaterData.length
               };
             };
 
@@ -135,22 +136,26 @@ export default function ZoomableSunburst() {
                 {
                   name: `Fully Completed (${completedSchemes.length})`,
                   value: completedSchemes.length,
-                  children: [
-                    { name: `>55 LPCD (${completedLPCD.high})`, value: completedLPCD.high },
-                    { name: `≤55 LPCD (${completedLPCD.low})`, value: completedLPCD.low }
+                  children: completedLPCD.total > 0 ? [
+                    ...(completedLPCD.high > 0 ? [{ name: `>55 LPCD (${completedLPCD.high})`, value: completedLPCD.high }] : []),
+                    ...(completedLPCD.low > 0 ? [{ name: `≤55 LPCD (${completedLPCD.low})`, value: completedLPCD.low }] : [])
+                  ].concat(completedLPCD.high === 0 && completedLPCD.low === 0 ? [{ name: `No LPCD Data`, value: 1 }] : []) : [
+                    { name: `No LPCD Data`, value: 1 }
                   ]
                 },
                 {
                   name: `In Progress (${inProgressSchemes.length})`, 
                   value: inProgressSchemes.length,
-                  children: [
-                    { name: `>55 LPCD (${inProgressLPCD.high})`, value: inProgressLPCD.high },
-                    { name: `≤55 LPCD (${inProgressLPCD.low})`, value: inProgressLPCD.low }
+                  children: inProgressLPCD.total > 0 ? [
+                    ...(inProgressLPCD.high > 0 ? [{ name: `>55 LPCD (${inProgressLPCD.high})`, value: inProgressLPCD.high }] : []),
+                    ...(inProgressLPCD.low > 0 ? [{ name: `≤55 LPCD (${inProgressLPCD.low})`, value: inProgressLPCD.low }] : [])
+                  ].concat(inProgressLPCD.high === 0 && inProgressLPCD.low === 0 ? [{ name: `No LPCD Data`, value: 1 }] : []) : [
+                    { name: `No LPCD Data`, value: 1 }
                   ]
                 }
               ]
             };
-          }).filter(Boolean) // Remove null entries (circles with no connected schemes)
+          }).filter((circle): circle is NonNullable<typeof circle> => circle !== null) // Remove null entries (circles with no connected schemes)
         };
       })
     };
@@ -176,13 +181,13 @@ export default function ZoomableSunburst() {
     const color = d3.scaleOrdinal(d3.quantize(d3.interpolateRainbow, (data.children?.length || 0) + 1));
 
     // Compute the layout
-    const hierarchy = d3.hierarchy(data)
+    const hierarchy = d3.hierarchy(data as any)
         .sum(d => d.value || 0)
         .sort((a, b) => (b.value || 0) - (a.value || 0));
     
     const root = d3.partition()
         .size([2 * Math.PI, hierarchy.height + 1])
-        (hierarchy);
+        (hierarchy) as any;
     
     root.each((d: any) => d.current = d);
 
@@ -275,21 +280,28 @@ export default function ZoomableSunburst() {
       // Transition the data on all arcs, even the ones that aren't visible,
       // so that if this transition is interrupted, entering arcs will start
       // the next transition from the desired position.
+      // @ts-ignore - D3 type compatibility issue
       path.transition(t)
           .tween("data", (d: any) => {
             const i = d3.interpolate(d.current, d.target);
             return (t: number) => d.current = i(t);
           })
+        // @ts-ignore - D3 type compatibility issue
         .filter(function(d: any) {
           return +(this as any).getAttribute("fill-opacity") || arcVisible(d.target);
         })
+          // @ts-ignore - D3 type compatibility issue
           .attr("fill-opacity", (d: any) => arcVisible(d.target) ? (d.children ? 0.6 : 0.4) : 0)
           .attr("pointer-events", (d: any) => arcVisible(d.target) ? "auto" : "none")
+          // @ts-ignore - D3 type compatibility issue
           .attrTween("d", (d: any) => () => arc(d.current));
 
+      // @ts-ignore - D3 type compatibility issue
       label.filter(function(d: any) {
           return +(this as any).getAttribute("fill-opacity") || labelVisible(d.target);
+        // @ts-ignore - D3 type compatibility issue
         }).transition(t)
+          // @ts-ignore - D3 type compatibility issue
           .attr("fill-opacity", (d: any) => +labelVisible(d.target))
           .attrTween("transform", (d: any) => () => labelTransform(d.current));
     }
