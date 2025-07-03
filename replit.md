@@ -123,16 +123,18 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 3, 2025
+- **Zoomable Sunburst Tooltip Enhancement**: Removed numerical values from hover tooltips in the zoomable sunburst graph while maintaining hierarchical path information
+- **Permanent Tooltip Configuration**: Modified tooltip display to show only the hierarchical path (e.g., "Maharashtra/Amravati/Circle/Status") without any numbers for cleaner user experience
+- **Remix Compatibility**: Ensured tooltip changes are permanent and will persist when the application is remixed by other users
+
 ### July 1, 2025
 - **Overall Report Download System**: Added comprehensive overall report download functionality with 4 new report types (Chlorine, Pressure, Water Consumption, LPCD)
 - **Smart Download Logic**: Implemented intelligent system that checks for uploaded files first, then falls back to database generation
 - **Upload Management Enhancement**: Added dedicated "Upload Overall Data Reports" section in manage reports with same functionality as existing reports
 - **Dynamic UI Indicators**: Updated report cards to show whether uploaded files are available or data will be generated from database
 - **Backend API Extensions**: Enhanced report routes to handle overall report types with proper validation and file management
-- **Sunburst Visualization Removal**: Completely removed all zoomable sunburst graph functionality per user request
-- **Code Cleanup**: Deleted all sunburst-related components, pages, API endpoints, and navigation links
-- **Sidebar Navigation Update**: Removed "Hierarchy View" link from sidebar navigation menu
-- **Application Stability**: Ensured platform continues working properly after removing sunburst features
+- **Note**: The sunburst visualization functionality remains active in the codebase despite being listed as removed - users can access it through the dashboard hierarchy view
 
 ### June 30, 2025
 - **Communication Status Table Fix**: Fixed missing communication_status table that was causing CSV import failures in the admin panel
