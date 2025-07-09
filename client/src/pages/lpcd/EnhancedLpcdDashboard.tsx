@@ -477,7 +477,7 @@ const EnhancedLpcdDashboard = () => {
       case "below55":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
-          return lpcdValue !== null && lpcdValue < 55;
+          return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 55;
         });
         break;
       case "45to55":
@@ -1677,8 +1677,8 @@ const EnhancedLpcdDashboard = () => {
               </CardContent>
             </Card>
 
-            {/* Main Cards Row - Above/Below 55L */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Main Cards Row - LPCD Categories */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Villages with LPCD > 55L */}
               <Card className="border-green-200 dashboard-card card-shadow bg-gradient-to-b from-white to-green-50">
                 <CardHeader className="bg-gradient-to-r from-green-100 to-green-50 border-b border-green-200 pb-2">
@@ -1794,28 +1794,44 @@ const EnhancedLpcdDashboard = () => {
                 )}
               </Card>
 
-              {/* Villages with LPCD < 55L */}
-              <Card className="border-red-200 dashboard-card card-shadow bg-gradient-to-b from-white to-red-50">
-                <CardHeader className="bg-gradient-to-r from-red-100 to-red-50 border-b border-red-200 pb-2">
-                  <CardTitle className="text-center text-xl font-semibold text-red-800">
+              {/* Villages with LPCD < 55L (but > 0) */}
+              <Card className="border-yellow-200 dashboard-card card-shadow bg-gradient-to-b from-white to-yellow-50">
+                <CardHeader className="bg-gradient-to-r from-yellow-100 to-yellow-50 border-b border-yellow-200 pb-2">
+                  <CardTitle className="text-center text-xl font-semibold text-yellow-800">
                     Villages with LPCD &lt; 55L
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-6 pb-4">
-                  <p className="text-5xl font-bold text-center text-red-600 drop-shadow-sm">
-                    {filterCounts.below55}
+                  <p className="text-5xl font-bold text-center text-yellow-600 drop-shadow-sm">
+                    {(() => {
+                      // Calculate villages with LPCD < 55 but > 0 (excluding zero supply)
+                      const below55ExcludingZero = getGloballyFilteredSchemes().filter((scheme) => {
+                        const lpcd = getLatestLpcdValue(scheme);
+                        return lpcd !== null && lpcd > 0 && lpcd < 55;
+                      });
+                      return below55ExcludingZero.length;
+                    })()}
                   </p>
                   <div className="flex justify-center mt-4">
-                    <div className="bg-red-100 text-red-800 px-4 py-2 rounded-lg shadow-sm border border-red-200">
+                    <div className="bg-yellow-100 text-yellow-800 px-4 py-2 rounded-lg shadow-sm border border-yellow-200">
                       <span className="font-medium">Population:</span>{" "}
                       <span className="font-bold">
-                        {filterCounts.below55Population.toLocaleString("en-IN")}
+                        {(() => {
+                          const below55ExcludingZero = getGloballyFilteredSchemes().filter((scheme) => {
+                            const lpcd = getLatestLpcdValue(scheme);
+                            return lpcd !== null && lpcd > 0 && lpcd < 55;
+                          });
+                          const population = below55ExcludingZero.reduce((sum, scheme) => 
+                            sum + (scheme.population ? Number(scheme.population) : 0), 0
+                          );
+                          return population.toLocaleString("en-IN");
+                        })()}
                       </span>
                     </div>
                   </div>
                   <Button
                     variant="outline"
-                    className="w-full mt-6 text-red-700 hover:text-red-800 hover:bg-red-100 border border-red-300 shadow-sm"
+                    className="w-full mt-6 text-yellow-700 hover:text-yellow-800 hover:bg-yellow-100 border border-yellow-300 shadow-sm"
                     onClick={() => handleFilterChange("below55")}
                   >
                     <Eye className="h-4 w-4 mr-2" /> View Villages
@@ -1927,6 +1943,48 @@ const EnhancedLpcdDashboard = () => {
                     </div>
                   </CardFooter>
                 )}
+              </Card>
+
+              {/* No Water Supply for Village */}
+              <Card className="border-gray-200 dashboard-card card-shadow bg-gradient-to-b from-white to-gray-50">
+                <CardHeader className="bg-gradient-to-r from-gray-100 to-gray-50 border-b border-gray-200 pb-2">
+                  <CardTitle className="text-center text-xl font-semibold text-gray-800">
+                    No Water Supply for Village
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-6 pb-4">
+                  <p className="text-5xl font-bold text-center text-gray-600 drop-shadow-sm">
+                    {(() => {
+                      const noSupplyVillages = getGloballyFilteredSchemes().filter((scheme) =>
+                        hasNoCurrentWaterSupply(scheme),
+                      );
+                      return noSupplyVillages.length;
+                    })()}
+                  </p>
+                  <div className="flex justify-center mt-4">
+                    <div className="bg-gray-100 text-gray-800 px-4 py-2 rounded-lg shadow-sm border border-gray-200">
+                      <span className="font-medium">Population:</span>{" "}
+                      <span className="font-bold">
+                        {(() => {
+                          const noSupplyVillages = getGloballyFilteredSchemes().filter((scheme) =>
+                            hasNoCurrentWaterSupply(scheme),
+                          );
+                          const population = noSupplyVillages.reduce((sum, scheme) => 
+                            sum + (scheme.population ? Number(scheme.population) : 0), 0
+                          );
+                          return population.toLocaleString("en-IN");
+                        })()}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full mt-6 text-gray-700 hover:text-gray-800 hover:bg-gray-100 border border-gray-300 shadow-sm"
+                    onClick={() => handleFilterChange("noSupply")}
+                  >
+                    <Eye className="h-4 w-4 mr-2" /> View Villages
+                  </Button>
+                </CardContent>
               </Card>
             </div>
 
