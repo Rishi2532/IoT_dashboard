@@ -201,10 +201,10 @@ const SimpleLpcdDashboard: React.FC = () => {
         break;
         
       case 'zerosupply':
-        // Only include schemes with latest LPCD value = 0
+        // Only include schemes with latest LPCD value = 0 or null (no water supply)
         result = result.filter(scheme => {
           const lpcdValue = getLatestLpcdValue(scheme);
-          return lpcdValue === 0;
+          return lpcdValue === 0 || lpcdValue === null;
         });
         break;
         
@@ -417,25 +417,25 @@ const SimpleLpcdDashboard: React.FC = () => {
               </CardContent>
             </Card>
             
-            {/* Villages with LPCD between 40-55L */}
+            {/* Villages with LPCD < 55L (but > 0) */}
             <Card 
               className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-yellow-50 border-yellow-200 ${
-                currentFilter === "40to55" ? "ring-2 ring-yellow-500 ring-offset-2" : ""
+                currentFilter === "below55" ? "ring-2 ring-yellow-500 ring-offset-2" : ""
               }`}
             >
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-yellow-700">Villages with LPCD 40-55L</h3>
+                  <h3 className="text-lg font-semibold text-yellow-700">Villages with LPCD &lt; 55L</h3>
                   <p className="text-3xl font-bold text-yellow-600 mt-2">
                     {globallyFilteredData.filter(scheme => {
                       const lpcdValue = getLatestLpcdValue(scheme);
-                      return lpcdValue !== null && lpcdValue >= 40 && lpcdValue <= 55;
+                      return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 55;
                     }).length}
                   </p>
                   <Button 
                     variant="ghost" 
                     className="mt-2 text-yellow-700 hover:text-yellow-800 hover:bg-yellow-100"
-                    onClick={() => handleFilterChange('40to55')}
+                    onClick={() => handleFilterChange('below55')}
                   >
                     View Villages
                   </Button>
@@ -443,25 +443,25 @@ const SimpleLpcdDashboard: React.FC = () => {
               </CardContent>
             </Card>
             
-            {/* Villages with LPCD < 40L */}
+            {/* No Water Supply for Village */}
             <Card 
-              className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-red-50 border-red-200 ${
-                currentFilter === "below40" ? "ring-2 ring-red-500 ring-offset-2" : ""
+              className={`cursor-pointer hover:shadow-md transition-all duration-200 bg-gray-50 border-gray-200 ${
+                currentFilter === "zerosupply" ? "ring-2 ring-gray-500 ring-offset-2" : ""
               }`}
             >
               <CardContent className="pt-6">
                 <div className="text-center">
-                  <h3 className="text-lg font-semibold text-red-700">Villages with LPCD &lt; 40L</h3>
-                  <p className="text-3xl font-bold text-red-600 mt-2">
+                  <h3 className="text-lg font-semibold text-gray-700">No Water Supply for Village</h3>
+                  <p className="text-3xl font-bold text-gray-600 mt-2">
                     {globallyFilteredData.filter(scheme => {
                       const lpcdValue = getLatestLpcdValue(scheme);
-                      return lpcdValue !== null && lpcdValue > 0 && lpcdValue < 40;
+                      return lpcdValue === 0 || lpcdValue === null;
                     }).length}
                   </p>
                   <Button 
                     variant="ghost" 
-                    className="mt-2 text-red-700 hover:text-red-800 hover:bg-red-100"
-                    onClick={() => handleFilterChange('below40')}
+                    className="mt-2 text-gray-700 hover:text-gray-800 hover:bg-gray-100"
+                    onClick={() => handleFilterChange('zerosupply')}
                   >
                     View Villages
                   </Button>
