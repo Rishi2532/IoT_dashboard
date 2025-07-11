@@ -133,6 +133,9 @@ Preferred communication style: Simple, everyday language.
 - **Automatic Migration Logic**: Added automatic column detection and migration logic in server/setup-db.ts to add missing Day 7 columns when upgrading existing databases
 - **Complete Schema Consistency**: Ensured all database initialization files (init-database.js, setup-db.ts, database_setup.sql, database_create_scripts.sql) have consistent Day 7 field definitions
 - **Remix-Ready Setup**: All database schema fixes are now permanent and will automatically apply to future remixes without manual intervention
+- **Block-Specific Dashboard URL Fix**: Fixed dashboard URL generation for schemes spanning multiple blocks (like 83 Village RRWS Scheme MJP RR) to ensure each block gets its correct dashboard URL path
+- **Weekly Average LPCD Display**: Enhanced village detail dialog to show weekly average LPCD in the green circular badge instead of single day value, calculated as sum of available daily LPCD values divided by number of days with data
+- **Permanent URL Generation Logic**: Updated auto-generate-dashboard-urls.ts to include block field in WHERE clause to prevent URL conflicts for multi-block schemes during future data imports
 
 ### July 3, 2025
 - **Zoomable Sunburst Tooltip Enhancement**: Removed numerical values from hover tooltips in the zoomable sunburst graph while maintaining hierarchical path information
