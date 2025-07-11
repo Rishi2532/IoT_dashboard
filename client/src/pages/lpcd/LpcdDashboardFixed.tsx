@@ -54,6 +54,7 @@ interface WaterSchemeData {
   water_value_day4?: number | string;
   water_value_day5?: number | string;
   water_value_day6?: number | string;
+  water_value_day7?: number | string;
   lpcd_value_day1?: number | string;
   lpcd_value_day2?: number | string;
   lpcd_value_day3?: number | string;

@@ -63,6 +63,7 @@ interface WaterSchemeData {
   water_value_day4?: number | string;
   water_value_day5?: number | string;
   water_value_day6?: number | string;
+  water_value_day7?: number | string;
   lpcd_value_day1?: number | string;
   lpcd_value_day2?: number | string;
   lpcd_value_day3?: number | string;
@@ -77,6 +78,7 @@ interface WaterSchemeData {
   water_date_day4?: string;
   water_date_day5?: string;
   water_date_day6?: string;
+  water_date_day7?: string;
   lpcd_date_day1?: string;
   lpcd_date_day2?: string;
   lpcd_date_day3?: string;
@@ -140,7 +142,7 @@ const SimpleLpcdDashboard: React.FC = () => {
   // Helper function to get the latest water value
   const getLatestWaterValue = (scheme: WaterSchemeData): number | null => {
     // Try to get the latest non-null value
-    for (const day of [6, 5, 4, 3, 2, 1]) {
+    for (const day of [7, 6, 5, 4, 3, 2, 1]) {
       const value = scheme[`water_value_day${day}` as keyof WaterSchemeData];
       if (value !== undefined && value !== null && value !== '' && !isNaN(Number(value))) {
         return Number(value);

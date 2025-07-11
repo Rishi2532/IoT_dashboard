@@ -38,6 +38,7 @@ interface WaterSchemeData {
   water_value_day4?: number | string;
   water_value_day5?: number | string;
   water_value_day6?: number | string;
+  water_value_day7?: number | string;
   lpcd_value_day1?: number | string;
   lpcd_value_day2?: number | string;
   lpcd_value_day3?: number | string;
@@ -52,6 +53,7 @@ interface WaterSchemeData {
   water_date_day4?: string;
   water_date_day5?: string;
   water_date_day6?: string;
+  water_date_day7?: string;
   lpcd_date_day1?: string;
   lpcd_date_day2?: string;
   lpcd_date_day3?: string;
@@ -215,7 +217,7 @@ const VillageDetailDialog: React.FC<VillageDetailDialogProps> = ({
                     }
                     
                     // Process water consumption values
-                    for (let day = 1; day <= 6; day++) {
+                    for (let day = 1; day <= 7; day++) {
                       const dateField = `water_date_day${day}` as keyof WaterSchemeData;
                       const valueField = `water_value_day${day}` as keyof WaterSchemeData;
                       

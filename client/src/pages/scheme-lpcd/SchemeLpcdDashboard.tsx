@@ -81,6 +81,7 @@ export interface SchemeLpcdData {
   total_water_day4: number;
   total_water_day5: number;
   total_water_day6: number;
+  total_water_day7: number;
   lpcd_value_day1: number;
   lpcd_value_day2: number;
   lpcd_value_day3: number;
@@ -94,6 +95,7 @@ export interface SchemeLpcdData {
   water_date_day4: string;
   water_date_day5: string;
   water_date_day6: string;
+  water_date_day7: string;
   lpcd_date_day1: string;
   lpcd_date_day2: string;
   lpcd_date_day3: string;

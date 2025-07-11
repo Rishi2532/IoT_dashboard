@@ -81,6 +81,7 @@ export interface WaterSchemeData {
   water_value_day4: number;
   water_value_day5: number;
   water_value_day6: number;
+  water_value_day7: number;
   lpcd_value_day1: number;
   lpcd_value_day2: number;
   lpcd_value_day3: number;
@@ -94,6 +95,7 @@ export interface WaterSchemeData {
   water_date_day4: string;
   water_date_day5: string;
   water_date_day6: string;
+  water_date_day7: string;
   lpcd_date_day1: string;
   lpcd_date_day2: string;
   lpcd_date_day3: string;
@@ -1263,8 +1265,8 @@ const EnhancedLpcdDashboard = () => {
                 <h3 className="text-lg font-semibold mb-3 bg-white p-2 rounded shadow-sm border border-blue-100">
                   Water Consumption (LL)
                 </h3>
-                <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-                  {[1, 2, 3, 4, 5, 6].map((day) => {
+                <div className="grid grid-cols-3 md:grid-cols-7 gap-2">
+                  {[1, 2, 3, 4, 5, 6, 7].map((day) => {
                     const waterValue =
                       selectedVillage[
                         `water_value_day${day}` as keyof WaterSchemeData
