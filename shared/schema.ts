@@ -156,6 +156,7 @@ export const waterSchemeData = pgTable("water_scheme_data", {
   water_value_day4: decimal("water_value_day4", { precision: 20, scale: 6 }),
   water_value_day5: decimal("water_value_day5", { precision: 20, scale: 6 }),
   water_value_day6: decimal("water_value_day6", { precision: 20, scale: 6 }),
+  water_value_day7: decimal("water_value_day7", { precision: 20, scale: 6 }),
   
   // LPCD values for different days
   lpcd_value_day1: decimal("lpcd_value_day1", { precision: 20, scale: 6 }),
@@ -173,6 +174,7 @@ export const waterSchemeData = pgTable("water_scheme_data", {
   water_date_day4: varchar("water_date_day4", { length: 20 }),
   water_date_day5: varchar("water_date_day5", { length: 20 }),
   water_date_day6: varchar("water_date_day6", { length: 20 }),
+  water_date_day7: varchar("water_date_day7", { length: 20 }),
   
   // Dates for LPCD measurements
   lpcd_date_day1: varchar("lpcd_date_day1", { length: 20 }),

@@ -78,13 +78,14 @@ const columnMapping = {
   'water value day5': 'water_value_day5',
   'water value day6': 'water_value_day6',
   
-  // Also accept numerical positional columns (11-16) from the Excel
+  // Also accept numerical positional columns (11-17) from the Excel
   '11': 'water_value_day1', 
   '12': 'water_value_day2',
   '13': 'water_value_day3',
   '14': 'water_value_day4',
   '15': 'water_value_day5',
   '16': 'water_value_day6',
+  '17': 'water_value_day7',
   
   // LPCD value mappings
   'lpcd value day1': 'lpcd_value_day1',
@@ -95,14 +96,14 @@ const columnMapping = {
   'lpcd value day6': 'lpcd_value_day6',
   'lpcd value day7': 'lpcd_value_day7',
   
-  // Also accept numerical positional columns (17-23) from the Excel
-  '17': 'lpcd_value_day1',
-  '18': 'lpcd_value_day2',
-  '19': 'lpcd_value_day3',
-  '20': 'lpcd_value_day4',
-  '21': 'lpcd_value_day5',
-  '22': 'lpcd_value_day6',
-  '23': 'lpcd_value_day7',
+  // Also accept numerical positional columns (18-24) from the Excel
+  '18': 'lpcd_value_day1',
+  '19': 'lpcd_value_day2',
+  '20': 'lpcd_value_day3',
+  '21': 'lpcd_value_day4',
+  '22': 'lpcd_value_day5',
+  '23': 'lpcd_value_day6',
+  '24': 'lpcd_value_day7',
   
   // Date fields
   'water date day1': 'water_date_day1',
@@ -111,6 +112,7 @@ const columnMapping = {
   'water date day4': 'water_date_day4',
   'water date day5': 'water_date_day5',
   'water date day6': 'water_date_day6',
+  'water date day7': 'water_date_day7',
   'lpcd date day1': 'lpcd_date_day1',
   'lpcd date day2': 'lpcd_date_day2',
   'lpcd date day3': 'lpcd_date_day3',
@@ -123,9 +125,9 @@ const columnMapping = {
   'Consistent Zero LPCD for a week': 'consistent_zero_lpcd_for_a_week',
   'Consistent <55 LPCD for a week': 'below_55_lpcd_count',
   'Consistent >55 LPCD for a week': 'above_55_lpcd_count',
-  '38': 'consistent_zero_lpcd_for_a_week',
-  '39': 'below_55_lpcd_count',
-  '40': 'above_55_lpcd_count'
+  '39': 'consistent_zero_lpcd_for_a_week',
+  '40': 'below_55_lpcd_count',
+  '41': 'above_55_lpcd_count'
 };
 
 // Function to safely convert various cell values to numbers

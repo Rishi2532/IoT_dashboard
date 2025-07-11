@@ -123,6 +123,12 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 11, 2025
+- **Water Value Day 7 Database Enhancement**: Added water_value_day7 and water_date_day7 fields to the water_scheme_data and water_scheme_data_history tables
+- **CSV Column Mapping Update**: Updated all CSV import column mappings to accommodate the new 7th day water consumption tracking (water_value_day7 at column 16)
+- **Positional Import Enhancement**: Modified positionalColumnMapping and csvColumnMapping in server/storage.ts to handle the shifted column positions for LPCD and date fields
+- **Complete Import System Update**: Updated water-scheme-routes.ts and admin/import-lpcd.js to properly handle the new 7-day water consumption structure with correct column positioning
+
 ### July 3, 2025
 - **Zoomable Sunburst Tooltip Enhancement**: Removed numerical values from hover tooltips in the zoomable sunburst graph while maintaining hierarchical path information
 - **Permanent Tooltip Configuration**: Modified tooltip display to show only the hierarchical path (e.g., "Maharashtra/Amravati/Circle/Status") without any numbers for cleaner user experience

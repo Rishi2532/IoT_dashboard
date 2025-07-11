@@ -1326,6 +1326,7 @@ function mapCsvFields(row: string[]) {
     'water_value_day4',
     'water_value_day5',
     'water_value_day6',
+    'water_value_day7',
     'lpcd_value_day1',
     'lpcd_value_day2',
     'lpcd_value_day3',
@@ -1339,6 +1340,7 @@ function mapCsvFields(row: string[]) {
     'water_date_day4',
     'water_date_day5',
     'water_date_day6',
+    'water_date_day7',
     'lpcd_date_day1',
     'lpcd_date_day2',
     'lpcd_date_day3',
@@ -1360,7 +1362,7 @@ function mapCsvFields(row: string[]) {
       
       // Convert value to appropriate type
       if (['population', 'number_of_esr', 'water_value_day1', 'water_value_day2', 'water_value_day3', 
-           'water_value_day4', 'water_value_day5', 'water_value_day6', 'lpcd_value_day1', 'lpcd_value_day2', 
+           'water_value_day4', 'water_value_day5', 'water_value_day6', 'water_value_day7', 'lpcd_value_day1', 'lpcd_value_day2', 
            'lpcd_value_day3', 'lpcd_value_day4', 'lpcd_value_day5', 'lpcd_value_day6', 'lpcd_value_day7',
            'below_55_lpcd_count', 'above_55_lpcd_count'].includes(field)) {
         // Handle empty values
