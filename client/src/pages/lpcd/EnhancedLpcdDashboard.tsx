@@ -1085,11 +1085,35 @@ const EnhancedLpcdDashboard = () => {
     setVillageDetailsOpen(true);
   };
 
+  // Calculate weekly average LPCD function
+  const calculateWeeklyAverageLpcd = (scheme: WaterSchemeData): number | null => {
+    const lpcdValues: number[] = [];
+    
+    // Collect all LPCD values for the week
+    for (let day = 1; day <= 7; day++) {
+      const valueField = `lpcd_value_day${day}` as keyof WaterSchemeData;
+      const value = scheme[valueField];
+      
+      if (value !== undefined && value !== null && value !== '' && !isNaN(Number(value))) {
+        lpcdValues.push(Number(value));
+      }
+    }
+    
+    // Calculate average if we have any values
+    if (lpcdValues.length > 0) {
+      const sum = lpcdValues.reduce((acc, val) => acc + val, 0);
+      return sum / lpcdValues.length; // Divide by actual number of days with data for true average
+    }
+    
+    return null;
+  };
+
   // Village Details Component
   const VillageDetailsDialog = () => {
     if (!selectedVillage) return null;
 
     const lpcdValue = getLatestLpcdValue(selectedVillage);
+    const weeklyAverageLpcd = calculateWeeklyAverageLpcd(selectedVillage);
     const lpcdValues = [
       {
         day: 1,
@@ -1195,7 +1219,7 @@ const EnhancedLpcdDashboard = () => {
                   </Button>
                 )}
               </div>
-              <LpcdBadge value={lpcdValue} />
+              <LpcdBadge value={weeklyAverageLpcd} />
             </DialogTitle>
             <DialogDescription>
               <div className="grid grid-cols-2 gap-4 mt-2">
