@@ -128,6 +128,8 @@ Preferred communication style: Simple, everyday language.
 - **CSV Column Mapping Update**: Updated all CSV import column mappings to accommodate the new 7th day water consumption tracking (water_value_day7 at column 16)
 - **Positional Import Enhancement**: Modified positionalColumnMapping and csvColumnMapping in server/storage.ts to handle the shifted column positions for LPCD and date fields
 - **Complete Import System Update**: Updated water-scheme-routes.ts and admin/import-lpcd.js to properly handle the new 7-day water consumption structure with correct column positioning
+- **Frontend Dashboard Enhancement**: Updated all dashboard components to display Day 7 water consumption data with proper TypeScript interfaces and grid layouts
+- **Permanent Database Schema**: Updated database_setup.sql, database_create_scripts.sql, and server/init-database.js to permanently include water_value_day7 and water_date_day7 fields for new installations and remixes
 
 ### July 3, 2025
 - **Zoomable Sunburst Tooltip Enhancement**: Removed numerical values from hover tooltips in the zoomable sunburst graph while maintaining hierarchical path information

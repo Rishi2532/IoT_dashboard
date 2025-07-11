@@ -137,6 +137,7 @@ async function initializeDatabase() {
         "water_value_day4" DECIMAL(20,6),
         "water_value_day5" DECIMAL(20,6),
         "water_value_day6" DECIMAL(20,6),
+        "water_value_day7" DECIMAL(20,6),
         "lpcd_value_day1" DECIMAL(20,6),
         "lpcd_value_day2" DECIMAL(20,6),
         "lpcd_value_day3" DECIMAL(20,6),
@@ -150,6 +151,7 @@ async function initializeDatabase() {
         "water_date_day4" VARCHAR(20),
         "water_date_day5" VARCHAR(20),
         "water_date_day6" VARCHAR(20),
+        "water_date_day7" VARCHAR(20),
         "lpcd_date_day1" VARCHAR(20),
         "lpcd_date_day2" VARCHAR(20),
         "lpcd_date_day3" VARCHAR(20),
@@ -162,6 +164,30 @@ async function initializeDatabase() {
         "above_55_lpcd_count" INTEGER,
         "dashboard_url" TEXT,
         PRIMARY KEY ("scheme_id", "village_name")
+      );
+    `);
+    
+    // Water scheme data history table for permanent historical storage
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS "water_scheme_data_history" (
+        "id" SERIAL PRIMARY KEY,
+        "region" VARCHAR(100),
+        "circle" VARCHAR(100),
+        "division" VARCHAR(100),
+        "sub_division" VARCHAR(100),
+        "block" VARCHAR(100),
+        "scheme_id" VARCHAR(100),
+        "scheme_name" VARCHAR(255),
+        "village_name" VARCHAR(255),
+        "population" INTEGER,
+        "number_of_esr" INTEGER,
+        "data_date" VARCHAR(15) NOT NULL,
+        "water_value" DECIMAL(20,6),
+        "lpcd_value" DECIMAL(20,6),
+        "uploaded_at" TIMESTAMP DEFAULT NOW() NOT NULL,
+        "upload_batch_id" VARCHAR(50),
+        "dashboard_url" TEXT,
+        UNIQUE("scheme_id", "village_name", "data_date", "uploaded_at")
       );
     `);
     
