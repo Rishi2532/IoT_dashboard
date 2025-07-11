@@ -213,6 +213,7 @@ export async function initializeTables(db: any) {
         "water_value_day4" DECIMAL(20,6),
         "water_value_day5" DECIMAL(20,6),
         "water_value_day6" DECIMAL(20,6),
+        "water_value_day7" DECIMAL(20,6),
         "lpcd_value_day1" DECIMAL(20,6),
         "lpcd_value_day2" DECIMAL(20,6),
         "lpcd_value_day3" DECIMAL(20,6),
@@ -226,6 +227,7 @@ export async function initializeTables(db: any) {
         "water_date_day4" VARCHAR(20),
         "water_date_day5" VARCHAR(20),
         "water_date_day6" VARCHAR(20),
+        "water_date_day7" VARCHAR(20),
         "lpcd_date_day1" VARCHAR(20),
         "lpcd_date_day2" VARCHAR(20),
         "lpcd_date_day3" VARCHAR(20),
@@ -256,6 +258,31 @@ export async function initializeTables(db: any) {
       }
     } catch (error) {
       console.error('Error checking for dashboard_url column:', error);
+    }
+    
+    // Check if Day 7 water columns exist in water_scheme_data, add if missing
+    try {
+      const result = await db.execute(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'water_scheme_data' AND column_name IN ('water_value_day7', 'water_date_day7');
+      `);
+      
+      const existingColumns = result.rows.map((row: any) => row.column_name);
+      
+      if (!existingColumns.includes('water_value_day7')) {
+        console.log('Adding missing water_value_day7 column to water_scheme_data table...');
+        await db.execute(`ALTER TABLE "water_scheme_data" ADD COLUMN "water_value_day7" DECIMAL(20,6);`);
+        console.log('Successfully added water_value_day7 column to water_scheme_data table');
+      }
+      
+      if (!existingColumns.includes('water_date_day7')) {
+        console.log('Adding missing water_date_day7 column to water_scheme_data table...');
+        await db.execute(`ALTER TABLE "water_scheme_data" ADD COLUMN "water_date_day7" VARCHAR(20);`);
+        console.log('Successfully added water_date_day7 column to water_scheme_data table');
+      }
+    } catch (error) {
+      console.error('Error checking for Day 7 columns in water_scheme_data:', error);
     }
     
     // Create chlorine_data table
