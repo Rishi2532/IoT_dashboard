@@ -343,8 +343,8 @@ const EnhancedLpcdDashboard = () => {
   const getLatestWaterSupplyValue = (
     scheme: WaterSchemeData,
   ): number | null => {
-    // Try to get the latest non-null water supply value
-    for (const day of [6, 5, 4, 3, 2, 1]) {
+    // Try to get the latest non-null water supply value, starting with day 7
+    for (const day of [7, 6, 5, 4, 3, 2, 1]) {
       const value = scheme[`water_value_day${day}` as keyof WaterSchemeData];
       if (
         value !== undefined &&
