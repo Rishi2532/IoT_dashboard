@@ -1,15 +1,23 @@
 import { drizzle } from "drizzle-orm/node-postgres";
 import pg from "pg";
-import fs from 'fs';
-import path from 'path';
-import { regions, schemeStatuses, users, waterSchemeData, chlorineData, pressureData, reportFiles } from "@shared/schema";
+import fs from "fs";
+import path from "path";
+import {
+  regions,
+  schemeStatuses,
+  users,
+  waterSchemeData,
+  chlorineData,
+  pressureData,
+  reportFiles,
+} from "@shared/schema";
 
 const { Pool } = pg;
 
 // Detect if running in VS Code with pgAdmin configuration
 function isVSCodePgAdmin() {
   try {
-    const envVscodePath = path.join(process.cwd(), '.env.vscode');
+    const envVscodePath = path.join(process.cwd(), ".env.vscode");
     return fs.existsSync(envVscodePath);
   } catch (error) {
     return false;
@@ -19,7 +27,7 @@ function isVSCodePgAdmin() {
 // Create a new pool instance using the DATABASE_URL
 export function setupDatabase() {
   console.log("Setting up database connection...");
-  
+
   // Check if running in VS Code with pgAdmin configuration
   const isVSCode = isVSCodePgAdmin();
   if (isVSCode) {
@@ -35,14 +43,18 @@ export function setupDatabase() {
   // Ensure DATABASE_URL is available
   if (!process.env.DATABASE_URL) {
     console.error("DATABASE_URL environment variable is not set!");
-    
+
     // If in VS Code, suggest using the pgAdmin setup
     if (isVSCode) {
-      console.log("Try running the application with F5 in VS Code or use the .env.vscode file");
+      console.log(
+        "Try running the application with F5 in VS Code or use the .env.vscode file",
+      );
     } else if (isReplit) {
-      console.log("In Replit, the DATABASE_URL should be automatically provided. Please check if PostgreSQL database is properly configured.");
+      console.log(
+        "In Replit, the DATABASE_URL should be automatically provided. Please check if PostgreSQL database is properly configured.",
+      );
     }
-    
+
     throw new Error("DATABASE_URL environment variable is not set!");
   }
 
@@ -50,31 +62,32 @@ export function setupDatabase() {
     // Only log the database host for security reasons
     const dbUrl = new URL(process.env.DATABASE_URL);
     console.log(`Connecting to: ${dbUrl.host}`);
-    
+
     // If connecting to localhost, it's likely pgAdmin
-    if (dbUrl.host === 'localhost') {
+    if (dbUrl.host === "localhost") {
       console.log("Using local database (likely pgAdmin)");
     }
   } catch (e) {
-    console.log('Connecting to database...');
+    console.log("Connecting to database...");
   }
 
   // Create the pool with correct options
   const poolConfig: any = {
-    connectionString: process.env.DATABASE_URL
+    connectionString: process.env.DATABASE_URL,
   };
-  
+
   // Add SSL config for cloud databases (like Neon)
-  const isLocalHost = process.env.DATABASE_URL.includes('localhost') || 
-                      process.env.DATABASE_URL.includes('127.0.0.1');
-                      
+  const isLocalHost =
+    process.env.DATABASE_URL.includes("localhost") ||
+    process.env.DATABASE_URL.includes("127.0.0.1");
+
   if (!isLocalHost) {
     poolConfig.ssl = {
       require: true,
       rejectUnauthorized: false, // Important for Neon DB connections
     };
   }
-  
+
   const pool = new Pool(poolConfig);
 
   // Log successful connection
@@ -96,7 +109,7 @@ export function setupDatabase() {
 export async function initializeTables(db: any) {
   try {
     console.log("Initializing database tables...");
-    
+
     // Create regions table
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "region" (
@@ -114,7 +127,7 @@ export async function initializeTables(db: any) {
         "pressure_transmitter_integrated" INTEGER
       );
     `);
-    
+
     // Create scheme_status table - without primary key to allow duplicate entries
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "scheme_status" (
@@ -148,7 +161,7 @@ export async function initializeTables(db: any) {
         "dashboard_url" TEXT
       );
     `);
-    
+
     // Check if mjp_commissioned and mjp_fully_completed columns exist, add if missing
     try {
       const result = await db.execute(`
@@ -156,24 +169,36 @@ export async function initializeTables(db: any) {
         FROM information_schema.columns 
         WHERE table_name = 'scheme_status' AND column_name IN ('mjp_commissioned', 'mjp_fully_completed');
       `);
-      
+
       const existingColumns = result.rows.map((row: any) => row.column_name);
-      
-      if (!existingColumns.includes('mjp_commissioned')) {
-        console.log('Adding missing mjp_commissioned column to scheme_status table...');
-        await db.execute(`ALTER TABLE "scheme_status" ADD COLUMN "mjp_commissioned" TEXT DEFAULT 'No';`);
-        console.log('Successfully added mjp_commissioned column to scheme_status table');
+
+      if (!existingColumns.includes("mjp_commissioned")) {
+        console.log(
+          "Adding missing mjp_commissioned column to scheme_status table...",
+        );
+        await db.execute(
+          `ALTER TABLE "scheme_status" ADD COLUMN "mjp_commissioned" TEXT DEFAULT 'No';`,
+        );
+        console.log(
+          "Successfully added mjp_commissioned column to scheme_status table",
+        );
       }
-      
-      if (!existingColumns.includes('mjp_fully_completed')) {
-        console.log('Adding missing mjp_fully_completed column to scheme_status table...');
-        await db.execute(`ALTER TABLE "scheme_status" ADD COLUMN "mjp_fully_completed" TEXT DEFAULT 'In Progress';`);
-        console.log('Successfully added mjp_fully_completed column to scheme_status table');
+
+      if (!existingColumns.includes("mjp_fully_completed")) {
+        console.log(
+          "Adding missing mjp_fully_completed column to scheme_status table...",
+        );
+        await db.execute(
+          `ALTER TABLE "scheme_status" ADD COLUMN "mjp_fully_completed" TEXT DEFAULT 'In Progress';`,
+        );
+        console.log(
+          "Successfully added mjp_fully_completed column to scheme_status table",
+        );
       }
     } catch (error) {
-      console.error('Error checking for MJP columns in scheme_status:', error);
+      console.error("Error checking for MJP columns in scheme_status:", error);
     }
-    
+
     // Create users table
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "users" (
@@ -184,7 +209,7 @@ export async function initializeTables(db: any) {
         "role" TEXT NOT NULL DEFAULT 'user'
       );
     `);
-    
+
     // Create app_state table
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "app_state" (
@@ -193,7 +218,7 @@ export async function initializeTables(db: any) {
         "updated_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    
+
     // Create water_scheme_data table
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "water_scheme_data" (
@@ -207,20 +232,20 @@ export async function initializeTables(db: any) {
         "village_name" TEXT,
         "population" INTEGER,
         "number_of_esr" INTEGER,
-        "water_value_day1" DECIMAL(20,6),
-        "water_value_day2" DECIMAL(20,6),
-        "water_value_day3" DECIMAL(20,6),
-        "water_value_day4" DECIMAL(20,6),
-        "water_value_day5" DECIMAL(20,6),
-        "water_value_day6" DECIMAL(20,6),
-        "water_value_day7" DECIMAL(20,6),
-        "lpcd_value_day1" DECIMAL(20,6),
-        "lpcd_value_day2" DECIMAL(20,6),
-        "lpcd_value_day3" DECIMAL(20,6),
-        "lpcd_value_day4" DECIMAL(20,6),
-        "lpcd_value_day5" DECIMAL(20,6),
-        "lpcd_value_day6" DECIMAL(20,6),
-        "lpcd_value_day7" DECIMAL(20,6),
+        "water_value_day1" DECIMAL,
+        "water_value_day2" DECIMAL,
+        "water_value_day3" DECIMAL,
+        "water_value_day4" DECIMAL,
+        "water_value_day5" DECIMAL,
+        "water_value_day6" DECIMAL,
+        "water_value_day7" DECIMAL,
+        "lpcd_value_day1" DECIMAL,
+        "lpcd_value_day2" DECIMAL,
+        "lpcd_value_day3" DECIMAL,
+        "lpcd_value_day4" DECIMAL,
+        "lpcd_value_day5" DECIMAL,
+        "lpcd_value_day6" DECIMAL,
+        "lpcd_value_day7" DECIMAL,
         "water_date_day1" VARCHAR(20),
         "water_date_day2" VARCHAR(20),
         "water_date_day3" VARCHAR(20),
@@ -239,10 +264,10 @@ export async function initializeTables(db: any) {
         "below_55_lpcd_count" INTEGER,
         "above_55_lpcd_count" INTEGER,
         "dashboard_url" TEXT,
-        PRIMARY KEY ("scheme_id", "village_name")
+        PRIMARY KEY ("scheme_id", "village_name", "block")
       );
     `);
-    
+
     // Check if dashboard_url column exists in water_scheme_data, add if missing
     try {
       const result = await db.execute(`
@@ -250,16 +275,22 @@ export async function initializeTables(db: any) {
         FROM information_schema.columns 
         WHERE table_name = 'water_scheme_data' AND column_name = 'dashboard_url';
       `);
-      
+
       if (result.rows.length === 0) {
-        console.log('Adding missing dashboard_url column to water_scheme_data table...');
-        await db.execute(`ALTER TABLE "water_scheme_data" ADD COLUMN "dashboard_url" TEXT;`);
-        console.log('Successfully added dashboard_url column to water_scheme_data table');
+        console.log(
+          "Adding missing dashboard_url column to water_scheme_data table...",
+        );
+        await db.execute(
+          `ALTER TABLE "water_scheme_data" ADD COLUMN "dashboard_url" TEXT;`,
+        );
+        console.log(
+          "Successfully added dashboard_url column to water_scheme_data table",
+        );
       }
     } catch (error) {
-      console.error('Error checking for dashboard_url column:', error);
+      console.error("Error checking for dashboard_url column:", error);
     }
-    
+
     // Check if Day 7 water columns exist in water_scheme_data, add if missing
     try {
       const result = await db.execute(`
@@ -267,24 +298,129 @@ export async function initializeTables(db: any) {
         FROM information_schema.columns 
         WHERE table_name = 'water_scheme_data' AND column_name IN ('water_value_day7', 'water_date_day7');
       `);
-      
+
       const existingColumns = result.rows.map((row: any) => row.column_name);
-      
-      if (!existingColumns.includes('water_value_day7')) {
-        console.log('Adding missing water_value_day7 column to water_scheme_data table...');
-        await db.execute(`ALTER TABLE "water_scheme_data" ADD COLUMN "water_value_day7" DECIMAL(20,6);`);
-        console.log('Successfully added water_value_day7 column to water_scheme_data table');
+
+      if (!existingColumns.includes("water_value_day7")) {
+        console.log(
+          "Adding missing water_value_day7 column to water_scheme_data table...",
+        );
+        await db.execute(
+          `ALTER TABLE "water_scheme_data" ADD COLUMN "water_value_day7" DECIMAL;`,
+        );
+        console.log(
+          "Successfully added water_value_day7 column to water_scheme_data table",
+        );
       }
-      
-      if (!existingColumns.includes('water_date_day7')) {
-        console.log('Adding missing water_date_day7 column to water_scheme_data table...');
-        await db.execute(`ALTER TABLE "water_scheme_data" ADD COLUMN "water_date_day7" VARCHAR(20);`);
-        console.log('Successfully added water_date_day7 column to water_scheme_data table');
+
+      if (!existingColumns.includes("water_date_day7")) {
+        console.log(
+          "Adding missing water_date_day7 column to water_scheme_data table...",
+        );
+        await db.execute(
+          `ALTER TABLE "water_scheme_data" ADD COLUMN "water_date_day7" VARCHAR(20);`,
+        );
+        console.log(
+          "Successfully added water_date_day7 column to water_scheme_data table",
+        );
       }
     } catch (error) {
-      console.error('Error checking for Day 7 columns in water_scheme_data:', error);
+      console.error(
+        "Error checking for Day 7 columns in water_scheme_data:",
+        error,
+      );
     }
-    
+
+    // Handle primary key migration from (scheme_id, village_name) to (scheme_id, village_name, block)
+    try {
+      // Check if the primary key needs to be migrated by checking the constraint name
+      const pkResult = await db.execute(`
+        SELECT constraint_name, column_name 
+        FROM information_schema.key_column_usage 
+        WHERE table_name = 'water_scheme_data' 
+        AND constraint_name LIKE '%pkey%'
+        ORDER BY ordinal_position;
+      `);
+
+      const pkColumns = pkResult.rows.map((row: any) => row.column_name);
+
+      // If the primary key doesn't include 'block', we need to migrate
+      if (pkColumns.length === 2 && !pkColumns.includes("block")) {
+        console.log(
+          "Migrating water_scheme_data primary key to include block field...",
+        );
+
+        // Step 1: Drop the existing primary key constraint
+        await db.execute(
+          `ALTER TABLE "water_scheme_data" DROP CONSTRAINT IF EXISTS "water_scheme_data_pkey";`,
+        );
+
+        // Step 2: Add the new composite primary key with block
+        await db.execute(
+          `ALTER TABLE "water_scheme_data" ADD CONSTRAINT "water_scheme_data_pkey" PRIMARY KEY ("scheme_id", "village_name", "block");`,
+        );
+
+        console.log(
+          "Successfully migrated water_scheme_data primary key to include block field",
+        );
+      }
+    } catch (error) {
+      console.error("Error migrating water_scheme_data primary key:", error);
+    }
+
+    // Remove precision constraints from decimal columns if they exist
+    try {
+      // Check if any decimal columns have precision constraints
+      const decimalResult = await db.execute(`
+        SELECT column_name, data_type, numeric_precision, numeric_scale
+        FROM information_schema.columns 
+        WHERE table_name = 'water_scheme_data' 
+        AND data_type = 'numeric' 
+        AND numeric_precision IS NOT NULL;
+      `);
+
+      if (decimalResult.rows.length > 0) {
+        console.log("Removing precision constraints from decimal columns...");
+
+        // Update each decimal column to remove precision constraints
+        const decimalColumns = [
+          "water_value_day1",
+          "water_value_day2",
+          "water_value_day3",
+          "water_value_day4",
+          "water_value_day5",
+          "water_value_day6",
+          "water_value_day7",
+          "lpcd_value_day1",
+          "lpcd_value_day2",
+          "lpcd_value_day3",
+          "lpcd_value_day4",
+          "lpcd_value_day5",
+          "lpcd_value_day6",
+          "lpcd_value_day7",
+        ];
+
+        for (const column of decimalColumns) {
+          try {
+            await db.execute(
+              `ALTER TABLE "water_scheme_data" ALTER COLUMN "${column}" TYPE DECIMAL USING "${column}"::DECIMAL;`,
+            );
+          } catch (colError) {
+            console.error(`Error updating column ${column}:`, colError);
+          }
+        }
+
+        console.log(
+          "Successfully removed precision constraints from decimal columns",
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error checking/updating decimal column constraints:",
+        error,
+      );
+    }
+
     // Create chlorine_data table
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "chlorine_data" (
@@ -319,7 +455,7 @@ export async function initializeTables(db: any) {
         PRIMARY KEY ("scheme_id", "village_name", "esr_name")
       );
     `);
-    
+
     // Check if dashboard_url column exists in chlorine_data, add if missing
     try {
       const result = await db.execute(`
@@ -327,16 +463,25 @@ export async function initializeTables(db: any) {
         FROM information_schema.columns 
         WHERE table_name = 'chlorine_data' AND column_name = 'dashboard_url';
       `);
-      
+
       if (result.rows.length === 0) {
-        console.log('Adding missing dashboard_url column to chlorine_data table...');
-        await db.execute(`ALTER TABLE "chlorine_data" ADD COLUMN "dashboard_url" TEXT;`);
-        console.log('Successfully added dashboard_url column to chlorine_data table');
+        console.log(
+          "Adding missing dashboard_url column to chlorine_data table...",
+        );
+        await db.execute(
+          `ALTER TABLE "chlorine_data" ADD COLUMN "dashboard_url" TEXT;`,
+        );
+        console.log(
+          "Successfully added dashboard_url column to chlorine_data table",
+        );
       }
     } catch (error) {
-      console.error('Error checking for dashboard_url column in chlorine_data:', error);
+      console.error(
+        "Error checking for dashboard_url column in chlorine_data:",
+        error,
+      );
     }
-    
+
     // Create chlorine_history table for permanent historical storage
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "chlorine_history" (
@@ -358,19 +503,19 @@ export async function initializeTables(db: any) {
         UNIQUE("scheme_id", "village_name", "esr_name", "chlorine_date", "uploaded_at")
       );
     `);
-    
+
     // Create index on chlorine_history for efficient date range queries
     await db.execute(`
       CREATE INDEX IF NOT EXISTS "idx_chlorine_history_date_range" 
       ON "chlorine_history" ("chlorine_date", "scheme_id", "village_name", "esr_name");
     `);
-    
+
     // Create index on chlorine_history for efficient latest record queries
     await db.execute(`
       CREATE INDEX IF NOT EXISTS "idx_chlorine_history_latest" 
       ON "chlorine_history" ("scheme_id", "village_name", "esr_name", "chlorine_date", "uploaded_at" DESC);
     `);
-    
+
     // Create pressure_data table
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "pressure_data" (
@@ -405,7 +550,7 @@ export async function initializeTables(db: any) {
         PRIMARY KEY ("scheme_id", "village_name", "esr_name")
       );
     `);
-    
+
     // Check if dashboard_url column exists in pressure_data, add if missing
     try {
       const result = await db.execute(`
@@ -413,16 +558,25 @@ export async function initializeTables(db: any) {
         FROM information_schema.columns 
         WHERE table_name = 'pressure_data' AND column_name = 'dashboard_url';
       `);
-      
+
       if (result.rows.length === 0) {
-        console.log('Adding missing dashboard_url column to pressure_data table...');
-        await db.execute(`ALTER TABLE "pressure_data" ADD COLUMN "dashboard_url" TEXT;`);
-        console.log('Successfully added dashboard_url column to pressure_data table');
+        console.log(
+          "Adding missing dashboard_url column to pressure_data table...",
+        );
+        await db.execute(
+          `ALTER TABLE "pressure_data" ADD COLUMN "dashboard_url" TEXT;`,
+        );
+        console.log(
+          "Successfully added dashboard_url column to pressure_data table",
+        );
       }
     } catch (error) {
-      console.error('Error checking for dashboard_url column in pressure_data:', error);
+      console.error(
+        "Error checking for dashboard_url column in pressure_data:",
+        error,
+      );
     }
-    
+
     // Create pressure_history table for permanent historical storage
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "pressure_history" (
@@ -444,19 +598,19 @@ export async function initializeTables(db: any) {
         UNIQUE("scheme_id", "village_name", "esr_name", "pressure_date", "uploaded_at")
       );
     `);
-    
+
     // Create index on pressure_history for efficient date range queries
     await db.execute(`
       CREATE INDEX IF NOT EXISTS "idx_pressure_history_date_range" 
       ON "pressure_history" ("pressure_date", "scheme_id", "village_name", "esr_name");
     `);
-    
+
     // Create index on pressure_history for efficient latest record queries
     await db.execute(`
       CREATE INDEX IF NOT EXISTS "idx_pressure_history_latest" 
       ON "pressure_history" ("scheme_id", "village_name", "esr_name", "pressure_date", "uploaded_at" DESC);
     `);
-    
+
     // Create water_scheme_data_history table for permanent historical storage
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "water_scheme_data_history" (
@@ -472,32 +626,32 @@ export async function initializeTables(db: any) {
         "population" INTEGER,
         "number_of_esr" INTEGER,
         "data_date" VARCHAR(15) NOT NULL,
-        "water_value" DECIMAL(20,6),
-        "lpcd_value" DECIMAL(20,6),
+        "water_value" DECIMAL,
+        "lpcd_value" DECIMAL,
         "uploaded_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
         "upload_batch_id" VARCHAR(50),
         "dashboard_url" TEXT,
         UNIQUE("scheme_id", "village_name", "data_date", "uploaded_at")
       );
     `);
-    
+
     // Create index on water_scheme_data_history for efficient date range queries
     await db.execute(`
       CREATE INDEX IF NOT EXISTS "idx_water_scheme_data_history_date_range" 
       ON "water_scheme_data_history" ("data_date", "scheme_id", "village_name");
     `);
-    
+
     // Create index on water_scheme_data_history for efficient latest record queries
     await db.execute(`
       CREATE INDEX IF NOT EXISTS "idx_water_scheme_data_history_latest" 
       ON "water_scheme_data_history" ("scheme_id", "village_name", "data_date", "uploaded_at" DESC);
     `);
-    
+
     // Check if the users table has any records using raw SQL to avoid Drizzle ORM issues
     try {
       const usersResult = await db.execute(`SELECT COUNT(*) FROM "users"`);
       const usersCount = parseInt(usersResult.rows[0].count, 10);
-      
+
       if (usersCount === 0) {
         console.log("Creating default admin user...");
         // Use raw SQL to insert admin user to avoid potential ORM issues
@@ -511,7 +665,7 @@ export async function initializeTables(db: any) {
       console.error("Error checking/creating users:", error);
       // Continue despite error to allow other tables to be created
     }
-    
+
     // Create report_files table
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "report_files" (
@@ -526,7 +680,7 @@ export async function initializeTables(db: any) {
         "is_active" BOOLEAN DEFAULT TRUE
       );
     `);
-    
+
     // Create user_activity_logs table for comprehensive activity tracking
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "user_activity_logs" (
@@ -545,7 +699,7 @@ export async function initializeTables(db: any) {
         "metadata" JSONB
       );
     `);
-    
+
     // Create population_tracking table for daily total population storage
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "population_tracking" (
@@ -555,7 +709,7 @@ export async function initializeTables(db: any) {
         "created_at" TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
       );
     `);
-    
+
     // Create region_population_tracking table for daily regional population storage
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "region_population_tracking" (
@@ -567,7 +721,7 @@ export async function initializeTables(db: any) {
         UNIQUE("date", "region")
       );
     `);
-    
+
     // Create communication_status table for ESR sensor connectivity monitoring
     await db.execute(`
       CREATE TABLE IF NOT EXISTS "communication_status" (
@@ -610,11 +764,10 @@ export async function initializeTables(db: any) {
       CREATE INDEX IF NOT EXISTS "idx_communication_status_scheme" 
       ON "communication_status" ("scheme_id");
     `);
-    
+
     console.log("Database tables initialized successfully");
   } catch (error) {
     console.error("Error initializing database tables:", error);
     throw error;
   }
 }
-

@@ -53,47 +53,47 @@ const upload = multer({
 router.get('/', async (req, res) => {
   try {
     const { region, minLpcd, maxLpcd, zeroSupplyForWeek } = req.query;
-    
+
     // Use pg directly for this route
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       let query = 'SELECT * FROM water_scheme_data';
       const queryParams: any[] = [];
       const conditions: string[] = [];
-      
+
       // Add filter conditions
       if (region && region !== 'all') {
         conditions.push('region = $' + (queryParams.length + 1));
         queryParams.push(region);
       }
-      
+
       if (minLpcd) {
         // When setting a minimum LPCD, exclude zero/null values and ensure it's greater than the min value
         conditions.push('(lpcd_value_day1 > 0 AND lpcd_value_day1 >= $' + (queryParams.length + 1) + ')');
         queryParams.push(Number(minLpcd));
       }
-      
+
       if (maxLpcd) {
         // When setting a maximum, include only values less than or equal to max but greater than 0
         conditions.push('(lpcd_value_day1 > 0 AND lpcd_value_day1 <= $' + (queryParams.length + 1) + ')');
         queryParams.push(Number(maxLpcd));
       }
-      
+
       if (zeroSupplyForWeek === 'true') {
         conditions.push('consistent_zero_lpcd_for_a_week = $' + (queryParams.length + 1));
         queryParams.push(1); // Using 1 instead of true since the field is an integer
       }
-      
+
       // Build final query with conditions
       if (conditions.length > 0) {
         query += ' WHERE ' + conditions.join(' AND ');
       }
-      
+
       query += ' ORDER BY region, scheme_id, village_name';
-      
+
       const result = await client.query(query, queryParams);
       res.json(result.rows);
     } finally {
@@ -109,11 +109,11 @@ router.get('/', async (req, res) => {
 router.get('/village-counts', async (req, res) => {
   try {
     const { region, mjpCommissioned } = req.query;
-    
+
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       let baseQuery = `
         WITH deduplicated_villages AS (
@@ -144,15 +144,15 @@ router.get('/village-counts', async (req, res) => {
           COUNT(CASE WHEN lpcd_value_day7 = 0 OR lpcd_value_day7 IS NULL THEN 1 END) as villages_zero_lpcd
         FROM deduplicated_villages
       `;
-      
+
       const queryParams: any[] = [];
       const conditions: string[] = [];
-      
+
       if (region && region !== 'all') {
         conditions.push('region = $' + (queryParams.length + 1));
         queryParams.push(region);
       }
-      
+
       if (mjpCommissioned) {
         if (mjpCommissioned === 'yes') {
           conditions.push("mjp_commissioned = 'Yes'");
@@ -160,11 +160,11 @@ router.get('/village-counts', async (req, res) => {
           conditions.push("mjp_commissioned != 'Yes'");
         }
       }
-      
+
       if (conditions.length > 0) {
         baseQuery = baseQuery.replace('FROM deduplicated_villages', 'FROM deduplicated_villages WHERE ' + conditions.join(' AND '));
       }
-      
+
       const result = await client.query(baseQuery, queryParams);
       res.json(result.rows[0]);
     } finally {
@@ -180,12 +180,12 @@ router.get('/village-counts', async (req, res) => {
 router.get('/village-stats', async (req, res) => {
   try {
     const { region } = req.query;
-    
+
     // Use pg directly for this route
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       let baseQuery = `
         WITH unique_villages AS (
@@ -202,47 +202,47 @@ router.get('/village-stats', async (req, res) => {
         )
         SELECT 
           COUNT(DISTINCT CONCAT(village_name, '|', scheme_id)) as total_villages,
-          
+
           -- Villages receiving water (water_value_day6 > 0)
           COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) as villages_with_water,
           ROUND((COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_with_water,
-          
+
           -- Villages not receiving water (water_value_day6 = 0 or NULL)
           COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) as villages_without_water,
           ROUND((COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_without_water,
-          
+
           -- Villages with LPCD > 55
           COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) as villages_lpcd_above_55,
           ROUND((COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_lpcd_above_55,
-          
+
           -- Villages with LPCD <= 55 (but > 0)
           COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_lpcd_below_55,
           ROUND((COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_lpcd_below_55,
-          
+
           -- Daily change calculations (comparing day 6 vs day 5)
           COUNT(CASE WHEN water_value_day6 > 0 AND (water_value_day5 = 0 OR water_value_day5 IS NULL) THEN 1 END) as villages_gained_water,
           COUNT(CASE WHEN (water_value_day6 = 0 OR water_value_day6 IS NULL) AND water_value_day5 > 0 THEN 1 END) as villages_lost_water,
-          
+
           -- Villages with water on day 5 for comparison
           COUNT(CASE WHEN water_value_day5 > 0 THEN 1 END) as villages_with_water_day5,
           COUNT(CASE WHEN water_value_day5 = 0 OR water_value_day5 IS NULL THEN 1 END) as villages_without_water_day5,
-          
+
           -- LPCD change calculations (day 7 vs day 6)
           COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) as villages_lpcd_above_55_day7,
           COUNT(CASE WHEN lpcd_value_day6 > 55 THEN 1 END) as villages_lpcd_above_55_day6,
           COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_lpcd_below_55_day7,
           COUNT(CASE WHEN lpcd_value_day6 <= 55 AND lpcd_value_day6 > 0 THEN 1 END) as villages_lpcd_below_55_day6
-          
+
         FROM unique_villages
       `;
-      
+
       const queryParams: any[] = [];
-      
+
       if (region && region !== 'all') {
         baseQuery = baseQuery.replace('FROM unique_villages', 'FROM unique_villages WHERE region = $1');
         queryParams.push(region);
       }
-      
+
       const result = await client.query(baseQuery, queryParams);
       res.json(result.rows[0]);
     } finally {
@@ -258,12 +258,12 @@ router.get('/village-stats', async (req, res) => {
 router.get('/population-stats', async (req, res) => {
   try {
     const { region } = req.query;
-    
+
     // Use pg directly for this route
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       let baseQuery = `
         WITH unique_villages AS (
@@ -282,54 +282,54 @@ router.get('/population-stats', async (req, res) => {
         SELECT 
           COUNT(DISTINCT CONCAT(village_name, '|', scheme_id)) as total_villages,
           SUM(population) as total_population,
-          
+
           -- Villages and population receiving water (water_value_day6 > 0)
           COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) as villages_with_water,
           SUM(CASE WHEN water_value_day6 > 0 THEN population ELSE 0 END) as population_with_water,
           ROUND((COUNT(CASE WHEN water_value_day6 > 0 THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_with_water,
           ROUND((SUM(CASE WHEN water_value_day6 > 0 THEN population ELSE 0 END) * 100.0 / SUM(population)), 2) as percent_population_with_water,
-          
+
           -- Villages and population with no water (water_value_day6 = 0 or NULL)
           COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) as villages_no_water,
           SUM(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN population ELSE 0 END) as population_no_water,
           ROUND((COUNT(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN 1 END) * 100.0 / COUNT(DISTINCT CONCAT(village_name, '|', scheme_id))), 2) as percent_villages_no_water,
           ROUND((SUM(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN population ELSE 0 END) * 100.0 / SUM(population)), 2) as percent_population_no_water,
-          
+
           -- LPCD analysis based on latest lpcd_date_day7
           COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) as villages_lpcd_above_55,
           COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_lpcd_below_55,
-          
+
           -- Population analysis for LPCD categories
           SUM(CASE WHEN lpcd_value_day7 > 55 THEN population ELSE 0 END) as population_lpcd_above_55,
           SUM(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) as population_lpcd_below_55,
-          
+
           -- Population change analysis (day6 vs day5) - Net change calculation
           -- Net change in population with water (day6 - day5)
           SUM(CASE WHEN water_value_day6 > 0 THEN population ELSE 0 END) - SUM(CASE WHEN water_value_day5 > 0 THEN population ELSE 0 END) as population_gained_water,
           -- Net change in population without water (day6 - day5)  
           SUM(CASE WHEN water_value_day6 = 0 OR water_value_day6 IS NULL THEN population ELSE 0 END) - SUM(CASE WHEN water_value_day5 = 0 OR water_value_day5 IS NULL THEN population ELSE 0 END) as population_lost_water,
-          
+
           -- Day 5 baseline for comparison
           SUM(CASE WHEN water_value_day5 > 0 THEN population ELSE 0 END) as population_with_water_day5,
           SUM(CASE WHEN water_value_day5 = 0 OR water_value_day5 IS NULL THEN population ELSE 0 END) as population_no_water_day5,
-          
+
           -- LPCD statistics for day 7 and day 6 comparison
           SUM(CASE WHEN lpcd_value_day7 > 55 THEN population ELSE 0 END) as population_lpcd_above_55_day7,
           SUM(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) as population_lpcd_below_55_day7,
           SUM(CASE WHEN lpcd_value_day6 > 55 THEN population ELSE 0 END) as population_lpcd_above_55_day6,
           SUM(CASE WHEN lpcd_value_day6 <= 55 AND lpcd_value_day6 > 0 THEN population ELSE 0 END) as population_lpcd_below_55_day6,
-          
+
           -- Village counts for LPCD (keep existing for compatibility)
           COUNT(CASE WHEN lpcd_value_day7 > 55 THEN 1 END) as villages_lpcd_above_55,
           COUNT(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN 1 END) as villages_lpcd_below_55,
-          
+
           -- Current LPCD population totals (using day 7 as current)
           SUM(CASE WHEN lpcd_value_day7 > 55 THEN population ELSE 0 END) as population_lpcd_above_55,
           SUM(CASE WHEN lpcd_value_day7 <= 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) as population_lpcd_below_55
-          
+
         FROM unique_villages
       `;
-      
+
       // Add WHERE clause for region filtering in the CTE
       const queryParams: any[] = [];
       if (region && region !== 'all') {
@@ -339,7 +339,7 @@ router.get('/population-stats', async (req, res) => {
         );
         queryParams.push(region);
       }
-      
+
       // Execute query
       const result = await client.query(baseQuery, queryParams);
       res.json(result.rows[0]);
@@ -356,15 +356,15 @@ router.get('/population-stats', async (req, res) => {
 router.get('/population-change', async (req, res) => {
   try {
     const { region } = req.query;
-    
+
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       let query;
       const queryParams: any[] = [];
-      
+
       if (region && region !== 'all') {
         // Get regional population change
         query = `
@@ -407,10 +407,10 @@ router.get('/population-change', async (req, res) => {
           FULL OUTER JOIN yesterday_data ON 1=1
         `;
       }
-      
+
       const result = await client.query(query, queryParams);
       const data = result.rows[0] || { current_population: 0, previous_population: 0, population_change: 0 };
-      
+
       res.json(data);
     } finally {
       client.release();
@@ -425,12 +425,12 @@ router.get('/population-change', async (req, res) => {
 router.get('/lpcd-stats', async (req, res) => {
   try {
     const { region } = req.query;
-    
+
     // Use pg directly for this route
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       // Get statistics using deduplicated data to match population cards
       let baseQuery = `
@@ -458,7 +458,7 @@ router.get('/lpcd-stats', async (req, res) => {
           SUM(CASE WHEN lpcd_value_day7 < 55 AND lpcd_value_day7 > 0 THEN population ELSE 0 END) AS below_55_population
         FROM unique_villages
       `;
-      
+
       // Add WHERE clause for region filtering in the CTE
       const queryParams: any[] = [];
       if (region && region !== 'all') {
@@ -468,7 +468,7 @@ router.get('/lpcd-stats', async (req, res) => {
         );
         queryParams.push(region);
       }
-      
+
       // Execute query
       const result = await client.query(baseQuery, queryParams);
       res.json(result.rows[0]);
@@ -486,14 +486,14 @@ router.post('/import/excel', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
-  
+
   try {
     const filePath = req.file.path;
     const result = await processExcelFile(filePath);
-    
+
     // Remove temp file after processing
     fs.unlinkSync(filePath);
-    
+
     // Automatically update population tracking after successful import
     try {
       console.log('📊 Triggering population tracking update after data import...');
@@ -503,7 +503,7 @@ router.post('/import/excel', upload.single('file'), async (req, res) => {
       console.error('❌ Error updating population tracking:', popError);
       // Don't fail the import if population tracking fails
     }
-    
+
     res.json(result);
   } catch (error) {
     console.error('Error importing from Excel:', error);
@@ -516,14 +516,14 @@ router.post('/import/csv', upload.single('file'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
-  
+
   try {
     const filePath = req.file.path;
     const result = await processCsvFile(filePath);
-    
+
     // Remove temp file after processing
     fs.unlinkSync(filePath);
-    
+
     // Automatically update population tracking after successful import
     try {
       console.log('📊 Triggering population tracking update after data import...');
@@ -533,7 +533,7 @@ router.post('/import/csv', upload.single('file'), async (req, res) => {
       console.error('❌ Error updating population tracking:', popError);
       // Don't fail the import if population tracking fails
     }
-    
+
     res.json(result);
   } catch (error) {
     console.error('Error importing from CSV:', error);
@@ -547,11 +547,11 @@ router.get('/template', (req, res) => {
     // First, check if template exists in the templates directory
     const templateDir = path.join(__dirname, '..', '..', 'templates');
     const templatePath = path.join(templateDir, 'lpcd_data_template.xlsx');
-    
+
     if (!fs.existsSync(templatePath)) {
       // If template doesn't exist, create it on the fly
       const wb = XLSX.utils.book_new();
-      
+
       // Define the headers
       const headers = [
         'Region',
@@ -594,10 +594,10 @@ router.get('/template', (req, res) => {
         'Below 55 LPCD Count',
         'Above 55 LPCD Count'
       ];
-      
+
       // Create an array to hold the worksheet data
       const wsData = [headers];
-      
+
       // Add sample data rows
       // Sample 1: Pune
       wsData.push([
@@ -641,7 +641,7 @@ router.get('/template', (req, res) => {
         '0',                   // Below 55 LPCD Count (as string for template)
         '7'                    // Above 55 LPCD Count (as string for template)
       ]);
-      
+
       // Sample 2: Nagpur with lower LPCD
       wsData.push([
         'Nagpur',              // Region
@@ -684,33 +684,33 @@ router.get('/template', (req, res) => {
         '7',                   // Below 55 LPCD Count
         '0'                    // Above 55 LPCD Count
       ]);
-      
+
       // Create the worksheet
       const ws = XLSX.utils.aoa_to_sheet(wsData);
-      
+
       // Format the column widths for better readability
       ws['!cols'] = headers.map(() => ({ wch: 15 })); // Default width of 15 for all columns
-      
+
       // Set a wider width for specific columns
       ws['!cols'][6] = { wch: 25 };  // Scheme Name
       ws['!cols'][7] = { wch: 25 };  // Village Name
-      
+
       // Add the worksheet to the workbook
       XLSX.utils.book_append_sheet(wb, ws, 'LPCD_Data_Template');
-      
+
       // Create the temp directory if it doesn't exist
       if (!fs.existsSync(templateDir)) {
         fs.mkdirSync(templateDir, { recursive: true });
       }
-      
+
       // Write the file to disk temporarily
       XLSX.writeFile(wb, templatePath);
     }
-    
+
     // Set response headers
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=lpcd_data_template.xlsx');
-    
+
     // Stream the file to the response
     const fileStream = fs.createReadStream(templatePath);
     fileStream.pipe(res);
@@ -729,23 +729,23 @@ async function processExcelFile(filePath: string) {
   const sheetName = workbook.SheetNames[0];
   const worksheet = workbook.Sheets[sheetName];
   const data = XLSX.utils.sheet_to_json(worksheet);
-  
+
   // Analyze the file to detect if it's our custom LPCD template or a different format
   let isLpcdTemplate = false;
-  
+
   if (data && data.length > 0) {
     const firstRow = data[0] as Record<string, unknown>;
-    
+
     // Check if firstRow is an object we can analyze
     if (firstRow && typeof firstRow === 'object') {
       const headers = Object.keys(firstRow);
-      
+
       // Check for the presence of water and LPCD value columns
       const waterValueColumns = headers.filter(h => h.includes('Water Value'));
       const lpcdValueColumns = headers.filter(h => h.includes('LPCD Value'));
-    
+
       isLpcdTemplate = waterValueColumns.length > 0 || lpcdValueColumns.length > 0;
-      
+
       console.log('Excel import analysis:');
       console.log('- Headers:', headers);
       console.log('- Water value columns:', waterValueColumns);
@@ -753,7 +753,7 @@ async function processExcelFile(filePath: string) {
       console.log('- Is LPCD template:', isLpcdTemplate);
     }
   }
-  
+
   return importDataToDatabase(data, true, isLpcdTemplate);
 }
 
@@ -766,16 +766,16 @@ async function processCsvFile(filePath: string) {
         columns: false,
         skip_empty_lines: true
       }));
-    
+
     parser.on('data', (record) => {
       data.push(record);
     });
-    
+
     parser.on('end', async () => {
       try {
         // Check if this is a properly formatted CSV with headers
         let hasLpcdHeaders = false;
-        
+
         if (data.length > 0) {
           // Check the first row for possible headers
           const firstRow = data[0];
@@ -785,9 +785,9 @@ async function processCsvFile(filePath: string) {
               h.includes('Water Value') || h.includes('water value'));
             const lpcdValueColumns = headerRow.filter(h => 
               h.includes('LPCD Value') || h.includes('lpcd value'));
-              
+
             hasLpcdHeaders = waterValueColumns.length > 0 || lpcdValueColumns.length > 0;
-            
+
             console.log('CSV import analysis:');
             console.log('- Headers:', headerRow);
             console.log('- Water value columns:', waterValueColumns);
@@ -795,14 +795,14 @@ async function processCsvFile(filePath: string) {
             console.log('- Has LPCD headers:', hasLpcdHeaders);
           }
         }
-        
+
         const result = await importDataToDatabase(data, false, hasLpcdHeaders);
         resolve(result);
       } catch (error) {
         reject(error);
       }
     });
-    
+
     parser.on('error', (error) => {
       reject(error);
     });
@@ -821,48 +821,48 @@ async function updateSchemeStatusFromRecord(client: any, record: any) {
     if (!record.scheme_functional_status && !record.fully_completion_scheme_status) {
       return;
     }
-    
+
     // Ensure we have the necessary identification fields
     if (!record.scheme_id || !record.scheme_name || !record.block) {
       return;
     }
-    
+
     console.log(`Checking scheme_status update for scheme: ${record.scheme_name}, block: ${record.block}`);
-    
+
     // Check if scheme_status record exists for this scheme and block
     const existingSchemeStatus = await client.query(
       'SELECT * FROM scheme_status WHERE scheme_id = $1 AND block = $2',
       [record.scheme_id, record.block]
     );
-    
+
     if (existingSchemeStatus.rows.length > 0) {
       // Update existing scheme_status record
       const updateFields: string[] = [];
       const updateValues: any[] = [];
       let paramIndex = 3; // Starting from $3 since $1 and $2 are for WHERE clause
-      
+
       if (record.scheme_functional_status) {
         updateFields.push(`scheme_functional_status = $${paramIndex}`);
         updateValues.push(record.scheme_functional_status);
         paramIndex++;
       }
-      
+
       if (record.fully_completion_scheme_status) {
         updateFields.push(`fully_completion_scheme_status = $${paramIndex}`);
         updateValues.push(record.fully_completion_scheme_status);
         paramIndex++;
       }
-      
+
       if (updateFields.length > 0) {
         const updateQuery = `
           UPDATE scheme_status 
           SET ${updateFields.join(', ')} 
           WHERE scheme_id = $1 AND block = $2
         `;
-        
+
         const finalValues = [record.scheme_id, record.block, ...updateValues];
         await client.query(updateQuery, finalValues);
-        
+
         console.log(`✅ Updated scheme_status for scheme: ${record.scheme_name}, block: ${record.block}`);
         console.log(`   - scheme_functional_status: ${record.scheme_functional_status || 'unchanged'}`);
         console.log(`   - fully_completion_scheme_status: ${record.fully_completion_scheme_status || 'unchanged'}`);
@@ -870,7 +870,7 @@ async function updateSchemeStatusFromRecord(client: any, record: any) {
     } else {
       // Create new scheme_status record if it doesn't exist
       console.log(`Creating new scheme_status record for scheme: ${record.scheme_name}, block: ${record.block}`);
-      
+
       const insertData = {
         scheme_id: record.scheme_id,
         scheme_name: record.scheme_name,
@@ -882,19 +882,19 @@ async function updateSchemeStatusFromRecord(client: any, record: any) {
         scheme_functional_status: record.scheme_functional_status || null,
         fully_completion_scheme_status: record.fully_completion_scheme_status || null
       };
-      
+
       const fields = Object.keys(insertData);
       const insertQuery = `
         INSERT INTO scheme_status (${fields.join(', ')}) 
         VALUES (${fields.map((_, idx) => `$${idx + 1}`).join(', ')})
       `;
-      
+
       const insertValues = fields.map(field => (insertData as any)[field]);
       await client.query(insertQuery, insertValues);
-      
+
       console.log(`✅ Created new scheme_status record for scheme: ${record.scheme_name}, block: ${record.block}`);
     }
-    
+
   } catch (error: any) {
     console.error(`Error updating scheme_status for scheme ${record.scheme_name}, block ${record.block}:`, error.message);
     // Don't throw error to avoid breaking the import process
@@ -906,22 +906,24 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
   let inserted = 0;
   let updated = 0;
   const errors: string[] = [];
-  
+
   // Use pg directly for this route
   const { Pool } = pg;
   const pool = new Pool({ connectionString: process.env.DATABASE_URL });
   const client = await pool.connect();
-  
+
   try {
     // Performance optimization: process in batches
     const BATCH_SIZE = 25; // Number of records to process in a single batch
     let currentBatch: any[] = [];
-    
-    // Pre-process and validate all records first
+
+    // Pre-process and validate all records first, removing duplicates
     const validRecords: any[] = [];
+    const seenRecords = new Set<string>();
+
     for (const row of data) {
       let record: any;
-        
+
       if (isExcel) {
         // Excel file with headers
         record = mapExcelFields(row);
@@ -929,141 +931,100 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
         // CSV file without headers
         record = mapCsvFields(row);
       }
-      
+
       // Skip rows without scheme_id
       if (!record.scheme_id) {
         errors.push(`Skipped row - missing scheme_id: ${JSON.stringify(row)}`);
         continue;
       }
-      
+
       // Ensure both scheme_id and village_name are present
       if (!record.scheme_id || !record.village_name) {
         errors.push(`Skipped row - missing required fields: ${!record.scheme_id ? 'scheme_id' : ''} ${!record.village_name ? 'village_name' : ''}`);
         continue;
       }
-      
+
+      // Create unique key for duplicate detection (including block field)
+      const uniqueKey = `${record.scheme_id}-${record.village_name}-${record.block || ''}`;
+
+      if (seenRecords.has(uniqueKey)) {
+        errors.push(`Duplicate record detected and skipped: scheme_id: ${record.scheme_id}, village_name: ${record.village_name}, block: ${record.block || 'N/A'}`);
+        continue;
+      }
+
+      seenRecords.add(uniqueKey);
       validRecords.push(record);
     }
-    
+
     // Process in batches
     for (let i = 0; i < validRecords.length; i++) {
       const record = validRecords[i];
       currentBatch.push(record);
-      
+
       // Process batch when it reaches the batch size or at the end of the data
       if (currentBatch.length >= BATCH_SIZE || i === validRecords.length - 1) {
-        await client.query('BEGIN');
-        
-        try {
-          // Process each record in the batch
-          for (const batchRecord of currentBatch) {
-            try {
-              // Check if record exists
-              const checkResult = await client.query(
-                'SELECT scheme_id, village_name FROM water_scheme_data WHERE scheme_id = $1 AND village_name = $2',
-                [batchRecord.scheme_id, batchRecord.village_name]
-              );
-              
-              if (checkResult.rows.length > 0) {
-                // Update existing record - exclude primary key fields from the update
-                const updateFields = Object.keys(batchRecord).filter(key => key !== 'scheme_id' && key !== 'village_name');
-                
-                if (updateFields.length === 0) {
-                  // No fields to update other than the primary key
-                  continue;
-                }
-                
-                // Check if we need to generate a dashboard URL for this record
-                if (!batchRecord.dashboard_url) {
-                  // Get the full record data from the database first
-                  const existingRecord = await client.query(
-                    'SELECT * FROM water_scheme_data WHERE scheme_id = $1 AND village_name = $2',
-                    [batchRecord.scheme_id, batchRecord.village_name]
-                  );
-                  
-                  if (existingRecord.rows.length > 0) {
-                    const fullRecord = {...existingRecord.rows[0], ...batchRecord};
-                    batchRecord.dashboard_url = generateVillageDashboardUrl(fullRecord);
-                    
-                    if (batchRecord.dashboard_url) {
-                      console.log(`Generated dashboard URL for existing village: ${batchRecord.village_name} in scheme: ${batchRecord.scheme_id}`);
-                      // Add dashboard_url to updateFields if it's not already there
-                      if (!updateFields.includes('dashboard_url')) {
-                        updateFields.push('dashboard_url');
-                      }
-                    }
-                  }
-                }
-                
-                const updateQuery = `
-                  UPDATE water_scheme_data 
-                  SET ${updateFields.map((key, idx) => `${key} = $${idx + 3}`).join(', ')} 
-                  WHERE scheme_id = $1 AND village_name = $2
-                `;
-                
-                const updateValues = [batchRecord.scheme_id, batchRecord.village_name];
-                updateFields.forEach(key => {
-                  updateValues.push(batchRecord[key]);
-                });
-                
-                await client.query(updateQuery, updateValues);
-                updated++;
-                
-                // IMPORTANT: Update scheme_status table if status fields are present
-                await updateSchemeStatusFromRecord(client, batchRecord);
-                
-              } else {
-                // For new records, generate dashboard URL if not already present
-                if (!batchRecord.dashboard_url) {
-                  batchRecord.dashboard_url = generateVillageDashboardUrl(batchRecord);
-                  if (batchRecord.dashboard_url) {
-                    console.log(`Generated dashboard URL for village: ${batchRecord.village_name} in scheme: ${batchRecord.scheme_id}`);
-                  }
-                }
-                
-                // Insert new record
-                const fields = Object.keys(batchRecord);
-                const insertQuery = `
-                  INSERT INTO water_scheme_data (${fields.join(', ')}) 
-                  VALUES (${fields.map((_, idx) => `$${idx + 1}`).join(', ')})
-                `;
-                
-                const insertValues = fields.map(field => batchRecord[field]);
-                await client.query(insertQuery, insertValues);
-                inserted++;
-                
-                // IMPORTANT: Update scheme_status table for new records too
-                await updateSchemeStatusFromRecord(client, batchRecord);
-              }
-            } catch (error: any) {
-              // Handle specific errors but don't rollback the whole batch
-              if (error.code === '23505') {
-                // Duplicate key error
-                errors.push(`Duplicate key error for scheme_id: ${batchRecord.scheme_id}, village_name: ${batchRecord.village_name}`);
-              } else {
-                errors.push(`Error processing row: ${error.message || 'Unknown error'}`);
+        // Process each record in the batch using individual UPSERT operations (no transactions)
+        for (const batchRecord of currentBatch) {
+          try {
+            // Generate dashboard URL if not already present
+            if (!batchRecord.dashboard_url) {
+              batchRecord.dashboard_url = generateVillageDashboardUrl(batchRecord);
+              if (batchRecord.dashboard_url) {
+                console.log(`Generated dashboard URL for village: ${batchRecord.village_name} in scheme: ${batchRecord.scheme_id}`);
               }
             }
+
+            // Use UPSERT to handle duplicates gracefully
+            const fields = Object.keys(batchRecord);
+            const nonPkFields = fields.filter(key => key !== 'scheme_id' && key !== 'village_name' && key !== 'block');
+
+            if (nonPkFields.length === 0) {
+              // Only primary key fields present, skip this record
+              continue;
+            }
+
+            const upsertQuery = `
+              INSERT INTO water_scheme_data (${fields.join(', ')}) 
+              VALUES (${fields.map((_, idx) => `$${idx + 1}`).join(', ')})
+              ON CONFLICT (scheme_id, village_name, block) 
+              DO UPDATE SET 
+                ${nonPkFields.map(key => `${key} = EXCLUDED.${key}`).join(', ')}
+              RETURNING (xmax = 0) AS inserted
+            `;
+
+            const upsertValues = fields.map(field => batchRecord[field]);
+            const result = await client.query(upsertQuery, upsertValues);
+
+            if (result.rows[0].inserted) {
+              inserted++;
+            } else {
+              updated++;
+            }
+
+            // IMPORTANT: Update scheme_status table if status fields are present
+            await updateSchemeStatusFromRecord(client, batchRecord);
+
+          } catch (error: any) {
+            // Handle specific errors but don't fail the entire batch
+            if (error.code === '23505') {
+              // Duplicate key error (shouldn't happen with UPSERT, but just in case)
+              errors.push(`Duplicate key error for scheme_id: ${batchRecord.scheme_id}, village_name: ${batchRecord.village_name}, block: ${batchRecord.block}`);
+            } else {
+              console.error('Error processing record:', error);
+              errors.push(`Error processing row: ${error.message || 'Unknown error'}`);
+            }
           }
-          
-          // Commit the batch transaction
-          await client.query('COMMIT');
-          
-          // Clear the batch for the next round
-          currentBatch = [];
-        } catch (batchError: any) {
-          // Rollback the entire batch if there was an error
-          await client.query('ROLLBACK');
-          console.error('Error processing batch:', batchError);
-          errors.push(`Failed to process batch: ${batchError.message || String(batchError)}`);
         }
+
+        // Clear the batch for the next round
+        currentBatch = [];
       }
     }
-    
+
     // Store historical water scheme data after successful import
     try {
       console.log("🔄 Storing historical water scheme data from CSV import...");
-      
+
       // Get all the imported records for historical storage
       const allImportedRecords = [];
       for (const row of data) {
@@ -1073,32 +1034,32 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
         } else {
           record = mapCsvFields(row);
         }
-        
+
         if (record.scheme_id && record.village_name) {
           allImportedRecords.push(record);
         }
       }
-      
+
       console.log(`📊 Processing ${allImportedRecords.length} records for historical storage...`);
-      
+
       if (allImportedRecords.length > 0) {
         // Store historical data directly using PostgreSQL client
         const uploadBatchId = `batch_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         const historicalRecords: any[] = [];
-        
+
         for (const record of allImportedRecords) {
           if (!record.scheme_id || !record.village_name) {
             continue;
           }
-          
+
           // Process water values (days 1-6)
           for (let day = 1; day <= 6; day++) {
             const waterDateField = `water_date_day${day}`;
             const waterValueField = `water_value_day${day}`;
-            
+
             const waterDate = record[waterDateField];
             const waterValue = record[waterValueField];
-            
+
             if (waterDate && waterValue !== null && waterValue !== undefined && waterValue !== '') {
               historicalRecords.push({
                 region: record.region || null,
@@ -1119,15 +1080,15 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
               });
             }
           }
-          
+
           // Process LPCD values (days 1-7)
           for (let day = 1; day <= 7; day++) {
             const lpcdDateField = `lpcd_date_day${day}`;
             const lpcdValueField = `lpcd_value_day${day}`;
-            
+
             const lpcdDate = record[lpcdDateField];
             const lpcdValue = record[lpcdValueField];
-            
+
             if (lpcdDate && lpcdValue !== null && lpcdValue !== undefined && lpcdValue !== '') {
               historicalRecords.push({
                 region: record.region || null,
@@ -1149,15 +1110,15 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
             }
           }
         }
-        
+
         if (historicalRecords.length > 0) {
           console.log(`Inserting ${historicalRecords.length} historical records into water_scheme_data_history...`);
-          
+
           // Insert records in batches
           const batchSize = 50;
           for (let i = 0; i < historicalRecords.length; i += batchSize) {
             const batch = historicalRecords.slice(i, i + batchSize);
-            
+
             try {
               // Build individual insert statements for each record
               for (const histRecord of batch) {
@@ -1167,26 +1128,26 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
                    population, number_of_esr, data_date, water_value, lpcd_value, upload_batch_id, dashboard_url) 
                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)
                 `;
-                
+
                 const values = [
                   histRecord.region, histRecord.circle, histRecord.division, histRecord.sub_division,
                   histRecord.block, histRecord.scheme_id, histRecord.scheme_name, histRecord.village_name,
                   histRecord.population, histRecord.number_of_esr, histRecord.data_date,
                   histRecord.water_value, histRecord.lpcd_value, histRecord.upload_batch_id, histRecord.dashboard_url
                 ];
-                
+
                 await client.query(insertQuery, values);
               }
-              
+
               console.log(`✅ Inserted batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(historicalRecords.length/batchSize)} into water_scheme_data_history`);
             } catch (batchError) {
               console.error(`Error inserting historical batch ${Math.floor(i/batchSize) + 1}:`, batchError);
             }
           }
-          
+
           console.log(`✅ Successfully stored ${historicalRecords.length} historical records with batch ID: ${uploadBatchId}`);
         }
-        
+
         console.log("✅ Historical water scheme data stored successfully in water_scheme_data_history table");
       } else {
         console.log("⚠️ No valid records found for historical storage");
@@ -1196,7 +1157,7 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
       console.error('Historical error details:', historicalError);
       errors.push('Failed to store historical water scheme data');
     }
-    
+
     return {
       message: `Successfully processed ${inserted + updated} records.`,
       inserted,
@@ -1214,7 +1175,7 @@ async function importDataToDatabase(data: any[], isExcel: boolean, isLpcdTemplat
 // Map Excel fields to database columns
 function mapExcelFields(row: any) {
   const record: any = {};
-  
+
   // Map Excel headers to database fields
   const fieldMapping: Record<string, string> = {
     'Region': 'region',
@@ -1257,13 +1218,13 @@ function mapExcelFields(row: any) {
     'Below 55 LPCD Count': 'below_55_lpcd_count',
     'Above 55 LPCD Count': 'above_55_lpcd_count'
   };
-  
+
   // Map fields from Excel column names
   for (const excelField in row) {
     const dbField = fieldMapping[excelField];
     if (dbField) {
       const value = row[excelField];
-      
+
       // Convert numeric fields to proper number types
       if (['population', 'number_of_esr', 'water_value_day1', 'water_value_day2', 'water_value_day3', 
            'water_value_day4', 'water_value_day5', 'water_value_day6', 'lpcd_value_day1', 'lpcd_value_day2', 
@@ -1294,20 +1255,20 @@ function mapExcelFields(row: any) {
       }
     }
   }
-  
+
   // Log a sample of the processed record for debugging
   if (record.scheme_id) {
     console.log(`Processed record for scheme_id ${record.scheme_id}, village ${record.village_name}:`, 
                 `water_value_day1=${record.water_value_day1}, lpcd_value_day1=${record.lpcd_value_day1}`);
   }
-  
+
   return record;
 }
 
 // Map CSV fields to database columns (no headers)
 function mapCsvFields(row: string[]) {
   const record: any = {};
-  
+
   // CSV column order - extended to include scheme status fields
   const columnMapping = [
     'region',
@@ -1354,12 +1315,12 @@ function mapCsvFields(row: string[]) {
     'scheme_functional_status',
     'fully_completion_scheme_status'
   ];
-  
+
   // Map fields based on column position
   columnMapping.forEach((field, index) => {
     if (index < row.length) {
       const value = row[index];
-      
+
       // Convert value to appropriate type
       if (['population', 'number_of_esr', 'water_value_day1', 'water_value_day2', 'water_value_day3', 
            'water_value_day4', 'water_value_day5', 'water_value_day6', 'water_value_day7', 'lpcd_value_day1', 'lpcd_value_day2', 
@@ -1398,14 +1359,14 @@ function mapCsvFields(row: string[]) {
       }
     }
   });
-  
+
   return record;
 }
 
 // Normalize status values to standard format
 function normalizeStatusValue(status: string): string {
   const lowerStatus = status.toLowerCase().trim();
-  
+
   // Standard status mapping
   const statusMap: Record<string, string> = {
     'not-connected': 'Not-Connected',
@@ -1423,12 +1384,12 @@ function normalizeStatusValue(status: string): string {
     'non functional': 'Non-Functional',
     'nonfunctional': 'Non-Functional'
   };
-  
+
   // Try exact match first
   if (statusMap[lowerStatus]) {
     return statusMap[lowerStatus];
   }
-  
+
   // Pattern matching for partial matches
   if (lowerStatus.includes('not') && lowerStatus.includes('connect')) {
     return 'Not-Connected';
@@ -1448,7 +1409,7 @@ function normalizeStatusValue(status: string): string {
   if (lowerStatus.includes('non') && lowerStatus.includes('function')) {
     return 'Non-Functional';
   }
-  
+
   // Return original if no match found
   return status;
 }
@@ -1457,17 +1418,17 @@ function normalizeStatusValue(status: string): string {
 router.get("/water-trends", async (req, res) => {
   try {
     const { region } = req.query;
-    
+
     // Get average water values for the last 6 days
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     let whereClause = '';
     if (region && region !== 'all') {
       whereClause = `WHERE region = '${region}'`;
     }
-    
+
     try {
       const result = await client.query(`
         SELECT 
@@ -1481,7 +1442,7 @@ router.get("/water-trends", async (req, res) => {
         WHERE population IS NOT NULL AND population > 0
         ${region && region !== 'all' ? 'AND region = \'' + region + '\'' : ''}
       `);
-    
+
       const row = result.rows[0];
       const trendData = [
         parseFloat(row.day1) || 0,
@@ -1491,7 +1452,7 @@ router.get("/water-trends", async (req, res) => {
         parseFloat(row.day5) || 0,
         parseFloat(row.day6) || 0
       ];
-      
+
       res.json({
         success: true,
         data: trendData
@@ -1512,11 +1473,11 @@ router.get("/water-trends", async (req, res) => {
 router.get("/no-water-trends", async (req, res) => {
   try {
     const { region } = req.query;
-    
+
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       const result = await client.query(`
         SELECT 
@@ -1530,7 +1491,7 @@ router.get("/no-water-trends", async (req, res) => {
         WHERE population IS NOT NULL AND population > 0
         ${region && region !== 'all' ? 'AND region = \'' + region + '\'' : ''}
       `);
-    
+
       const row = result.rows[0];
       const trendData = [
         parseFloat(row.day1) || 0,
@@ -1540,7 +1501,7 @@ router.get("/no-water-trends", async (req, res) => {
         parseFloat(row.day5) || 0,
         parseFloat(row.day6) || 0
       ];
-      
+
       res.json({
         success: true,
         data: trendData
@@ -1561,18 +1522,18 @@ router.get("/no-water-trends", async (req, res) => {
 router.get("/lpcd-trends", async (req, res) => {
   try {
     const { region } = req.query;
-    
+
     // Get average LPCD values for the last 7 days
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       let whereClause = '';
       if (region && region !== 'all') {
         whereClause = `WHERE region = '${region}'`;
       }
-      
+
       const result = await client.query(`
         SELECT 
           SUM(CASE WHEN lpcd_value_day1 > 55 AND lpcd_value_day1 <= 200 THEN CAST(population AS INTEGER) ELSE 0 END) as day1,
@@ -1586,7 +1547,7 @@ router.get("/lpcd-trends", async (req, res) => {
         WHERE population IS NOT NULL AND population > 0
         ${region && region !== 'all' ? 'AND region = \'' + region + '\'' : ''}
       `);
-      
+
       const row = result.rows[0];
       const trendData = [
         parseFloat(row.day1) || 0,
@@ -1597,7 +1558,7 @@ router.get("/lpcd-trends", async (req, res) => {
         parseFloat(row.day6) || 0,
         parseFloat(row.day7) || 0
       ];
-      
+
       res.json({
         success: true,
         data: trendData
@@ -1618,11 +1579,11 @@ router.get("/lpcd-trends", async (req, res) => {
 router.get("/lpcd-below-55-trends", async (req, res) => {
   try {
     const { region } = req.query;
-    
+
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       const result = await client.query(`
         SELECT 
@@ -1637,7 +1598,7 @@ router.get("/lpcd-below-55-trends", async (req, res) => {
         WHERE population IS NOT NULL AND population > 0
         ${region && region !== 'all' ? 'AND region = \'' + region + '\'' : ''}
       `);
-      
+
       const row = result.rows[0];
       const trendData = [
         parseFloat(row.day1) || 0,
@@ -1648,7 +1609,7 @@ router.get("/lpcd-below-55-trends", async (req, res) => {
         parseFloat(row.day6) || 0,
         parseFloat(row.day7) || 0
       ];
-      
+
       res.json({
         success: true,
         data: trendData
@@ -1669,15 +1630,15 @@ router.get("/lpcd-below-55-trends", async (req, res) => {
 router.get("/population-trends", async (req, res) => {
   try {
     const { region } = req.query;
-    
+
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       let query;
       const queryParams: any[] = [];
-      
+
       if (region && region !== 'all') {
         // Get regional population trends from region_population_tracking
         query = `
@@ -1701,12 +1662,12 @@ router.get("/population-trends", async (req, res) => {
           LIMIT 7
         `;
       }
-      
+
       const result = await client.query(query, queryParams);
-      
+
       // Reverse to get chronological order and extract just population values
       const trendData = result.rows.reverse().map(row => row.population || 0);
-      
+
       res.json({
         success: true,
         data: trendData
@@ -1727,11 +1688,11 @@ router.get("/population-trends", async (req, res) => {
 router.get('/history', async (req, res) => {
   try {
     const { scheme_id, village_name, start_date, end_date, region } = req.query;
-    
+
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       let query = `
         SELECT 
@@ -1739,37 +1700,37 @@ router.get('/history', async (req, res) => {
         FROM water_scheme_data_history 
         WHERE 1=1
       `;
-      
+
       const queryParams: any[] = [];
       let paramIndex = 1;
-      
+
       if (scheme_id) {
         query += ` AND scheme_id = $${paramIndex++}`;
         queryParams.push(scheme_id);
       }
-      
+
       if (village_name) {
         query += ` AND village_name = $${paramIndex++}`;
         queryParams.push(village_name);
       }
-      
+
       if (region) {
         query += ` AND region = $${paramIndex++}`;
         queryParams.push(region);
       }
-      
+
       if (start_date) {
         query += ` AND data_date >= $${paramIndex++}`;
         queryParams.push(start_date);
       }
-      
+
       if (end_date) {
         query += ` AND data_date <= $${paramIndex++}`;
         queryParams.push(end_date);
       }
-      
+
       query += ` ORDER BY data_date DESC, uploaded_at DESC`;
-      
+
       const result = await client.query(query, queryParams);
       res.json(result.rows);
     } finally {
@@ -1785,15 +1746,15 @@ router.get('/history', async (req, res) => {
 router.get('/lpcd-trends', async (req, res) => {
   try {
     const { scheme_id, village_name, start_date, end_date, days = 30 } = req.query;
-    
+
     if (!scheme_id || !village_name) {
       return res.status(400).json({ error: 'scheme_id and village_name are required' });
     }
-    
+
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       let query = `
         SELECT 
@@ -1804,15 +1765,15 @@ router.get('/lpcd-trends', async (req, res) => {
         FROM water_scheme_data_history 
         WHERE scheme_id = $1 AND village_name = $2
       `;
-      
+
       const queryParams: any[] = [scheme_id, village_name];
       let paramIndex = 3;
-      
+
       if (start_date) {
         query += ` AND data_date >= $${paramIndex++}`;
         queryParams.push(start_date);
       }
-      
+
       if (end_date) {
         query += ` AND data_date <= $${paramIndex++}`;
         queryParams.push(end_date);
@@ -1820,9 +1781,9 @@ router.get('/lpcd-trends', async (req, res) => {
         // If no date range specified, get last X days
         query += ` AND data_date >= (CURRENT_DATE - INTERVAL '${days} days')::text`;
       }
-      
+
       query += ` ORDER BY data_date ASC`;
-      
+
       const result = await client.query(query, queryParams);
       res.json(result.rows);
     } finally {
@@ -1838,11 +1799,11 @@ router.get('/lpcd-trends', async (req, res) => {
 router.get('/export/history', async (req, res) => {
   try {
     const { scheme_id, village_name, start_date, end_date, region, format = 'xlsx' } = req.query;
-    
+
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       let query = `
         SELECT 
@@ -1864,44 +1825,44 @@ router.get('/export/history', async (req, res) => {
         FROM water_scheme_data_history 
         WHERE 1=1
       `;
-      
+
       const queryParams: any[] = [];
       let paramIndex = 1;
-      
+
       if (scheme_id) {
         query += ` AND scheme_id = $${paramIndex++}`;
         queryParams.push(scheme_id);
       }
-      
+
       if (village_name) {
         query += ` AND village_name = $${paramIndex++}`;
         queryParams.push(village_name);
       }
-      
+
       if (region) {
         query += ` AND region = $${paramIndex++}`;
         queryParams.push(region);
       }
-      
+
       if (start_date) {
         query += ` AND data_date >= $${paramIndex++}`;
         queryParams.push(start_date);
       }
-      
+
       if (end_date) {
         query += ` AND data_date <= $${paramIndex++}`;
         queryParams.push(end_date);
       }
-      
+
       query += ` ORDER BY data_date DESC, village_name ASC`;
-      
+
       const result = await client.query(query, queryParams);
-      
+
       if (format === 'csv') {
         // Generate CSV
         const headers = Object.keys(result.rows[0] || {});
         let csvContent = headers.join(',') + '\n';
-        
+
         result.rows.forEach(row => {
           const values = headers.map(header => {
             const value = row[header];
@@ -1909,7 +1870,7 @@ router.get('/export/history', async (req, res) => {
           });
           csvContent += values.join(',') + '\n';
         });
-        
+
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename="water_scheme_history_${Date.now()}.csv"`);
         res.send(csvContent);
@@ -1918,9 +1879,9 @@ router.get('/export/history', async (req, res) => {
         const wb = XLSX.utils.book_new();
         const ws = XLSX.utils.json_to_sheet(result.rows);
         XLSX.utils.book_append_sheet(wb, ws, 'Water_Scheme_History');
-        
+
         const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-        
+
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="water_scheme_history_${Date.now()}.xlsx"`);
         res.send(buffer);
@@ -1938,7 +1899,7 @@ router.get('/export/history', async (req, res) => {
 router.get('/historical', async (req, res) => {
   try {
     const { startDate, endDate, region } = req.query;
-    
+
     if (!startDate || !endDate) {
       return res.status(400).json({ 
         error: 'startDate and endDate are required parameters' 
@@ -1948,13 +1909,13 @@ router.get('/historical', async (req, res) => {
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       // Convert date formats if needed
       // If dates come in YYYY-MM-DD format, convert to DD-MMM format
       let formattedStartDate = startDate;
       let formattedEndDate = endDate;
-      
+
       // Check if dates are in YYYY-MM-DD format and convert to DD-MMM
       if (typeof startDate === 'string' && startDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const startDateObj = new Date(startDate + 'T00:00:00Z');
@@ -1963,7 +1924,7 @@ router.get('/historical', async (req, res) => {
           month: 'short' 
         });
       }
-      
+
       if (typeof endDate === 'string' && endDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
         const endDateObj = new Date(endDate + 'T00:00:00Z');
         formattedEndDate = endDateObj.toLocaleDateString('en-GB', { 
@@ -1971,7 +1932,7 @@ router.get('/historical', async (req, res) => {
           month: 'short' 
         });
       }
-      
+
       // Since dates are stored in DD-MMM format, get all data and return it
       // The frontend will handle date filtering or we return all available data
       let query = `
@@ -1994,32 +1955,32 @@ router.get('/historical', async (req, res) => {
         FROM water_scheme_data_history 
         WHERE (lpcd_value IS NOT NULL OR water_value IS NOT NULL)
       `;
-      
+
       const queryParams: any[] = [];
       let paramIndex = 1;
-      
+
       // Add region filter if specified
       if (region && region !== 'all') {
         query += ` AND region = $${paramIndex++}`;
         queryParams.push(region);
       }
-      
+
       query += ' ORDER BY data_date DESC, village_name ASC';
-      
+
       console.log('Executing historical LPCD query:', query);
       console.log('With parameters:', queryParams);
       console.log('Date range requested:', startDate, 'to', endDate);
       console.log('Formatted dates:', formattedStartDate, 'to', formattedEndDate);
-      
+
       const result = await client.query(query, queryParams);
-      
+
       console.log(`Found ${result.rows.length} historical LPCD records`);
       const dates = result.rows.map(r => r.data_date);
       const uniqueDates = dates.filter((date, index) => dates.indexOf(date) === index).sort();
       console.log('Available dates:', uniqueDates);
-      
+
       res.json(result.rows);
-      
+
     } finally {
       client.release();
     }
@@ -2042,7 +2003,7 @@ router.get('/download/village-lpcd-history', async (req, res) => {
       maxLpcd,
       format = 'xlsx' 
     } = req.query;
-    
+
     if (!startDate || !endDate) {
       return res.status(400).json({ 
         error: 'startDate and endDate are required parameters (format: YYYY-MM-DD)' 
@@ -2054,12 +2015,12 @@ router.get('/download/village-lpcd-history', async (req, res) => {
     const { Pool } = pg;
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
     const client = await pool.connect();
-    
+
     try {
       // Convert YYYY-MM-DD dates to Date objects for proper filtering
       const startDateObj = new Date(startDate + 'T00:00:00Z');
       const endDateObj = new Date(endDate + 'T23:59:59Z');
-      
+
       console.log(`Date range: ${startDate} to ${endDate} (${startDateObj.toISOString()} to ${endDateObj.toISOString()})`);
 
       // First get all historical data, then filter by date range in JavaScript
@@ -2084,45 +2045,45 @@ router.get('/download/village-lpcd-history', async (req, res) => {
         FROM water_scheme_data_history 
         WHERE (lpcd_value IS NOT NULL OR water_value IS NOT NULL)
       `;
-      
+
       const queryParams = [];
       let paramIndex = 1;
-      
+
       // Add region filter
       if (region && region !== 'all') {
         query += ` AND region = $${paramIndex++}`;
         queryParams.push(region);
       }
-      
+
       // Add scheme filter
       if (scheme_id) {
         query += ` AND scheme_id = $${paramIndex++}`;
         queryParams.push(scheme_id);
       }
-      
+
       // Add village filter
       if (village_name) {
         query += ` AND village_name = $${paramIndex++}`;
         queryParams.push(village_name);
       }
-      
+
       // Add LPCD range filters
       if (minLpcd) {
         query += ` AND lpcd_value >= $${paramIndex++}`;
         queryParams.push(String(minLpcd));
       }
-      
+
       if (maxLpcd) {
         query += ` AND lpcd_value <= $${paramIndex++}`;
         queryParams.push(String(maxLpcd));
       }
-      
+
       query += ` ORDER BY data_date DESC, region ASC, village_name ASC`;
-      
+
       const result = await client.query(query, queryParams);
-      
+
       console.log(`Retrieved ${result.rows.length} total historical records from database`);
-      
+
       // Helper function to parse DD-MMM date format to Date object
       const parseDDMMMDate = (dateStr: any): Date | null => {
         if (!dateStr || typeof dateStr !== 'string') return null;
@@ -2139,27 +2100,27 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           return null;
         }
       };
-      
+
       // Filter results by date range
       const filteredRows = result.rows.filter(row => {
         const rowDate = parseDDMMMDate(row.data_date);
         if (!rowDate) return false;
         return rowDate >= startDateObj && rowDate <= endDateObj;
       });
-      
+
       console.log(`Filtered to ${filteredRows.length} records within date range`);
-      
+
       const filteredResult = { ...result, rows: filteredRows };
-      
+
       if (result.rows.length === 0) {
         return res.status(404).json({ 
           error: 'No LPCD data found for the specified date range and filters' 
         });
       }
-      
+
       // Generate filename with date range
       const filename = `Village_LPCD_History_${startDate}_to_${endDate}_${Date.now()}`;
-      
+
       if (format === 'csv') {
         // Generate CSV
         const headers = [
@@ -2167,9 +2128,9 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           'Scheme ID', 'Scheme Name', 'Village Name', 'Population',
           'Date', 'LPCD Value', 'Water Value', 'Upload Batch', 'Uploaded At'
         ];
-        
+
         let csvContent = headers.join(',') + '\n';
-        
+
         result.rows.forEach(row => {
           const values = [
             row.region || '',
@@ -2189,29 +2150,29 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           ];
           csvContent += values.map(v => `"${v}"`).join(',') + '\n';
         });
-        
+
         res.setHeader('Content-Type', 'text/csv');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}.csv"`);
         res.send(csvContent);
       } else {
         // Generate Excel with proper pivot structure - dates as headers
         const wb = XLSX.utils.book_new();
-        
+
         // Get unique dates and sort them
         const dates = filteredResult.rows.map(row => row.data_date);
         const uniqueDatesSet = new Set(dates);
         const uniqueDates = Array.from(uniqueDatesSet).sort();
-        
+
         console.log('Creating proper pivot Excel structure');
         console.log('Unique dates found:', uniqueDates);
-        
+
         // Create village lookup map for consolidation
         const villageData = new Map();
-        
+
         // First pass: collect all village base information
         filteredResult.rows.forEach(row => {
           const villageKey = `${row.scheme_id}|${row.village_name}`;
-          
+
           if (!villageData.has(villageKey)) {
             villageData.set(villageKey, {
               baseInfo: {
@@ -2229,36 +2190,36 @@ router.get('/download/village-lpcd-history', async (req, res) => {
               dateValues: new Map()
             });
           }
-          
+
           // Store values for this date, merging with existing data if present
           const existingDateData = villageData.get(villageKey).dateValues.get(row.data_date) || {
             water_value: '',
             lpcd_value: ''
           };
-          
+
           villageData.get(villageKey).dateValues.set(row.data_date, {
             water_value: row.water_value || existingDateData.water_value || '',
             lpcd_value: row.lpcd_value || existingDateData.lpcd_value || ''
           });
         });
-        
+
         // Create the pivot table structure manually
         const pivotRows = [];
-        
+
         // Build header row
         const headerRow = [
           'Region', 'Circle', 'Division', 'Sub Division', 'Block',
           'Scheme ID', 'Scheme Name', 'Village Name', 'Population', 'Number of ESR'
         ];
-        
+
         // Add date headers in pairs
         uniqueDates.forEach(date => {
           headerRow.push(`${date} Water Value (ML)`);
           headerRow.push(`${date} LPCD Value`);
         });
-        
+
         pivotRows.push(headerRow);
-        
+
         // Build data rows
         villageData.forEach((village) => {
           const dataRow = [
@@ -2273,7 +2234,7 @@ router.get('/download/village-lpcd-history', async (req, res) => {
             village.baseInfo.population,
             village.baseInfo.number_of_esr
           ];
-          
+
           // Add date values in order
           uniqueDates.forEach(date => {
             const dateVal = village.dateValues.get(date);
@@ -2285,15 +2246,15 @@ router.get('/download/village-lpcd-history', async (req, res) => {
               dataRow.push(''); // Empty LPCD value
             }
           });
-          
+
           pivotRows.push(dataRow);
         });
-        
+
         console.log(`FINAL PIVOT: ${pivotRows.length - 1} villages, ${headerRow.length} columns total`);
-        
+
         // Create worksheet from the pivot array
         const ws = XLSX.utils.aoa_to_sheet(pivotRows);
-        
+
         // Set column widths
         const colWidths = [
           { width: 15 }, // Region
@@ -2307,17 +2268,17 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           { width: 12 }, // Population
           { width: 15 }  // Number of ESR
         ];
-        
+
         // Add column widths for date columns
         uniqueDates.forEach(() => {
           colWidths.push({ width: 15 }); // Water Value
           colWidths.push({ width: 12 }); // LPCD Value
         });
-        
+
         ws['!cols'] = colWidths;
-        
+
         XLSX.utils.book_append_sheet(wb, ws, 'Pivot Data');
-        
+
         // Add summary sheet
         const summaryData = [
           { 'Filter': 'Date Range', 'Value': `${startDate} to ${endDate}` },
@@ -2327,20 +2288,20 @@ router.get('/download/village-lpcd-history', async (req, res) => {
           { 'Filter': 'Max LPCD Filter', 'Value': maxLpcd || 'None' },
           { 'Filter': 'Generated At', 'Value': new Date().toISOString() }
         ];
-        
+
         const summaryWs = XLSX.utils.json_to_sheet(summaryData);
         summaryWs['!cols'] = [{ width: 20 }, { width: 30 }];
         XLSX.utils.book_append_sheet(wb, summaryWs, 'Filter Summary');
-        
+
         const buffer = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' });
-        
+
         res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}.xlsx"`);
         res.send(buffer);
       }
-      
+
       console.log(`Downloaded ${filteredResult.rows.length} historical LPCD records for date range ${startDate} to ${endDate}`);
-      
+
     } finally {
       client.release();
     }
@@ -2354,9 +2315,9 @@ router.get('/download/village-lpcd-history', async (req, res) => {
 router.post('/populate-history', async (req, res) => {
   try {
     console.log('📊 Manual trigger to populate water_scheme_data_history from current data');
-    
+
     await storageInstance.populateHistoryFromCurrentData();
-    
+
     res.json({
       success: true,
       message: 'Successfully populated water_scheme_data_history from current data'

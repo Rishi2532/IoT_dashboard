@@ -139,7 +139,12 @@ type LpcdRange =
 
 const EnhancedLpcdDashboard = () => {
   const { toast } = useToast();
-  const { trackPageVisit, trackDataExport, trackFilterUsage, trackFileDownload } = useComprehensiveActivityTracker();
+  const {
+    trackPageVisit,
+    trackDataExport,
+    trackFilterUsage,
+    trackFileDownload,
+  } = useComprehensiveActivityTracker();
 
   // Filter state
   const [selectedRegion, setSelectedRegion] = useState<string>("all");
@@ -159,11 +164,11 @@ const EnhancedLpcdDashboard = () => {
   const [historicalStartDate, setHistoricalStartDate] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() - 30); // Default to 30 days ago
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   });
   const [historicalEndDate, setHistoricalEndDate] = useState(() => {
     const date = new Date();
-    return date.toISOString().split('T')[0];
+    return date.toISOString().split("T")[0];
   });
 
   // Track page visit on component mount
@@ -176,21 +181,27 @@ const EnhancedLpcdDashboard = () => {
     const handleRegionFilterChange = (event: CustomEvent) => {
       const { region } = event.detail;
       console.log("Enhanced LPCD Dashboard received region filter:", region);
-      const newRegion = region === 'all' ? 'all' : region;
+      const newRegion = region === "all" ? "all" : region;
       setSelectedRegion(newRegion);
       setPage(1);
     };
 
     const handleMjpCommissionedFilterChange = (event: CustomEvent) => {
       const { mjpCommissioned } = event.detail;
-      console.log("Enhanced LPCD Dashboard received MJP commissioned filter:", mjpCommissioned);
+      console.log(
+        "Enhanced LPCD Dashboard received MJP commissioned filter:",
+        mjpCommissioned,
+      );
       setCommissionedFilter(mjpCommissioned ? "true" : "all");
       setPage(1);
     };
 
     const handleMjpFullyCompletedFilterChange = (event: CustomEvent) => {
       const { mjpFullyCompleted } = event.detail;
-      console.log("Enhanced LPCD Dashboard received MJP fully completed filter:", mjpFullyCompleted);
+      console.log(
+        "Enhanced LPCD Dashboard received MJP fully completed filter:",
+        mjpFullyCompleted,
+      );
       setFullyCompletedFilter(mjpFullyCompleted ? "true" : "all");
       setPage(1);
     };
@@ -212,16 +223,40 @@ const EnhancedLpcdDashboard = () => {
       setPage(1);
     };
 
-    window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
-    window.addEventListener('mjpCommissionedFilterChange', handleMjpCommissionedFilterChange as EventListener);
-    window.addEventListener('mjpFullyCompletedFilterChange', handleMjpFullyCompletedFilterChange as EventListener);
-    window.addEventListener('statusFilterChange', handleStatusFilterChange as EventListener);
-    
+    window.addEventListener(
+      "regionFilterChange",
+      handleRegionFilterChange as EventListener,
+    );
+    window.addEventListener(
+      "mjpCommissionedFilterChange",
+      handleMjpCommissionedFilterChange as EventListener,
+    );
+    window.addEventListener(
+      "mjpFullyCompletedFilterChange",
+      handleMjpFullyCompletedFilterChange as EventListener,
+    );
+    window.addEventListener(
+      "statusFilterChange",
+      handleStatusFilterChange as EventListener,
+    );
+
     return () => {
-      window.removeEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
-      window.removeEventListener('mjpCommissionedFilterChange', handleMjpCommissionedFilterChange as EventListener);
-      window.removeEventListener('mjpFullyCompletedFilterChange', handleMjpFullyCompletedFilterChange as EventListener);
-      window.removeEventListener('statusFilterChange', handleStatusFilterChange as EventListener);
+      window.removeEventListener(
+        "regionFilterChange",
+        handleRegionFilterChange as EventListener,
+      );
+      window.removeEventListener(
+        "mjpCommissionedFilterChange",
+        handleMjpCommissionedFilterChange as EventListener,
+      );
+      window.removeEventListener(
+        "mjpFullyCompletedFilterChange",
+        handleMjpFullyCompletedFilterChange as EventListener,
+      );
+      window.removeEventListener(
+        "statusFilterChange",
+        handleStatusFilterChange as EventListener,
+      );
     };
   }, []);
 
@@ -297,19 +332,24 @@ const EnhancedLpcdDashboard = () => {
     error: historicalError,
     refetch: refetchHistorical,
   } = useQuery<any[]>({
-    queryKey: ["/api/water-scheme-data/historical", historicalStartDate, historicalEndDate, selectedRegion],
+    queryKey: [
+      "/api/water-scheme-data/historical",
+      historicalStartDate,
+      historicalEndDate,
+      selectedRegion,
+    ],
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("startDate", historicalStartDate);
       params.append("endDate", historicalEndDate);
-      
+
       if (selectedRegion && selectedRegion !== "all") {
         params.append("region", selectedRegion);
       }
 
       const url = `/api/water-scheme-data/historical?${params.toString()}`;
       console.log("Fetching historical LPCD data with URL:", url);
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error("Failed to fetch historical LPCD data");
@@ -361,7 +401,7 @@ const EnhancedLpcdDashboard = () => {
   // Check if a scheme has zero water supply for the current day
   const hasNoCurrentWaterSupply = (scheme: WaterSchemeData): boolean => {
     // Get the most recent water supply value
-    const currentWaterSupply = getLatestWaterSupplyValue(scheme);
+    const currentWaterSupply = getLatestLpcdValue(scheme);
 
     // Return true if it's explicitly 0
     return currentWaterSupply !== null && currentWaterSupply === 0;
@@ -572,7 +612,7 @@ const EnhancedLpcdDashboard = () => {
     return filtered;
   };
 
-  // Calculate filter counts using globally filtered data with proper deduplication
+  // Calculate filter counts using globally filtered data without deduplication
   const getFilterCounts = () => {
     // Get the globally filtered data for calculating card statistics
     const globallyFilteredData = getGloballyFilteredSchemes();
@@ -604,24 +644,11 @@ const EnhancedLpcdDashboard = () => {
 
     if (globallyFilteredData.length === 0) return counts;
 
-    // Create a map to track unique villages by scheme_id+village_name (correct unique key)
-    const uniqueVillages = new Map();
-    
-    // First pass: deduplicate villages and collect unique entries
+    // Count all records (including duplicates from different blocks)
+    counts.total = globallyFilteredData.length;
+
+    // Count all village records in each category (no deduplication)
     globallyFilteredData.forEach((scheme) => {
-      const villageKey = `${scheme.scheme_id}|${scheme.village_name}`;
-      
-      // Only keep the first occurrence of each unique village
-      if (!uniqueVillages.has(villageKey)) {
-        uniqueVillages.set(villageKey, scheme);
-      }
-    });
-
-    // Set total to unique village count
-    counts.total = uniqueVillages.size;
-
-    // Count unique villages in each category
-    uniqueVillages.forEach((scheme) => {
       const lpcdValue = getLatestLpcdValue(scheme);
       const population = scheme.population ? Number(scheme.population) : 0;
 
@@ -938,7 +965,7 @@ const EnhancedLpcdDashboard = () => {
         trackDataExport("village_lpcd_data", "xlsx", dataToExport.length, {
           region_filter: selectedRegion !== "all" ? selectedRegion : null,
           lpcd_filter: currentFilter !== "all" ? currentFilter : null,
-          filename: filename
+          filename: filename,
         });
 
         toast({
@@ -965,7 +992,7 @@ const EnhancedLpcdDashboard = () => {
       params.append("startDate", historicalStartDate);
       params.append("endDate", historicalEndDate);
       params.append("format", "xlsx");
-      
+
       if (selectedRegion && selectedRegion !== "all") {
         params.append("region", selectedRegion);
       }
@@ -973,19 +1000,24 @@ const EnhancedLpcdDashboard = () => {
       const queryString = params.toString();
       const url = `/api/water-scheme-data/download/village-lpcd-history?${queryString}`;
 
-      console.log("Downloading historical LPCD data from water_scheme_data_history table:", url);
-      
+      console.log(
+        "Downloading historical LPCD data from water_scheme_data_history table:",
+        url,
+      );
+
       const response = await fetch(url);
-      
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to export historical LPCD data");
+        throw new Error(
+          errorData.error || "Failed to export historical LPCD data",
+        );
       }
 
       // Get the filename from response headers
-      const contentDisposition = response.headers.get('content-disposition');
+      const contentDisposition = response.headers.get("content-disposition");
       let filename = `Village_LPCD_History_${historicalStartDate}_to_${historicalEndDate}.xlsx`;
-      
+
       if (contentDisposition) {
         const filenameMatch = contentDisposition.match(/filename="(.+)"/);
         if (filenameMatch) {
@@ -996,7 +1028,7 @@ const EnhancedLpcdDashboard = () => {
       // Convert response to blob and trigger download
       const blob = await response.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = downloadUrl;
       link.download = filename;
       document.body.appendChild(link);
@@ -1009,16 +1041,16 @@ const EnhancedLpcdDashboard = () => {
         "Village LPCD Historical Data",
         filename,
         0, // We don't know the count from server response
-        { 
+        {
           dateRange: `${historicalStartDate} to ${historicalEndDate}`,
-          region: selectedRegion !== "all" ? selectedRegion : undefined 
+          region: selectedRegion !== "all" ? selectedRegion : undefined,
         },
         {
           exportSource: "lpcd_historical_dashboard",
           startDate: historicalStartDate,
           endDate: historicalEndDate,
-          dataSource: "water_scheme_data_history"
-        }
+          dataSource: "water_scheme_data_history",
+        },
       );
 
       toast({
@@ -1030,7 +1062,10 @@ const EnhancedLpcdDashboard = () => {
       console.error("Export error:", error);
       toast({
         title: "Export Failed",
-        description: error instanceof Error ? error.message : "Failed to export historical LPCD data",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to export historical LPCD data",
         variant: "destructive",
       });
     }
@@ -1086,25 +1121,32 @@ const EnhancedLpcdDashboard = () => {
   };
 
   // Calculate weekly average LPCD function
-  const calculateWeeklyAverageLpcd = (scheme: WaterSchemeData): number | null => {
+  const calculateWeeklyAverageLpcd = (
+    scheme: WaterSchemeData,
+  ): number | null => {
     const lpcdValues: number[] = [];
-    
+
     // Collect all LPCD values for the week
     for (let day = 1; day <= 7; day++) {
       const valueField = `lpcd_value_day${day}` as keyof WaterSchemeData;
       const value = scheme[valueField];
-      
-      if (value !== undefined && value !== null && value !== '' && !isNaN(Number(value))) {
+
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        !isNaN(Number(value))
+      ) {
         lpcdValues.push(Number(value));
       }
     }
-    
+
     // Calculate average if we have any values
     if (lpcdValues.length > 0) {
       const sum = lpcdValues.reduce((acc, val) => acc + val, 0);
       return sum / lpcdValues.length; // Divide by actual number of days with data for true average
     }
-    
+
     return null;
   };
 
@@ -1575,7 +1617,7 @@ const EnhancedLpcdDashboard = () => {
                   Select Date Range for Historical LPCD Data
                 </span>
               </div>
-              
+
               <div className="flex flex-col md:flex-row gap-4 items-center">
                 <div className="flex flex-col gap-1">
                   <label className="text-xs text-gray-600">Start Date</label>
@@ -1586,7 +1628,7 @@ const EnhancedLpcdDashboard = () => {
                     className="w-40"
                   />
                 </div>
-                
+
                 <div className="flex flex-col gap-1">
                   <label className="text-xs text-gray-600">End Date</label>
                   <Input
@@ -1613,7 +1655,9 @@ const EnhancedLpcdDashboard = () => {
                   variant="default"
                   size="sm"
                   className="flex items-center gap-2 mt-4 md:mt-0 bg-blue-600 hover:bg-blue-700"
-                  disabled={isLoadingHistorical || historicalLpcdData.length === 0}
+                  disabled={
+                    isLoadingHistorical || historicalLpcdData.length === 0
+                  }
                 >
                   <Download className="h-4 w-4" />
                   Export to Excel ({historicalLpcdData.length})
@@ -1623,8 +1667,8 @@ const EnhancedLpcdDashboard = () => {
 
             {historicalLpcdData.length > 0 && (
               <div className="mt-3 text-sm text-green-700">
-                Found {historicalLpcdData.length} historical records
-                ({historicalStartDate} to {historicalEndDate})
+                Found {historicalLpcdData.length} historical records (
+                {historicalStartDate} to {historicalEndDate})
               </div>
             )}
 
@@ -1831,10 +1875,11 @@ const EnhancedLpcdDashboard = () => {
                   <p className="text-5xl font-bold text-center text-yellow-600 drop-shadow-sm">
                     {(() => {
                       // Calculate villages with LPCD < 55 but > 0 (excluding zero supply)
-                      const below55ExcludingZero = getGloballyFilteredSchemes().filter((scheme) => {
-                        const lpcd = getLatestLpcdValue(scheme);
-                        return lpcd !== null && lpcd > 0 && lpcd < 55;
-                      });
+                      const below55ExcludingZero =
+                        getGloballyFilteredSchemes().filter((scheme) => {
+                          const lpcd = getLatestLpcdValue(scheme);
+                          return lpcd !== null && lpcd > 0 && lpcd < 55;
+                        });
                       return below55ExcludingZero.length;
                     })()}
                   </p>
@@ -1843,12 +1888,18 @@ const EnhancedLpcdDashboard = () => {
                       <span className="font-medium">Population:</span>{" "}
                       <span className="font-bold">
                         {(() => {
-                          const below55ExcludingZero = getGloballyFilteredSchemes().filter((scheme) => {
-                            const lpcd = getLatestLpcdValue(scheme);
-                            return lpcd !== null && lpcd > 0 && lpcd < 55;
-                          });
-                          const population = below55ExcludingZero.reduce((sum, scheme) => 
-                            sum + (scheme.population ? Number(scheme.population) : 0), 0
+                          const below55ExcludingZero =
+                            getGloballyFilteredSchemes().filter((scheme) => {
+                              const lpcd = getLatestLpcdValue(scheme);
+                              return lpcd !== null && lpcd > 0 && lpcd < 55;
+                            });
+                          const population = below55ExcludingZero.reduce(
+                            (sum, scheme) =>
+                              sum +
+                              (scheme.population
+                                ? Number(scheme.population)
+                                : 0),
+                            0,
                           );
                           return population.toLocaleString("en-IN");
                         })()}
@@ -1981,9 +2032,10 @@ const EnhancedLpcdDashboard = () => {
                 <CardContent className="pt-6 pb-4">
                   <p className="text-5xl font-bold text-center text-gray-600 drop-shadow-sm">
                     {(() => {
-                      const noSupplyVillages = getGloballyFilteredSchemes().filter((scheme) =>
-                        hasNoCurrentWaterSupply(scheme),
-                      );
+                      const noSupplyVillages =
+                        getGloballyFilteredSchemes().filter((scheme) =>
+                          hasNoCurrentWaterSupply(scheme),
+                        );
                       return noSupplyVillages.length;
                     })()}
                   </p>
@@ -1992,11 +2044,17 @@ const EnhancedLpcdDashboard = () => {
                       <span className="font-medium">Population:</span>{" "}
                       <span className="font-bold">
                         {(() => {
-                          const noSupplyVillages = getGloballyFilteredSchemes().filter((scheme) =>
-                            hasNoCurrentWaterSupply(scheme),
-                          );
-                          const population = noSupplyVillages.reduce((sum, scheme) => 
-                            sum + (scheme.population ? Number(scheme.population) : 0), 0
+                          const noSupplyVillages =
+                            getGloballyFilteredSchemes().filter((scheme) =>
+                              hasNoCurrentWaterSupply(scheme),
+                            );
+                          const population = noSupplyVillages.reduce(
+                            (sum, scheme) =>
+                              sum +
+                              (scheme.population
+                                ? Number(scheme.population)
+                                : 0),
+                            0,
                           );
                           return population.toLocaleString("en-IN");
                         })()}
@@ -2136,7 +2194,10 @@ const EnhancedLpcdDashboard = () => {
                             const isEven = index % 2 === 0;
                             return (
                               <TableRow
-                                key={`${scheme.scheme_id}-${scheme.village_name}`}
+                                // IMPORTANT: Key includes block field to handle duplicate villages across blocks
+                                // This ensures proper React rendering when same village exists in multiple blocks
+                                // (e.g., Shivrai village in both Gangapur and Vaijapur blocks)
+                                key={`${scheme.scheme_id}-${scheme.village_name}-${scheme.block}`}
                                 className={`village-item ${
                                   isEven ? "bg-blue-50" : "bg-white"
                                 } hover:bg-blue-100 transition-all`}
@@ -2156,7 +2217,12 @@ const EnhancedLpcdDashboard = () => {
                                   </div>
                                 </TableCell>
                                 <TableCell className="border-b border-blue-200 font-medium text-gray-800 text-left align-middle">
-                                  {scheme.village_name}
+                                  <div className="font-medium text-gray-800">
+                                    {scheme.village_name}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    Block: {scheme.block}
+                                  </div>
                                 </TableCell>
                                 <TableCell className="border-b border-blue-200 text-center font-mono font-medium align-middle">
                                   {scheme.population?.toLocaleString("en-IN") ||

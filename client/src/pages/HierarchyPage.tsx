@@ -1,18 +1,14 @@
 import DashboardLayout from "@/components/dashboard/dashboard-layout";
 import Sidebar from "@/components/dashboard/sidebar";
-import ZoomableSunburst from "@/components/dashboard/zoomable-sunburst";
+import SchemeVillageHeatmap from "@/components/dashboard/scheme-village-heatmap";
 
 const HierarchyPage = () => {
   return (
     <DashboardLayout>
-      <div className="flex h-full">
-        <div className="hidden lg:block">
-          <Sidebar />
-        </div>
-        <div className="flex-1 px-4">
-          <div className="w-full">
-            <ZoomableSunburst />
-          </div>
+      <div className="w-full h-full">
+        {/* Full width layout without sidebar constraints */}
+        <div className="w-full px-2 py-2">
+          <SchemeVillageHeatmap />
         </div>
       </div>
     </DashboardLayout>

@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
 import DashboardLayout from "@/components/dashboard/dashboard-layout";
 import RegionFilter from "@/components/dashboard/region-filter";
 import StatsCards from "@/components/dashboard/stats-cards";
@@ -14,12 +15,25 @@ import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";
 import ZoomableCirclePacking from "@/components/dashboard/zoomable-circle-packing";
 import ZoomableSunburst from "@/components/dashboard/zoomable-sunburst";
 
-
 import ChatbotComponent, {
   FilterContextProvider,
 } from "@/components/chatbot/ChatbotComponent";
 import { Button } from "@/components/ui/button";
-import { Download, RefreshCw, Map, Filter } from "lucide-react";
+import {
+  Download,
+  RefreshCw,
+  Map,
+  Filter,
+  GitBranchPlus,
+  MapPin,
+  BarChart2,
+  PieChart,
+  Droplet,
+  Flame,
+  Gauge,
+  Wifi,
+  Settings,
+} from "lucide-react";
 import { Region, RegionSummary, SchemeStatus } from "@/types";
 import { useToast } from "@/hooks/use-toast";
 import { useComprehensiveActivityTracker } from "@/hooks/use-comprehensive-activity-tracker";
@@ -36,8 +50,6 @@ import { useGeoFilter } from "@/contexts/GeoFilterContext";
 import { useGeographicFilteredSchemes } from "@/hooks/useGeographicFilteredData";
 // Import GeoJSON data for our map
 import getMaharashtraGeoJson from "@/lib/maharashtra-geojson";
-
-
 
 export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState("all");
@@ -60,13 +72,19 @@ export default function Dashboard() {
     const handleRegionFilterChange = (event: CustomEvent) => {
       const { region } = event.detail;
       console.log("Main Dashboard received region filter:", region);
-      setSelectedRegion(region === 'all' ? 'all' : region);
+      setSelectedRegion(region === "all" ? "all" : region);
     };
 
-    window.addEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
-    
+    window.addEventListener(
+      "regionFilterChange",
+      handleRegionFilterChange as EventListener,
+    );
+
     return () => {
-      window.removeEventListener('regionFilterChange', handleRegionFilterChange as EventListener);
+      window.removeEventListener(
+        "regionFilterChange",
+        handleRegionFilterChange as EventListener,
+      );
     };
   }, []);
 
@@ -587,6 +605,8 @@ export default function Dashboard() {
       {/* Daily Updates */}
       <DailyUpdates isLoading={false} />
 
+      {/* Quick Navigation Cards */}
+
       {/* Region Filter in card */}
       <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-white rounded-lg border shadow-sm relative z-10">
         <h2 className="text-base sm:text-lg font-medium mb-2 sm:mb-3 text-blue-800">
@@ -730,8 +750,6 @@ export default function Dashboard() {
       <div className="mb-4 sm:mb-6">
         <ZoomableSunburst />
       </div>
-
-
 
       {/* Enhanced Schemes Table with title and styling */}
       <div className="bg-white p-3 sm:p-5 rounded-lg border border-blue-100 shadow-md mb-4 sm:mb-6">

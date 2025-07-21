@@ -81,42 +81,42 @@ export async function registerRoutes(app: Express): Promise<Server> {
     storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   });
-  
+
   // API routes
-  
+
   // Mount AI routes
   app.use("/api/ai", aiRoutes);
-  
+
   // Mount water scheme routes
   app.use("/api/water-scheme-data", waterSchemeRoutes);
-  
+
   // Mount scheme LPCD routes
   app.use("/api/scheme-lpcd-data", schemeLpcdRoutes);
-  
+
   // Mount reports routes for Excel file uploads/downloads
   app.use("/api/reports", reportsRoutes);
-  
+
   // Mount LPCD import routes (admin-only)
   app.use("/api/admin", requireAdmin, lpcdImportRoutes);
-  
+
   // Mount chlorine data routes
   app.use("/api/chlorine", chlorineRoutes);
-  
+
   // Mount pressure data routes
   app.use("/api/pressure", pressureRoutes);
-  
+
   // Mount communication status routes
   app.use("/api/communication", communicationRoutes);
-  
+
   // Mount translation routes
   app.use("/api/translation", translationRoutes);
-  
+
   // Mount population tracking routes
   app.use("/api/population-tracking", populationRoutes);
-  
+
   // Mount ESR monitoring routes
   app.use("/api/esr", esrRoutes);
-  
+
   // Mount communication status routes
   app.use("/api/communication-status", communicationStatusRoutes);
 
@@ -183,12 +183,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Log the user login with IP address and user agent
       try {
-        const ipAddress = req.ip || req.connection.remoteAddress || 'unknown';
-        const userAgent = req.get('User-Agent') || 'unknown';
+        const ipAddress = req.ip || req.connection.remoteAddress || "unknown";
+        const userAgent = req.get("User-Agent") || "unknown";
         const sessionId = req.sessionID;
-        
+
         await storage.logUserLogin(user, ipAddress, userAgent, sessionId);
-        console.log(`User login logged: ${user.username} (${user.name}) at ${new Date().toISOString()}`);
+        console.log(
+          `User login logged: ${user.username} (${user.name}) at ${new Date().toISOString()}`,
+        );
       } catch (logError) {
         console.error("Error logging user login:", logError);
         // Don't fail the login if logging fails
@@ -224,26 +226,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/login-logs", requireAdmin, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
-      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
-      
+      const userId = req.query.userId
+        ? parseInt(req.query.userId as string)
+        : undefined;
+
       let logs;
       if (userId) {
         logs = await storage.getUserLoginLogsByUserId(userId, limit);
       } else {
         logs = await storage.getUserLoginLogs(limit);
       }
-      
+
       // Fetch activities for each session
       const logsWithActivities = await Promise.all(
         logs.map(async (log: any) => {
           if (log.session_id) {
-            const activities = await storage.getUserActivityLogsBySession(log.session_id, 20);
+            const activities = await storage.getUserActivityLogsBySession(
+              log.session_id,
+              20,
+            );
             return { ...log, activities };
           }
           return { ...log, activities: [] };
-        })
+        }),
       );
-      
+
       res.json(logsWithActivities);
     } catch (error) {
       console.error("Error fetching login logs:", error);
@@ -258,24 +265,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Not authenticated" });
       }
 
-      const { 
-        activity_type, 
-        activity_description, 
-        file_name, 
-        file_type, 
-        page_url, 
+      const {
+        activity_type,
+        activity_description,
+        file_name,
+        file_type,
+        page_url,
         metadata,
         filter_applied,
         export_format,
         data_count,
         scheme_filter,
-        region_filter
+        region_filter,
       } = req.body;
-      
+
       if (!activity_type || !activity_description) {
-        return res.status(400).json({ message: "Activity type and description are required" });
+        return res
+          .status(400)
+          .json({ message: "Activity type and description are required" });
       }
-      
+
       const user = await storage.getUser(req.session.userId);
       if (!user) {
         return res.status(404).json({ message: "User not found" });
@@ -290,8 +299,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         scheme_filter,
         region_filter,
         timestamp: new Date().toISOString(),
-        referer: req.get('Referer'),
-        user_role: user.role
+        referer: req.get("Referer"),
+        user_role: user.role,
       };
 
       const activity = await storage.logUserActivity({
@@ -302,10 +311,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         activity_description,
         file_name: file_name || null,
         file_type: file_type || null,
-        page_url: page_url || req.get('Referer') || null,
+        page_url: page_url || req.get("Referer") || null,
         ip_address: req.ip || req.connection.remoteAddress || null,
-        user_agent: req.get('User-Agent') || null,
-        metadata: enhancedMetadata
+        user_agent: req.get("User-Agent") || null,
+        metadata: enhancedMetadata,
       });
 
       res.json(activity);
@@ -319,8 +328,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/auth/activities", requireAdmin, async (req, res) => {
     try {
       const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
-      const userId = req.query.userId ? parseInt(req.query.userId as string) : undefined;
-      
+      const userId = req.query.userId
+        ? parseInt(req.query.userId as string)
+        : undefined;
+
       const activities = await storage.getUserActivityLogs(userId, limit);
       res.json(activities);
     } catch (error) {
@@ -333,7 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/auth/logout", async (req, res) => {
     if (req.session && req.session.userId) {
       const sessionId = req.sessionID; // Use req.sessionID instead of req.session.sessionId
-      
+
       try {
         // Log the logout time in the database
         await storage.logUserLogout(sessionId);
@@ -342,7 +353,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Error logging logout:", error);
         // Continue with logout even if logging fails
       }
-      
+
       req.session.destroy((err: Error | null) => {
         if (err) {
           return res.status(500).json({ message: "Logout failed" });
@@ -378,7 +389,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch region summary" });
     }
   });
-  
+
   // Get summary for a specific region by name (used by chatbot)
   app.get("/api/regions/:name/summary", async (req, res) => {
     try {
@@ -386,7 +397,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const summary = await storage.getRegionSummary(regionName);
       res.json(summary);
     } catch (error) {
-      console.error(`Error fetching summary for region ${req.params.name}:`, error);
+      console.error(
+        `Error fetching summary for region ${req.params.name}:`,
+        error,
+      );
       res.status(500).json({ message: "Failed to fetch region summary" });
     }
   });
@@ -477,10 +491,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const schemeId = req.query.scheme_id as string;
       const mjpCommissioned = req.query.mjp_commissioned as string;
       const mjpFullyCompleted = req.query.mjp_fully_completed as string;
-      const viewType = req.query.view_type as string || 'summary';
+      const viewType = (req.query.view_type as string) || "summary";
       // Default to consolidated view (true) for summary, non-consolidated (false) for detailed
-      const consolidated = req.query.consolidated === 'true' || 
-                           (req.query.consolidated === undefined && viewType === 'summary');
+      const consolidated =
+        req.query.consolidated === "true" ||
+        (req.query.consolidated === undefined && viewType === "summary");
 
       console.log(
         `Request params: region=${regionName}, status=${status}, schemeId=${schemeId}, mjpCommissioned=${mjpCommissioned}, mjpFullyCompleted=${mjpFullyCompleted}, consolidated=${consolidated}, viewType=${viewType}`,
@@ -491,7 +506,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (regionName && regionName !== "all") {
         // Use consolidated schemes for the region
         if (consolidated) {
-          console.log(`Filtering for consolidated schemes in region=${regionName}, status=${status}`);
+          console.log(
+            `Filtering for consolidated schemes in region=${regionName}, status=${status}`,
+          );
           schemes = await storage.getConsolidatedSchemesByRegion(
             regionName,
             status,
@@ -499,7 +516,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           );
         } else {
           // Use original non-consolidated method
-          console.log(`Filtering for all scheme instances in region=${regionName}, status=${status}`);
+          console.log(
+            `Filtering for all scheme instances in region=${regionName}, status=${status}`,
+          );
           schemes = await storage.getSchemesByRegion(
             regionName,
             status,
@@ -527,18 +546,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           `After filtering: ${schemes.length} schemes for region ${regionName}`,
         );
       }
-      
+
       // Apply MJP commissioned filter if specified
       if (mjpCommissioned && mjpCommissioned !== "all") {
-        schemes = schemes.filter((scheme) => scheme.mjp_commissioned === mjpCommissioned);
+        schemes = schemes.filter(
+          (scheme) => scheme.mjp_commissioned === mjpCommissioned,
+        );
         console.log(
           `After MJP commissioned filtering: ${schemes.length} schemes with mjp_commissioned=${mjpCommissioned}`,
         );
       }
-      
+
       // Apply MJP fully completed filter if specified
       if (mjpFullyCompleted && mjpFullyCompleted !== "all") {
-        schemes = schemes.filter((scheme) => scheme.mjp_fully_completed === mjpFullyCompleted);
+        schemes = schemes.filter(
+          (scheme) => scheme.mjp_fully_completed === mjpFullyCompleted,
+        );
         console.log(
           `After MJP fully completed filtering: ${schemes.length} schemes with mjp_fully_completed=${mjpFullyCompleted}`,
         );
@@ -572,7 +595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch scheme" });
     }
   });
-  
+
   // Get schemes by name (for multi-block schemes)
   app.get("/api/schemes/by-name/:name", async (req, res) => {
     try {
@@ -586,85 +609,101 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const schemes = await storage.getSchemesByName(schemeName);
 
       if (!schemes || schemes.length === 0) {
-        return res.status(404).json({ message: "No schemes found with this name" });
+        return res
+          .status(404)
+          .json({ message: "No schemes found with this name" });
       }
 
       // If "All Blocks" is specified or no block specified, return aggregated data
       if (!blockName || blockName === "All Blocks") {
         // If there's only one scheme/block, just return it
         if (schemes.length === 1) {
-          return res.json({...schemes[0], block: 'All Blocks'});
+          return res.json({ ...schemes[0], block: "All Blocks" });
         }
-        
+
         // Create an aggregated scheme object that sums up numerical values
         // Start with the first scheme's data
         const aggregatedScheme = { ...schemes[0] };
-        
+
         // Fields to sum up across all blocks
         const numericFields = [
-          'number_of_village',
-          'total_villages_integrated',
-          'fully_completed_villages',
-          'no_of_functional_village',
-          'no_of_partial_village',
-          'no_of_non_functional_village',
-          'total_number_of_esr',
-          'total_esr_integrated',
-          'no_fully_completed_esr',
-          'balance_to_complete_esr',
-          'flow_meters_connected',
-          'pressure_transmitter_connected',
-          'residual_chlorine_analyzer_connected'
+          "number_of_village",
+          "total_villages_integrated",
+          "fully_completed_villages",
+          "no_of_functional_village",
+          "no_of_partial_village",
+          "no_of_non_functional_village",
+          "total_number_of_esr",
+          "total_esr_integrated",
+          "no_fully_completed_esr",
+          "balance_to_complete_esr",
+          "flow_meters_connected",
+          "pressure_transmitter_connected",
+          "residual_chlorine_analyzer_connected",
         ];
-        
+
         // Reset the numeric fields in our aggregate result to 0
         for (const field of numericFields) {
           if (field in aggregatedScheme) {
             aggregatedScheme[field] = 0;
           }
         }
-        
+
         // Sum up the numeric fields from all blocks
-        console.log(`Aggregating ${schemes.length} blocks for scheme ${schemeName}`);
+        console.log(
+          `Aggregating ${schemes.length} blocks for scheme ${schemeName}`,
+        );
         for (const scheme of schemes) {
           console.log(`Adding block ${scheme.block} data`);
           for (const field of numericFields) {
-            if (field in scheme && typeof scheme[field] === 'number') {
+            if (field in scheme && typeof scheme[field] === "number") {
               // Use += to sum up the values
-              aggregatedScheme[field] = (aggregatedScheme[field] || 0) + (scheme[field] || 0);
-              console.log(`${field}: ${scheme[field]} => Total: ${aggregatedScheme[field]}`);
+              aggregatedScheme[field] =
+                (aggregatedScheme[field] || 0) + (scheme[field] || 0);
+              console.log(
+                `${field}: ${scheme[field]} => Total: ${aggregatedScheme[field]}`,
+              );
             }
           }
         }
-        
+
         // Set special flags for the aggregated result
         aggregatedScheme.isAggregated = true;
-        aggregatedScheme.block = 'All Blocks';
-        
+        aggregatedScheme.block = "All Blocks";
+
         console.log("Final aggregated data:", aggregatedScheme);
         return res.json(aggregatedScheme);
       }
-      
+
       // If a specific block is specified, filter schemes by block
-      console.log(`Filtering for block: "${blockName}" in ${schemes.length} schemes`);
-      
+      console.log(
+        `Filtering for block: "${blockName}" in ${schemes.length} schemes`,
+      );
+
       // First get a list of all available blocks from the database for this scheme
       const availableBlocks = await storage.getBlocksByScheme(schemeName);
       console.log("Available blocks:", availableBlocks);
-      
+
       // FIRST: Try to get data from CSV imports (most up-to-date)
-      console.log(`Trying to get the latest CSV data for scheme "${schemeName}" and block "${blockName}"`);
-      const csvData = await storage.getSchemeDataFromCsvImports(schemeName, blockName);
-      
+      console.log(
+        `Trying to get the latest CSV data for scheme "${schemeName}" and block "${blockName}"`,
+      );
+      const csvData = await storage.getSchemeDataFromCsvImports(
+        schemeName,
+        blockName,
+      );
+
       if (csvData) {
-        console.log(`Found CSV data for scheme "${schemeName}" and block "${blockName}"`);
-        
+        console.log(
+          `Found CSV data for scheme "${schemeName}" and block "${blockName}"`,
+        );
+
         // Use the CSV data as our primary source of truth
         // But make sure to include any additional fields from the scheme_status record too
-        
+
         // Get a template scheme_status record to use for missing fields
         let templateScheme = null;
-        
+
         // Try to find an exact match first
         for (const scheme of schemes) {
           if ((scheme.block || "").toLowerCase() === blockName.toLowerCase()) {
@@ -672,114 +711,133 @@ export async function registerRoutes(app: Express): Promise<Server> {
             break;
           }
         }
-        
+
         // If no exact match, try partial matching
         if (!templateScheme) {
           for (const scheme of schemes) {
             const schemeBlock = (scheme.block || "").toLowerCase();
             const requestedBlockLower = blockName.toLowerCase();
-            
-            if (schemeBlock.includes(requestedBlockLower) || requestedBlockLower.includes(schemeBlock)) {
+
+            if (
+              schemeBlock.includes(requestedBlockLower) ||
+              requestedBlockLower.includes(schemeBlock)
+            ) {
               templateScheme = scheme;
               break;
             }
           }
         }
-        
+
         // If still no match, just use the first scheme as a template
         if (!templateScheme && schemes.length > 0) {
           templateScheme = schemes[0];
         }
-        
+
         // Merge the CSV data with the template scheme data
         const mergedData = {
           ...templateScheme,
           ...csvData,
-          block: blockName // Ensure the block is set correctly
+          block: blockName, // Ensure the block is set correctly
         };
-        
-        console.log(`Returning merged CSV data for scheme "${schemeName}" and block "${blockName}"`);
+
+        console.log(
+          `Returning merged CSV data for scheme "${schemeName}" and block "${blockName}"`,
+        );
         return res.json(mergedData);
       }
-      
+
       // SECOND: If no CSV data, fall back to the traditional approach
-      console.log(`No CSV data found, falling back to scheme_status table for "${schemeName}" and block "${blockName}"`);
-      
+      console.log(
+        `No CSV data found, falling back to scheme_status table for "${schemeName}" and block "${blockName}"`,
+      );
+
       // Try to find an exact match first
-      let filteredSchemes = schemes.filter(scheme => {
+      let filteredSchemes = schemes.filter((scheme) => {
         // Handle null or undefined block values
         const schemeBlock = scheme.block || "";
         const requestedBlock = blockName || "";
-        
+
         // Exact case-insensitive comparison
         return schemeBlock.toLowerCase() === requestedBlock.toLowerCase();
       });
-      
+
       // If no exact match, try partial matching for CSV imported data
       if (filteredSchemes.length === 0 && blockName) {
-        console.log(`No exact match found for block "${blockName}", trying partial match...`);
-        
+        console.log(
+          `No exact match found for block "${blockName}", trying partial match...`,
+        );
+
         // Try to find the block using partial matching (in case of CSV import data)
-        filteredSchemes = schemes.filter(scheme => {
+        filteredSchemes = schemes.filter((scheme) => {
           // Check if the block name contains the requested block or vice versa
           const schemeBlock = (scheme.block || "").toLowerCase();
           const requestedBlockLower = blockName.toLowerCase();
-          
-          return schemeBlock.includes(requestedBlockLower) || 
-                 requestedBlockLower.includes(schemeBlock);
+
+          return (
+            schemeBlock.includes(requestedBlockLower) ||
+            requestedBlockLower.includes(schemeBlock)
+          );
         });
-        
+
         if (filteredSchemes.length > 0) {
-          console.log(`Found ${filteredSchemes.length} schemes with partial block match for "${blockName}"`);
+          console.log(
+            `Found ${filteredSchemes.length} schemes with partial block match for "${blockName}"`,
+          );
         }
       }
-      
-      console.log(`Found ${filteredSchemes.length} schemes matching block "${blockName}"`);
-      
+
+      console.log(
+        `Found ${filteredSchemes.length} schemes matching block "${blockName}"`,
+      );
+
       if (filteredSchemes.length > 0) {
         // Send only the first matching scheme instead of an array
         return res.json(filteredSchemes[0]);
       } else {
         // If we still have no matches, check if this block exists in the database
         // but just doesn't have any scheme_status records yet
-        const blockExists = availableBlocks.some(block => 
-          block.toLowerCase() === (blockName || "").toLowerCase()
+        const blockExists = availableBlocks.some(
+          (block) => block.toLowerCase() === (blockName || "").toLowerCase(),
         );
-        
+
         if (blockExists) {
-          console.log(`Block "${blockName}" exists but has no scheme_status records, creating template`);
-          
+          console.log(
+            `Block "${blockName}" exists but has no scheme_status records, creating template`,
+          );
+
           // Use the first scheme as a template and change the block
-          const templateScheme = {...schemes[0]};
+          const templateScheme = { ...schemes[0] };
           templateScheme.block = blockName;
-          
+
           // Clear numeric values since this is a new block with no data yet
           const numericFields = [
-            'number_of_village',
-            'total_villages_integrated',
-            'fully_completed_villages',
-            'no_of_functional_village',
-            'no_of_partial_village',
-            'no_of_non_functional_village',
-            'total_number_of_esr',
-            'total_esr_integrated',
-            'no_fully_completed_esr',
-            'balance_to_complete_esr',
-            'flow_meters_connected',
-            'pressure_transmitter_connected',
-            'residual_chlorine_analyzer_connected'
+            "number_of_village",
+            "total_villages_integrated",
+            "fully_completed_villages",
+            "no_of_functional_village",
+            "no_of_partial_village",
+            "no_of_non_functional_village",
+            "total_number_of_esr",
+            "total_esr_integrated",
+            "no_fully_completed_esr",
+            "balance_to_complete_esr",
+            "flow_meters_connected",
+            "pressure_transmitter_connected",
+            "residual_chlorine_analyzer_connected",
           ];
-          
+
           for (const field of numericFields) {
             if (field in templateScheme) {
               templateScheme[field] = 0;
             }
           }
-          
+
           return res.json(templateScheme);
         }
-        
-        console.log("No schemes found for the specified block, returning all schemes");
+
+        console.log(
+          "No schemes found for the specified block, returning all schemes",
+        );
         // If the block wasn't found, still return the aggregate view
         return res.json(schemes);
       }
@@ -788,7 +846,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch schemes by name" });
     }
   });
-  
+
   // Get aggregated data for a scheme across all blocks
   app.get("/api/schemes/aggregate/:name", async (req, res) => {
     try {
@@ -797,66 +855,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (!schemeName || schemeName.trim() === "") {
         return res.status(400).json({ message: "Invalid scheme name" });
       }
-      
+
       // Removed special hardcoded handling for 105 Villages RRWSS
       // Now we use dynamic aggregation from actual database values for all schemes
 
       const schemes = await storage.getSchemesByName(schemeName);
 
       if (!schemes || schemes.length === 0) {
-        return res.status(404).json({ message: "No schemes found with this name" });
+        return res
+          .status(404)
+          .json({ message: "No schemes found with this name" });
       }
-      
+
       // If there's only one scheme/block, just return it
       if (schemes.length === 1) {
-        return res.json({...schemes[0], block: 'All Blocks'});
+        return res.json({ ...schemes[0], block: "All Blocks" });
       }
-      
+
       // Create an aggregated scheme object that sums up numerical values
       // Start with the first scheme's data
       const aggregatedScheme = { ...schemes[0] };
-      
+
       // Fields to sum up across all blocks
       const numericFields = [
-        'number_of_village',
-        'total_villages_integrated',
-        'fully_completed_villages',
-        'no_of_functional_village',
-        'no_of_partial_village',
-        'no_of_non_functional_village',
-        'total_number_of_esr',
-        'total_esr_integrated',
-        'no_fully_completed_esr',
-        'balance_to_complete_esr',
-        'flow_meters_connected',
-        'pressure_transmitter_connected',
-        'residual_chlorine_analyzer_connected'
+        "number_of_village",
+        "total_villages_integrated",
+        "fully_completed_villages",
+        "no_of_functional_village",
+        "no_of_partial_village",
+        "no_of_non_functional_village",
+        "total_number_of_esr",
+        "total_esr_integrated",
+        "no_fully_completed_esr",
+        "balance_to_complete_esr",
+        "flow_meters_connected",
+        "pressure_transmitter_connected",
+        "residual_chlorine_analyzer_connected",
       ];
-      
+
       // Reset the numeric fields in our aggregate result to 0
       for (const field of numericFields) {
         if (field in aggregatedScheme) {
           aggregatedScheme[field] = 0;
         }
       }
-      
+
       // Sum up the numeric fields from all blocks
-      console.log(`Aggregating ${schemes.length} blocks for scheme ${schemeName}`);
+      console.log(
+        `Aggregating ${schemes.length} blocks for scheme ${schemeName}`,
+      );
       for (const scheme of schemes) {
         console.log(`Adding block ${scheme.block} data`);
         for (const field of numericFields) {
-          if (field in scheme && typeof scheme[field] === 'number') {
+          if (field in scheme && typeof scheme[field] === "number") {
             // Use += to sum up the values
-            aggregatedScheme[field] = (aggregatedScheme[field] || 0) + (scheme[field] || 0);
-            console.log(`${field}: ${scheme[field]} => Total: ${aggregatedScheme[field]}`);
+            aggregatedScheme[field] =
+              (aggregatedScheme[field] || 0) + (scheme[field] || 0);
+            console.log(
+              `${field}: ${scheme[field]} => Total: ${aggregatedScheme[field]}`,
+            );
           }
         }
       }
-      
+
       // Set special flags for the aggregated result
       aggregatedScheme.isAggregated = true;
-      aggregatedScheme.block = 'All Blocks';
-      
+      aggregatedScheme.block = "All Blocks";
+
       console.log("Final aggregated data:", aggregatedScheme);
       res.json(aggregatedScheme);
     } catch (error) {
@@ -870,9 +935,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       console.log("Fetching all scheme status data");
       const schemes = await storage.getAllSchemes();
-      
+
       // Transform scheme data to include completion status
-      const schemeStatusData = schemes.map(scheme => ({
+      const schemeStatusData = schemes.map((scheme) => ({
         scheme_id: scheme.scheme_id,
         scheme_name: scheme.scheme_name,
         region: scheme.region,
@@ -880,14 +945,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         division: scheme.division,
         sub_division: scheme.sub_division,
         block: scheme.block,
-        completion_status: scheme.fully_completion_scheme_status || 
-                          (scheme.mjp_fully_completed === 'Fully Completed' ? 'Fully Completed' : 'In Progress'),
+        completion_status:
+          scheme.fully_completion_scheme_status ||
+          (scheme.mjp_fully_completed === "Fully Completed"
+            ? "Fully Completed"
+            : "In Progress"),
         total_villages: scheme.total_villages_integrated || 0,
         completed_villages: scheme.fully_completed_villages || 0,
         total_esr: scheme.total_esr_integrated || 0,
-        completed_esr: scheme.no_fully_completed_esr || 0
+        completed_esr: scheme.no_fully_completed_esr || 0,
+        number_of_village: scheme.number_of_village || 0, // Add the number_of_village field
       }));
-      
+
       console.log(`Returning ${schemeStatusData.length} scheme status records`);
       res.json(schemeStatusData);
     } catch (error) {
@@ -895,55 +964,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to fetch scheme status" });
     }
   });
-  
+
   // Get schemes by geographic filter (region, division, subdivision, circle, block)
   app.get("/api/schemes/geographic", async (req, res) => {
     try {
       // Extract geographic filters from query params
-      const region = req.query.region as string || 'all';
-      const division = req.query.division as string || 'all';
-      const subdivision = req.query.subdivision as string || 'all';
-      const circle = req.query.circle as string || 'all';
-      const block = req.query.block as string || 'all';
-      
+      const region = (req.query.region as string) || "all";
+      const division = (req.query.division as string) || "all";
+      const subdivision = (req.query.subdivision as string) || "all";
+      const circle = (req.query.circle as string) || "all";
+      const block = (req.query.block as string) || "all";
+
       console.log(`Getting schemes with geographic filters: 
         region=${region}, division=${division}, subdivision=${subdivision}, 
         circle=${circle}, block=${block}`);
-      
+
       // Start with all schemes
       let schemes = await storage.getAllSchemes();
-      
+
       // Apply filters
-      if (region !== 'all') {
-        schemes = schemes.filter(scheme => scheme.region === region);
+      if (region !== "all") {
+        schemes = schemes.filter((scheme) => scheme.region === region);
       }
-      
-      if (division !== 'all') {
-        schemes = schemes.filter(scheme => scheme.division === division);
+
+      if (division !== "all") {
+        schemes = schemes.filter((scheme) => scheme.division === division);
       }
-      
-      if (subdivision !== 'all') {
-        schemes = schemes.filter(scheme => scheme.sub_division === subdivision);
+
+      if (subdivision !== "all") {
+        schemes = schemes.filter(
+          (scheme) => scheme.sub_division === subdivision,
+        );
       }
-      
-      if (circle !== 'all') {
-        schemes = schemes.filter(scheme => scheme.circle === circle);
+
+      if (circle !== "all") {
+        schemes = schemes.filter((scheme) => scheme.circle === circle);
       }
-      
-      if (block !== 'all') {
-        schemes = schemes.filter(scheme => scheme.block === block);
+
+      if (block !== "all") {
+        schemes = schemes.filter((scheme) => scheme.block === block);
       }
-      
-      console.log(`Found ${schemes.length} schemes matching geographic filters`);
-      
+
+      console.log(
+        `Found ${schemes.length} schemes matching geographic filters`,
+      );
+
       // Return the filtered schemes
       return res.json(schemes);
     } catch (error) {
       console.error("Error getting schemes by geographic filter:", error);
-      res.status(500).json({ message: "Failed to fetch schemes by geographic filter" });
+      res
+        .status(500)
+        .json({ message: "Failed to fetch schemes by geographic filter" });
     }
   });
-  
+
   // Get blocks for a specific scheme name
   app.get("/api/schemes/blocks/:name", async (req, res) => {
     try {
@@ -957,31 +1032,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Looking up blocks for scheme: "${schemeName}"`);
       const blocks = await storage.getBlocksByScheme(schemeName);
-      
-      console.log(`Found ${blocks.length} blocks for scheme "${schemeName}": ${JSON.stringify(blocks)}`);
-      
+
+      console.log(
+        `Found ${blocks.length} blocks for scheme "${schemeName}": ${JSON.stringify(blocks)}`,
+      );
+
       // Make sure blocks are not empty or contain only empty strings
-      const validBlocks = blocks.filter(block => block && block.trim() !== '');
-      
+      const validBlocks = blocks.filter(
+        (block) => block && block.trim() !== "",
+      );
+
       console.log(`Valid blocks: ${validBlocks.length}`);
-      
+
       if (validBlocks.length > 0) {
-        console.log(`Returning ${validBlocks.length} blocks for scheme "${schemeName}"`);
+        console.log(
+          `Returning ${validBlocks.length} blocks for scheme "${schemeName}"`,
+        );
         res.json(validBlocks);
       } else {
-        console.log(`No valid blocks found for scheme "${schemeName}", checking scheme records directly`);
-        
+        console.log(
+          `No valid blocks found for scheme "${schemeName}", checking scheme records directly`,
+        );
+
         // Fallback: Try to get scheme data directly and extract blocks
         const schemes = await storage.getSchemesByName(schemeName);
-        console.log(`Found ${schemes.length} scheme records with name "${schemeName}"`);
-        
+        console.log(
+          `Found ${schemes.length} scheme records with name "${schemeName}"`,
+        );
+
         if (schemes.length > 0) {
           const extractedBlocks = schemes
-            .map(scheme => scheme.block)
-            .filter(block => block && block.trim() !== '');
-            
-          console.log(`Extracted ${extractedBlocks.length} blocks from scheme records: ${JSON.stringify(extractedBlocks)}`);
-          
+            .map((scheme) => scheme.block)
+            .filter((block) => block && block.trim() !== "");
+
+          console.log(
+            `Extracted ${extractedBlocks.length} blocks from scheme records: ${JSON.stringify(extractedBlocks)}`,
+          );
+
           // Return unique blocks only
           const uniqueBlocks = [...new Set(extractedBlocks)];
           console.log(`Returning ${uniqueBlocks.length} unique blocks`);
@@ -1057,9 +1144,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // FIXED: If block is specified, get scheme by ID and block
-      const existingScheme = block !== undefined 
-        ? await storage.getSchemeByIdAndBlock(schemeId, block)
-        : await storage.getSchemeById(schemeId);
+      const existingScheme =
+        block !== undefined
+          ? await storage.getSchemeByIdAndBlock(schemeId, block)
+          : await storage.getSchemeById(schemeId);
 
       if (!existingScheme) {
         return res.status(404).json({ message: "Scheme not found" });
@@ -1083,25 +1171,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: "Failed to delete scheme" });
     }
   });
-  
+
   // Delete all schemes (admin only)
   app.delete("/api/schemes/all/confirm", requireAdmin, async (req, res) => {
     try {
       console.log("Deleting all schemes from database...");
-      
+
       // Delete all schemes
       const deletedCount = await storage.deleteAllSchemes();
-      
+
       // Update region summaries after deletion
       await updateRegionSummaries();
-      
+
       // Force refresh of today's updates
       await storage.getTodayUpdates();
-      
+
       res.json({
         success: true,
         message: `All schemes have been deleted successfully. Total schemes deleted: ${deletedCount}`,
-        deletedCount
+        deletedCount,
       });
     } catch (error) {
       console.error("Error deleting all schemes:", error);
@@ -1116,9 +1204,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Extract query parameters for filtering
       const region = req.query.region as string | undefined;
-      const minLpcd = req.query.minLpcd ? parseInt(req.query.minLpcd as string) : undefined;
-      const maxLpcd = req.query.maxLpcd ? parseInt(req.query.maxLpcd as string) : undefined;
-      const zeroSupplyForWeek = req.query.zeroSupplyForWeek === 'true';
+      const minLpcd = req.query.minLpcd
+        ? parseInt(req.query.minLpcd as string)
+        : undefined;
+      const maxLpcd = req.query.maxLpcd
+        ? parseInt(req.query.maxLpcd as string)
+        : undefined;
+      const zeroSupplyForWeek = req.query.zeroSupplyForWeek === "true";
 
       // Build filter object
       const filter: {
@@ -1127,26 +1219,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
         maxLpcd?: number;
         zeroSupplyForWeek?: boolean;
       } = {};
-      
-      if (region && region !== 'all') {
+
+      if (region && region !== "all") {
         filter.region = region;
       }
-      
+
       if (!isNaN(minLpcd as number)) {
         filter.minLpcd = minLpcd;
       }
-      
+
       if (!isNaN(maxLpcd as number)) {
         filter.maxLpcd = maxLpcd;
       }
-      
+
       if (zeroSupplyForWeek) {
         filter.zeroSupplyForWeek = true;
       }
 
       // Get data with the provided filters
       const waterSchemeData = await storage.getAllWaterSchemeData(filter);
-      
+
       // Return the filtered data
       res.json(waterSchemeData);
     } catch (error) {
@@ -1181,7 +1273,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/water-scheme-data", requireAdmin, async (req, res) => {
     try {
       const waterSchemeData = insertWaterSchemeDataSchema.parse(req.body);
-      const newWaterSchemeData = await storage.createWaterSchemeData(waterSchemeData);
+      const newWaterSchemeData =
+        await storage.createWaterSchemeData(waterSchemeData);
       res.status(201).json(newWaterSchemeData);
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -1205,14 +1298,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate the scheme ID exists
-      const existingWaterSchemeData = await storage.getWaterSchemeDataById(schemeId);
+      const existingWaterSchemeData =
+        await storage.getWaterSchemeDataById(schemeId);
       if (!existingWaterSchemeData) {
         return res.status(404).json({ message: "Water scheme data not found" });
       }
 
       // Validate the update data
       const updateData = req.body;
-      
+
       // Ensure the scheme_id in the request body matches the path parameter
       if (updateData.scheme_id && updateData.scheme_id !== schemeId) {
         return res.status(400).json({ message: "Scheme ID mismatch" });
@@ -1221,7 +1315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Update the water scheme data
       const updatedWaterSchemeData = await storage.updateWaterSchemeData(
         schemeId,
-        updateData
+        updateData,
       );
 
       res.json(updatedWaterSchemeData);
@@ -1240,7 +1334,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid scheme ID" });
       }
 
-      const existingWaterSchemeData = await storage.getWaterSchemeDataById(schemeId);
+      const existingWaterSchemeData =
+        await storage.getWaterSchemeDataById(schemeId);
 
       if (!existingWaterSchemeData) {
         return res.status(404).json({ message: "Water scheme data not found" });
@@ -1260,112 +1355,134 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Import water scheme data from Excel file (admin only)
-  app.post("/api/water-scheme-data/import/excel", requireAdmin, upload.single("file"), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
-      }
-
-      // Save the file to disk temporarily for processing 
-      const tempDir = path.join(process.cwd(), 'temp_uploads');
-      
-      // Create temp directory if it doesn't exist
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir, { recursive: true });
-      }
-      
-      const tempFilePath = path.join(tempDir, `upload_${Date.now()}.xlsx`);
-      fs.writeFileSync(tempFilePath, req.file.buffer);
-      
-      console.log(`Saved temp file to ${tempFilePath} for processing`);
-      
-      // Try specialized Amravati importer first if the filename contains relevant keywords
-      const fileName = req.file.originalname.toLowerCase();
-      const isAmravatiFile = 
-        fileName.includes('amravati') || 
-        fileName.includes('village') || 
-        fileName.includes('lpcd') ||
-        (req.body && req.body.region && req.body.region.toLowerCase() === 'amravati');
-      
-      let importResult;
-      let usedSpecialImporter = false;
-      
+  app.post(
+    "/api/water-scheme-data/import/excel",
+    requireAdmin,
+    upload.single("file"),
+    async (req, res) => {
       try {
-        if (isAmravatiFile) {
-          console.log('Using special Amravati importer');
-          // Use dynamic import to load the special importer
-          const specialImporter = await import('../special-amravati-import.js');
-          const amravatiResult = await specialImporter.importAmravatiData(tempFilePath);
-          
-          importResult = {
-            inserted: amravatiResult.inserted || 0,
-            updated: amravatiResult.updated || 0,
-            errors: amravatiResult.errors || []
-          };
-          usedSpecialImporter = true;
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
         }
-      } catch (importError) {
-        console.error('Error using special importer:', importError);
-        // Fall back to standard importer
-      }
-      
-      // If special importer wasn't used or failed, use standard importer
-      if (!usedSpecialImporter) {
-        console.log('Using standard water scheme data importer');
-        importResult = await storage.importWaterSchemeDataFromExcel(req.file.buffer);
-      }
-      
-      // Clean up temp file
-      try {
-        if (fs.existsSync(tempFilePath)) {
-          fs.unlinkSync(tempFilePath);
-          console.log(`Temp file ${tempFilePath} deleted`);
-        }
-      } catch (e) {
-        console.warn('Error cleaning up temp file:', e);
-      }
 
-      // Access the 'removed' count if available
-      const removedCount = importResult.removed || 0;
-      
-      res.json({
-        message: `Excel data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated, ${removedCount} records removed.`,
-        inserted: importResult.inserted,
-        updated: importResult.updated,
-        removed: removedCount,
-        errors: importResult.errors,
-      });
-    } catch (error) {
-      console.error("Error importing Excel water scheme data:", error);
-      res.status(500).json({ message: "Failed to import Excel water scheme data" });
-    }
-  });
+        // Save the file to disk temporarily for processing
+        const tempDir = path.join(process.cwd(), "temp_uploads");
+
+        // Create temp directory if it doesn't exist
+        if (!fs.existsSync(tempDir)) {
+          fs.mkdirSync(tempDir, { recursive: true });
+        }
+
+        const tempFilePath = path.join(tempDir, `upload_${Date.now()}.xlsx`);
+        fs.writeFileSync(tempFilePath, req.file.buffer);
+
+        console.log(`Saved temp file to ${tempFilePath} for processing`);
+
+        // Try specialized Amravati importer first if the filename contains relevant keywords
+        const fileName = req.file.originalname.toLowerCase();
+        const isAmravatiFile =
+          fileName.includes("amravati") ||
+          fileName.includes("village") ||
+          fileName.includes("lpcd") ||
+          (req.body &&
+            req.body.region &&
+            req.body.region.toLowerCase() === "amravati");
+
+        let importResult;
+        let usedSpecialImporter = false;
+
+        try {
+          if (isAmravatiFile) {
+            console.log("Using special Amravati importer");
+            // Use dynamic import to load the special importer
+            const specialImporter = await import(
+              "../special-amravati-import.js"
+            );
+            const amravatiResult =
+              await specialImporter.importAmravatiData(tempFilePath);
+
+            importResult = {
+              inserted: amravatiResult.inserted || 0,
+              updated: amravatiResult.updated || 0,
+              errors: amravatiResult.errors || [],
+            };
+            usedSpecialImporter = true;
+          }
+        } catch (importError) {
+          console.error("Error using special importer:", importError);
+          // Fall back to standard importer
+        }
+
+        // If special importer wasn't used or failed, use standard importer
+        if (!usedSpecialImporter) {
+          console.log("Using standard water scheme data importer");
+          importResult = await storage.importWaterSchemeDataFromExcel(
+            req.file.buffer,
+          );
+        }
+
+        // Clean up temp file
+        try {
+          if (fs.existsSync(tempFilePath)) {
+            fs.unlinkSync(tempFilePath);
+            console.log(`Temp file ${tempFilePath} deleted`);
+          }
+        } catch (e) {
+          console.warn("Error cleaning up temp file:", e);
+        }
+
+        // Access the 'removed' count if available
+        const removedCount = importResult.removed || 0;
+
+        res.json({
+          message: `Excel data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated, ${removedCount} records removed.`,
+          inserted: importResult.inserted,
+          updated: importResult.updated,
+          removed: removedCount,
+          errors: importResult.errors,
+        });
+      } catch (error) {
+        console.error("Error importing Excel water scheme data:", error);
+        res
+          .status(500)
+          .json({ message: "Failed to import Excel water scheme data" });
+      }
+    },
+  );
 
   // Import water scheme data from CSV file (admin only)
-  app.post("/api/water-scheme-data/import/csv", requireAdmin, upload.single("file"), async (req, res) => {
-    try {
-      if (!req.file) {
-        return res.status(400).json({ message: "No file uploaded" });
+  app.post(
+    "/api/water-scheme-data/import/csv",
+    requireAdmin,
+    upload.single("file"),
+    async (req, res) => {
+      try {
+        if (!req.file) {
+          return res.status(400).json({ message: "No file uploaded" });
+        }
+
+        const fileBuffer = req.file.buffer;
+        const importResult =
+          await storage.importWaterSchemeDataFromCSV(fileBuffer);
+
+        // Access the 'removed' count if available
+        const removedCount = importResult.removed || 0;
+
+        res.json({
+          message: `CSV data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated, ${removedCount} records removed.`,
+          inserted: importResult.inserted,
+          updated: importResult.updated,
+          removed: removedCount,
+          errors: importResult.errors,
+        });
+      } catch (error) {
+        console.error("Error importing CSV water scheme data:", error);
+        res
+          .status(500)
+          .json({ message: "Failed to import CSV water scheme data" });
       }
-
-      const fileBuffer = req.file.buffer;
-      const importResult = await storage.importWaterSchemeDataFromCSV(fileBuffer);
-
-      // Access the 'removed' count if available
-      const removedCount = importResult.removed || 0;
-      
-      res.json({
-        message: `CSV data imported successfully. ${importResult.inserted} new records created, ${importResult.updated} records updated, ${removedCount} records removed.`,
-        inserted: importResult.inserted,
-        updated: importResult.updated,
-        removed: removedCount,
-        errors: importResult.errors,
-      });
-    } catch (error) {
-      console.error("Error importing CSV water scheme data:", error);
-      res.status(500).json({ message: "Failed to import CSV water scheme data" });
-    }
-  });
+    },
+  );
 
   // Update region summaries based on current scheme data
   app.post(
@@ -2231,7 +2348,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           "import",
         );
         const fileBuffer = req.file.buffer;
-        
+
         // Mark all existing schemes as inactive before import
         // This allows us to track which schemes are in the current import
         try {
@@ -3545,14 +3662,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/population/snapshot", async (req, res) => {
     try {
       const { date, totalPopulation } = req.body;
-      
-      if (!date || typeof totalPopulation !== 'number') {
-        return res.status(400).json({ 
-          message: "Date and totalPopulation are required" 
+
+      if (!date || typeof totalPopulation !== "number") {
+        return res.status(400).json({
+          message: "Date and totalPopulation are required",
         });
       }
 
-      const snapshot = await storage.savePopulationSnapshot(date, totalPopulation);
+      const snapshot = await storage.savePopulationSnapshot(
+        date,
+        totalPopulation,
+      );
       res.json(snapshot);
     } catch (error) {
       console.error("Error saving population snapshot:", error);
@@ -3564,17 +3684,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { date } = req.params;
       const changeData = await storage.calculatePopulationChange(date);
-      
+
       if (!changeData) {
-        return res.status(404).json({ 
-          message: "No population data found for the specified date" 
+        return res.status(404).json({
+          message: "No population data found for the specified date",
         });
       }
 
       res.json(changeData);
     } catch (error) {
       console.error("Error calculating population change:", error);
-      res.status(500).json({ message: "Failed to calculate population change" });
+      res
+        .status(500)
+        .json({ message: "Failed to calculate population change" });
     }
   });
 
@@ -3597,21 +3719,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }, 0);
 
       // Get today's date in YYYY-MM-DD format
-      const today = new Date().toISOString().split('T')[0];
-      
+      const today = new Date().toISOString().split("T")[0];
+
       // Save today's population snapshot
       await storage.savePopulationSnapshot(today, totalPopulation);
-      
+
       // Also save region-specific snapshots
       await storage.saveAllRegionPopulationSnapshots(today);
-      
+
       // Calculate population change from previous day
       const changeData = await storage.calculatePopulationChange(today);
-      
+
       res.json({
         totalPopulation,
         date: today,
-        change: changeData
+        change: changeData,
       });
     } catch (error) {
       console.error("Error calculating total population:", error);
@@ -3623,68 +3745,90 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/population/region/:region", async (req, res) => {
     try {
       const { region } = req.params;
-      
+
       // Calculate current population for the specific region
       const waterSchemeDataList = await storage.getAllWaterSchemeData();
-      const regionSchemes = waterSchemeDataList.filter(scheme => scheme.region === region);
+      const regionSchemes = waterSchemeDataList.filter(
+        (scheme) => scheme.region === region,
+      );
       const regionPopulation = regionSchemes.reduce((sum, scheme) => {
         return sum + (scheme.population || 0);
       }, 0);
 
       // Get today's date in YYYY-MM-DD format
-      const today = new Date().toISOString().split('T')[0];
-      
+      const today = new Date().toISOString().split("T")[0];
+
       // Save today's region population snapshot
-      await storage.saveRegionPopulationSnapshot(today, region, regionPopulation);
-      
+      await storage.saveRegionPopulationSnapshot(
+        today,
+        region,
+        regionPopulation,
+      );
+
       // Calculate population change from previous day
-      const changeData = await storage.calculateRegionPopulationChange(today, region);
-      
+      const changeData = await storage.calculateRegionPopulationChange(
+        today,
+        region,
+      );
+
       res.json({
         totalPopulation: regionPopulation,
         region,
         date: today,
-        change: changeData
+        change: changeData,
       });
     } catch (error) {
       console.error("Error calculating region population:", error);
-      res.status(500).json({ message: "Failed to calculate region population" });
+      res
+        .status(500)
+        .json({ message: "Failed to calculate region population" });
     }
   });
 
   app.post("/api/population/region/snapshot", async (req, res) => {
     try {
       const { date, region, totalPopulation } = req.body;
-      
-      if (!date || !region || typeof totalPopulation !== 'number') {
-        return res.status(400).json({ 
-          message: "Date, region, and totalPopulation are required" 
+
+      if (!date || !region || typeof totalPopulation !== "number") {
+        return res.status(400).json({
+          message: "Date, region, and totalPopulation are required",
         });
       }
 
-      const snapshot = await storage.saveRegionPopulationSnapshot(date, region, totalPopulation);
+      const snapshot = await storage.saveRegionPopulationSnapshot(
+        date,
+        region,
+        totalPopulation,
+      );
       res.json(snapshot);
     } catch (error) {
       console.error("Error saving region population snapshot:", error);
-      res.status(500).json({ message: "Failed to save region population snapshot" });
+      res
+        .status(500)
+        .json({ message: "Failed to save region population snapshot" });
     }
   });
 
   app.get("/api/population/region/:region/change/:date", async (req, res) => {
     try {
       const { region, date } = req.params;
-      const changeData = await storage.calculateRegionPopulationChange(date, region);
-      
+      const changeData = await storage.calculateRegionPopulationChange(
+        date,
+        region,
+      );
+
       if (!changeData) {
-        return res.status(404).json({ 
-          message: "No population data found for the specified region and date" 
+        return res.status(404).json({
+          message: "No population data found for the specified region and date",
         });
       }
 
       res.json(changeData);
     } catch (error) {
       console.error("Error calculating region population change:", error);
-      res.status(500).json({ message: "Failed to calculate region population change" });
+      res
+        .status(500)
+        .json({ message: "Failed to calculate region population change" });
     }
   });
 
@@ -3731,12 +3875,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/population/total", requireAdmin, async (req, res) => {
     try {
       const { date, total_population } = req.body;
-      
+
       if (!date || !total_population) {
-        return res.status(400).json({ message: "Date and total_population are required" });
+        return res
+          .status(400)
+          .json({ message: "Date and total_population are required" });
       }
 
-      const result = await storage.addTotalPopulation({ date, total_population });
+      const result = await storage.addTotalPopulation({
+        date,
+        total_population,
+      });
       res.json(result);
     } catch (error) {
       console.error("Error adding total population:", error);
@@ -3748,12 +3897,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/population/region", requireAdmin, async (req, res) => {
     try {
       const { date, region, population } = req.body;
-      
+
       if (!date || !region || !population) {
-        return res.status(400).json({ message: "Date, region, and population are required" });
+        return res
+          .status(400)
+          .json({ message: "Date, region, and population are required" });
       }
 
-      const result = await storage.addRegionalPopulation({ date, region, population });
+      const result = await storage.addRegionalPopulation({
+        date,
+        region,
+        population,
+      });
       res.json(result);
     } catch (error) {
       console.error("Error adding regional population:", error);
@@ -3761,53 +3916,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-
-
-
-  // For Replit, we need to listen on port 5000 
+  // For Replit, we need to listen on port 5000
   // as this is the port Replit expects
   let server: Server = createHttpServer(app);
   const port = process.env.PORT || 5000;
-  
+
   // NOTE: Do not call server.listen() here. It's called in server/index.ts
-  console.log(`Creating HTTP server to run on port ${port} (will be bound to all interfaces)`);
-  
+  console.log(
+    `Creating HTTP server to run on port ${port} (will be bound to all interfaces)`,
+  );
+
   // Path to SSL certificate files - place them in the /ssl directory at the project root
-  // You will need: 
+  // You will need:
   // 1. /ssl/privatekey.pem - your private key file
   // 2. /ssl/certificate.pem - your SSL certificate file
-  const sslKeyPath = path.join(__dirname, '..', 'ssl', 'privatekey.pem');
-  const sslCertPath = path.join(__dirname, '..', 'ssl', 'certificate.pem');
-  
+  const sslKeyPath = path.join(__dirname, "..", "ssl", "privatekey.pem");
+  const sslCertPath = path.join(__dirname, "..", "ssl", "certificate.pem");
+
   // Check if SSL certificates exist and create HTTPS server on port 443 if they do
-  console.log(`Looking for SSL certificates at: ${sslKeyPath} and ${sslCertPath}`);
-  console.log(`Certificate exists: ${fs.existsSync(sslCertPath)}, Key exists: ${fs.existsSync(sslKeyPath)}`);
-  
+  console.log(
+    `Looking for SSL certificates at: ${sslKeyPath} and ${sslCertPath}`,
+  );
+  console.log(
+    `Certificate exists: ${fs.existsSync(sslCertPath)}, Key exists: ${fs.existsSync(sslKeyPath)}`,
+  );
+
   // We only check for privatekey.pem now
   if (fs.existsSync(sslKeyPath) && fs.existsSync(sslCertPath)) {
-    console.log('SSL certificates found, creating HTTPS server');
+    console.log("SSL certificates found, creating HTTPS server");
     try {
       // Create HTTPS server with the user's certificate
       const httpsOptions = {
         key: fs.readFileSync(sslKeyPath),
-        cert: fs.readFileSync(sslCertPath)
+        cert: fs.readFileSync(sslCertPath),
       };
       const httpsServer = createHttpsServer(httpsOptions, app);
-      
+
       // Use standard HTTPS port 443
       // Note: This requires administrator privileges when running locally
       // Explicitly bind to all interfaces (0.0.0.0) for better compatibility
       const httpsPort = 443;
-      httpsServer.listen(httpsPort, '0.0.0.0', () => {
+      httpsServer.listen(httpsPort, "0.0.0.0", () => {
         console.log(`HTTPS server running on port ${httpsPort}`);
       });
-      console.log(`Running both HTTP and HTTPS servers (HTTP: port 5000, HTTPS: port ${httpsPort})`);
+      console.log(
+        `Running both HTTP and HTTPS servers (HTTP: port 5000, HTTPS: port ${httpsPort})`,
+      );
     } catch (err) {
-      console.error('Error setting up HTTPS server:', err);
-      console.log('Continuing with HTTP server only');
+      console.error("Error setting up HTTPS server:", err);
+      console.log("Continuing with HTTP server only");
     }
   } else {
-    console.log('No SSL certificates found in ssl folder. Using HTTP server only.');
+    console.log(
+      "No SSL certificates found in ssl folder. Using HTTP server only.",
+    );
   }
   return server;
 }

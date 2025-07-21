@@ -6,7 +6,7 @@ import fs from "fs";
 dotenv.config();
 
 // Also try to load .env.vscode if it exists
-const envVscodePath = path.join(process.cwd(), '.env.vscode');
+const envVscodePath = path.join(process.cwd(), ".env.vscode");
 if (fs.existsSync(envVscodePath)) {
   console.log("Loading .env.vscode file...");
   dotenv.config({ path: envVscodePath });
@@ -17,7 +17,12 @@ if (!process.env.DATABASE_URL && process.env.REPL_ID) {
   // In Replit, check for database environment variables
   console.log("Setting up Replit database connection...");
   // Check if individual DB components are available
-  if (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE) {
+  if (
+    process.env.PGHOST &&
+    process.env.PGUSER &&
+    process.env.PGPASSWORD &&
+    process.env.PGDATABASE
+  ) {
     process.env.DATABASE_URL = `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE}?sslmode=require`;
     console.log("Constructed DATABASE_URL from individual components");
   }
@@ -113,7 +118,7 @@ app.use((req, res, next) => {
     },
     () => {
       log(`serving on port ${port}`);
-      
+
       // Initialize data cleanup after server starts
       setTimeout(() => {
         initializeDataCleanup().catch(console.error);
