@@ -19,8 +19,9 @@ const upload = multer({
 // Get communication status overview with filtering
 router.get("/overview", async (req, res) => {
   try {
-    const { region, circle, division, sub_division, block, data_freshness } = req.query;
-    
+    const { region, circle, division, sub_division, block, data_freshness } =
+      req.query;
+
     const result = await storage.getCommunicationOverview({
       region: region as string,
       circle: circle as string,
@@ -29,7 +30,7 @@ router.get("/overview", async (req, res) => {
       block: block as string,
       data_freshness: data_freshness as string,
     });
-    
+
     res.json(result);
   } catch (error) {
     console.error("Error fetching communication overview:", error);
@@ -46,6 +47,11 @@ router.get("/filters", async (req, res) => {
       region, circle, division, sub_division
     });
     
+    // Prevent caching for filter responses to ensure fresh data
+    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.set('Pragma', 'no-cache');
+    res.set('Expires', '0');
+
     const result = await storage.getCommunicationFilters({
       region: region as string,
       circle: circle as string,
@@ -64,8 +70,9 @@ router.get("/filters", async (req, res) => {
 // Get schemes list with communication status
 router.get("/schemes", async (req, res) => {
   try {
-    const { region, circle, division, sub_division, block, data_freshness } = req.query;
-    
+    const { region, circle, division, sub_division, block, data_freshness } =
+      req.query;
+
     const result = await storage.getCommunicationSchemes({
       region: region as string,
       circle: circle as string,
@@ -74,7 +81,7 @@ router.get("/schemes", async (req, res) => {
       block: block as string,
       data_freshness: data_freshness as string,
     });
-    
+
     res.json(result);
   } catch (error) {
     console.error("Error fetching communication schemes:", error);
@@ -87,13 +94,18 @@ router.get("/schemes/:schemeId", async (req, res) => {
   try {
     const { schemeId } = req.params;
     const { data_freshness } = req.query;
-    
-    const result = await storage.getSchemeCommunitationDetails(schemeId, data_freshness as string);
-    
+
+    const result = await storage.getSchemeCommunitationDetails(
+      schemeId,
+      data_freshness as string,
+    );
+
     res.json(result);
   } catch (error) {
     console.error("Error fetching scheme communication details:", error);
-    res.status(500).json({ error: "Failed to fetch scheme communication details" });
+    res
+      .status(500)
+      .json({ error: "Failed to fetch scheme communication details" });
   }
 });
 
@@ -107,26 +119,32 @@ router.post("/import/csv", upload.single("file"), async (req, res) => {
     const { clearExisting } = req.body;
     const shouldClear = clearExisting === "true";
 
-    console.log(`Starting communication status CSV import (clearExisting=${shouldClear})`);
-    
+    console.log(
+      `Starting communication status CSV import (clearExisting=${shouldClear})`,
+    );
+
     const filePath = req.file.path;
     const fileContent = fs.readFileSync(filePath, "utf-8");
 
     // Parse CSV without headers
     const records: string[][] = [];
-    
+
     await new Promise<void>((resolve, reject) => {
-      parse(fileContent, {
-        skip_empty_lines: true,
-        trim: true,
-      }, (err, data) => {
-        if (err) {
-          reject(err);
-        } else {
-          records.push(...data);
-          resolve();
-        }
-      });
+      parse(
+        fileContent,
+        {
+          skip_empty_lines: true,
+          trim: true,
+        },
+        (err, data) => {
+          if (err) {
+            reject(err);
+          } else {
+            records.push(...data);
+            resolve();
+          }
+        },
+      );
     });
 
     console.log(`Parsed ${records.length} records from CSV`);
@@ -145,10 +163,9 @@ router.post("/import/csv", upload.single("file"), async (req, res) => {
 
     console.log("Communication status import completed:", result);
     res.json(result);
-
   } catch (error) {
     console.error("Error importing communication status CSV:", error);
-    
+
     // Clean up file if it exists
     if (req.file?.path) {
       try {
@@ -157,10 +174,10 @@ router.post("/import/csv", upload.single("file"), async (req, res) => {
         console.error("Error cleaning up uploaded file:", cleanupError);
       }
     }
-    
-    res.status(500).json({ 
+
+    res.status(500).json({
       error: "Failed to import communication status data",
-      details: error instanceof Error ? error.message : "Unknown error"
+      details: error instanceof Error ? error.message : "Unknown error",
     });
   }
 });
