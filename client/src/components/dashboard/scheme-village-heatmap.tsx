@@ -288,7 +288,7 @@ export default function SchemeVillageHeatmap() {
           ? parseFloat(data.population)
           : data.population;
 
-        if (!isNaN(waterDay7) && waterDay7 > 0 && !isNaN(population) && population > 0) {
+        if (!isNaN(waterDay7) && waterDay7 >= 0 && !isNaN(population) && population > 0) {
           totalWaterDay7 += waterDay7;
           totalPopulation += population;
           hasValidData = true;
@@ -299,7 +299,18 @@ export default function SchemeVillageHeatmap() {
     if (hasValidData && totalPopulation > 0) {
       // LPCD = total water consumption / total population * 100000
       const lpcd = (totalWaterDay7 / totalPopulation) * 100000;
-      return !isNaN(lpcd) && lpcd > 0 ? Math.round(lpcd) : null;
+      
+      // Debug logging for Padali scheme
+      if (schemes.some(s => s.scheme_name?.includes('Padali'))) {
+        console.log('Padali LPCD Calculation:', {
+          totalWaterDay7,
+          totalPopulation,
+          lpcd,
+          rounded: Math.round(lpcd)
+        });
+      }
+      
+      return !isNaN(lpcd) && lpcd >= 0 ? Math.round(lpcd) : null;
     }
 
     return null;
