@@ -176,9 +176,18 @@ export default function CommunicationStatusPage() {
   });
 
   const { data: filters } = useQuery({
-    queryKey: ["/api/communication-status/filters"],
+    queryKey: [
+      "/api/communication-status/filters",
+      selectedRegion,
+    ],
     queryFn: async () => {
-      const response = await fetch("/api/communication-status/filters");
+      const params = new URLSearchParams();
+      // Only pass region filter to get all options for other filters based on selected region
+      if (selectedRegion !== "all") params.set("region", selectedRegion);
+
+      const response = await fetch(
+        `/api/communication-status/filters?${params.toString()}`,
+      );
       return response.json();
     },
   });
@@ -186,16 +195,17 @@ export default function CommunicationStatusPage() {
   // Filter schemes based on search term
   const filteredSchemes = useMemo(() => {
     if (!schemes || !searchTerm.trim()) return schemes || [];
-    
+
     const searchLower = searchTerm.toLowerCase().trim();
-    return schemes.filter((scheme: CommunicationScheme) =>
-      scheme.scheme_name?.toLowerCase().includes(searchLower) ||
-      scheme.village_name?.toLowerCase().includes(searchLower) ||
-      scheme.esr_name?.toLowerCase().includes(searchLower) ||
-      scheme.scheme_id?.toLowerCase().includes(searchLower) ||
-      scheme.region?.toLowerCase().includes(searchLower) ||
-      scheme.circle?.toLowerCase().includes(searchLower) ||
-      scheme.division?.toLowerCase().includes(searchLower)
+    return schemes.filter(
+      (scheme: CommunicationScheme) =>
+        scheme.scheme_name?.toLowerCase().includes(searchLower) ||
+        scheme.village_name?.toLowerCase().includes(searchLower) ||
+        scheme.esr_name?.toLowerCase().includes(searchLower) ||
+        scheme.scheme_id?.toLowerCase().includes(searchLower) ||
+        scheme.region?.toLowerCase().includes(searchLower) ||
+        scheme.circle?.toLowerCase().includes(searchLower) ||
+        scheme.division?.toLowerCase().includes(searchLower),
     );
   }, [schemes, searchTerm]);
 
@@ -206,22 +216,23 @@ export default function CommunicationStatusPage() {
       if (selectedRegion !== "all") params.set("region", selectedRegion);
       if (selectedCircle !== "all") params.set("circle", selectedCircle);
       if (selectedDivision !== "all") params.set("division", selectedDivision);
-      if (selectedSubdivision !== "all") params.set("subdivision", selectedSubdivision);
+      if (selectedSubdivision !== "all")
+        params.set("subdivision", selectedSubdivision);
       if (selectedBlock !== "all") params.set("block", selectedBlock);
       if (searchTerm.trim()) params.set("search", searchTerm.trim());
 
       // Create a download endpoint URL
       const url = `/api/communication-status/download?${params.toString()}`;
-      
+
       // Trigger download
-      const link = document.createElement('a');
+      const link = document.createElement("a");
       link.href = url;
-      link.download = `communication_status_${new Date().toISOString().split('T')[0]}.csv`;
+      link.download = `communication_status_${new Date().toISOString().split("T")[0]}.csv`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error('Error downloading Excel file:', error);
+      console.error("Error downloading Excel file:", error);
     }
   };
 
@@ -242,7 +253,7 @@ export default function CommunicationStatusPage() {
           </Badge>
         );
       default:
-        return <Badge variant="secondary">Unknown</Badge>;
+        return <Badge variant="secondary">NA</Badge>;
     }
   };
 
@@ -303,16 +314,17 @@ export default function CommunicationStatusPage() {
   // Apply search filter to unique schemes
   const searchFilteredSchemes = useMemo(() => {
     if (!searchTerm.trim()) return uniqueSchemes;
-    
+
     const searchLower = searchTerm.toLowerCase().trim();
-    return uniqueSchemes.filter((scheme: CommunicationScheme) =>
-      scheme.scheme_name?.toLowerCase().includes(searchLower) ||
-      scheme.village_name?.toLowerCase().includes(searchLower) ||
-      scheme.esr_name?.toLowerCase().includes(searchLower) ||
-      scheme.scheme_id?.toLowerCase().includes(searchLower) ||
-      scheme.region?.toLowerCase().includes(searchLower) ||
-      scheme.circle?.toLowerCase().includes(searchLower) ||
-      scheme.division?.toLowerCase().includes(searchLower)
+    return uniqueSchemes.filter(
+      (scheme: CommunicationScheme) =>
+        scheme.scheme_name?.toLowerCase().includes(searchLower) ||
+        scheme.village_name?.toLowerCase().includes(searchLower) ||
+        scheme.esr_name?.toLowerCase().includes(searchLower) ||
+        scheme.scheme_id?.toLowerCase().includes(searchLower) ||
+        scheme.region?.toLowerCase().includes(searchLower) ||
+        scheme.circle?.toLowerCase().includes(searchLower) ||
+        scheme.division?.toLowerCase().includes(searchLower),
     );
   }, [uniqueSchemes, searchTerm]);
 
@@ -352,6 +364,11 @@ export default function CommunicationStatusPage() {
                 value={selectedRegion}
                 onValueChange={(value) => {
                   setSelectedRegion(value);
+                  // Reset dependent filters when region changes
+                  setSelectedCircle("all");
+                  setSelectedDivision("all");
+                  setSelectedSubdivision("all");
+                  setSelectedBlock("all");
                   resetPage();
                 }}
               >
@@ -372,6 +389,10 @@ export default function CommunicationStatusPage() {
                 value={selectedCircle}
                 onValueChange={(value) => {
                   setSelectedCircle(value);
+                  // Reset dependent filters when circle changes
+                  setSelectedDivision("all");
+                  setSelectedSubdivision("all");
+                  setSelectedBlock("all");
                   resetPage();
                 }}
               >
@@ -392,6 +413,9 @@ export default function CommunicationStatusPage() {
                 value={selectedDivision}
                 onValueChange={(value) => {
                   setSelectedDivision(value);
+                  // Reset dependent filters when division changes
+                  setSelectedSubdivision("all");
+                  setSelectedBlock("all");
                   resetPage();
                 }}
               >
@@ -412,6 +436,8 @@ export default function CommunicationStatusPage() {
                 value={selectedSubdivision}
                 onValueChange={(value) => {
                   setSelectedSubdivision(value);
+                  // Reset dependent filters when subdivision changes
+                  setSelectedBlock("all");
                   resetPage();
                 }}
               >
@@ -478,6 +504,77 @@ export default function CommunicationStatusPage() {
               </CardContent>
             </Card>
 
+            {/* Flow Meters Card */}
+            <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-green-50 via-white to-green-50">
+              <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/10 rounded-full -mr-10 -mt-10"></div>
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="p-2 bg-green-500/10 rounded-lg mr-3">
+                      <Zap className="w-5 h-5 text-green-600" />
+                    </div>
+                    <span className="text-green-900">Flow Meters</span>
+                  </div>
+                  <div className="flex items-center space-x-1">
+                    <CheckCircle2 className="w-3 h-3 text-green-500" />
+                    {/* <span className="text-xs text-green-600 font-medium">
+                      {(
+                        (overview.flow_meter_online /
+                          (overview.flow_meter_online +
+                            overview.flow_meter_offline) *
+                        100
+                      ).toFixed(0)}
+                      %
+                    </span> */}
+                  </div>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-black rounded-full"></div>
+                      <span className="text-sm font-medium">Connected</span>
+                    </div>
+                    <span className="text-xl font-bold text-black-600">
+                      {Math.round(
+                        Number(overview.flow_meter_online) +
+                          Number(overview.flow_meter_offline),
+                      )}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-sm font-medium">Online</span>
+                    </div>
+                    <span className="text-xl font-bold text-green-600">
+                      {overview.flow_meter_online}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
+                      <span className="text-sm font-medium">Offline</span>
+                    </div>
+                    <span className="text-xl font-bold text-red-600">
+                      {overview.flow_meter_offline}
+                    </span>
+                  </div>
+                  <div className="border-t pt-2 mt-2">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-orange-600">
+                        &gt; 72h: {overview.flow_meter_less_72h}
+                      </span>
+                      <span className="text-red-600">
+                        &lt; 72h: {overview.flow_meter_more_72h}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Chlorine Sensors Card */}
             <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-cyan-50 via-white to-cyan-50">
               <div className="absolute top-0 right-0 w-20 h-20 bg-cyan-500/10 rounded-full -mr-10 -mt-10"></div>
@@ -491,20 +588,33 @@ export default function CommunicationStatusPage() {
                   </div>
                   <div className="flex items-center space-x-1">
                     <CheckCircle2 className="w-3 h-3 text-green-500" />
-                    <span className="text-xs text-green-600 font-medium">
+
+                    {/* <span className="text-xs text-green-600 font-medium">
                       {(
                         (overview.chlorine_online /
                           (overview.chlorine_online +
-                            overview.chlorine_offline || 1)) *
+                            overview.chlorine_offline)) *
                         100
-                      ).toFixed(0)}
-                      %
-                    </span>
+                      )}
+
+                    </span> */}
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-black rounded-full"></div>+
+                      <span className="text-sm font-medium">Connected</span>
+                    </div>
+                    <span className="text-xl font-bold text-black-600">
+                      {Math.round(
+                        Number(overview.chlorine_online) +
+                          Number(overview.chlorine_offline),
+                      )}
+                    </span>
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -551,20 +661,32 @@ export default function CommunicationStatusPage() {
                   </div>
                   <div className="flex items-center space-x-1">
                     <CheckCircle2 className="w-3 h-3 text-green-500" />
-                    <span className="text-xs text-green-600 font-medium">
+                    {/* <span className="text-xs text-green-600 font-medium">
                       {(
                         (overview.pressure_online /
                           (overview.pressure_online +
-                            overview.pressure_offline || 1)) *
+                            overview.pressure_offline) *
                         100
                       ).toFixed(0)}
                       %
-                    </span>
+                    </span> */}
                   </div>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-2 h-2 bg-black rounded-full"></div>
+                      <span className="text-sm font-medium">Connected</span>
+                    </div>
+                    <span className="text-xl font-bold text-black-600">
+                      {Math.round(
+                        Number(overview.pressure_online) +
+                          Number(overview.pressure_offline),
+                      )}
+                    </span>
+                  </div>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center space-x-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full"></div>
@@ -596,70 +718,11 @@ export default function CommunicationStatusPage() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Flow Meters Card */}
-            <Card className="relative overflow-hidden border-0 shadow-lg bg-gradient-to-br from-green-50 via-white to-green-50">
-              <div className="absolute top-0 right-0 w-20 h-20 bg-green-500/10 rounded-full -mr-10 -mt-10"></div>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="p-2 bg-green-500/10 rounded-lg mr-3">
-                      <Zap className="w-5 h-5 text-green-600" />
-                    </div>
-                    <span className="text-green-900">Flow Meters</span>
-                  </div>
-                  <div className="flex items-center space-x-1">
-                    <CheckCircle2 className="w-3 h-3 text-green-500" />
-                    <span className="text-xs text-green-600 font-medium">
-                      {(
-                        (overview.flow_meter_online /
-                          (overview.flow_meter_online +
-                            overview.flow_meter_offline || 1)) *
-                        100
-                      ).toFixed(0)}
-                      %
-                    </span>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-medium">Online</span>
-                    </div>
-                    <span className="text-xl font-bold text-green-600">
-                      {overview.flow_meter_online}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                      <span className="text-sm font-medium">Offline</span>
-                    </div>
-                    <span className="text-xl font-bold text-red-600">
-                      {overview.flow_meter_offline}
-                    </span>
-                  </div>
-                  <div className="border-t pt-2 mt-2">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-orange-600">
-                        &gt; 72h: {overview.flow_meter_less_72h}
-                      </span>
-                      <span className="text-red-600">
-                        &lt; 72h: {overview.flow_meter_more_72h}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
         )}
 
         {/* Regional Statistics */}
-        {!statsLoading && Array.isArray(stats) && (
+        {/* {!statsLoading && Array.isArray(stats) && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {stats.map((stat: CommunicationStats) => (
               <Card
@@ -706,7 +769,7 @@ export default function CommunicationStatusPage() {
               </Card>
             ))}
           </div>
-        )}
+        )} */}
 
         {/* Schemes List with Pagination */}
         <Card>
@@ -725,7 +788,7 @@ export default function CommunicationStatusPage() {
             <CardDescription>
               Detailed view of communication status for each scheme and ESR
             </CardDescription>
-            
+
             {/* Search and Download Controls */}
             <div className="flex gap-4 items-center mt-4">
               <div className="flex-1 max-w-sm">
@@ -742,7 +805,7 @@ export default function CommunicationStatusPage() {
                   />
                 </div>
               </div>
-              
+
               <Button
                 onClick={handleExcelDownload}
                 variant="outline"
@@ -767,8 +830,8 @@ export default function CommunicationStatusPage() {
                       <TableHead>Chlorine</TableHead>
                       <TableHead>Pressure</TableHead>
                       <TableHead>Flow Meter</TableHead>
-                      <TableHead>Time Status</TableHead>
-                      <TableHead>Overall</TableHead>
+                      {/* <TableHead>Time Status</TableHead>
+                      <TableHead>Overall</TableHead> */}
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -792,7 +855,7 @@ export default function CommunicationStatusPage() {
                             <TableCell>
                               {getStatusBadge(scheme.flow_meter_status)}
                             </TableCell>
-                            <TableCell>
+                            {/* <TableCell>
                               {getTimeBadge(
                                 scheme.chlorine_0h_72h,
                                 scheme.chlorine_72h,
@@ -800,7 +863,7 @@ export default function CommunicationStatusPage() {
                             </TableCell>
                             <TableCell>
                               {getStatusBadge(scheme.overall_status)}
-                            </TableCell>
+                            </TableCell> */}
                           </TableRow>
                         ),
                       )

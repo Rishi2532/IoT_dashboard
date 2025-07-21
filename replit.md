@@ -123,6 +123,10 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 21, 2025
+- **Communication Status Filter Enhancement**: Fixed the filter behavior so that circle, division, subdivision, and block filters show all available options when initially visiting the page, but dynamically filter to show only options from the selected region after a region is chosen
+- **Improved User Experience**: Users can now see all filter options initially, making it easier to explore data across regions before drilling down to specific regions
+
 ### July 11, 2025
 - **Water Value Day 7 Database Enhancement**: Added water_value_day7 and water_date_day7 fields to the water_scheme_data and water_scheme_data_history tables
 - **CSV Column Mapping Update**: Updated all CSV import column mappings to accommodate the new 7th day water consumption tracking (water_value_day7 at column 16)
