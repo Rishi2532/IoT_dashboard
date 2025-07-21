@@ -272,36 +272,37 @@ export default function SchemeVillageHeatmap() {
   };
 
   const calculateSchemeAverageLpcd = (schemes: SchemeData[]) => {
-    let totalLpcd = 0;
-    let validCount = 0;
+    let totalWaterDay7 = 0;
+    let totalPopulation = 0;
+    let hasValidData = false;
 
     schemes.forEach((scheme) => {
       const schemeWaterData = getSchemeWaterData(scheme.scheme_id, scheme.scheme_name);
       schemeWaterData.forEach((data) => {
-        // Calculate average LPCD for this village from all 7 days
-        const lpcdValues = [
-          data.lpcd_value_day1,
-          data.lpcd_value_day2,
-          data.lpcd_value_day3,
-          data.lpcd_value_day4,
-          data.lpcd_value_day5,
-          data.lpcd_value_day6,
-          data.lpcd_value_day7,
-        ]
-          .map(val => typeof val === 'string' ? parseFloat(val) : val) // Convert strings to numbers
-          .filter((val) => val !== null && val !== undefined && !isNaN(val) && val > 0);
+        // Get water consumption for day 7 (latest day)
+        const waterDay7 = typeof data.water_value_day7 === 'string' 
+          ? parseFloat(data.water_value_day7) 
+          : data.water_value_day7;
+          
+        const population = typeof data.population === 'string'
+          ? parseFloat(data.population)
+          : data.population;
 
-        if (lpcdValues.length > 0) {
-          const avgLpcd = lpcdValues.reduce((sum, val) => sum + val, 0) / lpcdValues.length;
-          if (!isNaN(avgLpcd) && avgLpcd > 0) {
-            totalLpcd += avgLpcd;
-            validCount++;
-          }
+        if (!isNaN(waterDay7) && waterDay7 > 0 && !isNaN(population) && population > 0) {
+          totalWaterDay7 += waterDay7;
+          totalPopulation += population;
+          hasValidData = true;
         }
       });
     });
 
-    return validCount > 0 && !isNaN(totalLpcd) ? Math.round(totalLpcd / validCount) : null;
+    if (hasValidData && totalPopulation > 0) {
+      // LPCD = total water consumption / total population * 100000
+      const lpcd = (totalWaterDay7 / totalPopulation) * 100000;
+      return !isNaN(lpcd) && lpcd > 0 ? Math.round(lpcd) : null;
+    }
+
+    return null;
   };
 
   if (isLoading) {
