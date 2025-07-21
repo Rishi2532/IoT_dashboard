@@ -76,7 +76,7 @@ export default function SchemeVillageHeatmap() {
 
   const { data: waterSchemeData } = useQuery<WaterSchemeData[]>({
     queryKey: ["/api/water-scheme-data"],
-    enabled: !!selectedCell, // Only fetch when a cell is selected
+    // Always fetch water scheme data so we can calculate LPCD
   });
 
   // Define the village count ranges
@@ -287,17 +287,21 @@ export default function SchemeVillageHeatmap() {
           data.lpcd_value_day5,
           data.lpcd_value_day6,
           data.lpcd_value_day7,
-        ].filter((val) => val !== null && val !== undefined && val > 0);
+        ]
+          .map(val => typeof val === 'string' ? parseFloat(val) : val) // Convert strings to numbers
+          .filter((val) => val !== null && val !== undefined && !isNaN(val) && val > 0);
 
         if (lpcdValues.length > 0) {
           const avgLpcd = lpcdValues.reduce((sum, val) => sum + val, 0) / lpcdValues.length;
-          totalLpcd += avgLpcd;
-          validCount++;
+          if (!isNaN(avgLpcd) && avgLpcd > 0) {
+            totalLpcd += avgLpcd;
+            validCount++;
+          }
         }
       });
     });
 
-    return validCount > 0 ? Math.round(totalLpcd / validCount) : null;
+    return validCount > 0 && !isNaN(totalLpcd) ? Math.round(totalLpcd / validCount) : null;
   };
 
   if (isLoading) {
@@ -529,8 +533,11 @@ export default function SchemeVillageHeatmap() {
                                 Status: {firstScheme.completion_status}
                               </span>
                               {(() => {
+                                // Only show LPCD if water scheme data is available
+                                if (!waterSchemeData || waterSchemeData.length === 0) return null;
+                                
                                 const avgLpcd = calculateSchemeAverageLpcd(group.schemes);
-                                return avgLpcd !== null ? (
+                                return avgLpcd !== null && !isNaN(avgLpcd) ? (
                                   <>
                                     <span className="mx-2">•</span>
                                     <span className={`px-2 py-0.5 rounded text-xs font-medium ${

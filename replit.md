@@ -124,6 +124,10 @@ Preferred communication style: Simple, everyday language.
 ## Recent Changes
 
 ### July 21, 2025
+- **Scheme Distribution Heatmap LPCD Enhancement**: Added scheme LPCD information display in the heatmap scheme lists showing format "Total Villages: 3 • Blocks: 1 • Circle: Akola • Status: Fully Completed • LPCD: 45L"
+- **LPCD Calculation System**: Implemented average LPCD calculation from 7-day water scheme data with proper numeric parsing and validation
+- **Color-coded LPCD Badges**: Added status-based color indicators (green ≥55L, yellow 40-54L, orange 25-39L, red <25L)
+- **Data Integrity Improvements**: Fixed NaN LPCD values by improving number parsing and validation, ensuring water scheme data is fetched for calculations
 - **Communication Status Filter Enhancement**: Fixed the filter behavior so that circle, division, subdivision, and block filters show all available options when initially visiting the page, but dynamically filter to show only options from the selected region after a region is chosen
 - **Improved User Experience**: Users can now see all filter options initially, making it easier to explore data across regions before drilling down to specific regions
 
