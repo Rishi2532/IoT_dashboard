@@ -306,11 +306,11 @@ export default function SchemeVillageHeatmap() {
           totalWaterDay7,
           totalPopulation,
           lpcd,
-          rounded: Math.round(lpcd)
+          precise: Math.round(lpcd * 100) / 100
         });
       }
       
-      return !isNaN(lpcd) && lpcd >= 0 ? Math.round(lpcd) : null;
+      return !isNaN(lpcd) && lpcd >= 0 ? Math.round(lpcd * 100) / 100 : null;
     }
 
     return null;
@@ -705,51 +705,37 @@ export default function SchemeVillageHeatmap() {
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day1 != null
-                                                ? Number(
-                                                    village.water_value_day1,
-                                                  ).toFixed(1)
+                                                ? Number(village.water_value_day1) === 0 ? "0" : Number(village.water_value_day1).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day2 != null
-                                                ? Number(
-                                                    village.water_value_day2,
-                                                  ).toFixed(1)
+                                                ? Number(village.water_value_day2) === 0 ? "0" : Number(village.water_value_day2).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day3 != null
-                                                ? Number(
-                                                    village.water_value_day3,
-                                                  ).toFixed(1)
+                                                ? Number(village.water_value_day3) === 0 ? "0" : Number(village.water_value_day3).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day4 != null
-                                                ? Number(
-                                                    village.water_value_day4,
-                                                  ).toFixed(1)
+                                                ? Number(village.water_value_day4) === 0 ? "0" : Number(village.water_value_day4).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day5 != null
-                                                ? Number(
-                                                    village.water_value_day5,
-                                                  ).toFixed(1)
+                                                ? Number(village.water_value_day5) === 0 ? "0" : Number(village.water_value_day5).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day6 != null
-                                                ? Number(
-                                                    village.water_value_day6,
-                                                  ).toFixed(1)
+                                                ? Number(village.water_value_day6) === 0 ? "0" : Number(village.water_value_day6).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day7 != null
-                                                ? Number(
-                                                    village.water_value_day7,
-                                                  ).toFixed(1)
+                                                ? Number(village.water_value_day7) === 0 ? "0" : Number(village.water_value_day7).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-green-50">
