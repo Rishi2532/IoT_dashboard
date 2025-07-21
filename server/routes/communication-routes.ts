@@ -42,15 +42,6 @@ router.get("/overview", async (req, res) => {
 router.get("/filters", async (req, res) => {
   try {
     const { region, circle, division, sub_division } = req.query;
-    
-    console.log("Communication filters route - received query params:", {
-      region, circle, division, sub_division
-    });
-    
-    // Prevent caching for filter responses to ensure fresh data
-    res.set('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.set('Pragma', 'no-cache');
-    res.set('Expires', '0');
 
     const result = await storage.getCommunicationFilters({
       region: region as string,
@@ -58,8 +49,7 @@ router.get("/filters", async (req, res) => {
       division: division as string,
       sub_division: sub_division as string,
     });
-    
-    console.log("Communication filters route - returning result with circles:", result.circles?.length);
+
     res.json(result);
   } catch (error) {
     console.error("Error fetching communication filters:", error);

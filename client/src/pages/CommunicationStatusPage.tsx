@@ -179,11 +179,17 @@ export default function CommunicationStatusPage() {
     queryKey: [
       "/api/communication-status/filters",
       selectedRegion,
+      selectedCircle,
+      selectedDivision,
+      selectedSubdivision,
     ],
     queryFn: async () => {
       const params = new URLSearchParams();
-      // Only pass region filter to get all options for other filters based on selected region
       if (selectedRegion !== "all") params.set("region", selectedRegion);
+      if (selectedCircle !== "all") params.set("circle", selectedCircle);
+      if (selectedDivision !== "all") params.set("division", selectedDivision);
+      if (selectedSubdivision !== "all")
+        params.set("subdivision", selectedSubdivision);
 
       const response = await fetch(
         `/api/communication-status/filters?${params.toString()}`,
