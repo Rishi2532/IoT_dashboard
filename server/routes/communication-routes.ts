@@ -42,6 +42,10 @@ router.get("/filters", async (req, res) => {
   try {
     const { region, circle, division, sub_division } = req.query;
     
+    console.log("Communication filters route - received query params:", {
+      region, circle, division, sub_division
+    });
+    
     const result = await storage.getCommunicationFilters({
       region: region as string,
       circle: circle as string,
@@ -49,6 +53,7 @@ router.get("/filters", async (req, res) => {
       sub_division: sub_division as string,
     });
     
+    console.log("Communication filters route - returning result with circles:", result.circles?.length);
     res.json(result);
   } catch (error) {
     console.error("Error fetching communication filters:", error);

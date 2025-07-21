@@ -8718,6 +8718,13 @@ export class PostgresStorage implements IStorage {
     const db = await this.ensureInitialized();
 
     try {
+      // For debugging, let's check if filters are being passed correctly
+      if (filters.region) {
+        // Test the actual SQL query first to verify our logic
+        const testQuery = `SELECT DISTINCT circle FROM communication_status WHERE region = '${filters.region}' ORDER BY circle`;
+        console.log(`Testing SQL query: ${testQuery}`);
+      }
+
       let query = db.select().from(communicationStatus);
 
       // Apply parent level filters
@@ -8738,8 +8745,8 @@ export class PostgresStorage implements IStorage {
       }
 
       const records = await query;
-
-      return {
+      
+      const result = {
         regions: [
           ...new Set(records.map((r) => r.region).filter(Boolean)),
         ].sort(),
@@ -8756,6 +8763,8 @@ export class PostgresStorage implements IStorage {
           ...new Set(records.map((r) => r.block).filter(Boolean)),
         ].sort(),
       };
+
+      return result;
     } catch (error) {
       console.error("Error in getCommunicationFilters:", error);
       throw error;
