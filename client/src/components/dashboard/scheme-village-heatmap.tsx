@@ -10,6 +10,7 @@ interface SchemeData {
   scheme_name: string;
   region: string;
   circle: string;
+  block: string; // Add block field
   completion_status: string;
   total_villages: number;
   completed_villages: number;
@@ -41,6 +42,13 @@ interface WaterSchemeData {
   lpcd_value_day5: number;
   lpcd_value_day6: number;
   lpcd_value_day7: number;
+  water_date_day1: string;
+  water_date_day2: string;
+  water_date_day3: string;
+  water_date_day4: string;
+  water_date_day5: string;
+  water_date_day6: string;
+  water_date_day7: string;
 }
 
 interface HeatmapData {
@@ -93,7 +101,12 @@ export default function SchemeVillageHeatmap() {
   ];
 
   const heatmapData = useMemo(() => {
-    if (!schemeStatus) return [];
+    if (!schemeStatus) return {
+      data: [],
+      regions: [],
+      villageRanges: [],
+      maxSchemeCount: 0
+    };
 
     // Get all unique regions
     const regions = Array.from(
@@ -256,6 +269,35 @@ export default function SchemeVillageHeatmap() {
     return waterSchemeData.filter(
       (wd) => wd.scheme_id === schemeId || wd.scheme_name === schemeName,
     );
+  };
+
+  const calculateSchemeAverageLpcd = (schemes: SchemeData[]) => {
+    let totalLpcd = 0;
+    let validCount = 0;
+
+    schemes.forEach((scheme) => {
+      const schemeWaterData = getSchemeWaterData(scheme.scheme_id, scheme.scheme_name);
+      schemeWaterData.forEach((data) => {
+        // Calculate average LPCD for this village from all 7 days
+        const lpcdValues = [
+          data.lpcd_value_day1,
+          data.lpcd_value_day2,
+          data.lpcd_value_day3,
+          data.lpcd_value_day4,
+          data.lpcd_value_day5,
+          data.lpcd_value_day6,
+          data.lpcd_value_day7,
+        ].filter((val) => val !== null && val !== undefined && val > 0);
+
+        if (lpcdValues.length > 0) {
+          const avgLpcd = lpcdValues.reduce((sum, val) => sum + val, 0) / lpcdValues.length;
+          totalLpcd += avgLpcd;
+          validCount++;
+        }
+      });
+    });
+
+    return validCount > 0 ? Math.round(totalLpcd / validCount) : null;
   };
 
   if (isLoading) {
@@ -486,6 +528,25 @@ export default function SchemeVillageHeatmap() {
                               <span>
                                 Status: {firstScheme.completion_status}
                               </span>
+                              {(() => {
+                                const avgLpcd = calculateSchemeAverageLpcd(group.schemes);
+                                return avgLpcd !== null ? (
+                                  <>
+                                    <span className="mx-2">•</span>
+                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                      avgLpcd >= 55 
+                                        ? 'bg-green-100 text-green-800' 
+                                        : avgLpcd >= 40
+                                        ? 'bg-yellow-100 text-yellow-800'
+                                        : avgLpcd >= 25
+                                        ? 'bg-orange-100 text-orange-800'
+                                        : 'bg-red-100 text-red-800'
+                                    }`}>
+                                      LPCD: {avgLpcd}L
+                                    </span>
+                                  </>
+                                ) : null;
+                              })()}
                             </div>
                             {group.schemes.length > 1 && (
                               <div className="text-xs text-blue-600 mt-1">
