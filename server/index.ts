@@ -13,18 +13,39 @@ if (fs.existsSync(envVscodePath)) {
 }
 
 // Ensure DATABASE_URL is available from Replit environment
-if (!process.env.DATABASE_URL && process.env.REPL_ID) {
-  // In Replit, check for database environment variables
-  console.log("Setting up Replit database connection...");
-  // Check if individual DB components are available
-  if (
-    process.env.PGHOST &&
-    process.env.PGUSER &&
-    process.env.PGPASSWORD &&
-    process.env.PGDATABASE
-  ) {
-    process.env.DATABASE_URL = `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE}?sslmode=require`;
-    console.log("Constructed DATABASE_URL from individual components");
+// First check if we're in Replit environment
+const isReplitEnv = process.env.REPLIT || process.env.REPL_ID || process.env.REPLIT_DEPLOYMENT;
+console.log("Environment check:", {
+  REPLIT: !!process.env.REPLIT,
+  REPL_ID: !!process.env.REPL_ID,
+  REPLIT_DEPLOYMENT: !!process.env.REPLIT_DEPLOYMENT,
+  DATABASE_URL: !!process.env.DATABASE_URL,
+  PGHOST: !!process.env.PGHOST,
+  PGUSER: !!process.env.PGUSER
+});
+
+if (isReplitEnv) {
+  console.log("Detected Replit environment");
+  
+  // If DATABASE_URL doesn't exist but individual components do, construct it
+  if (!process.env.DATABASE_URL) {
+    console.log("DATABASE_URL not found, checking for individual components...");
+    
+    if (process.env.PGHOST && process.env.PGUSER && process.env.PGPASSWORD && process.env.PGDATABASE) {
+      const dbUrl = `postgresql://${process.env.PGUSER}:${process.env.PGPASSWORD}@${process.env.PGHOST}:${process.env.PGPORT || 5432}/${process.env.PGDATABASE}?sslmode=require`;
+      process.env.DATABASE_URL = dbUrl;
+      console.log("✅ Constructed DATABASE_URL from individual components");
+    } else {
+      console.log("❌ Missing individual database components");
+      console.log({
+        PGHOST: !!process.env.PGHOST,
+        PGUSER: !!process.env.PGUSER,
+        PGPASSWORD: !!process.env.PGPASSWORD,
+        PGDATABASE: !!process.env.PGDATABASE
+      });
+    }
+  } else {
+    console.log("✅ DATABASE_URL already available");
   }
 }
 
