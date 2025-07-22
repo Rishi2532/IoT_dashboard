@@ -75,7 +75,9 @@ export default function SchemeVillageHeatmap() {
     queryKey: ["/api/scheme-status"],
   });
 
-  const { data: waterSchemeData, isLoading: isLoadingWaterData } = useQuery<WaterSchemeData[]>({
+  const { data: waterSchemeData, isLoading: isLoadingWaterData } = useQuery<
+    WaterSchemeData[]
+  >({
     queryKey: ["/api/water-scheme-data"],
     // Always fetch water scheme data so we can calculate LPCD
   });
@@ -83,10 +85,10 @@ export default function SchemeVillageHeatmap() {
   // Debug water scheme data loading
   React.useEffect(() => {
     if (waterSchemeData) {
-      console.log('Water scheme data loaded:', {
+      console.log("Water scheme data loaded:", {
         totalRecords: waterSchemeData.length,
         sampleRecord: waterSchemeData[0],
-        hasDay7Data: waterSchemeData.some(d => d.water_value_day7 != null)
+        hasDay7Data: waterSchemeData.some((d) => d.water_value_day7 != null),
       });
     }
   }, [waterSchemeData]);
@@ -106,18 +108,28 @@ export default function SchemeVillageHeatmap() {
     let hasValidData = false;
 
     schemes.forEach((scheme) => {
-      const schemeWaterData = getSchemeWaterData(scheme.scheme_id, scheme.scheme_name);
+      const schemeWaterData = getSchemeWaterData(
+        scheme.scheme_id,
+        scheme.scheme_name,
+      );
       schemeWaterData.forEach((data) => {
         // Get water consumption for day 7 (latest day)
-        const waterDay7 = typeof data.water_value_day7 === 'string' 
-          ? parseFloat(data.water_value_day7) 
-          : data.water_value_day7;
-          
-        const population = typeof data.population === 'string'
-          ? parseFloat(data.population)
-          : data.population;
+        const waterDay7 =
+          typeof data.water_value_day7 === "string"
+            ? parseFloat(data.water_value_day7)
+            : data.water_value_day7;
 
-        if (!isNaN(waterDay7) && waterDay7 >= 0 && !isNaN(population) && population > 0) {
+        const population =
+          typeof data.population === "string"
+            ? parseFloat(data.population)
+            : data.population;
+
+        if (
+          !isNaN(waterDay7) &&
+          waterDay7 >= 0 &&
+          !isNaN(population) &&
+          population > 0
+        ) {
           totalWaterDay7 += waterDay7;
           totalPopulation += population;
           hasValidData = true;
@@ -128,17 +140,17 @@ export default function SchemeVillageHeatmap() {
     if (hasValidData && totalPopulation > 0) {
       // LPCD = total water consumption / total population * 100000
       const lpcd = (totalWaterDay7 / totalPopulation) * 100000;
-      
+
       // Debug logging for Padali scheme
-      if (schemes.some(s => s.scheme_name?.includes('Padali'))) {
-        console.log('Padali LPCD Calculation:', {
+      if (schemes.some((s) => s.scheme_name?.includes("Padali"))) {
+        console.log("Padali LPCD Calculation:", {
           totalWaterDay7,
           totalPopulation,
           lpcd,
-          precise: Math.round(lpcd * 100) / 100
+          precise: Math.round(lpcd * 100) / 100,
         });
       }
-      
+
       return !isNaN(lpcd) && lpcd >= 0 ? Math.round(lpcd * 100) / 100 : null;
     }
 
@@ -148,10 +160,10 @@ export default function SchemeVillageHeatmap() {
   // Calculate average LPCD for all schemes in a cell
   const calculateCellAverageLpcd = (schemes: SchemeData[]) => {
     if (!waterSchemeData || waterSchemeData.length === 0) {
-      console.log('No water scheme data available for LPCD calculation');
+      console.log("No water scheme data available for LPCD calculation");
       return null;
     }
-    
+
     // Group schemes by scheme name to get unique schemes
     const groupedSchemes = new Map<string, SchemeData[]>();
     schemes.forEach((scheme) => {
@@ -171,11 +183,14 @@ export default function SchemeVillageHeatmap() {
       }
     });
 
-    console.log('LPCD Calculation Debug:', {
+    console.log("LPCD Calculation Debug:", {
       totalSchemes: groupedSchemes.size,
       lpcdValues,
       waterDataAvailable: waterSchemeData.length,
-      averageCalculation: lpcdValues.length > 0 ? `(${lpcdValues.join(' + ')}) / ${lpcdValues.length} = ${lpcdValues.reduce((sum, lpcd) => sum + lpcd, 0) / lpcdValues.length}` : 'No valid LPCD values'
+      averageCalculation:
+        lpcdValues.length > 0
+          ? `(${lpcdValues.join(" + ")}) / ${lpcdValues.length} = ${lpcdValues.reduce((sum, lpcd) => sum + lpcd, 0) / lpcdValues.length}`
+          : "No valid LPCD values",
     });
 
     if (lpcdValues.length === 0) return null;
@@ -183,7 +198,7 @@ export default function SchemeVillageHeatmap() {
     // Calculate average of all scheme LPCDs
     const totalLpcd = lpcdValues.reduce((sum, lpcd) => sum + lpcd, 0);
     const averageLpcd = totalLpcd / lpcdValues.length;
-    
+
     return Math.round(averageLpcd * 100) / 100;
   };
 
@@ -209,12 +224,13 @@ export default function SchemeVillageHeatmap() {
   ];
 
   const heatmapData = useMemo(() => {
-    if (!schemeStatus || isLoadingWaterData) return {
-      data: [],
-      regions: [],
-      villageRanges: [],
-      maxSchemeCount: 0
-    };
+    if (!schemeStatus || isLoadingWaterData)
+      return {
+        data: [],
+        regions: [],
+        villageRanges: [],
+        maxSchemeCount: 0,
+      };
 
     // Get all unique regions
     const regions = Array.from(
@@ -280,7 +296,7 @@ export default function SchemeVillageHeatmap() {
             schemeCount: uniqueSchemes.size,
             averageLpcd,
             schemesInRange: schemesInRange.length,
-            waterDataCount: waterSchemeData?.length || 0
+            waterDataCount: waterSchemeData?.length || 0,
           });
         }
 
@@ -307,18 +323,18 @@ export default function SchemeVillageHeatmap() {
 
     // Use LPCD-based color coding with exact color specifications from user
     if (averageLpcd === null) return "#e5e7eb"; // Gray for no LPCD data
-    if (averageLpcd > 80) return "#f97316"; // Orange-500 for > 80L (Very High)
-    if (averageLpcd > 70) return "#059669"; // Green-600 for > 70L (High)  
-    if (averageLpcd >= 55) return "#10b981"; // Green-500 for 55-70L (Good)
-    if (averageLpcd >= 40) return "#eab308"; // Yellow-500 for 40-54L (Low)
-    if (averageLpcd >= 25) return "#fca5a5"; // Red-300 for 25-39L (Very Low)
-    if (averageLpcd > 0) return "#ef4444"; // Red-500 for 0-24L (Critical)
+    if (averageLpcd > 100) return "#00ff86"; // Orange-500 for > 80L (Very High)
+    if (averageLpcd > 70) return "#6fe0abff"; // Green-600 for > 70L (High)
+    if (averageLpcd >= 55) return "#ccffe7"; // Green-500 for 55-70L (Good)
+    if (averageLpcd >= 40) return "#fcc"; // Yellow-500 for 40-54L (Low)
+    if (averageLpcd >= 25) return "#ffa6a6"; // Red-300 for 25-39L (Very Low)
+    if (averageLpcd > 0) return "#fe4d4dff"; // Red-500 for 0-24L (Critical)
     return "#374151"; // Gray-800 for no water
   };
 
   const getTextColor = (schemeCount: number, averageLpcd: number | null) => {
     if (schemeCount === 0) return "#6b7280";
-    
+
     // Use LPCD-based text color for readability
     if (averageLpcd === null) return "#374151"; // Dark gray for no data
     if (averageLpcd > 80) return "#ffffff"; // White for orange background
@@ -396,8 +412,6 @@ export default function SchemeVillageHeatmap() {
     setExpandedSchemes(newExpanded);
   };
 
-
-
   if (isLoading || isLoadingWaterData) {
     return (
       <Card className="w-full">
@@ -439,7 +453,8 @@ export default function SchemeVillageHeatmap() {
       <CardHeader>
         <CardTitle>Scheme Distribution Heatmap</CardTitle>
         <p className="text-sm text-gray-600">
-          Number of schemes by region and village count. Colors indicate average LPCD values of schemes in each cell.
+          Number of schemes by region and village count. Colors indicate average
+          LPCD values of schemes in each cell.
         </p>
       </CardHeader>
       <CardContent className="p-2">
@@ -493,7 +508,7 @@ export default function SchemeVillageHeatmap() {
                       averageLpcd,
                       bgColor,
                       textColor,
-                      expectedColor: averageLpcd ? 'LPCD-based' : 'default'
+                      expectedColor: averageLpcd ? "LPCD-based" : "default",
                     });
                   }
 
@@ -510,7 +525,7 @@ export default function SchemeVillageHeatmap() {
                             ? "2px solid #1d4ed8"
                             : undefined,
                       }}
-                      title={`${region}: ${schemeCount} schemes with ${villageRange} villages${averageLpcd !== null ? `. Average LPCD: ${averageLpcd}L` : ''}. Click to view details.`}
+                      title={`${region}: ${schemeCount} schemes with ${villageRange} villages${averageLpcd !== null ? `. Average LPCD: ${averageLpcd}L` : ""}. Click to view details.`}
                       onClick={() => handleCellClick(region, villageRange)}
                     >
                       {schemeCount > 0 ? schemeCount : ""}
@@ -530,35 +545,59 @@ export default function SchemeVillageHeatmap() {
                 <span className="text-xs">0 schemes</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#e5e7eb" }}></div>
+                <div
+                  className="w-4 h-4 border border-gray-300"
+                  style={{ backgroundColor: "#e5e7eb" }}
+                ></div>
                 <span className="text-xs">No LPCD data</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#10b981" }}></div>
+                <div
+                  className="w-4 h-4 border border-gray-300"
+                  style={{ backgroundColor: "#10b981" }}
+                ></div>
                 <span className="text-xs">55-70L (Good)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#059669" }}></div>
+                <div
+                  className="w-4 h-4 border border-gray-300"
+                  style={{ backgroundColor: "#059669" }}
+                ></div>
                 <span className="text-xs">70-80L (High)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#f97316" }}></div>
+                <div
+                  className="w-4 h-4 border border-gray-300"
+                  style={{ backgroundColor: "#f97316" }}
+                ></div>
                 <span className="text-xs">&gt;80L (Very High)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#eab308" }}></div>
+                <div
+                  className="w-4 h-4 border border-gray-300"
+                  style={{ backgroundColor: "#eab308" }}
+                ></div>
                 <span className="text-xs">40-54L (Low)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#fca5a5" }}></div>
+                <div
+                  className="w-4 h-4 border border-gray-300"
+                  style={{ backgroundColor: "#fca5a5" }}
+                ></div>
                 <span className="text-xs">25-39L (Very Low)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#ef4444" }}></div>
+                <div
+                  className="w-4 h-4 border border-gray-300"
+                  style={{ backgroundColor: "#ef4444" }}
+                ></div>
                 <span className="text-xs">0-24L (Critical)</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#374151" }}></div>
+                <div
+                  className="w-4 h-4 border border-gray-300"
+                  style={{ backgroundColor: "#374151" }}
+                ></div>
                 <span className="text-xs">No water</span>
               </div>
             </div>
@@ -650,21 +689,29 @@ export default function SchemeVillageHeatmap() {
                               </span>
                               {(() => {
                                 // Only show LPCD if water scheme data is available
-                                if (!waterSchemeData || waterSchemeData.length === 0) return null;
-                                
-                                const avgLpcd = calculateSchemeAverageLpcd(group.schemes);
+                                if (
+                                  !waterSchemeData ||
+                                  waterSchemeData.length === 0
+                                )
+                                  return null;
+
+                                const avgLpcd = calculateSchemeAverageLpcd(
+                                  group.schemes,
+                                );
                                 return avgLpcd !== null && !isNaN(avgLpcd) ? (
                                   <>
                                     <span className="mx-2">•</span>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-medium ${
-                                      avgLpcd >= 55 
-                                        ? 'bg-green-100 text-green-800' 
-                                        : avgLpcd >= 40
-                                        ? 'bg-yellow-100 text-yellow-800'
-                                        : avgLpcd >= 25
-                                        ? 'bg-orange-100 text-orange-800'
-                                        : 'bg-red-100 text-red-800'
-                                    }`}>
+                                    <span
+                                      className={`px-2 py-0.5 rounded text-xs font-medium ${
+                                        avgLpcd >= 55
+                                          ? "bg-green-100 text-green-800"
+                                          : avgLpcd >= 40
+                                            ? "bg-yellow-100 text-yellow-800"
+                                            : avgLpcd >= 25
+                                              ? "bg-orange-100 text-orange-800"
+                                              : "bg-red-100 text-red-800"
+                                      }`}
+                                    >
                                       LPCD: {avgLpcd}L
                                     </span>
                                   </>
@@ -809,37 +856,79 @@ export default function SchemeVillageHeatmap() {
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day1 != null
-                                                ? Number(village.water_value_day1) === 0 ? "0" : Number(village.water_value_day1).toString()
+                                                ? Number(
+                                                    village.water_value_day1,
+                                                  ) === 0
+                                                  ? "0"
+                                                  : Number(
+                                                      village.water_value_day1,
+                                                    ).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day2 != null
-                                                ? Number(village.water_value_day2) === 0 ? "0" : Number(village.water_value_day2).toString()
+                                                ? Number(
+                                                    village.water_value_day2,
+                                                  ) === 0
+                                                  ? "0"
+                                                  : Number(
+                                                      village.water_value_day2,
+                                                    ).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day3 != null
-                                                ? Number(village.water_value_day3) === 0 ? "0" : Number(village.water_value_day3).toString()
+                                                ? Number(
+                                                    village.water_value_day3,
+                                                  ) === 0
+                                                  ? "0"
+                                                  : Number(
+                                                      village.water_value_day3,
+                                                    ).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day4 != null
-                                                ? Number(village.water_value_day4) === 0 ? "0" : Number(village.water_value_day4).toString()
+                                                ? Number(
+                                                    village.water_value_day4,
+                                                  ) === 0
+                                                  ? "0"
+                                                  : Number(
+                                                      village.water_value_day4,
+                                                    ).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day5 != null
-                                                ? Number(village.water_value_day5) === 0 ? "0" : Number(village.water_value_day5).toString()
+                                                ? Number(
+                                                    village.water_value_day5,
+                                                  ) === 0
+                                                  ? "0"
+                                                  : Number(
+                                                      village.water_value_day5,
+                                                    ).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day6 != null
-                                                ? Number(village.water_value_day6) === 0 ? "0" : Number(village.water_value_day6).toString()
+                                                ? Number(
+                                                    village.water_value_day6,
+                                                  ) === 0
+                                                  ? "0"
+                                                  : Number(
+                                                      village.water_value_day6,
+                                                    ).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-blue-50">
                                               {village.water_value_day7 != null
-                                                ? Number(village.water_value_day7) === 0 ? "0" : Number(village.water_value_day7).toString()
+                                                ? Number(
+                                                    village.water_value_day7,
+                                                  ) === 0
+                                                  ? "0"
+                                                  : Number(
+                                                      village.water_value_day7,
+                                                    ).toString()
                                                 : "-"}
                                             </td>
                                             <td className="px-1 py-1 text-center border border-gray-300 bg-green-50">
