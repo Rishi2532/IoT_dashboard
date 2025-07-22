@@ -130,33 +130,123 @@ export default function SchemeDetailsPage() {
     );
   }
 
+  // Calculate total statistics for the blue header
+  const totalWaterConsumption = villages?.reduce((sum: number, village: any) => {
+    const waterValue = village.water_value_day7 || village.water_value || 0;
+    return sum + (typeof waterValue === 'number' ? waterValue : parseFloat(waterValue) || 0);
+  }, 0) || 0;
+
+  const totalPopulation = villages?.reduce((sum: number, village: any) => {
+    const population = village.population || 0;
+    return sum + (typeof population === 'number' ? population : parseFloat(population) || 0);
+  }, 0) || 0;
+
+  const totalVillages = villages?.length || 0;
+  const totalESRs = esrData?.length || 0;
+
+  // Calculate scheme LPCD (total water consumption * 100000 / total population)
+  const schemeLPCD = totalPopulation > 0 ? (totalWaterConsumption * 100000) / totalPopulation : 0;
+
+  // Get sensor counts from ESR data
+  const flowMeterCount = scheme?.flow_meters_connected || 0;
+  const pressureSensorCount = scheme?.pressure_transmitter_connected || 0;
+  const chlorineAnalyzerCount = scheme?.residual_chlorine_analyzer_connected || 0;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <Button onClick={handleGoBack} variant="ghost" size="sm" className="mb-4">
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Schemes
-            </Button>
-            <h1 className="text-3xl font-bold text-gray-900">{scheme.scheme_name}</h1>
-            <p className="text-gray-600 mt-1">
-              {scheme.region} • {scheme.block} • ID: {scheme.scheme_id}
-            </p>
+        {/* Enhanced Header - Stock Market Style */}
+        <div className="space-y-4">
+          {/* Back Button */}
+          <Button onClick={handleGoBack} variant="ghost" size="sm">
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Schemes
+          </Button>
+
+          {/* Orange Box - Scheme Information */}
+          <div className="bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold">{scheme.scheme_name}</h1>
+                <p className="text-orange-100 mt-1">
+                  ID: {scheme.scheme_id}
+                </p>
+              </div>
+              <Badge
+                variant="secondary"
+                className={`px-3 py-1 text-sm font-semibold ${
+                  scheme.fully_completion_scheme_status === "Fully Completed"
+                    ? "bg-green-500 text-white"
+                    : scheme.fully_completion_scheme_status === "In Progress"
+                    ? "bg-yellow-500 text-white"
+                    : "bg-gray-500 text-white"
+                }`}
+              >
+                {scheme.fully_completion_scheme_status}
+              </Badge>
+            </div>
           </div>
-          <Badge
-            variant="secondary"
-            className={`px-3 py-1 ${
-              scheme.fully_completion_scheme_status === "Fully Completed"
-                ? "bg-green-100 text-green-800"
-                : scheme.fully_completion_scheme_status === "In Progress"
-                ? "bg-yellow-100 text-yellow-800"
-                : "bg-gray-100 text-gray-800"
-            }`}
-          >
-            {scheme.fully_completion_scheme_status}
-          </Badge>
+
+          {/* Blue Box - Key Statistics */}
+          <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+              {/* Total Water Consumption */}
+              <div className="text-center">
+                <div className="text-2xl font-bold">{totalWaterConsumption.toFixed(1)}</div>
+                <div className="text-blue-100 text-xs">Total Water</div>
+                <div className="text-blue-100 text-xs">Consumption</div>
+              </div>
+
+              {/* Total Villages */}
+              <div className="text-center">
+                <div className="text-2xl font-bold">{totalVillages}</div>
+                <div className="text-blue-100 text-xs">Total</div>
+                <div className="text-blue-100 text-xs">Villages</div>
+              </div>
+
+              {/* Total ESRs */}
+              <div className="text-center">
+                <div className="text-2xl font-bold">{totalESRs}</div>
+                <div className="text-blue-100 text-xs">Total</div>
+                <div className="text-blue-100 text-xs">ESRs</div>
+              </div>
+
+              {/* Scheme LPCD */}
+              <div className="text-center">
+                <div className="text-2xl font-bold">{schemeLPCD.toFixed(1)}L</div>
+                <div className="text-blue-100 text-xs">Scheme</div>
+                <div className="text-blue-100 text-xs">LPCD</div>
+              </div>
+
+              {/* Flow Meters */}
+              <div className="text-center">
+                <div className="text-2xl font-bold">{flowMeterCount}</div>
+                <div className="text-blue-100 text-xs">Flow</div>
+                <div className="text-blue-100 text-xs">Meters</div>
+              </div>
+
+              {/* Pressure Sensors */}
+              <div className="text-center">
+                <div className="text-2xl font-bold">{pressureSensorCount}</div>
+                <div className="text-blue-100 text-xs">Pressure</div>
+                <div className="text-blue-100 text-xs">Sensors</div>
+              </div>
+
+              {/* Chlorine Analyzers */}
+              <div className="text-center">
+                <div className="text-2xl font-bold">{chlorineAnalyzerCount}</div>
+                <div className="text-blue-100 text-xs">Chlorine</div>
+                <div className="text-blue-100 text-xs">Analyzers</div>
+              </div>
+            </div>
+            
+            {/* Location Information */}
+            <div className="mt-3 pt-3 border-t border-blue-500">
+              <p className="text-blue-100 text-sm">
+                {scheme.region} • {scheme.circle} • {scheme.division} • {scheme.block}
+              </p>
+            </div>
+          </div>
         </div>
 
         {/* Scheme Overview Cards */}
