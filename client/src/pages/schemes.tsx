@@ -49,8 +49,12 @@ export default function Schemes() {
   };
 
   const handleViewSchemeDetails = (scheme: SchemeStatus) => {
-    setSelectedScheme(scheme);
-    setIsModalOpen(true);
+    console.log("Viewing details for scheme:", scheme);
+    // Navigate to the dedicated scheme details page
+    const encodedSchemeId = encodeURIComponent(scheme.scheme_id);
+    const encodedBlock = scheme.block ? encodeURIComponent(scheme.block) : '';
+    const url = encodedBlock ? `/schemes/${encodedSchemeId}/${encodedBlock}` : `/schemes/${encodedSchemeId}`;
+    window.location.href = url;
   };
 
   const handleCloseModal = () => {

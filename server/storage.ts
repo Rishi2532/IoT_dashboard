@@ -180,6 +180,7 @@ export interface IStorage {
   getWaterSchemeDataById(
     schemeId: string,
   ): Promise<WaterSchemeData | undefined>;
+  getWaterSchemeDataByScheme(schemeId: string, block?: string): Promise<WaterSchemeData[]>;
   createWaterSchemeData(data: InsertWaterSchemeData): Promise<WaterSchemeData>;
   updateWaterSchemeData(
     schemeId: string,
@@ -201,6 +202,7 @@ export interface IStorage {
 
   // Chlorine Data operations
   getAllChlorineData(filter?: ChlorineDataFilter): Promise<ChlorineData[]>;
+  getChlorineDataByScheme(schemeId: string, block?: string): Promise<ChlorineData[]>;
   getHistoricalChlorineData(filter: {
     startDate: string;
     endDate: string;
@@ -268,6 +270,7 @@ export interface IStorage {
 
   // Pressure Data operations
   getAllPressureData(filter?: PressureDataFilter): Promise<PressureData[]>;
+  getPressureDataByScheme(schemeId: string, block?: string): Promise<PressureData[]>;
   getHistoricalPressureData(filter: {
     startDate: string;
     endDate: string;
@@ -1381,6 +1384,24 @@ export class PostgresStorage implements IStorage {
     } catch (error) {
       console.error("Error fetching chlorine data:", error);
       return [];
+    }
+  }
+
+  async getChlorineDataByScheme(schemeId: string, block?: string): Promise<ChlorineData[]> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+
+    try {
+      let whereCondition = eq(chlorineData.scheme_id, schemeId);
+      if (block) {
+        whereCondition = and(whereCondition, eq(chlorineData.block, block));
+      }
+
+      const results = await db.select().from(chlorineData).where(whereCondition);
+      return results;
+    } catch (error) {
+      console.error("Error fetching chlorine data by scheme:", error);
+      throw error;
     }
   }
 
@@ -3262,6 +3283,24 @@ export class PostgresStorage implements IStorage {
       return await query;
     } catch (error) {
       console.error("Error in getAllPressureData:", error);
+      throw error;
+    }
+  }
+
+  async getPressureDataByScheme(schemeId: string, block?: string): Promise<PressureData[]> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+
+    try {
+      let whereCondition = eq(pressureData.scheme_id, schemeId);
+      if (block) {
+        whereCondition = and(whereCondition, eq(pressureData.block, block));
+      }
+
+      const results = await db.select().from(pressureData).where(whereCondition);
+      return results;
+    } catch (error) {
+      console.error("Error fetching pressure data by scheme:", error);
       throw error;
     }
   }
@@ -5684,6 +5723,24 @@ export class PostgresStorage implements IStorage {
       .from(waterSchemeData)
       .where(eq(waterSchemeData.scheme_id, schemeId));
     return result.length > 0 ? result[0] : undefined;
+  }
+
+  async getWaterSchemeDataByScheme(schemeId: string, block?: string): Promise<WaterSchemeData[]> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+
+    try {
+      let whereCondition = eq(waterSchemeData.scheme_id, schemeId);
+      if (block) {
+        whereCondition = and(whereCondition, eq(waterSchemeData.block, block));
+      }
+
+      const results = await db.select().from(waterSchemeData).where(whereCondition);
+      return results;
+    } catch (error) {
+      console.error("Error fetching water scheme data by scheme:", error);
+      throw error;
+    }
   }
 
   async createWaterSchemeData(

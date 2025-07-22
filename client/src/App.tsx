@@ -1,6 +1,7 @@
 import { Switch, Route, useLocation } from "wouter";
 import Dashboard from "./pages/dashboard";
 import Schemes from "./pages/schemes";
+import SchemeDetailsPage from "./pages/scheme-details";
 import Regions from "./pages/regions";
 import Reports from "./pages/reports";
 import Settings from "./pages/settings";
@@ -122,6 +123,11 @@ function App() {
               <Route path="/schemes">
                 <ProtectedRoute>
                   <Schemes />
+                </ProtectedRoute>
+              </Route>
+              <Route path="/scheme/:schemeId/:block?">
+                <ProtectedRoute>
+                  <SchemeDetailsPage />
                 </ProtectedRoute>
               </Route>
               <Route path="/regions">

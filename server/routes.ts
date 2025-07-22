@@ -596,6 +596,107 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get water scheme data for a specific scheme (for scheme details page)
+  app.get("/api/water-scheme-data/by-scheme/:schemeId", async (req, res) => {
+    try {
+      const schemeId = req.params.schemeId;
+      const block = req.query.block as string | undefined;
+
+      if (!schemeId || schemeId.trim() === "") {
+        return res.status(400).json({ message: "Invalid scheme ID" });
+      }
+
+      // Fetch water scheme data for the scheme
+      const waterData = await storage.getWaterSchemeDataByScheme(schemeId, block);
+
+      res.json(waterData);
+    } catch (error) {
+      console.error("Error fetching water scheme data:", error);
+      res.status(500).json({ message: "Failed to fetch water scheme data" });
+    }
+  });
+
+  // Get ESR data for a specific scheme (for scheme details page)
+  app.get("/api/scheme-esr-data/:schemeId", async (req, res) => {
+    try {
+      const schemeId = req.params.schemeId;
+      const block = req.query.block as string | undefined;
+
+      if (!schemeId || schemeId.trim() === "") {
+        return res.status(400).json({ message: "Invalid scheme ID" });
+      }
+
+      // Fetch chlorine data for the scheme
+      const chlorineData = await storage.getChlorineDataByScheme(schemeId, block);
+      
+      // Fetch pressure data for the scheme  
+      const pressureData = await storage.getPressureDataByScheme(schemeId, block);
+
+      // Combine the data by ESR
+      const esrMap = new Map();
+
+      // Process chlorine data
+      chlorineData?.forEach((item) => {
+        const key = `${item.village_name}:${item.esr_name}`;
+        if (!esrMap.has(key)) {
+          esrMap.set(key, {
+            village_name: item.village_name,
+            esr_name: item.esr_name,
+            scheme_id: item.scheme_id,
+            scheme_name: item.scheme_name,
+          });
+        }
+        
+        const esr = esrMap.get(key);
+        // Get the most recent chlorine value
+        const chlorineValues = [
+          item.chlorine_value_7,
+          item.chlorine_value_6,
+          item.chlorine_value_5,
+          item.chlorine_value_4,
+          item.chlorine_value_3,
+          item.chlorine_value_2,
+          item.chlorine_value_1,
+        ].map(val => val ? parseFloat(val.toString()) : null).filter(val => val !== null && val > 0);
+        
+        esr.chlorine_value = chlorineValues.length > 0 ? chlorineValues[0] : null;
+      });
+
+      // Process pressure data
+      pressureData?.forEach((item) => {
+        const key = `${item.village_name}:${item.esr_name}`;
+        if (!esrMap.has(key)) {
+          esrMap.set(key, {
+            village_name: item.village_name,
+            esr_name: item.esr_name,
+            scheme_id: item.scheme_id,
+            scheme_name: item.scheme_name,
+          });
+        }
+        
+        const esr = esrMap.get(key);
+        // Get the most recent pressure value
+        const pressureValues = [
+          item.pressure_value_7,
+          item.pressure_value_6,
+          item.pressure_value_5,
+          item.pressure_value_4,
+          item.pressure_value_3,
+          item.pressure_value_2,
+          item.pressure_value_1,
+        ].map(val => val ? parseFloat(val.toString()) : null).filter(val => val !== null && val > 0);
+        
+        esr.pressure_value = pressureValues.length > 0 ? pressureValues[0] : null;
+      });
+
+      const result = Array.from(esrMap.values());
+      res.json(result);
+    } catch (error) {
+      console.error("Error fetching ESR data:", error);
+      res.status(500).json({ message: "Failed to fetch ESR data" });
+    }
+  });
+
   // Get schemes by name (for multi-block schemes)
   app.get("/api/schemes/by-name/:name", async (req, res) => {
     try {
