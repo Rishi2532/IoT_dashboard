@@ -86,15 +86,19 @@ export default function SchemeDetailsPage() {
     return "danger";
   };
 
-  const getChlorineStatus = (value: number | null): "good" | "warning" | "danger" => {
-    if (value === null || value === undefined) return "danger";
-    if (value >= 0.2 && value <= 0.5) return "good";
+  const getChlorineStatus = (value: number | null | string): "good" | "warning" | "danger" => {
+    if (value === null || value === undefined || value === "") return "danger";
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+    if (isNaN(numValue)) return "danger";
+    if (numValue >= 0.2 && numValue <= 0.5) return "good";
     return "danger";
   };
 
-  const getPressureStatus = (value: number | null): "good" | "warning" | "danger" => {
-    if (value === null || value === undefined) return "danger";
-    if (value >= 0.2 && value <= 0.7) return "good";
+  const getPressureStatus = (value: number | null | string): "good" | "warning" | "danger" => {
+    if (value === null || value === undefined || value === "") return "danger";
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+    if (isNaN(numValue)) return "danger";
+    if (numValue >= 0.2 && numValue <= 0.7) return "good";
     return "danger";
   };
 
@@ -329,8 +333,8 @@ export default function SchemeDetailsPage() {
                                                         getChlorineStatus(esr.chlorine_value)
                                                       )} text-xs`}
                                                     >
-                                                      {esr.chlorine_value !== null && esr.chlorine_value !== undefined
-                                                        ? `${esr.chlorine_value.toFixed(2)} mg/L`
+                                                      {esr.chlorine_value !== null && esr.chlorine_value !== undefined && esr.chlorine_value !== ""
+                                                        ? `${Number(esr.chlorine_value).toFixed(2)} mg/L`
                                                         : "No data"}
                                                     </Badge>
                                                   </div>
@@ -344,8 +348,8 @@ export default function SchemeDetailsPage() {
                                                         getPressureStatus(esr.pressure_value)
                                                       )} text-xs`}
                                                     >
-                                                      {esr.pressure_value !== null && esr.pressure_value !== undefined
-                                                        ? `${esr.pressure_value.toFixed(2)} bar`
+                                                      {esr.pressure_value !== null && esr.pressure_value !== undefined && esr.pressure_value !== ""
+                                                        ? `${Number(esr.pressure_value).toFixed(2)} bar`
                                                         : "No data"}
                                                     </Badge>
                                                   </div>

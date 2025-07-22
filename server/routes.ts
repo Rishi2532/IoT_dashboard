@@ -648,8 +648,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         
         const esr = esrMap.get(key);
-        // Get the most recent chlorine value
-        const chlorineValues = [
+        // Get the most recent chlorine value (including 0 values)
+        const allChlorineValues = [
           item.chlorine_value_7,
           item.chlorine_value_6,
           item.chlorine_value_5,
@@ -657,9 +657,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           item.chlorine_value_3,
           item.chlorine_value_2,
           item.chlorine_value_1,
-        ].map(val => val ? parseFloat(val.toString()) : null).filter(val => val !== null && val > 0);
+        ];
         
-        esr.chlorine_value = chlorineValues.length > 0 ? chlorineValues[0] : null;
+        // Find the most recent non-null value (including 0)
+        let recentChlorine = null;
+        for (const val of allChlorineValues) {
+          if (val !== null && val !== undefined) {
+            const numVal = parseFloat(val.toString());
+            if (!isNaN(numVal)) {
+              recentChlorine = numVal;
+              break;
+            }
+          }
+        }
+        
+        esr.chlorine_value = recentChlorine;
       });
 
       // Process pressure data
@@ -684,7 +696,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           item.pressure_value_3,
           item.pressure_value_2,
           item.pressure_value_1,
-        ].map(val => val ? parseFloat(val.toString()) : null).filter(val => val !== null && val > 0);
+        ].map(val => val !== null && val !== undefined ? parseFloat(val.toString()) : null).filter(val => val !== null && !isNaN(val) && val > 0);
         
         esr.pressure_value = pressureValues.length > 0 ? pressureValues[0] : null;
       });
