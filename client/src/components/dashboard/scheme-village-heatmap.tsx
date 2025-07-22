@@ -174,7 +174,8 @@ export default function SchemeVillageHeatmap() {
     console.log('LPCD Calculation Debug:', {
       totalSchemes: groupedSchemes.size,
       lpcdValues,
-      waterDataAvailable: waterSchemeData.length
+      waterDataAvailable: waterSchemeData.length,
+      averageCalculation: lpcdValues.length > 0 ? `(${lpcdValues.join(' + ')}) / ${lpcdValues.length} = ${lpcdValues.reduce((sum, lpcd) => sum + lpcd, 0) / lpcdValues.length}` : 'No valid LPCD values'
     });
 
     if (lpcdValues.length === 0) return null;
@@ -208,7 +209,7 @@ export default function SchemeVillageHeatmap() {
   ];
 
   const heatmapData = useMemo(() => {
-    if (!schemeStatus) return {
+    if (!schemeStatus || isLoadingWaterData) return {
       data: [],
       regions: [],
       villageRanges: [],
@@ -299,7 +300,7 @@ export default function SchemeVillageHeatmap() {
       villageRanges: villageRanges.map((r) => r.label),
       maxSchemeCount: Math.max(...heatmapMatrix.map((d) => d.schemeCount)),
     };
-  }, [schemeStatus]);
+  }, [schemeStatus, waterSchemeData]);
 
   const getColor = (schemeCount: number, averageLpcd: number | null) => {
     if (schemeCount === 0) return "#f9fafb"; // Light gray for zero schemes
@@ -397,7 +398,7 @@ export default function SchemeVillageHeatmap() {
 
 
 
-  if (isLoading) {
+  if (isLoading || isLoadingWaterData) {
     return (
       <Card className="w-full">
         <CardHeader>
