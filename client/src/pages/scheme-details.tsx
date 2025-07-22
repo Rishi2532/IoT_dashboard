@@ -68,14 +68,14 @@ export default function SchemeDetailsPage() {
   };
 
   const getChlorineStatus = (value: number | null): "good" | "warning" | "danger" => {
-    if (!value) return "danger";
+    if (value === null || value === undefined) return "danger";
     if (value >= 0.5) return "good";
     if (value >= 0.2) return "warning";
     return "danger";
   };
 
   const getPressureStatus = (value: number | null): "good" | "warning" | "danger" => {
-    if (!value) return "danger";
+    if (value === null || value === undefined) return "danger";
     if (value >= 0.7) return "good";
     if (value >= 0.2) return "warning";
     return "danger";
@@ -146,7 +146,7 @@ export default function SchemeDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {scheme.fully_completed_villages}/{scheme.number_of_village}
+                {scheme.fully_completed_villages || 0}/{scheme.number_of_village || 0}
               </div>
               <p className="text-xs text-gray-500 mt-1">Completed/Total</p>
             </CardContent>
@@ -158,7 +158,7 @@ export default function SchemeDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {scheme.total_number_of_esr}
+                {scheme.total_number_of_esr || 0}
               </div>
               <p className="text-xs text-gray-500 mt-1">Total ESRs</p>
             </CardContent>
@@ -170,7 +170,9 @@ export default function SchemeDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-purple-600">
-                {Math.round((scheme.fully_completed_villages / scheme.number_of_village) * 100)}%
+                {scheme.number_of_village && scheme.number_of_village > 0 
+                  ? Math.round(((scheme.fully_completed_villages || 0) / scheme.number_of_village) * 100)
+                  : 0}%
               </div>
               <p className="text-xs text-gray-500 mt-1">Completion Rate</p>
             </CardContent>
@@ -309,7 +311,7 @@ export default function SchemeDetailsPage() {
                                                         getChlorineStatus(esr.chlorine_value)
                                                       )} text-xs`}
                                                     >
-                                                      {esr.chlorine_value 
+                                                      {esr.chlorine_value !== null && esr.chlorine_value !== undefined
                                                         ? `${esr.chlorine_value.toFixed(2)} ppm`
                                                         : "No data"}
                                                     </Badge>
@@ -324,7 +326,7 @@ export default function SchemeDetailsPage() {
                                                         getPressureStatus(esr.pressure_value)
                                                       )} text-xs`}
                                                     >
-                                                      {esr.pressure_value 
+                                                      {esr.pressure_value !== null && esr.pressure_value !== undefined
                                                         ? `${esr.pressure_value.toFixed(2)} bar`
                                                         : "No data"}
                                                     </Badge>

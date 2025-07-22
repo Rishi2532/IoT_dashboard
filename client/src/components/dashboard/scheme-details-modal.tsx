@@ -510,11 +510,11 @@ export default function SchemeDetailsModal({
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-blue-600 h-2 rounded-full"
-                    style={{ width: `${villagesIntegratedPercent}%` }}
+                    style={{ width: `${isNaN(villagesIntegratedPercent) ? 0 : villagesIntegratedPercent}%` }}
                   ></div>
                 </div>
                 <div className="text-xs text-right text-blue-700">
-                  {villagesIntegratedPercent}%
+                  {isNaN(villagesIntegratedPercent) ? "0" : villagesIntegratedPercent}%
                 </div>
 
                 {/* Fully completed villages */}
@@ -530,11 +530,11 @@ export default function SchemeDetailsModal({
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-green-600 h-2 rounded-full"
-                    style={{ width: `${fullyCompletedVillagesPercent}%` }}
+                    style={{ width: `${isNaN(fullyCompletedVillagesPercent) ? 0 : fullyCompletedVillagesPercent}%` }}
                   ></div>
                 </div>
                 <div className="text-xs text-right text-green-700">
-                  {fullyCompletedVillagesPercent}%
+                  {isNaN(fullyCompletedVillagesPercent) ? "0" : fullyCompletedVillagesPercent}%
                 </div>
               </div>
             </div>
@@ -562,11 +562,11 @@ export default function SchemeDetailsModal({
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-purple-600 h-2 rounded-full"
-                    style={{ width: `${esrIntegratedPercent}%` }}
+                    style={{ width: `${isNaN(esrIntegratedPercent) ? 0 : esrIntegratedPercent}%` }}
                   ></div>
                 </div>
                 <div className="text-xs text-right text-purple-700">
-                  {esrIntegratedPercent}%
+                  {isNaN(esrIntegratedPercent) ? "0" : esrIntegratedPercent}%
                 </div>
 
                 {/* Fully completed ESR */}
@@ -581,11 +581,11 @@ export default function SchemeDetailsModal({
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div
                     className="bg-green-600 h-2 rounded-full"
-                    style={{ width: `${fullyCompletedEsrPercent}%` }}
+                    style={{ width: `${isNaN(fullyCompletedEsrPercent) ? 0 : fullyCompletedEsrPercent}%` }}
                   ></div>
                 </div>
                 <div className="text-xs text-right text-green-700">
-                  {fullyCompletedEsrPercent}%
+                  {isNaN(fullyCompletedEsrPercent) ? "0" : fullyCompletedEsrPercent}%
                 </div>
               </div>
             </div>
