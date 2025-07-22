@@ -273,12 +273,13 @@ export default function SchemeVillageHeatmap() {
         // Calculate average LPCD for all schemes in this cell
         const averageLpcd = calculateCellAverageLpcd(schemesInRange);
 
-        // Debug logging for specific cells
-        if (region === "Amravati" && range.label === "6-9" && uniqueSchemes.size > 0) {
+        // Debug logging for any cell with schemes
+        if (uniqueSchemes.size > 0) {
           console.log(`LPCD Debug for ${region} ${range.label}:`, {
             schemeCount: uniqueSchemes.size,
             averageLpcd,
-            schemesInRange: schemesInRange.length
+            schemesInRange: schemesInRange.length,
+            waterDataCount: waterSchemeData?.length || 0
           });
         }
 
@@ -484,13 +485,14 @@ export default function SchemeVillageHeatmap() {
                   const bgColor = getColor(schemeCount, averageLpcd);
                   const textColor = getTextColor(schemeCount, averageLpcd);
 
-                  // Debug logging for specific cells
-                  if (region === "Amravati" && villageRange === "6-9" && schemeCount > 0) {
+                  // Debug logging for any cell with schemes
+                  if (schemeCount > 0) {
                     console.log(`Color Debug for ${region} ${villageRange}:`, {
                       schemeCount,
                       averageLpcd,
                       bgColor,
-                      textColor
+                      textColor,
+                      expectedColor: averageLpcd ? 'LPCD-based' : 'default'
                     });
                   }
 
