@@ -113,6 +113,20 @@ export default function SchemeDetailsPage() {
     return "danger";
   };
 
+  const formatPressureValue = (value: number | null | string): string => {
+    if (value === null || value === undefined || value === "") return "No data";
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+    if (isNaN(numValue)) return "No data";
+    return `${numValue.toFixed(2)} bar`;
+  };
+
+  const formatChlorineValue = (value: number | null | string): string => {
+    if (value === null || value === undefined || value === "") return "No data";
+    const numValue = typeof value === "string" ? parseFloat(value) : value;
+    if (isNaN(numValue)) return "No data";
+    return `${numValue.toFixed(2)} mg/L`;
+  };
+
   if (isLoadingScheme) {
     return (
       <DashboardLayout>
@@ -200,7 +214,7 @@ export default function SchemeDetailsPage() {
 
           {/* Blue Box - Key Statistics */}
           <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg p-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-4">
               {/* Total Water Consumption */}
               <div className="text-center">
                 <div className="text-2xl font-bold">{totalWaterConsumption.toFixed(1)}</div>
@@ -210,15 +224,29 @@ export default function SchemeDetailsPage() {
 
               {/* Total Villages */}
               <div className="text-center">
-                <div className="text-2xl font-bold">{totalVillages}</div>
+                <div className="text-2xl font-bold">{scheme?.number_of_village || totalVillages}</div>
                 <div className="text-blue-100 text-xs">Total</div>
+                <div className="text-blue-100 text-xs">Villages</div>
+              </div>
+
+              {/* Integrated Villages */}
+              <div className="text-center">
+                <div className="text-2xl font-bold">{scheme?.total_villages_integrated || 0}</div>
+                <div className="text-blue-100 text-xs">Integrated</div>
                 <div className="text-blue-100 text-xs">Villages</div>
               </div>
 
               {/* Total ESRs */}
               <div className="text-center">
-                <div className="text-2xl font-bold">{totalESRs}</div>
+                <div className="text-2xl font-bold">{scheme?.total_number_of_esr || totalESRs}</div>
                 <div className="text-blue-100 text-xs">Total</div>
+                <div className="text-blue-100 text-xs">ESRs</div>
+              </div>
+
+              {/* Integrated ESRs */}
+              <div className="text-center">
+                <div className="text-2xl font-bold">{scheme?.total_esr_integrated || 0}</div>
+                <div className="text-blue-100 text-xs">Integrated</div>
                 <div className="text-blue-100 text-xs">ESRs</div>
               </div>
 
@@ -445,9 +473,7 @@ export default function SchemeDetailsPage() {
                                                   getChlorineStatus(esr.chlorine_value)
                                                 )} text-xs`}
                                               >
-                                                {esr.chlorine_value !== null && esr.chlorine_value !== undefined && esr.chlorine_value !== ""
-                                                  ? `${Number(esr.chlorine_value).toFixed(2)} mg/L`
-                                                  : "No data"}
+                                                {formatChlorineValue(esr.chlorine_value)}
                                               </Badge>
                                             </div>
                                             
@@ -461,9 +487,7 @@ export default function SchemeDetailsPage() {
                                                   getPressureStatus(esr.pressure_value)
                                                 )} text-xs`}
                                               >
-                                                {esr.pressure_value !== null && esr.pressure_value !== undefined && esr.pressure_value !== ""
-                                                  ? `${Number(esr.pressure_value).toFixed(2)} bar`
-                                                  : "No data"}
+                                                {formatPressureValue(esr.pressure_value)}
                                               </Badge>
                                             </div>
                                           </div>
