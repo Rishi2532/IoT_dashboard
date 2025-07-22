@@ -144,7 +144,7 @@ export default function SchemeDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-blue-600">
-                {scheme.fully_completed_villages || 0}/{scheme.number_of_village || 0}
+                {villages?.filter(v => v.completion_status === "Completed").length || 0}/{villages?.length || 0}
               </div>
               <p className="text-xs text-gray-500 mt-1">Completed/Total</p>
             </CardContent>
@@ -156,7 +156,7 @@ export default function SchemeDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-green-600">
-                {scheme.total_number_of_esr || 0}
+                {esrData?.length || 0}
               </div>
               <p className="text-xs text-gray-500 mt-1">Total ESRs</p>
             </CardContent>
@@ -168,8 +168,8 @@ export default function SchemeDetailsPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-purple-600">
-                {scheme.number_of_village && scheme.number_of_village > 0 
-                  ? Math.round(((scheme.fully_completed_villages || 0) / scheme.number_of_village) * 100)
+                {villages && villages.length > 0 
+                  ? Math.round(((villages.filter(v => v.completion_status === "Completed").length) / villages.length) * 100)
                   : 0}%
               </div>
               <p className="text-xs text-gray-500 mt-1">Completion Rate</p>
