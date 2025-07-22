@@ -13,9 +13,28 @@ export default function SchemeDetailsPage() {
   const schemeId = pathParts[0];
   const block = pathParts[1]; // May be undefined for multi-block schemes
 
-  // Fetch scheme information
+  // Fetch scheme information - use aggregate endpoint for multi-block schemes
   const { data: scheme, isLoading: isLoadingScheme } = useQuery({
-    queryKey: ["/api/schemes", schemeId],
+    queryKey: ["/api/schemes/aggregate", schemeId],
+    queryFn: async () => {
+      // First try to get individual scheme data
+      let response = await fetch(`/api/schemes?schemeId=${schemeId}`);
+      if (response.ok) {
+        const schemes = await response.json();
+        if (schemes && schemes.length > 0) {
+          const singleScheme = schemes[0];
+          // If this is a multi-block scheme, get aggregated data
+          if (singleScheme.scheme_name) {
+            const aggregateResponse = await fetch(`/api/schemes/aggregate/${encodeURIComponent(singleScheme.scheme_name)}`);
+            if (aggregateResponse.ok) {
+              return aggregateResponse.json();
+            }
+          }
+          return singleScheme;
+        }
+      }
+      throw new Error("Failed to fetch scheme data");
+    },
     enabled: !!schemeId,
   });
 
