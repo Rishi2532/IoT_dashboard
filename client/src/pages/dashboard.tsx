@@ -12,7 +12,7 @@ import FlipPopulationCards from "@/components/dashboard/flip-population-cards";
 import SchemeTable from "@/components/dashboard/scheme-table";
 import SchemeDetailsModal from "@/components/dashboard/scheme-details-modal";
 import ComponentTypeFilter from "@/components/dashboard/ComponentTypeFilter";
-import ZoomableCirclePacking from "@/components/dashboard/zoomable-circle-packing";
+
 import ZoomableSunburst from "@/components/dashboard/zoomable-sunburst";
 
 import ChatbotComponent, {
@@ -739,11 +739,6 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Circle Packing Visualization */}
-      <div className="mb-4 sm:mb-6">
-        <ZoomableCirclePacking />
       </div>
 
       {/* Zoomable Sunburst Visualization */}

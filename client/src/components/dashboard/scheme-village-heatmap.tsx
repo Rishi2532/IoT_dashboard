@@ -56,6 +56,7 @@ interface HeatmapData {
   villageRange: string;
   schemeCount: number;
   schemes: SchemeData[]; // Store the actual schemes for display
+  averageLpcd: number | null; // Average LPCD for schemes in this cell
 }
 
 interface SelectedCell {
@@ -163,11 +164,15 @@ export default function SchemeVillageHeatmap() {
         // Count unique schemes (not blocks)
         const uniqueSchemes = new Set(schemesInRange.map((s) => s.scheme_name));
 
+        // Calculate average LPCD for all schemes in this cell
+        const averageLpcd = calculateCellAverageLpcd(schemesInRange);
+
         heatmapMatrix.push({
           region,
           villageRange: range.label,
           schemeCount: uniqueSchemes.size,
           schemes: schemesInRange, // Store all blocks for display
+          averageLpcd, // Average LPCD for color coding
         });
       });
     });
@@ -180,22 +185,44 @@ export default function SchemeVillageHeatmap() {
     };
   }, [schemeStatus]);
 
-  const getColor = (schemeCount: number, maxCount: number) => {
-    if (schemeCount === 0) return "#f9fafb"; // Light gray for zero
-
-    // Blue-to-green gradient: #e0f3f8 → #66c2a4 → #238b45
-    const intensity = schemeCount / maxCount;
-
-    if (intensity <= 0.33) return "#e0f3f8"; // Very light blue for low count
-    if (intensity <= 0.66) return "#66c2a4"; // Teal/greenish for medium count
-    return "#238b45"; // Deep green for high count
+  // LPCD-based color coding function as specified by user
+  const getLpcdStatusColor = (lpcdValue: number | null): string => {
+    if (lpcdValue === null) return "bg-gray-200 text-gray-700";
+    if (lpcdValue > 80) return "bg-orange-500 text-white"; // High status (> 80L)
+    if (lpcdValue > 70) return "bg-green-600 text-white"; // High status (> 70L)
+    if (lpcdValue >= 55) return "bg-green-500 text-white"; // Good status (55-70L)
+    if (lpcdValue >= 40) return "bg-yellow-500 text-black"; // Low but not critical
+    if (lpcdValue >= 25) return "bg-red-300 text-white"; // Very low
+    if (lpcdValue > 0) return "bg-red-500 text-white"; // Critically low
+    return "bg-gray-800 text-white"; // No water
   };
 
-  const getTextColor = (schemeCount: number, maxCount: number) => {
+  const getColor = (schemeCount: number, averageLpcd: number | null) => {
+    if (schemeCount === 0) return "#f9fafb"; // Light gray for zero schemes
+
+    // Use LPCD-based color coding
+    if (averageLpcd === null) return "#e5e7eb"; // Gray for no LPCD data
+    if (averageLpcd > 80) return "#f97316"; // Orange for > 80L
+    if (averageLpcd > 70) return "#059669"; // Green-600 for > 70L  
+    if (averageLpcd >= 55) return "#10b981"; // Green-500 for 55-70L
+    if (averageLpcd >= 40) return "#eab308"; // Yellow-500 for 40-54L
+    if (averageLpcd >= 25) return "#fca5a5"; // Red-300 for 25-39L
+    if (averageLpcd > 0) return "#ef4444"; // Red-500 for 0-24L
+    return "#374151"; // Gray-800 for no water
+  };
+
+  const getTextColor = (schemeCount: number, averageLpcd: number | null) => {
     if (schemeCount === 0) return "#6b7280";
-    const intensity = schemeCount / maxCount;
-    // White text for high intensity (deep green), black for low/medium
-    return intensity > 0.66 ? "#ffffff" : "#000000";
+    
+    // Use LPCD-based text color for readability
+    if (averageLpcd === null) return "#374151"; // Dark gray for no data
+    if (averageLpcd > 80) return "#ffffff"; // White for orange background
+    if (averageLpcd > 70) return "#ffffff"; // White for green backgrounds
+    if (averageLpcd >= 55) return "#ffffff"; // White for green backgrounds
+    if (averageLpcd >= 40) return "#000000"; // Black for yellow background
+    if (averageLpcd >= 25) return "#ffffff"; // White for red backgrounds
+    if (averageLpcd > 0) return "#ffffff"; // White for red backgrounds
+    return "#ffffff"; // White for dark gray background
   };
 
   const handleCellClick = (region: string, villageRange: string) => {
@@ -316,6 +343,38 @@ export default function SchemeVillageHeatmap() {
     return null;
   };
 
+  // Calculate average LPCD for all schemes in a cell
+  const calculateCellAverageLpcd = (schemes: SchemeData[]) => {
+    if (!waterSchemeData || waterSchemeData.length === 0) return null;
+    
+    // Group schemes by scheme name to get unique schemes
+    const groupedSchemes = new Map<string, SchemeData[]>();
+    schemes.forEach((scheme) => {
+      if (groupedSchemes.has(scheme.scheme_name)) {
+        groupedSchemes.get(scheme.scheme_name)!.push(scheme);
+      } else {
+        groupedSchemes.set(scheme.scheme_name, [scheme]);
+      }
+    });
+
+    // Calculate LPCD for each unique scheme
+    const lpcdValues: number[] = [];
+    Array.from(groupedSchemes.values()).forEach((schemeGroup) => {
+      const schemeLpcd = calculateSchemeAverageLpcd(schemeGroup);
+      if (schemeLpcd !== null && !isNaN(schemeLpcd)) {
+        lpcdValues.push(schemeLpcd);
+      }
+    });
+
+    if (lpcdValues.length === 0) return null;
+
+    // Calculate average of all scheme LPCDs
+    const totalLpcd = lpcdValues.reduce((sum, lpcd) => sum + lpcd, 0);
+    const averageLpcd = totalLpcd / lpcdValues.length;
+    
+    return Math.round(averageLpcd * 100) / 100;
+  };
+
   if (isLoading) {
     return (
       <Card className="w-full">
@@ -357,8 +416,7 @@ export default function SchemeVillageHeatmap() {
       <CardHeader>
         <CardTitle>Scheme Distribution Heatmap</CardTitle>
         <p className="text-sm text-gray-600">
-          Number of schemes by region and village count. Darker colors indicate
-          more schemes.
+          Number of schemes by region and village count. Colors indicate average LPCD values of schemes in each cell.
         </p>
       </CardHeader>
       <CardContent className="p-2">
@@ -401,8 +459,9 @@ export default function SchemeVillageHeatmap() {
                       d.region === region && d.villageRange === villageRange,
                   );
                   const schemeCount = cellData?.schemeCount || 0;
-                  const bgColor = getColor(schemeCount, maxSchemeCount);
-                  const textColor = getTextColor(schemeCount, maxSchemeCount);
+                  const averageLpcd = cellData?.averageLpcd || null;
+                  const bgColor = getColor(schemeCount, averageLpcd);
+                  const textColor = getTextColor(schemeCount, averageLpcd);
 
                   return (
                     <div
@@ -417,7 +476,7 @@ export default function SchemeVillageHeatmap() {
                             ? "2px solid #1d4ed8"
                             : undefined,
                       }}
-                      title={`${region}: ${schemeCount} schemes with ${villageRange} villages. Click to view details.`}
+                      title={`${region}: ${schemeCount} schemes with ${villageRange} villages${averageLpcd !== null ? `. Average LPCD: ${averageLpcd}L` : ''}. Click to view details.`}
                       onClick={() => handleCellClick(region, villageRange)}
                     >
                       {schemeCount > 0 ? schemeCount : ""}
@@ -428,35 +487,46 @@ export default function SchemeVillageHeatmap() {
             ))}
           </div>
 
-          {/* Legend */}
-          <div className="mt-6 flex items-center gap-4">
-            <span className="text-sm font-medium">Legend:</span>
-            <div className="flex items-center gap-2">
-              <div className="w-4 h-4 bg-gray-100 border border-gray-300"></div>
-              <span className="text-xs">0 schemes</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 border border-gray-300"
-                style={{
-                  backgroundColor: getColor(
-                    maxSchemeCount * 0.5,
-                    maxSchemeCount,
-                  ),
-                }}
-              ></div>
-              <span className="text-xs">
-                Medium ({Math.ceil(maxSchemeCount * 0.5)})
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div
-                className="w-4 h-4 border border-gray-300"
-                style={{
-                  backgroundColor: getColor(maxSchemeCount, maxSchemeCount),
-                }}
-              ></div>
-              <span className="text-xs">High ({maxSchemeCount})</span>
+          {/* LPCD-based Legend */}
+          <div className="mt-6">
+            <span className="text-sm font-medium">LPCD Color Legend:</span>
+            <div className="flex flex-wrap items-center gap-4 mt-2">
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 bg-gray-100 border border-gray-300"></div>
+                <span className="text-xs">0 schemes</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#e5e7eb" }}></div>
+                <span className="text-xs">No LPCD data</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#10b981" }}></div>
+                <span className="text-xs">55-70L (Good)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#059669" }}></div>
+                <span className="text-xs">70-80L (High)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#f97316" }}></div>
+                <span className="text-xs">&gt;80L (Very High)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#eab308" }}></div>
+                <span className="text-xs">40-54L (Low)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#fca5a5" }}></div>
+                <span className="text-xs">25-39L (Very Low)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#ef4444" }}></div>
+                <span className="text-xs">0-24L (Critical)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border border-gray-300" style={{ backgroundColor: "#374151" }}></div>
+                <span className="text-xs">No water</span>
+              </div>
             </div>
           </div>
 

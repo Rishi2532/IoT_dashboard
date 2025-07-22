@@ -123,6 +123,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 22, 2025
+- **Migration to Replit Environment**: Successfully migrated the Maharashtra Water Infrastructure Management Platform from Replit Agent to standard Replit environment with full database connectivity and feature preservation
+- **LPCD-Based Heatmap Color Coding**: Enhanced Scheme Distribution Heatmap to calculate average LPCD of all schemes in each cell and apply color coding based on LPCD values (green ≥55L, yellow 40-54L, red 25-39L, etc.) instead of scheme count
+- **Advanced LPCD Calculation**: Implemented cell-level average LPCD calculation that groups schemes by name, calculates individual scheme LPCD, then averages across all schemes in the cell for accurate representation
+- **Comprehensive Color Legend**: Added detailed LPCD-based color legend showing ranges from "No water" (dark gray) to "Very High" (orange >80L) with proper visual indicators
+- **Enhanced Tooltips**: Updated heatmap cell tooltips to display average LPCD values alongside scheme counts for better user information
+
 ### July 21, 2025
 - **Scheme Distribution Heatmap LPCD Enhancement**: Added scheme LPCD information display in the heatmap scheme lists showing format "Total Villages: 3 • Blocks: 1 • Circle: Akola • Status: Fully Completed • LPCD: 45L"
 - **LPCD Calculation System**: Implemented LPCD calculation using latest day water consumption (water_value_day7) divided by total population of all villages in scheme, multiplied by 100000
