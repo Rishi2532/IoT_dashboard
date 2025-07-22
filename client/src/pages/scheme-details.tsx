@@ -69,15 +69,13 @@ export default function SchemeDetailsPage() {
 
   const getChlorineStatus = (value: number | null): "good" | "warning" | "danger" => {
     if (value === null || value === undefined) return "danger";
-    if (value >= 0.5) return "good";
-    if (value >= 0.2) return "warning";
+    if (value >= 0.2 && value <= 0.5) return "good";
     return "danger";
   };
 
   const getPressureStatus = (value: number | null): "good" | "warning" | "danger" => {
     if (value === null || value === undefined) return "danger";
-    if (value >= 0.7) return "good";
-    if (value >= 0.2) return "warning";
+    if (value >= 0.2 && value <= 0.7) return "good";
     return "danger";
   };
 
@@ -312,7 +310,7 @@ export default function SchemeDetailsPage() {
                                                       )} text-xs`}
                                                     >
                                                       {esr.chlorine_value !== null && esr.chlorine_value !== undefined
-                                                        ? `${esr.chlorine_value.toFixed(2)} ppm`
+                                                        ? `${esr.chlorine_value.toFixed(2)} mg/L`
                                                         : "No data"}
                                                     </Badge>
                                                   </div>
