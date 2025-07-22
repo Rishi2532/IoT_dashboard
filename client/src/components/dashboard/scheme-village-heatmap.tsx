@@ -80,6 +80,92 @@ export default function SchemeVillageHeatmap() {
     // Always fetch water scheme data so we can calculate LPCD
   });
 
+  // Helper function to get scheme water data
+  const getSchemeWaterData = (schemeId: string, schemeName: string) => {
+    if (!waterSchemeData) return [];
+    return waterSchemeData.filter(
+      (wd) => wd.scheme_id === schemeId || wd.scheme_name === schemeName,
+    );
+  };
+
+  // Calculate average LPCD for a single scheme
+  const calculateSchemeAverageLpcd = (schemes: SchemeData[]) => {
+    let totalWaterDay7 = 0;
+    let totalPopulation = 0;
+    let hasValidData = false;
+
+    schemes.forEach((scheme) => {
+      const schemeWaterData = getSchemeWaterData(scheme.scheme_id, scheme.scheme_name);
+      schemeWaterData.forEach((data) => {
+        // Get water consumption for day 7 (latest day)
+        const waterDay7 = typeof data.water_value_day7 === 'string' 
+          ? parseFloat(data.water_value_day7) 
+          : data.water_value_day7;
+          
+        const population = typeof data.population === 'string'
+          ? parseFloat(data.population)
+          : data.population;
+
+        if (!isNaN(waterDay7) && waterDay7 >= 0 && !isNaN(population) && population > 0) {
+          totalWaterDay7 += waterDay7;
+          totalPopulation += population;
+          hasValidData = true;
+        }
+      });
+    });
+
+    if (hasValidData && totalPopulation > 0) {
+      // LPCD = total water consumption / total population * 100000
+      const lpcd = (totalWaterDay7 / totalPopulation) * 100000;
+      
+      // Debug logging for Padali scheme
+      if (schemes.some(s => s.scheme_name?.includes('Padali'))) {
+        console.log('Padali LPCD Calculation:', {
+          totalWaterDay7,
+          totalPopulation,
+          lpcd,
+          precise: Math.round(lpcd * 100) / 100
+        });
+      }
+      
+      return !isNaN(lpcd) && lpcd >= 0 ? Math.round(lpcd * 100) / 100 : null;
+    }
+
+    return null;
+  };
+
+  // Calculate average LPCD for all schemes in a cell
+  const calculateCellAverageLpcd = (schemes: SchemeData[]) => {
+    if (!waterSchemeData || waterSchemeData.length === 0) return null;
+    
+    // Group schemes by scheme name to get unique schemes
+    const groupedSchemes = new Map<string, SchemeData[]>();
+    schemes.forEach((scheme) => {
+      if (groupedSchemes.has(scheme.scheme_name)) {
+        groupedSchemes.get(scheme.scheme_name)!.push(scheme);
+      } else {
+        groupedSchemes.set(scheme.scheme_name, [scheme]);
+      }
+    });
+
+    // Calculate LPCD for each unique scheme
+    const lpcdValues: number[] = [];
+    Array.from(groupedSchemes.values()).forEach((schemeGroup) => {
+      const schemeLpcd = calculateSchemeAverageLpcd(schemeGroup);
+      if (schemeLpcd !== null && !isNaN(schemeLpcd)) {
+        lpcdValues.push(schemeLpcd);
+      }
+    });
+
+    if (lpcdValues.length === 0) return null;
+
+    // Calculate average of all scheme LPCDs
+    const totalLpcd = lpcdValues.reduce((sum, lpcd) => sum + lpcd, 0);
+    const averageLpcd = totalLpcd / lpcdValues.length;
+    
+    return Math.round(averageLpcd * 100) / 100;
+  };
+
   // Define the village count ranges
   const villageRanges = [
     { label: "1", min: 1, max: 1 }, // Exclude 0 village schemes
@@ -291,89 +377,7 @@ export default function SchemeVillageHeatmap() {
     setExpandedSchemes(newExpanded);
   };
 
-  const getSchemeWaterData = (schemeId: string, schemeName: string) => {
-    if (!waterSchemeData) return [];
-    return waterSchemeData.filter(
-      (wd) => wd.scheme_id === schemeId || wd.scheme_name === schemeName,
-    );
-  };
 
-  const calculateSchemeAverageLpcd = (schemes: SchemeData[]) => {
-    let totalWaterDay7 = 0;
-    let totalPopulation = 0;
-    let hasValidData = false;
-
-    schemes.forEach((scheme) => {
-      const schemeWaterData = getSchemeWaterData(scheme.scheme_id, scheme.scheme_name);
-      schemeWaterData.forEach((data) => {
-        // Get water consumption for day 7 (latest day)
-        const waterDay7 = typeof data.water_value_day7 === 'string' 
-          ? parseFloat(data.water_value_day7) 
-          : data.water_value_day7;
-          
-        const population = typeof data.population === 'string'
-          ? parseFloat(data.population)
-          : data.population;
-
-        if (!isNaN(waterDay7) && waterDay7 >= 0 && !isNaN(population) && population > 0) {
-          totalWaterDay7 += waterDay7;
-          totalPopulation += population;
-          hasValidData = true;
-        }
-      });
-    });
-
-    if (hasValidData && totalPopulation > 0) {
-      // LPCD = total water consumption / total population * 100000
-      const lpcd = (totalWaterDay7 / totalPopulation) * 100000;
-      
-      // Debug logging for Padali scheme
-      if (schemes.some(s => s.scheme_name?.includes('Padali'))) {
-        console.log('Padali LPCD Calculation:', {
-          totalWaterDay7,
-          totalPopulation,
-          lpcd,
-          precise: Math.round(lpcd * 100) / 100
-        });
-      }
-      
-      return !isNaN(lpcd) && lpcd >= 0 ? Math.round(lpcd * 100) / 100 : null;
-    }
-
-    return null;
-  };
-
-  // Calculate average LPCD for all schemes in a cell
-  const calculateCellAverageLpcd = (schemes: SchemeData[]) => {
-    if (!waterSchemeData || waterSchemeData.length === 0) return null;
-    
-    // Group schemes by scheme name to get unique schemes
-    const groupedSchemes = new Map<string, SchemeData[]>();
-    schemes.forEach((scheme) => {
-      if (groupedSchemes.has(scheme.scheme_name)) {
-        groupedSchemes.get(scheme.scheme_name)!.push(scheme);
-      } else {
-        groupedSchemes.set(scheme.scheme_name, [scheme]);
-      }
-    });
-
-    // Calculate LPCD for each unique scheme
-    const lpcdValues: number[] = [];
-    Array.from(groupedSchemes.values()).forEach((schemeGroup) => {
-      const schemeLpcd = calculateSchemeAverageLpcd(schemeGroup);
-      if (schemeLpcd !== null && !isNaN(schemeLpcd)) {
-        lpcdValues.push(schemeLpcd);
-      }
-    });
-
-    if (lpcdValues.length === 0) return null;
-
-    // Calculate average of all scheme LPCDs
-    const totalLpcd = lpcdValues.reduce((sum, lpcd) => sum + lpcd, 0);
-    const averageLpcd = totalLpcd / lpcdValues.length;
-    
-    return Math.round(averageLpcd * 100) / 100;
-  };
 
   if (isLoading) {
     return (
