@@ -173,11 +173,10 @@ export default function Header() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="group relative overflow-hidden text-white hover:text-white bg-gradient-to-r from-rose-500/20 to-pink-500/20 hover:from-rose-400/30 hover:to-pink-400/30 backdrop-blur-md px-3 h-8 rounded-lg transition-all duration-300 hover:scale-105 border border-white/30 hover:border-white/60 shadow-lg hover:shadow-xl hover:shadow-rose-400/20"
+                  className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
                 >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-                  <Settings className="h-4 w-4 mr-2 relative z-10" />
-                  <span className="text-sm font-semibold relative z-10">Admin</span>
+                  <Settings className="h-3.5 w-3.5 mr-1.5" />
+                  <span className="text-xs font-medium">Admin</span>
                 </Button>
               </Link>
             )}
@@ -197,65 +196,60 @@ export default function Header() {
         </div>
 
         {/* Navigation Bar Below Title */}
-        <div className="hidden lg:flex items-center justify-center space-x-2 pb-3 border-b border-white/10">
+        <div className="hidden lg:flex items-center justify-center space-x-1 pb-3 border-b border-white/10">
           <Link href="/dashboard">
             <Button
               variant="ghost"
               size="sm"
-              className="group relative overflow-hidden text-white hover:text-white bg-gradient-to-r from-blue-500/20 to-cyan-500/20 hover:from-blue-400/30 hover:to-cyan-400/30 backdrop-blur-md px-3 h-9 rounded-lg transition-all duration-300 hover:scale-105 border border-white/30 hover:border-white/60 shadow-lg hover:shadow-xl hover:shadow-blue-400/20"
+              className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
               title="Dashboard"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-              <Home className="h-4 w-4 mr-2 relative z-10" />
-              <span className="text-sm font-semibold relative z-10">Dashboard</span>
+              <Home className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">Dashboard</span>
             </Button>
           </Link>
           <Link href="/schemes">
             <Button
               variant="ghost"
               size="sm"
-              className="group relative overflow-hidden text-white hover:text-white bg-gradient-to-r from-emerald-500/20 to-teal-500/20 hover:from-emerald-400/30 hover:to-teal-400/30 backdrop-blur-md px-3 h-9 rounded-lg transition-all duration-300 hover:scale-105 border border-white/30 hover:border-white/60 shadow-lg hover:shadow-xl hover:shadow-emerald-400/20"
+              className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
               title="Schemes"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-              <GitBranchPlus className="h-4 w-4 mr-2 relative z-10" />
-              <span className="text-sm font-semibold relative z-10">Schemes</span>
+              <GitBranchPlus className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">Schemes</span>
             </Button>
           </Link>
           <Link href="/regions">
             <Button
               variant="ghost"
               size="sm"
-              className="group relative overflow-hidden text-white hover:text-white bg-gradient-to-r from-purple-500/20 to-pink-500/20 hover:from-purple-400/30 hover:to-pink-400/30 backdrop-blur-md px-3 h-9 rounded-lg transition-all duration-300 hover:scale-105 border border-white/30 hover:border-white/60 shadow-lg hover:shadow-xl hover:shadow-purple-400/20"
+              className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
               title="Regions"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-              <MapPin className="h-4 w-4 mr-2 relative z-10" />
-              <span className="text-sm font-semibold relative z-10">Regions</span>
+              <MapPin className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">Regions</span>
             </Button>
           </Link>
           <Link href="/reports">
             <Button
               variant="ghost"
               size="sm"
-              className="group relative overflow-hidden text-white hover:text-white bg-gradient-to-r from-orange-500/20 to-red-500/20 hover:from-orange-400/30 hover:to-red-400/30 backdrop-blur-md px-3 h-9 rounded-lg transition-all duration-300 hover:scale-105 border border-white/30 hover:border-white/60 shadow-lg hover:shadow-xl hover:shadow-orange-400/20"
+              className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
               title="Reports"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-              <BarChart2 className="h-4 w-4 mr-2 relative z-10" />
-              <span className="text-sm font-semibold relative z-10">Reports</span>
+              <BarChart2 className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">Reports</span>
             </Button>
           </Link>
           <Link href="/hierarchy">
             <Button
               variant="ghost"
               size="sm"
-              className="group relative overflow-hidden text-white hover:text-white bg-gradient-to-r from-indigo-500/20 to-blue-500/20 hover:from-indigo-400/30 hover:to-blue-400/30 backdrop-blur-md px-3 h-9 rounded-lg transition-all duration-300 hover:scale-105 border border-white/30 hover:border-white/60 shadow-lg hover:shadow-xl hover:shadow-indigo-400/20"
+              className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
               title="Hierarchy"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-              <PieChart className="h-4 w-4 mr-2 relative z-10" />
-              <span className="text-sm font-semibold relative z-10">Hierarchy</span>
+              <PieChart className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">Hierarchy</span>
             </Button>
           </Link>
 
@@ -264,35 +258,34 @@ export default function Header() {
             <Button
               variant="ghost"
               size="sm"
-              className="group relative overflow-hidden text-white hover:text-white bg-gradient-to-r from-cyan-500/20 to-blue-500/20 hover:from-cyan-400/30 hover:to-blue-400/30 backdrop-blur-md px-3 h-9 rounded-lg transition-all duration-300 hover:scale-105 border border-white/30 hover:border-white/60 shadow-lg hover:shadow-xl hover:shadow-cyan-400/20"
+              className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
               title="LPCD Options"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-              <Droplet className="h-4 w-4 mr-2 relative z-10" />
-              <span className="text-sm font-semibold relative z-10">LPCD</span>
+              <Droplet className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">LPCD</span>
             </Button>
 
             {/* Dropdown Menu */}
-            <div className="absolute top-full left-0 mt-2 w-44 bg-gradient-to-br from-white/15 to-white/5 backdrop-blur-xl border border-white/40 rounded-xl shadow-2xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 transform translate-y-2 group-hover:translate-y-0">
-              <div className="py-2">
+            <div className="absolute top-full left-0 mt-1 w-40 bg-white/10 backdrop-blur-md border border-white/30 rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+              <div className="py-1">
                 <Link href="/lpcd">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start text-white hover:text-white hover:bg-white/20 backdrop-blur-sm px-3 h-9 rounded-lg mx-1 transition-all duration-200 hover:scale-[1.02]"
+                    className="w-full justify-start text-blue-500  px-3 h-8 rounded-md"
                   >
-                    <Droplet className="h-4 w-4 mr-2" />
-                    <span className="font-medium">Village LPCD</span>
+                    <Droplet className="h-3 w-3 mr-2" />
+                    Village LPCD
                   </Button>
                 </Link>
                 <Link href="/scheme-lpcd">
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="w-full justify-start text-white hover:text-white hover:bg-white/20 backdrop-blur-sm px-3 h-9 rounded-lg mx-1 transition-all duration-200 hover:scale-[1.02]"
+                    className="w-full justify-start text-blue-500  px-3 h-8 rounded-md"
                   >
-                    <GitBranchPlus className="h-4 w-4 mr-2" />
-                    <span className="font-medium">Scheme LPCD</span>
+                    <GitBranchPlus className="h-3 w-3 mr-2" />
+                    Scheme LPCD
                   </Button>
                 </Link>
               </div>
@@ -303,36 +296,33 @@ export default function Header() {
             <Button
               variant="ghost"
               size="sm"
-              className="group relative overflow-hidden text-white hover:text-white bg-gradient-to-r from-green-500/20 to-lime-500/20 hover:from-green-400/30 hover:to-lime-400/30 backdrop-blur-md px-3 h-9 rounded-lg transition-all duration-300 hover:scale-105 border border-white/30 hover:border-white/60 shadow-lg hover:shadow-xl hover:shadow-green-400/20"
+              className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
               title="Chlorine"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-              <Flame className="h-4 w-4 mr-2 relative z-10" />
-              <span className="text-sm font-semibold relative z-10">Chlorine</span>
+              <Flame className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">Chlorine</span>
             </Button>
           </Link>
           <Link href="/pressure">
             <Button
               variant="ghost"
               size="sm"
-              className="group relative overflow-hidden text-white hover:text-white bg-gradient-to-r from-yellow-500/20 to-amber-500/20 hover:from-yellow-400/30 hover:to-amber-400/30 backdrop-blur-md px-3 h-9 rounded-lg transition-all duration-300 hover:scale-105 border border-white/30 hover:border-white/60 shadow-lg hover:shadow-xl hover:shadow-yellow-400/20"
+              className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
               title="Pressure"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-              <Gauge className="h-4 w-4 mr-2 relative z-10" />
-              <span className="text-sm font-semibold relative z-10">Pressure</span>
+              <Gauge className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">Pressure</span>
             </Button>
           </Link>
           <Link href="/communication-status">
             <Button
               variant="ghost"
               size="sm"
-              className="group relative overflow-hidden text-white hover:text-white bg-gradient-to-r from-violet-500/20 to-purple-500/20 hover:from-violet-400/30 hover:to-purple-400/30 backdrop-blur-md px-3 h-9 rounded-lg transition-all duration-300 hover:scale-105 border border-white/30 hover:border-white/60 shadow-lg hover:shadow-xl hover:shadow-violet-400/20"
+              className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
               title="Communication"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700"></div>
-              <Wifi className="h-4 w-4 mr-2 relative z-10" />
-              <span className="text-sm font-semibold relative z-10">Communication</span>
+              <Wifi className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">Communication</span>
             </Button>
           </Link>
         </div>
