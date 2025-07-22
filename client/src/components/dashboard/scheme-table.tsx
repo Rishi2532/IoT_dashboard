@@ -46,6 +46,7 @@ interface SchemeTableProps {
   schemes: SchemeStatus[];
   isLoading: boolean;
   onViewDetails: (scheme: SchemeStatus) => void;
+  onNavigateToDetails?: (scheme: SchemeStatus) => void;
   statusFilter?: string;
   onStatusFilterChange?: (status: string) => void;
   onFilteredSchemesChange?: (filteredSchemes: SchemeStatus[]) => void;
@@ -56,6 +57,7 @@ export default function SchemeTable({
   schemes,
   isLoading,
   onViewDetails,
+  onNavigateToDetails,
   statusFilter = "all",
   onStatusFilterChange,
   onFilteredSchemesChange,
@@ -491,7 +493,7 @@ export default function SchemeTable({
                         </div>
                       </TableCell>
                       <TableCell className="text-center p-1 sm:p-3 lg:p-4 xl:p-5 border-b border-gray-100">
-                        <div className="flex justify-center">
+                        <div className="flex justify-center gap-2">
                           <Button
                             variant="outline"
                             size="sm"
@@ -500,6 +502,17 @@ export default function SchemeTable({
                           >
                             View Details
                           </Button>
+                          {onNavigateToDetails && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-white hover:bg-green-50 text-green-700 hover:text-green-800 border-green-200 hover:border-green-300 transition-colors duration-150 text-xs sm:text-sm h-8 sm:h-9 font-medium"
+                              onClick={() => onNavigateToDetails(scheme)}
+                            >
+                              <ExternalLink className="w-3 h-3 mr-1" />
+                              Full Details
+                            </Button>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>

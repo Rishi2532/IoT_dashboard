@@ -125,6 +125,13 @@ Preferred communication style: Simple, everyday language.
 
 ### July 22, 2025
 - **Migration to Replit Environment**: Successfully migrated the Maharashtra Water Infrastructure Management Platform from Replit Agent to standard Replit environment with full database connectivity and feature preservation
+- **Dedicated Scheme Details Page Implementation**: Created comprehensive scheme details page with village cards, ESR data display, and status indicators accessible via new "Full Details" button in scheme table
+  - Added route `/scheme/:schemeId/:block?` for dedicated scheme details navigation
+  - Implemented water scheme data and ESR chlorine/pressure data API endpoints
+  - Created village cards showing water consumption, LPCD values, population, and ESR readings
+  - Added color-coded status indicators (green/yellow/red) for water quality metrics
+  - Preserved original "View Details" modal functionality alongside new dedicated page
+  - Enhanced scheme table with dual action buttons for both modal and page navigation
 - **LPCD-Based Heatmap Color Coding**: Enhanced Scheme Distribution Heatmap to calculate average LPCD of all schemes in each cell and apply color coding based on LPCD values (green ≥55L, yellow 40-54L, red 25-39L, etc.) instead of scheme count
 - **Advanced LPCD Calculation**: Implemented cell-level average LPCD calculation that groups schemes by name, calculates individual scheme LPCD, then averages across all schemes in the cell for accurate representation
 - **Comprehensive Color Legend**: Added detailed LPCD-based color legend showing ranges from "No water" (dark gray) to "Very High" (orange >80L) with proper visual indicators

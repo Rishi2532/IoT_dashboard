@@ -49,11 +49,15 @@ export default function Schemes() {
   };
 
   const handleViewSchemeDetails = (scheme: SchemeStatus) => {
-    console.log("Viewing details for scheme:", scheme);
-    // Navigate to the dedicated scheme details page
+    setSelectedScheme(scheme);
+    setIsModalOpen(true);
+  };
+
+  const handleNavigateToSchemeDetails = (scheme: SchemeStatus) => {
+    console.log("Navigating to scheme details page for:", scheme);
     const encodedSchemeId = encodeURIComponent(scheme.scheme_id);
     const encodedBlock = scheme.block ? encodeURIComponent(scheme.block) : '';
-    const url = encodedBlock ? `/schemes/${encodedSchemeId}/${encodedBlock}` : `/schemes/${encodedSchemeId}`;
+    const url = encodedBlock ? `/scheme/${encodedSchemeId}/${encodedBlock}` : `/scheme/${encodedSchemeId}`;
     window.location.href = url;
   };
 
@@ -81,6 +85,7 @@ export default function Schemes() {
         schemes={schemes || []} 
         isLoading={isSchemesLoading}
         onViewDetails={handleViewSchemeDetails}
+        onNavigateToDetails={handleNavigateToSchemeDetails}
         statusFilter={statusFilter}
         onStatusFilterChange={handleStatusFilterChange}
         selectedRegion={selectedRegion}
