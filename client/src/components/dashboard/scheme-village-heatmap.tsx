@@ -253,6 +253,15 @@ export default function SchemeVillageHeatmap() {
         // Calculate average LPCD for all schemes in this cell
         const averageLpcd = calculateCellAverageLpcd(schemesInRange);
 
+        // Debug logging for specific cells
+        if (region === "Amravati" && range.label === "6-9" && uniqueSchemes.size > 0) {
+          console.log(`LPCD Debug for ${region} ${range.label}:`, {
+            schemeCount: uniqueSchemes.size,
+            averageLpcd,
+            schemesInRange: schemesInRange.length
+          });
+        }
+
         heatmapMatrix.push({
           region,
           villageRange: range.label,
@@ -271,29 +280,17 @@ export default function SchemeVillageHeatmap() {
     };
   }, [schemeStatus]);
 
-  // LPCD-based color coding function as specified by user
-  const getLpcdStatusColor = (lpcdValue: number | null): string => {
-    if (lpcdValue === null) return "bg-gray-200 text-gray-700";
-    if (lpcdValue > 80) return "bg-orange-500 text-white"; // High status (> 80L)
-    if (lpcdValue > 70) return "bg-green-600 text-white"; // High status (> 70L)
-    if (lpcdValue >= 55) return "bg-green-500 text-white"; // Good status (55-70L)
-    if (lpcdValue >= 40) return "bg-yellow-500 text-black"; // Low but not critical
-    if (lpcdValue >= 25) return "bg-red-300 text-white"; // Very low
-    if (lpcdValue > 0) return "bg-red-500 text-white"; // Critically low
-    return "bg-gray-800 text-white"; // No water
-  };
-
   const getColor = (schemeCount: number, averageLpcd: number | null) => {
     if (schemeCount === 0) return "#f9fafb"; // Light gray for zero schemes
 
-    // Use LPCD-based color coding
+    // Use LPCD-based color coding with exact color specifications from user
     if (averageLpcd === null) return "#e5e7eb"; // Gray for no LPCD data
-    if (averageLpcd > 80) return "#f97316"; // Orange for > 80L
-    if (averageLpcd > 70) return "#059669"; // Green-600 for > 70L  
-    if (averageLpcd >= 55) return "#10b981"; // Green-500 for 55-70L
-    if (averageLpcd >= 40) return "#eab308"; // Yellow-500 for 40-54L
-    if (averageLpcd >= 25) return "#fca5a5"; // Red-300 for 25-39L
-    if (averageLpcd > 0) return "#ef4444"; // Red-500 for 0-24L
+    if (averageLpcd > 80) return "#f97316"; // Orange-500 for > 80L (Very High)
+    if (averageLpcd > 70) return "#059669"; // Green-600 for > 70L (High)  
+    if (averageLpcd >= 55) return "#10b981"; // Green-500 for 55-70L (Good)
+    if (averageLpcd >= 40) return "#eab308"; // Yellow-500 for 40-54L (Low)
+    if (averageLpcd >= 25) return "#fca5a5"; // Red-300 for 25-39L (Very Low)
+    if (averageLpcd > 0) return "#ef4444"; // Red-500 for 0-24L (Critical)
     return "#374151"; // Gray-800 for no water
   };
 
@@ -466,6 +463,16 @@ export default function SchemeVillageHeatmap() {
                   const averageLpcd = cellData?.averageLpcd || null;
                   const bgColor = getColor(schemeCount, averageLpcd);
                   const textColor = getTextColor(schemeCount, averageLpcd);
+
+                  // Debug logging for specific cells
+                  if (region === "Amravati" && villageRange === "6-9" && schemeCount > 0) {
+                    console.log(`Color Debug for ${region} ${villageRange}:`, {
+                      schemeCount,
+                      averageLpcd,
+                      bgColor,
+                      textColor
+                    });
+                  }
 
                   return (
                     <div
