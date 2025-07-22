@@ -448,6 +448,23 @@ export default function SchemeVillageHeatmap() {
 
   const { data, regions, villageRanges: ranges, maxSchemeCount } = heatmapData;
 
+  // Calculate column totals (total schemes per village range)
+  const columnTotals = ranges.map((villageRange) => {
+    return data
+      .filter((d) => d.villageRange === villageRange)
+      .reduce((sum, d) => sum + d.schemeCount, 0);
+  });
+
+  // Calculate row totals (total schemes per region)
+  const rowTotals = regions.map((region) => {
+    return data
+      .filter((d) => d.region === region)
+      .reduce((sum, d) => sum + d.schemeCount, 0);
+  });
+
+  // Calculate grand total
+  const grandTotal = data.reduce((sum, d) => sum + d.schemeCount, 0);
+
   return (
     <Card className="w-full max-w-none">
       <CardHeader>
@@ -462,7 +479,7 @@ export default function SchemeVillageHeatmap() {
           <div
             className="grid border border-gray-300 rounded-lg overflow-hidden w-full"
             style={{
-              gridTemplateColumns: `180px repeat(${ranges.length}, 1fr)`,
+              gridTemplateColumns: `180px repeat(${ranges.length}, 1fr) 100px`,
             }}
           >
             {/* Header with village ranges */}
@@ -478,9 +495,13 @@ export default function SchemeVillageHeatmap() {
                 {villageRange}
               </div>
             ))}
+            {/* Total header */}
+            <div className="bg-gray-300 px-2 py-3 font-bold text-sm border-r border-gray-300 text-center flex items-center justify-center">
+              Total
+            </div>
 
             {/* Heatmap rows */}
-            {regions.map((region) => (
+            {regions.map((region, regionIndex) => (
               <>
                 {/* Region label */}
                 <div
@@ -532,8 +553,38 @@ export default function SchemeVillageHeatmap() {
                     </div>
                   );
                 })}
+
+                {/* Row total */}
+                <div
+                  key={`${region}-total`}
+                  className="h-12 flex items-center justify-center border-r border-gray-300 border-t border-gray-200 font-bold text-sm bg-gray-200 text-gray-800"
+                  title={`Total schemes in ${region}: ${rowTotals[regionIndex]}`}
+                >
+                  {rowTotals[regionIndex]}
+                </div>
               </>
             ))}
+
+            {/* Totals row */}
+            <div className="bg-gray-300 px-4 py-3 font-bold text-sm border-r border-gray-300 border-t-2 border-gray-400 flex items-center">
+              Total
+            </div>
+            {columnTotals.map((total, index) => (
+              <div
+                key={`total-${ranges[index]}`}
+                className="h-12 flex items-center justify-center border-r border-gray-300 border-t-2 border-gray-400 font-bold text-sm bg-gray-200 text-gray-800"
+                title={`Total schemes with ${ranges[index]} villages: ${total}`}
+              >
+                {total}
+              </div>
+            ))}
+            {/* Grand total */}
+            <div
+              className="h-12 flex items-center justify-center border-r border-gray-300 border-t-2 border-gray-400 font-bold text-sm bg-gray-300 text-gray-900"
+              title={`Grand total: ${grandTotal} schemes`}
+            >
+              {grandTotal}
+            </div>
           </div>
 
           {/* LPCD-based Legend */}
