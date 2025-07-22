@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -75,10 +75,21 @@ export default function SchemeVillageHeatmap() {
     queryKey: ["/api/scheme-status"],
   });
 
-  const { data: waterSchemeData } = useQuery<WaterSchemeData[]>({
+  const { data: waterSchemeData, isLoading: isLoadingWaterData } = useQuery<WaterSchemeData[]>({
     queryKey: ["/api/water-scheme-data"],
     // Always fetch water scheme data so we can calculate LPCD
   });
+
+  // Debug water scheme data loading
+  React.useEffect(() => {
+    if (waterSchemeData) {
+      console.log('Water scheme data loaded:', {
+        totalRecords: waterSchemeData.length,
+        sampleRecord: waterSchemeData[0],
+        hasDay7Data: waterSchemeData.some(d => d.water_value_day7 != null)
+      });
+    }
+  }, [waterSchemeData]);
 
   // Helper function to get scheme water data
   const getSchemeWaterData = (schemeId: string, schemeName: string) => {
@@ -136,7 +147,10 @@ export default function SchemeVillageHeatmap() {
 
   // Calculate average LPCD for all schemes in a cell
   const calculateCellAverageLpcd = (schemes: SchemeData[]) => {
-    if (!waterSchemeData || waterSchemeData.length === 0) return null;
+    if (!waterSchemeData || waterSchemeData.length === 0) {
+      console.log('No water scheme data available for LPCD calculation');
+      return null;
+    }
     
     // Group schemes by scheme name to get unique schemes
     const groupedSchemes = new Map<string, SchemeData[]>();
@@ -155,6 +169,12 @@ export default function SchemeVillageHeatmap() {
       if (schemeLpcd !== null && !isNaN(schemeLpcd)) {
         lpcdValues.push(schemeLpcd);
       }
+    });
+
+    console.log('LPCD Calculation Debug:', {
+      totalSchemes: groupedSchemes.size,
+      lpcdValues,
+      waterDataAvailable: waterSchemeData.length
     });
 
     if (lpcdValues.length === 0) return null;
