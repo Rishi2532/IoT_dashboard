@@ -56,8 +56,9 @@ export default function Schemes() {
   const handleNavigateToSchemeDetails = (scheme: SchemeStatus) => {
     console.log("Navigating to scheme details page for:", scheme);
     const encodedSchemeId = encodeURIComponent(scheme.scheme_id);
-    const encodedBlock = scheme.block ? encodeURIComponent(scheme.block) : '';
-    const url = encodedBlock ? `/scheme/${encodedSchemeId}/${encodedBlock}` : `/scheme/${encodedSchemeId}`;
+    // For multi-block schemes, don't pass block parameter
+    const isMultiBlock = scheme.block === 'All Blocks' || scheme.block === 'Multiple Blocks';
+    const url = isMultiBlock || !scheme.block ? `/scheme/${encodedSchemeId}` : `/scheme/${encodedSchemeId}/${encodeURIComponent(scheme.block)}`;
     window.location.href = url;
   };
 

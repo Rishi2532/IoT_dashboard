@@ -1392,12 +1392,16 @@ export class PostgresStorage implements IStorage {
     const db = await this.ensureInitialized();
 
     try {
+      console.log(`🔍 Fetching chlorine data for scheme: ${schemeId}, block: ${block || 'all blocks'}`);
+      
       let whereCondition = eq(chlorineData.scheme_id, schemeId);
       if (block) {
         whereCondition = and(whereCondition, eq(chlorineData.block, block));
       }
 
       const results = await db.select().from(chlorineData).where(whereCondition);
+      console.log(`✅ Found ${results.length} chlorine data records for scheme ${schemeId}`);
+      
       return results;
     } catch (error) {
       console.error("Error fetching chlorine data by scheme:", error);
@@ -3292,12 +3296,16 @@ export class PostgresStorage implements IStorage {
     const db = await this.ensureInitialized();
 
     try {
+      console.log(`🔍 Fetching pressure data for scheme: ${schemeId}, block: ${block || 'all blocks'}`);
+      
       let whereCondition = eq(pressureData.scheme_id, schemeId);
       if (block) {
         whereCondition = and(whereCondition, eq(pressureData.block, block));
       }
 
       const results = await db.select().from(pressureData).where(whereCondition);
+      console.log(`✅ Found ${results.length} pressure data records for scheme ${schemeId}`);
+      
       return results;
     } catch (error) {
       console.error("Error fetching pressure data by scheme:", error);
@@ -5730,12 +5738,16 @@ export class PostgresStorage implements IStorage {
     const db = await this.ensureInitialized();
 
     try {
+      console.log(`🔍 Fetching water scheme data for scheme: ${schemeId}, block: ${block || 'all blocks'}`);
+      
       let whereCondition = eq(waterSchemeData.scheme_id, schemeId);
       if (block) {
         whereCondition = and(whereCondition, eq(waterSchemeData.block, block));
       }
 
       const results = await db.select().from(waterSchemeData).where(whereCondition);
+      console.log(`✅ Found ${results.length} water scheme data records for scheme ${schemeId}`);
+      
       return results;
     } catch (error) {
       console.error("Error fetching water scheme data by scheme:", error);
