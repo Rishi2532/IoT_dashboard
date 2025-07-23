@@ -49,7 +49,7 @@ export default function Regions() {
           : (regions as Region[])?.map((region: Region) => {
               const esrCompletionPercentage = calculatePercentage(
                 region.fully_completed_esr,
-                region.total_villages_integrated,
+                region.total_esr_integrated,
               );
 
               const villageCompletionPercentage = calculatePercentage(
