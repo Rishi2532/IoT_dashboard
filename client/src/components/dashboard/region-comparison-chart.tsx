@@ -179,7 +179,7 @@ export default function RegionComparisonChart({
               // Show fewer ticks on mobile
               maxTicksLimit: isMobile ? 5 : 10,
             },
-            suggestedMax: function (context: any) {
+            max: function (context: any) {
               let maxValue = 0;
               if (
                 context.chart &&
@@ -193,7 +193,29 @@ export default function RegionComparisonChart({
                   ...allData.filter((v: any) => typeof v === "number"),
                 );
               }
-              return maxValue * 1.2;
+              
+              // Calculate the nearest higher round number efficiently
+              if (maxValue === 0) return 10;
+              
+              // Add 10% padding to maxValue
+              const paddedMax = maxValue * 1.1;
+              
+              // Find the appropriate scale based on the magnitude
+              let scale;
+              if (paddedMax <= 10) {
+                scale = 5;
+              } else if (paddedMax <= 50) {
+                scale = 10;
+              } else if (paddedMax <= 100) {
+                scale = 25;
+              } else if (paddedMax <= 250) {
+                scale = 50;
+              } else {
+                scale = 100;
+              }
+              
+              // Round up to the nearest scale interval
+              return Math.ceil(paddedMax / scale) * scale;
             },
           },
           x: {
