@@ -46,7 +46,7 @@ export default function Regions() {
                   </CardContent>
                 </Card>
               ))
-          : regions?.map((region: Region) => {
+          : (regions as Region[])?.map((region: Region) => {
               const esrCompletionPercentage = calculatePercentage(
                 region.fully_completed_esr,
                 region.total_villages_integrated,
@@ -79,9 +79,9 @@ export default function Regions() {
                             {region.total_esr_integrated || 0}
                           </span>
                         </div>
-                        <div className="w-full bg-neutral-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 rounded-full h-3">
                           <div
-                            className="bg-primary-500 h-2 rounded-full"
+                            className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all duration-300 shadow-sm"
                             style={{ width: `${esrCompletionPercentage}%` }}
                           ></div>
                         </div>
@@ -97,9 +97,9 @@ export default function Regions() {
                             {region.total_villages_integrated || 0}
                           </span>
                         </div>
-                        <div className="w-full bg-neutral-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 rounded-full h-3">
                           <div
-                            className="bg-success-500 h-2 rounded-full"
+                            className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-300 shadow-sm"
                             style={{ width: `${villageCompletionPercentage}%` }}
                           ></div>
                         </div>
@@ -115,9 +115,9 @@ export default function Regions() {
                             {region.total_schemes_integrated || 0}
                           </span>
                         </div>
-                        <div className="w-full bg-neutral-200 rounded-full h-2">
+                        <div className="w-full bg-gray-200 rounded-full h-3">
                           <div
-                            className="bg-warning-500 h-2 rounded-full"
+                            className="bg-gradient-to-r from-orange-500 to-orange-600 h-3 rounded-full transition-all duration-300 shadow-sm"
                             style={{ width: `${schemeCompletionPercentage}%` }}
                           ></div>
                         </div>
