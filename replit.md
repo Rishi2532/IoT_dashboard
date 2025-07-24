@@ -123,6 +123,19 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 24, 2025
+- **Block-Specific Dashboard URL Fix**: Fixed critical issue where multi-block schemes (like "83 Village RRWS Scheme MJP RR") were generating incorrect dashboard URLs
+  - Corrected dashboard URLs to be block-specific: Achalpur block now links to "Block-Achalpur" and Chandur Bazar block links to "Block-Chandur Bazar"
+  - Updated database records to ensure each block has its own unique PI Vision dashboard URL
+  - Enhanced auto-generation logic to prevent future URL conflicts during Excel imports
+  - Fixed scheme provision dashboard navigation to respect selected block context
+- **Regions Page Visual Enhancement**: Implemented vibrant colored progress bars with gradient effects
+  - ESR Completion: Blue gradient bars (from-blue-500 to-blue-600)
+  - Village Completion: Green gradient bars (from-green-500 to-green-600) 
+  - Scheme Completion: Orange gradient bars (from-orange-500 to-orange-600)
+  - Added smooth animations, increased bar height, and subtle shadows for modern appearance
+- **Progress Bar Calculation Fix**: Corrected ESR completion percentage to use `total_esr_integrated` instead of `total_villages_integrated` as denominator
+
 ### July 22, 2025
 - **Migration to Replit Environment**: Successfully migrated the Maharashtra Water Infrastructure Management Platform from Replit Agent to standard Replit environment with full database connectivity and feature preservation
 - **Dedicated Scheme Details Page Implementation**: Created comprehensive scheme details page with village cards, ESR data display, and status indicators accessible via new "Full Details" button in scheme table
