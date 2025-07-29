@@ -230,6 +230,35 @@ const SchemeLpcdDashboard = () => {
     },
   });
 
+  // Fetch scheme counts with both filtered and total counts
+  const { data: schemeCounts, isLoading: isLoadingSchemeCounts } = useQuery<{
+    filteredCount: number;
+    totalCount: number;
+    region: string;
+  }>({
+    queryKey: ["/api/schemes/counts", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/schemes/counts${queryString ? `?${queryString}` : ""}`;
+
+      console.log("Fetching scheme counts with URL:", url);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch scheme counts");
+      }
+
+      const data = await response.json();
+      console.log(`Received scheme counts:`, data);
+      return data;
+    },
+  });
+
   // Get latest LPCD value
   const getLatestLpcdValue = (scheme: SchemeLpcdData): number | null => {
     // Try to get the latest non-null value
