@@ -393,22 +393,24 @@ export default function FlipPopulationCards({
                   <div className="text-sm font-medium text-slate-600">
                     Total Population
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        totalPopulationChange?.isPositive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {totalPopulationChange?.isPositive ? "▲" : "▼"}
-                      <span>
-                        {formatNumber(totalPopulationChange?.value || 0)} (
-                        {totalPopulationChange?.percentage?.toFixed(1) || "0.0"}
-                        %)
-                      </span>
+                  {totalPopulationChange && (
+                    <div className="flex items-center gap-1">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          totalPopulationChange.isPositive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {totalPopulationChange.isPositive ? "▲" : "▼"}
+                        <span>
+                          {formatNumber(totalPopulationChange.value)} (
+                          {totalPopulationChange.percentage.toFixed(1)}
+                          %)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(currentTotalPopulation)}
@@ -435,22 +437,24 @@ export default function FlipPopulationCards({
                   <div className="text-sm font-medium text-slate-600">
                     Total Villages
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        totalPopulationChange?.isPositive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {totalPopulationChange?.isPositive ? "▲" : "▼"}
-                      <span>
-                        {formatNumber(totalPopulationChange?.value || 0)} (
-                        {totalPopulationChange?.percentage?.toFixed(1) || "0.0"}
-                        %)
-                      </span>
+                  {totalVillagesChange && (
+                    <div className="flex items-center gap-1">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          totalVillagesChange.isPositive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {totalVillagesChange.isPositive ? "▲" : "▼"}
+                        <span>
+                          {formatNumber(totalVillagesChange.value)} (
+                          {totalVillagesChange.percentage.toFixed(1)}
+                          %)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.total_villages)}
@@ -483,22 +487,24 @@ export default function FlipPopulationCards({
                   <div className="text-sm font-medium text-slate-600">
                     Population with Water
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        populationWaterChange?.isPositive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {populationWaterChange?.isPositive ? "▲" : "▼"}
-                      <span>
-                        {formatNumber(populationWaterChange?.value || 0)} (
-                        {populationWaterChange?.percentage?.toFixed(1) || "0.0"}
-                        %)
-                      </span>
+                  {populationWaterChange && (
+                    <div className="flex items-center gap-1">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          populationWaterChange.isPositive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {populationWaterChange.isPositive ? "▲" : "▼"}
+                        <span>
+                          {formatNumber(populationWaterChange.value)} (
+                          {populationWaterChange.percentage.toFixed(1)}
+                          %)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.population_with_water)}
@@ -535,21 +541,23 @@ export default function FlipPopulationCards({
                   <div className="text-sm font-medium text-slate-600">
                     Villages with Water
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        villageWaterChange?.isPositive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {villageWaterChange?.isPositive ? "▲" : "▼"}
-                      <span>
-                        {formatNumber(villageWaterChange?.value || 0)} (
-                        {villageWaterChange?.percentage?.toFixed(1) || "0.0"}%)
-                      </span>
+                  {villageWaterChange && (
+                    <div className="flex items-center gap-1">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          villageWaterChange.isPositive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {villageWaterChange.isPositive ? "▲" : "▼"}
+                        <span>
+                          {formatNumber(villageWaterChange.value)} (
+                          {villageWaterChange.percentage.toFixed(1)}%)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.villages_with_water)}
@@ -590,23 +598,24 @@ export default function FlipPopulationCards({
                   <div className="text-sm font-medium text-slate-600">
                     Population No Water
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        populationNoWaterChange?.isPositive
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
-                      {populationNoWaterChange?.isPositive ? "▲" : "▼"}
-                      <span>
-                        {formatNumber(populationNoWaterChange?.value || 0)} (
-                        {populationNoWaterChange?.percentage?.toFixed(1) ||
-                          "0.0"}
-                        %)
-                      </span>
+                  {populationNoWaterChange && (
+                    <div className="flex items-center gap-1">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          populationNoWaterChange.isPositive
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {populationNoWaterChange.isPositive ? "▲" : "▼"}
+                        <span>
+                          {formatNumber(populationNoWaterChange.value)} (
+                          {populationNoWaterChange.percentage.toFixed(1)}
+                          %)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.population_no_water)}
@@ -645,22 +654,24 @@ export default function FlipPopulationCards({
                   <div className="text-sm font-medium text-slate-600">
                     Villages No Water
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        villageNoWaterChange?.isPositive
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
-                      {villageNoWaterChange?.isPositive ? "▲" : "▼"}
-                      <span>
-                        {formatNumber(villageNoWaterChange?.value || 0)} (
-                        {villageNoWaterChange?.percentage?.toFixed(1) || "0.0"}
-                        %)
-                      </span>
+                  {villageNoWaterChange && (
+                    <div className="flex items-center gap-1">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          villageNoWaterChange.isPositive
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {villageNoWaterChange.isPositive ? "▲" : "▼"}
+                        <span>
+                          {formatNumber(villageNoWaterChange.value)} (
+                          {villageNoWaterChange.percentage.toFixed(1)}
+                          %)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.villages_without_water)}
@@ -705,24 +716,25 @@ export default function FlipPopulationCards({
                   <div className="text-sm font-medium text-slate-600">
                     Population LPCD {">"} 55
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        populationLpcdAbove55Change?.isPositive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {populationLpcdAbove55Change?.isPositive ? "▲" : "▼"}
-                      <span>
-                        {formatNumber(populationLpcdAbove55Change?.value || 0)}{" "}
-                        (
-                        {populationLpcdAbove55Change?.percentage?.toFixed(1) ||
-                          "0.0"}
-                        %)
-                      </span>
+                  {populationLpcdAbove55Change && (
+                    <div className="flex items-center gap-1">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          populationLpcdAbove55Change.isPositive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {populationLpcdAbove55Change.isPositive ? "▲" : "▼"}
+                        <span>
+                          {formatNumber(populationLpcdAbove55Change.value)}{" "}
+                          (
+                          {populationLpcdAbove55Change.percentage.toFixed(1)}
+                          %)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.population_lpcd_above_55)}
@@ -764,23 +776,24 @@ export default function FlipPopulationCards({
                   <div className="text-sm font-medium text-slate-600">
                     Villages LPCD {">"} 55
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        villageLpcdAbove55Change?.isPositive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {villageLpcdAbove55Change?.isPositive ? "▲" : "▼"}
-                      <span>
-                        {formatNumber(villageLpcdAbove55Change?.value || 0)} (
-                        {villageLpcdAbove55Change?.percentage?.toFixed(1) ||
-                          "0.0"}
-                        %)
-                      </span>
+                  {villageLpcdAbove55Change && (
+                    <div className="flex items-center gap-1">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          villageLpcdAbove55Change.isPositive
+                            ? "bg-green-100 text-green-700"
+                            : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {villageLpcdAbove55Change.isPositive ? "▲" : "▼"}
+                        <span>
+                          {formatNumber(villageLpcdAbove55Change.value)} (
+                          {villageLpcdAbove55Change.percentage.toFixed(1)}
+                          %)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.villages_lpcd_above_55)}
@@ -826,24 +839,25 @@ export default function FlipPopulationCards({
                   <div className="text-sm font-medium text-slate-600">
                     Population LPCD ≤ 55
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        populationLpcdBelow55Change?.isPositive
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
-                      {populationLpcdBelow55Change?.isPositive ? "▲" : "▼"}
-                      <span>
-                        {formatNumber(populationLpcdBelow55Change?.value || 0)}{" "}
-                        (
-                        {populationLpcdBelow55Change?.percentage?.toFixed(1) ||
-                          "0.0"}
-                        %)
-                      </span>
+                  {populationLpcdBelow55Change && (
+                    <div className="flex items-center gap-1">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          populationLpcdBelow55Change.isPositive
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {populationLpcdBelow55Change.isPositive ? "▲" : "▼"}
+                        <span>
+                          {formatNumber(populationLpcdBelow55Change.value)}{" "}
+                          (
+                          {populationLpcdBelow55Change.percentage.toFixed(1)}
+                          %)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(populationStats.population_lpcd_below_55)}
@@ -880,23 +894,24 @@ export default function FlipPopulationCards({
                   <div className="text-sm font-medium text-slate-600">
                     Villages LPCD ≤ 55
                   </div>
-                  <div className="flex items-center gap-1">
-                    <div
-                      className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
-                        villageLpcdBelow55Change?.isPositive
-                          ? "bg-red-100 text-red-700"
-                          : "bg-green-100 text-green-700"
-                      }`}
-                    >
-                      {villageLpcdBelow55Change?.isPositive ? "▲" : "▼"}
-                      <span>
-                        {formatNumber(villageLpcdBelow55Change?.value || 0)} (
-                        {villageLpcdBelow55Change?.percentage?.toFixed(1) ||
-                          "0.0"}
-                        %)
-                      </span>
+                  {villageLpcdBelow55Change && (
+                    <div className="flex items-center gap-1">
+                      <div
+                        className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs ${
+                          villageLpcdBelow55Change.isPositive
+                            ? "bg-red-100 text-red-700"
+                            : "bg-green-100 text-green-700"
+                        }`}
+                      >
+                        {villageLpcdBelow55Change.isPositive ? "▲" : "▼"}
+                        <span>
+                          {formatNumber(villageLpcdBelow55Change.value)} (
+                          {villageLpcdBelow55Change.percentage.toFixed(1)}
+                          %)
+                        </span>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
                 <div className="text-2xl font-bold text-slate-800 mb-1">
                   {formatNumber(villageStats.villages_lpcd_below_55)}
