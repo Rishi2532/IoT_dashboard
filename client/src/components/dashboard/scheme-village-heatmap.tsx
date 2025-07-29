@@ -323,7 +323,7 @@ export default function SchemeVillageHeatmap() {
 
     // Use LPCD-based color coding with exact color specifications from user
     if (averageLpcd === null) return "#e5e7eb"; // Gray for no LPCD data
-    if (averageLpcd > 100) return "#00ff86"; // Orange-500 for > 80L (Very High)
+    if (averageLpcd > 80) return "#f97316"; // Orange for > 80L (Very High)
     if (averageLpcd > 70) return "#6fe0abff"; // Green-600 for > 70L (High)
     if (averageLpcd >= 55) return "#ccffe7"; // Green-500 for 55-70L (Good)
     if (averageLpcd >= 40) return "#fcc"; // Yellow-500 for 40-54L (Low)
@@ -619,7 +619,7 @@ export default function SchemeVillageHeatmap() {
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 border border-gray-300"
-                  style={{ backgroundColor: "#00ff86" }}
+                  style={{ backgroundColor: "#f97316" }}
                 ></div>
                 <span className="text-xs">&gt;80L (Very High)</span>
               </div>
