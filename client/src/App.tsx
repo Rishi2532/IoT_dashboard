@@ -27,6 +27,7 @@ import {
 import { PressureDashboard, PressurePage } from "./pages/pressure";
 import CommunicationStatusPage from "./pages/CommunicationStatusPage";
 import ImportCommunicationStatus from "./pages/admin/ImportCommunicationStatus";
+import { Maharashtra } from "./pages/Maharashtra";
 
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
@@ -199,7 +200,11 @@ function App() {
                 </ProtectedRoute>
               </Route>
 
-
+              <Route path="/maharashtra-map">
+                <ProtectedRoute>
+                  <Maharashtra />
+                </ProtectedRoute>
+              </Route>
 
               {/* Admin protected routes */}
               <Route path="/admin/dashboard">
