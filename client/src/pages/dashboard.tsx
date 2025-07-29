@@ -50,6 +50,8 @@ import { useGeoFilter } from "@/contexts/GeoFilterContext";
 import { useGeographicFilteredSchemes } from "@/hooks/useGeographicFilteredData";
 // Import GeoJSON data for our map
 import getMaharashtraGeoJson from "@/lib/maharashtra-geojson";
+// Import the new Figma-based Maharashtra map
+import { Maharashtra } from "./Maharashtra";
 
 export default function Dashboard() {
   const [selectedRegion, setSelectedRegion] = useState("all");
@@ -647,21 +649,22 @@ export default function Dashboard() {
           </div>
           <div className="w-full overflow-x-auto flex-1 min-h-[480px]">
             <div className="min-w-[280px] sm:min-w-full h-full">
-              {/* Enhanced Geographic Filter Map */}
+              {/* High-Quality Figma-based Maharashtra Map */}
               <div
                 className="map-container"
                 id="maharashtra-map-preview"
-                style={{ height: "480px" }}
+                style={{ height: "480px", overflow: "hidden" }}
               >
-                {/* Add the enhanced map with GeoJSON data */}
-                <EnhancedGeoFilterMap
-                  mapHeight="480px"
-                  className="h-full w-full"
-                  locations={sampleLocations}
-                  onRegionClick={(regionName) => {
-                    handleRegionChange(regionName);
-                  }}
-                />
+                {/* Figma-based Maharashtra Map with district boundaries */}
+                <div className="h-full w-full flex items-center justify-center overflow-hidden">
+                  <div className="transform scale-[0.15] origin-center">
+                    <Maharashtra 
+                      onRegionClick={handleRegionChange}
+                      selectedRegion={selectedRegion}
+                      showLabels={false}
+                    />
+                  </div>
+                </div>
               </div>
 
               {/* Remove error modal if it appears */}

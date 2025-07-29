@@ -1,7 +1,83 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 
-export const Maharashtra = (): JSX.Element => {
+interface MaharashtraProps {
+  onRegionClick?: (regionName: string) => void;
+  selectedRegion?: string;
+  showLabels?: boolean;
+}
+
+export const Maharashtra = ({ 
+  onRegionClick = () => {}, 
+  selectedRegion = "all",
+  showLabels = true 
+}: MaharashtraProps): JSX.Element => {
+  // Mapping districts to their administrative regions
+  const districtToRegion: { [key: string]: string } = {
+    "Wardha": "Nagpur",
+    "Hingoli": "Chhatrapati Sambhajinagar", 
+    "Nandurbar": "Nashik",
+    "Dhule": "Nashik",
+    "Jalgaon": "Nashik", 
+    "Jalna": "Chhatrapati Sambhajinagar",
+    "Ahilyanagar": "Chhatrapati Sambhajinagar",
+    "Pune": "Pune",
+    "Nashik": "Nashik",
+    "Satara": "Pune",
+    "Kolhapur": "Pune",
+    "Usmanabad": "Chhatrapati Sambhajinagar",
+    "Buldhana": "Amravati",
+    "Thane": "Konkan",
+    "Raigad": "Konkan",
+    "Ratnagiri": "Konkan",
+    "Sindhudurg": "Konkan",
+    "Sangli": "Pune",
+    "Solapur": "Pune",
+    "Beed": "Chhatrapati Sambhajinagar",
+    "Parbhani": "Chhatrapati Sambhajinagar",
+    "Nanded": "Chhatrapati Sambhajinagar",
+    "Latur": "Chhatrapati Sambhajinagar",
+    "Palaghar": "Konkan",
+    "Akola": "Amravati",
+    "Amaravati": "Amravati", 
+    "Washim": "Amravati",
+    "Yavatmal": "Amravati",
+    "Chandrapur": "Nagpur",
+    "Bhandara": "Nagpur",
+    "Gondia": "Nagpur",
+    "Gadchiroli": "Nagpur",
+    "Nagpur": "Nagpur",
+    "Mumbai Suburban": "Konkan",
+    "Mumbai City": "Konkan",
+    "Chhatrapati Sambhajinagar": "Chhatrapati Sambhajinagar"
+  };
+
+  const handleDistrictClick = (districtName: string) => {
+    const region = districtToRegion[districtName];
+    if (region && onRegionClick) {
+      onRegionClick(region);
+    }
+  };
+
+  // Get color for region highlighting
+  const getRegionColor = (region: string): string => {
+    if (selectedRegion === "all") return "rgba(59, 130, 246, 0.3)"; // Blue
+    return selectedRegion === region ? "rgba(34, 197, 94, 0.4)" : "rgba(156, 163, 175, 0.2)"; // Green for selected, gray for others
+  };
+
+  // Get region bounds for highlighting
+  const getRegionHighlight = (region: string) => {
+    const highlights = {
+      "Pune": { top: "1300px", left: "400px", width: "600px", height: "500px" },
+      "Nashik": { top: "800px", left: "300px", width: "500px", height: "400px" },
+      "Amravati": { top: "700px", left: "1800px", width: "600px", height: "600px" },
+      "Chhatrapati Sambhajinagar": { top: "1000px", left: "1200px", width: "500px", height: "400px" },
+      "Nagpur": { top: "400px", left: "1800px", width: "700px", height: "600px" },
+      "Konkan": { top: "1200px", left: "100px", width: "400px", height: "800px" }
+    };
+    return highlights[region] || null;
+  };
+
   // Data for divisions to enable mapping over repeated elements
   const divisions = [
     { name: "Amaravati Division" },
@@ -1089,6 +1165,103 @@ export const Maharashtra = (): JSX.Element => {
                   </div>
                 </div>
               </div>
+
+              {/* Interactive Region Overlays */}
+              {/* Pune Region */}
+              <div 
+                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
+                style={{ 
+                  top: "1200px", 
+                  left: "300px", 
+                  width: "700px", 
+                  height: "600px", 
+                  backgroundColor: selectedRegion === "Pune" ? getRegionColor("Pune") : "transparent",
+                  border: selectedRegion === "Pune" ? "2px solid #10b981" : "none",
+                  borderRadius: "8px"
+                }}
+                onClick={() => handleDistrictClick("Pune")}
+                title="Pune Region"
+              />
+
+              {/* Nashik Region */}
+              <div 
+                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
+                style={{ 
+                  top: "500px", 
+                  left: "200px", 
+                  width: "600px", 
+                  height: "500px", 
+                  backgroundColor: selectedRegion === "Nashik" ? getRegionColor("Nashik") : "transparent",
+                  border: selectedRegion === "Nashik" ? "2px solid #10b981" : "none",
+                  borderRadius: "8px"
+                }}
+                onClick={() => handleDistrictClick("Nashik")}
+                title="Nashik Region"
+              />
+
+              {/* Amravati Region */}
+              <div 
+                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
+                style={{ 
+                  top: "500px", 
+                  left: "1700px", 
+                  width: "700px", 
+                  height: "700px", 
+                  backgroundColor: selectedRegion === "Amravati" ? getRegionColor("Amravati") : "transparent",
+                  border: selectedRegion === "Amravati" ? "2px solid #10b981" : "none",
+                  borderRadius: "8px"
+                }}
+                onClick={() => handleDistrictClick("Amravati")}
+                title="Amravati Region"
+              />
+
+              {/* Chhatrapati Sambhajinagar Region */}
+              <div 
+                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
+                style={{ 
+                  top: "800px", 
+                  left: "1000px", 
+                  width: "600px", 
+                  height: "500px", 
+                  backgroundColor: selectedRegion === "Chhatrapati Sambhajinagar" ? getRegionColor("Chhatrapati Sambhajinagar") : "transparent",
+                  border: selectedRegion === "Chhatrapati Sambhajinagar" ? "2px solid #10b981" : "none",
+                  borderRadius: "8px"
+                }}
+                onClick={() => handleDistrictClick("Chhatrapati Sambhajinagar")}
+                title="Chhatrapati Sambhajinagar Region"
+              />
+
+              {/* Nagpur Region */}
+              <div 
+                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
+                style={{ 
+                  top: "200px", 
+                  left: "2200px", 
+                  width: "800px", 
+                  height: "700px", 
+                  backgroundColor: selectedRegion === "Nagpur" ? getRegionColor("Nagpur") : "transparent",
+                  border: selectedRegion === "Nagpur" ? "2px solid #10b981" : "none",
+                  borderRadius: "8px"
+                }}
+                onClick={() => handleDistrictClick("Nagpur")}
+                title="Nagpur Region"
+              />
+
+              {/* Konkan Region */}
+              <div 
+                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
+                style={{ 
+                  top: "1000px", 
+                  left: "50px", 
+                  width: "500px", 
+                  height: "1000px", 
+                  backgroundColor: selectedRegion === "Konkan" ? getRegionColor("Konkan") : "transparent",
+                  border: selectedRegion === "Konkan" ? "2px solid #10b981" : "none",
+                  borderRadius: "8px"
+                }}
+                onClick={() => handleDistrictClick("Konkan")}
+                title="Konkan Region"
+              />
             </div>
           </div>
         </div>
