@@ -483,43 +483,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Get scheme counts with both filtered count and total from regions table
-  app.get("/api/schemes/counts", async (req, res) => {
-    try {
-      const regionName = req.query.region as string;
-      
-      let filteredSchemeCount = 0;
-      let totalSchemeCount = 0;
-      
-      if (regionName && regionName !== "all") {
-        // Get filtered scheme count from scheme_status table for specific region
-        const schemes = await storage.getConsolidatedSchemesByRegion(regionName);
-        filteredSchemeCount = schemes.length;
-        
-        // Get total scheme count from regions table
-        const region = await storage.getRegionByName(regionName);
-        totalSchemeCount = region?.total_schemes_integrated || 0;
-      } else {
-        // Get all schemes count from scheme_status table
-        const schemes = await storage.getConsolidatedSchemes();
-        filteredSchemeCount = schemes.length;
-        
-        // Get total scheme count from all regions
-        const allRegions = await storage.getAllRegions();
-        totalSchemeCount = allRegions.reduce((sum, region) => sum + (region.total_schemes_integrated || 0), 0);
-      }
-      
-      res.json({
-        filteredCount: filteredSchemeCount,
-        totalCount: totalSchemeCount,
-        region: regionName || "all"
-      });
-    } catch (error) {
-      console.error("Error fetching scheme counts:", error);
-      res.status(500).json({ message: "Failed to fetch scheme counts" });
-    }
-  });
-
   // Get all schemes with optional region, status, and scheme_id filters
   app.get("/api/schemes", async (req, res) => {
     try {
@@ -608,6 +571,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching schemes:", error);
       res.status(500).json({ message: "Failed to fetch schemes" });
+    }
+  });
+
+  // Get scheme counts with both filtered count and total from regions table
+  app.get("/api/schemes/counts", async (req, res) => {
+    try {
+      const regionName = req.query.region as string;
+      
+      let filteredSchemeCount = 0;
+      let totalSchemeCount = 0;
+      
+      if (regionName && regionName !== "all") {
+        // Get filtered scheme count from scheme_status table for specific region
+        const schemes = await storage.getConsolidatedSchemesByRegion(regionName);
+        filteredSchemeCount = schemes.length;
+        
+        // Get total scheme count from regions table
+        const region = await storage.getRegionByName(regionName);
+        totalSchemeCount = region?.total_schemes_integrated || 0;
+      } else {
+        // Get all schemes count from scheme_status table
+        const schemes = await storage.getConsolidatedSchemes();
+        filteredSchemeCount = schemes.length;
+        
+        // Get total scheme count from all regions
+        const allRegions = await storage.getAllRegions();
+        totalSchemeCount = allRegions.reduce((sum, region) => sum + (region.total_schemes_integrated || 0), 0);
+      }
+      
+      res.json({
+        filteredCount: filteredSchemeCount,
+        totalCount: totalSchemeCount,
+        region: regionName || "all"
+      });
+    } catch (error) {
+      console.error("Error fetching scheme counts:", error);
+      res.status(500).json({ message: "Failed to fetch scheme counts" });
     }
   });
 

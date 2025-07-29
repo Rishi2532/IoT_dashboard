@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { calculatePercentage } from "@/lib/utils";
 import { RegionSummary } from "@/types";
+import { useQuery } from "@tanstack/react-query";
 import {
   GitBranchPlus,
   Home,
@@ -15,9 +16,36 @@ interface StatsCardsProps {
   data?: RegionSummary;
   isLoading: boolean;
   layout?: 'normal' | 'compact';  // Add layout option for different display modes
+  selectedRegion?: string; // Add selectedRegion prop
 }
 
-export default function StatsCards({ data, isLoading, layout = 'normal' }: StatsCardsProps) {
+export default function StatsCards({ data, isLoading, layout = 'normal', selectedRegion = 'all' }: StatsCardsProps) {
+  // Fetch scheme counts with both filtered and total counts
+  const { data: schemeCounts } = useQuery<{
+    filteredCount: number;
+    totalCount: number;
+    region: string;
+  }>({
+    queryKey: ["/api/schemes/counts", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/schemes/counts${queryString ? `?${queryString}` : ""}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch scheme counts");
+      }
+
+      return response.json();
+    },
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
   if (isLoading || !data) {
     return (
       <div className={layout === 'compact'
@@ -86,7 +114,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal' }: Stats
               </h3>
               <div className="mt-1 flex items-baseline">
                 <p className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-blue-900">
-                  {totalSchemes}
+                  {schemeCounts ? `${schemeCounts.filteredCount}/${schemeCounts.totalCount}` : totalSchemes}
                 </p>
                 <p className="ml-1 sm:ml-2 text-xs sm:text-sm xl:text-base text-blue-600">
                   water schemes

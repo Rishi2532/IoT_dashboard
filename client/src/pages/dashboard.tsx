@@ -685,6 +685,7 @@ export default function Dashboard() {
             data={regionSummary}
             isLoading={isSummaryLoading}
             layout="compact"
+            selectedRegion={selectedRegion}
           />
         </div>
       </div>
