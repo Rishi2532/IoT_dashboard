@@ -115,179 +115,293 @@ export default function MaharashtraOfficialMap({
     }
   };
 
-  // Create enhanced interactive Maharashtra map with proper region grouping
-  const createInteractiveMap = () => {
+  // Create detailed Maharashtra district map matching the reference image
+  const createDetailedMaharashtraMap = () => {
     return (
-      <div className="relative w-full h-full bg-[#0a1033] rounded-lg overflow-hidden">
+      <div className="relative w-full h-full bg-white rounded-lg overflow-hidden border">
         <svg 
-          viewBox="0 0 800 700" 
+          viewBox="0 0 650 500" 
           className="w-full h-full"
           style={{ minHeight: '400px' }}
         >
-          {/* Region Groups with hover effects */}
+          {/* Background */}
+          <rect width="650" height="500" fill="#f0f9ff"/>
           
-          {/* KONKAN REGION GROUP */}
+          {/* NASHIK DIVISION (Yellow) */}
           <g 
-            id="konkan-region" 
-            className="region-group cursor-pointer transition-all duration-300 hover:brightness-110"
-            onMouseEnter={() => setHoveredRegion('Konkan')}
-            onMouseLeave={() => setHoveredRegion(null)}
-            onClick={() => onRegionClick('Konkan')}
-          >
-            <path 
-              d="M145,277 L153,261 L157,238 L167,218 L184,212 L195,233 L195,258 L180,273 L174,299 L166,322 L158,341 L141,356 L131,378 L119,402 L102,431 L93,463 L88,498 L88,524 L97,559 L113,598 L126,615 L133,624 L159,629 L173,630 L155,599 L139,572 L124,536 L114,497 L114,458 L124,425 L140,389 L152,361 L165,341 L182,318 Z" 
-              fill={selectedRegion === 'Konkan' ? '#22c55e' : hoveredRegion === 'Konkan' ? '#16a34a' : getRegionColor('Konkan')}
-              stroke={selectedRegion === 'Konkan' ? '#ffffff' : '#e5e7eb'}
-              strokeWidth={selectedRegion === 'Konkan' ? 3 : hoveredRegion === 'Konkan' ? 2 : 1}
-              className="transition-all duration-300"
-            />
-            {hoveredRegion === 'Konkan' && (
-              <text x="120" y="400" fill="#ffffff" fontSize="16" fontWeight="bold" textAnchor="middle">
-                Konkan
-              </text>
-            )}
-          </g>
-          
-          {/* PUNE REGION GROUP */}
-          <g 
-            id="pune-region" 
-            className="region-group cursor-pointer transition-all duration-300 hover:brightness-110"
-            onMouseEnter={() => setHoveredRegion('Pune')}
-            onMouseLeave={() => setHoveredRegion(null)}
-            onClick={() => onRegionClick('Pune')}
-          >
-            <path 
-              d="M195,258 L216,251 L238,258 L266,278 L275,313 L286,348 L310,363 L330,385 L348,406 L369,424 L388,443 L402,469 L414,498 L423,526 L426,552 L417,574 L389,578 L365,582 L336,584 L315,583 L294,580 L269,576 L245,569 L225,562 L202,556 L183,550 L167,544 L159,534 L151,515 L148,494 L144,468 L135,435 L125,407 L120,389 L133,377 L147,366 L157,344 L165,321 L173,299 L180,273 L195,258 Z" 
-              fill={selectedRegion === 'Pune' ? '#9ACD32' : hoveredRegion === 'Pune' ? '#9ACD32' : getRegionColor('Pune')}
-              stroke={selectedRegion === 'Pune' ? '#ffffff' : '#e5e7eb'}
-              strokeWidth={selectedRegion === 'Pune' ? 3 : hoveredRegion === 'Pune' ? 2 : 1}
-              className="transition-all duration-300"
-            />
-            {hoveredRegion === 'Pune' && (
-              <text x="300" y="420" fill="#ffffff" fontSize="16" fontWeight="bold" textAnchor="middle">
-                Pune
-              </text>
-            )}
-          </g>
-
-          {/* NASHIK REGION GROUP */}
-          <g 
-            id="nashik-region" 
-            className="region-group cursor-pointer transition-all duration-300 hover:brightness-110"
+            className="region-group cursor-pointer transition-all duration-300"
             onMouseEnter={() => setHoveredRegion('Nashik')}
             onMouseLeave={() => setHoveredRegion(null)}
             onClick={() => onRegionClick('Nashik')}
+            style={{ filter: selectedRegion !== 'all' && selectedRegion !== 'Nashik' ? 'opacity(0.3) blur(1px)' : 'none' }}
           >
-            <path 
-              d="M145,277 L153,261 L157,238 L167,218 L184,212 L204,209 L224,206 L242,211 L256,222 L272,232 L286,240 L300,246 L313,262 L321,278 L328,294 L340,308 L350,318 L372,321 L392,317 L413,310 L426,298 L438,280 L446,260 L450,238 L454,219 L452,200 L441,186 L427,174 L411,167 L392,161 L372,158 L350,156 L329,153 L310,149 L294,141 L282,128 L274,113 L274,96 L286,79 L305,67 L321,58 L336,50 L348,46 L325,64 L300,78 L278,94 L265,111 L256,130 L249,150 L240,170 L226,188 L211,199 L196,210 L184,212 Z" 
-              fill={selectedRegion === 'Nashik' ? '#facc15' : hoveredRegion === 'Nashik' ? '#fbbf24' : getRegionColor('Nashik')}
-              stroke={selectedRegion === 'Nashik' ? '#ffffff' : '#e5e7eb'}
-              strokeWidth={selectedRegion === 'Nashik' ? 3 : hoveredRegion === 'Nashik' ? 2 : 1}
-              className="transition-all duration-300"
-            />
-            {hoveredRegion === 'Nashik' && (
-              <text x="300" y="200" fill="#ffffff" fontSize="16" fontWeight="bold" textAnchor="middle">
-                Nashik
-              </text>
-            )}
+            {/* Nandurbar */}
+            <path d="M 175,62 L 220,62 L 220,112 L 175,112 Z" 
+                  fill={getRegionColor('Nashik')} stroke="#fff" strokeWidth="1"/>
+            <text x="197" y="87" textAnchor="middle" fontSize="10" fill="#000">Nandurbar</text>
+            
+            {/* Dhule */}
+            <path d="M 175,112 L 250,112 L 250,162 L 175,162 Z" 
+                  fill={getRegionColor('Nashik')} stroke="#fff" strokeWidth="1"/>
+            <text x="212" y="137" textAnchor="middle" fontSize="10" fill="#000">Dhule</text>
+            
+            {/* Jalgaon */}
+            <path d="M 250,112 L 325,112 L 325,162 L 250,162 Z" 
+                  fill={getRegionColor('Nashik')} stroke="#fff" strokeWidth="1"/>
+            <text x="287" y="137" textAnchor="middle" fontSize="10" fill="#000">Jalgaon</text>
+            
+            {/* Nashik */}
+            <path d="M 175,162 L 250,162 L 250,212 L 175,212 Z" 
+                  fill={getRegionColor('Nashik')} stroke="#fff" strokeWidth="1"/>
+            <text x="212" y="187" textAnchor="middle" fontSize="10" fill="#000">Nashik</text>
+            
+            {/* Ahmednagar */}
+            <path d="M 250,212 L 325,212 L 325,262 L 250,262 Z" 
+                  fill={getRegionColor('Nashik')} stroke="#fff" strokeWidth="1"/>
+            <text x="287" y="237" textAnchor="middle" fontSize="10" fill="#000">Ahmednagar</text>
           </g>
 
-          {/* CHHATRAPATI SAMBHAJINAGAR REGION GROUP */}
+          {/* AMRAVATI DIVISION (Pink) */}
           <g 
-            id="aurangabad-region" 
-            className="region-group cursor-pointer transition-all duration-300 hover:brightness-110"
-            onMouseEnter={() => setHoveredRegion('Chhatrapati Sambhajinagar')}
-            onMouseLeave={() => setHoveredRegion(null)}
-            onClick={() => onRegionClick('Chhatrapati Sambhajinagar')}
-          >
-            <path 
-              d="M313,262 L321,278 L328,294 L340,308 L350,318 L372,321 L392,317 L413,310 L426,298 L438,280 L446,260 L450,238 L454,219 L455,205 L464,198 L478,196 L494,202 L509,214 L519,230 L524,248 L525,267 L524,289 L520,308 L513,326 L500,341 L485,352 L470,358 L455,362 L440,365 L425,367 L410,370 L393,376 L377,387 L364,401 L351,416 L338,426 L367,420 L396,414 L426,408 L455,405 L480,403 L500,398 L510,385 L510,365 L506,345 L496,328 L480,317 L461,313 L442,316 L425,323 L407,332 L390,344 L372,359 L351,374 L334,388 L330,385 L310,363 L286,348 L275,313 L266,278 L238,258 L216,251 L195,258 L210,241 L229,227 L250,216 L267,210 L282,210 L296,212 L309,225 L313,262 Z" 
-              fill={selectedRegion === 'Chhatrapati Sambhajinagar' ? '#38bdf8' : hoveredRegion === 'Chhatrapati Sambhajinagar' ? '#0ea5e9' : getRegionColor('Chhatrapati Sambhajinagar')}
-              stroke={selectedRegion === 'Chhatrapati Sambhajinagar' ? '#ffffff' : '#e5e7eb'}
-              strokeWidth={selectedRegion === 'Chhatrapati Sambhajinagar' ? 3 : hoveredRegion === 'Chhatrapati Sambhajinagar' ? 2 : 1}
-              className="transition-all duration-300"
-            />
-            {hoveredRegion === 'Chhatrapati Sambhajinagar' && (
-              <text x="430" y="320" fill="#ffffff" fontSize="14" fontWeight="bold" textAnchor="middle">
-                Aurangabad
-              </text>
-            )}
-          </g>
-
-          {/* AMRAVATI REGION GROUP */}
-          <g 
-            id="amravati-region" 
-            className="region-group cursor-pointer transition-all duration-300 hover:brightness-110"
+            className="region-group cursor-pointer transition-all duration-300"
             onMouseEnter={() => setHoveredRegion('Amravati')}
             onMouseLeave={() => setHoveredRegion(null)}
             onClick={() => onRegionClick('Amravati')}
+            style={{ filter: selectedRegion !== 'all' && selectedRegion !== 'Amravati' ? 'opacity(0.3) blur(1px)' : 'none' }}
           >
-            <path 
-              d="M455,205 L464,198 L478,196 L494,202 L509,214 L519,230 L524,248 L525,267 L524,289 L520,308 L513,326 L500,341 L485,352 L470,358 L455,362 L440,365 L425,367 L410,370 L393,376 L377,387 L364,401 L351,416 L338,426 L347,440 L360,451 L374,457 L390,457 L407,452 L425,445 L444,440 L462,442 L479,450 L494,460 L507,468 L517,471 L535,461 L549,446 L558,431 L560,414 L556,398 L546,384 L530,374 L512,367 L495,358 L481,348 L473,334 L472,317 L478,298 L494,284 L510,268 L526,250 L538,229 L542,208 L537,188 L528,171 L515,159 L500,148 L484,139 L469,132 L455,126 L444,120 L436,114 L428,109 L420,108 L411,114 L400,124 L390,138 L386,155 L392,161 L411,167 L427,174 L441,186 L452,200 L455,205 Z" 
-              fill={selectedRegion === 'Amravati' ? '#FFB6C1' : hoveredRegion === 'Amravati' ? '#ff91a4' : getRegionColor('Amravati')}
-              stroke={selectedRegion === 'Amravati' ? '#ffffff' : '#e5e7eb'}
-              strokeWidth={selectedRegion === 'Amravati' ? 3 : hoveredRegion === 'Amravati' ? 2 : 1}
-              className="transition-all duration-300"
-            />
-            {hoveredRegion === 'Amravati' && (
-              <text x="500" y="280" fill="#ffffff" fontSize="16" fontWeight="bold" textAnchor="middle">
-                Amravati
-              </text>
-            )}
+            {/* Amravati */}
+            <path d="M 400,112 L 475,112 L 475,162 L 400,162 Z" 
+                  fill={getRegionColor('Amravati')} stroke="#fff" strokeWidth="1"/>
+            <text x="437" y="137" textAnchor="middle" fontSize="10" fill="#000">Amravati</text>
+            
+            {/* Akola */}
+            <path d="M 325,112 L 400,112 L 400,162 L 325,162 Z" 
+                  fill={getRegionColor('Amravati')} stroke="#fff" strokeWidth="1"/>
+            <text x="362" y="137" textAnchor="middle" fontSize="10" fill="#000">Akola</text>
+            
+            {/* Buldhana */}
+            <path d="M 325,162 L 400,162 L 400,212 L 325,212 Z" 
+                  fill={getRegionColor('Amravati')} stroke="#fff" strokeWidth="1"/>
+            <text x="362" y="187" textAnchor="middle" fontSize="10" fill="#000">Buldhana</text>
+            
+            {/* Washim */}
+            <path d="M 400,162 L 475,162 L 475,212 L 400,212 Z" 
+                  fill={getRegionColor('Amravati')} stroke="#fff" strokeWidth="1"/>
+            <text x="437" y="187" textAnchor="middle" fontSize="10" fill="#000">Washim</text>
+            
+            {/* Yavatmal */}
+            <path d="M 475,162 L 550,162 L 550,212 L 475,212 Z" 
+                  fill={getRegionColor('Amravati')} stroke="#fff" strokeWidth="1"/>
+            <text x="512" y="187" textAnchor="middle" fontSize="10" fill="#000">Yavatmal</text>
           </g>
 
-          {/* NAGPUR REGION GROUP */}
+          {/* NAGPUR DIVISION (Green) */}
           <g 
-            id="nagpur-region" 
-            className="region-group cursor-pointer transition-all duration-300 hover:brightness-110"
+            className="region-group cursor-pointer transition-all duration-300"
             onMouseEnter={() => setHoveredRegion('Nagpur')}
             onMouseLeave={() => setHoveredRegion(null)}
             onClick={() => onRegionClick('Nagpur')}
+            style={{ filter: selectedRegion !== 'all' && selectedRegion !== 'Nagpur' ? 'opacity(0.3) blur(1px)' : 'none' }}
           >
-            <path 
-              d="M542,208 L560,200 L580,210 L600,225 L615,245 L625,270 L630,295 L625,320 L615,340 L600,355 L580,365 L560,370 L540,365 L525,355 L515,340 L510,320 L515,295 L525,270 L542,208 Z" 
-              fill={selectedRegion === 'Nagpur' ? '#f97316' : hoveredRegion === 'Nagpur' ? '#ea580c' : getRegionColor('Nagpur')}
-              stroke={selectedRegion === 'Nagpur' ? '#ffffff' : '#e5e7eb'}
-              strokeWidth={selectedRegion === 'Nagpur' ? 3 : hoveredRegion === 'Nagpur' ? 2 : 1}
-              className="transition-all duration-300"
-            />
-            {hoveredRegion === 'Nagpur' && (
-              <text x="580" y="290" fill="#ffffff" fontSize="16" fontWeight="bold" textAnchor="middle">
-                Nagpur
-              </text>
-            )}
+            {/* Nagpur */}
+            <path d="M 475,62 L 550,62 L 550,112 L 475,112 Z" 
+                  fill={getRegionColor('Nagpur')} stroke="#fff" strokeWidth="1"/>
+            <text x="512" y="87" textAnchor="middle" fontSize="10" fill="#000">Nagpur</text>
+            
+            {/* Bhandara */}
+            <path d="M 550,62 L 600,62 L 600,112 L 550,112 Z" 
+                  fill={getRegionColor('Nagpur')} stroke="#fff" strokeWidth="1"/>
+            <text x="575" y="87" textAnchor="middle" fontSize="10" fill="#000">Bhandara</text>
+            
+            {/* Gondia */}
+            <path d="M 600,62 L 650,62 L 650,112 L 600,112 Z" 
+                  fill={getRegionColor('Nagpur')} stroke="#fff" strokeWidth="1"/>
+            <text x="625" y="87" textAnchor="middle" fontSize="10" fill="#000">Gondia</text>
+            
+            {/* Wardha */}
+            <path d="M 475,112 L 550,112 L 550,162 L 475,162 Z" 
+                  fill={getRegionColor('Nagpur')} stroke="#fff" strokeWidth="1"/>
+            <text x="512" y="137" textAnchor="middle" fontSize="10" fill="#000">Wardha</text>
+            
+            {/* Chandrapur */}
+            <path d="M 550,212 L 600,212 L 600,262 L 550,262 Z" 
+                  fill={getRegionColor('Nagpur')} stroke="#fff" strokeWidth="1"/>
+            <text x="575" y="237" textAnchor="middle" fontSize="10" fill="#000">Chandrapur</text>
+            
+            {/* Gadchiroli */}
+            <path d="M 600,212 L 650,212 L 650,300 L 600,300 Z" 
+                  fill={getRegionColor('Nagpur')} stroke="#fff" strokeWidth="1"/>
+            <text x="625" y="256" textAnchor="middle" fontSize="10" fill="#000">Gadchiroli</text>
           </g>
 
-          {/* Compass Rose */}
-          <g transform="translate(50, 600)">
-            <circle cx="0" cy="0" r="25" fill="rgba(255,255,255,0.1)" stroke="#ffffff" strokeWidth="1"/>
-            <path d="M0,-20 L5,0 L0,20 L-5,0 Z" fill="#ffffff"/>
-            <text x="0" y="-30" fill="#ffffff" fontSize="10" textAnchor="middle">N</text>
+          {/* CHHATRAPATI SAMBHAJINAGAR DIVISION (Blue) */}
+          <g 
+            className="region-group cursor-pointer transition-all duration-300"
+            onMouseEnter={() => setHoveredRegion('Chhatrapati Sambhajinagar')}
+            onMouseLeave={() => setHoveredRegion(null)}
+            onClick={() => onRegionClick('Chhatrapati Sambhajinagar')}
+            style={{ filter: selectedRegion !== 'all' && selectedRegion !== 'Chhatrapati Sambhajinagar' ? 'opacity(0.3) blur(1px)' : 'none' }}
+          >
+            {/* Chhatrapati Sambhajinagar */}
+            <path d="M 250,162 L 325,162 L 325,212 L 250,212 Z" 
+                  fill={getRegionColor('Chhatrapati Sambhajinagar')} stroke="#fff" strokeWidth="1"/>
+            <text x="287" y="187" textAnchor="middle" fontSize="9" fill="#000">Chhatrapati Sambhajinagar</text>
+            
+            {/* Jalna */}
+            <path d="M 325,212 L 400,212 L 400,262 L 325,262 Z" 
+                  fill={getRegionColor('Chhatrapati Sambhajinagar')} stroke="#fff" strokeWidth="1"/>
+            <text x="362" y="237" textAnchor="middle" fontSize="10" fill="#000">Jalna</text>
+            
+            {/* Parbhani */}
+            <path d="M 400,212 L 475,212 L 475,262 L 400,262 Z" 
+                  fill={getRegionColor('Chhatrapati Sambhajinagar')} stroke="#fff" strokeWidth="1"/>
+            <text x="437" y="237" textAnchor="middle" fontSize="10" fill="#000">Parbhani</text>
+            
+            {/* Hingoli */}
+            <path d="M 475,212 L 550,212 L 550,262 L 475,262 Z" 
+                  fill={getRegionColor('Chhatrapati Sambhajinagar')} stroke="#fff" strokeWidth="1"/>
+            <text x="512" y="237" textAnchor="middle" fontSize="10" fill="#000">Hingoli</text>
+            
+            {/* Beed */}
+            <path d="M 325,262 L 400,262 L 400,312 L 325,312 Z" 
+                  fill={getRegionColor('Chhatrapati Sambhajinagar')} stroke="#fff" strokeWidth="1"/>
+            <text x="362" y="287" textAnchor="middle" fontSize="10" fill="#000">Beed</text>
+            
+            {/* Nanded */}
+            <path d="M 475,262 L 550,262 L 550,312 L 475,312 Z" 
+                  fill={getRegionColor('Chhatrapati Sambhajinagar')} stroke="#fff" strokeWidth="1"/>
+            <text x="512" y="287" textAnchor="middle" fontSize="10" fill="#000">Nanded</text>
+            
+            {/* Latur */}
+            <path d="M 400,312 L 475,312 L 475,362 L 400,362 Z" 
+                  fill={getRegionColor('Chhatrapati Sambhajinagar')} stroke="#fff" strokeWidth="1"/>
+            <text x="437" y="337" textAnchor="middle" fontSize="10" fill="#000">Latur</text>
+            
+            {/* Dharashiv (Osmanabad) */}
+            <path d="M 325,312 L 400,312 L 400,362 L 325,362 Z" 
+                  fill={getRegionColor('Chhatrapati Sambhajinagar')} stroke="#fff" strokeWidth="1"/>
+            <text x="362" y="337" textAnchor="middle" fontSize="9" fill="#000">Dharashiv</text>
           </g>
+
+          {/* PUNE DIVISION (Light Green) */}
+          <g 
+            className="region-group cursor-pointer transition-all duration-300"
+            onMouseEnter={() => setHoveredRegion('Pune')}
+            onMouseLeave={() => setHoveredRegion(null)}
+            onClick={() => onRegionClick('Pune')}
+            style={{ filter: selectedRegion !== 'all' && selectedRegion !== 'Pune' ? 'opacity(0.3) blur(1px)' : 'none' }}
+          >
+            {/* Pune */}
+            <path d="M 175,312 L 250,312 L 250,362 L 175,362 Z" 
+                  fill={getRegionColor('Pune')} stroke="#fff" strokeWidth="1"/>
+            <text x="212" y="337" textAnchor="middle" fontSize="10" fill="#000">Pune</text>
+            
+            {/* Ahmednagar (part of Pune division in some schemes) */}
+            <path d="M 250,262 L 325,262 L 325,312 L 250,312 Z" 
+                  fill={getRegionColor('Pune')} stroke="#fff" strokeWidth="1"/>
+            <text x="287" y="287" textAnchor="middle" fontSize="9" fill="#000">Ahmednagar</text>
+            
+            {/* Solapur */}
+            <path d="M 250,312 L 325,312 L 325,362 L 250,362 Z" 
+                  fill={getRegionColor('Pune')} stroke="#fff" strokeWidth="1"/>
+            <text x="287" y="337" textAnchor="middle" fontSize="10" fill="#000">Solapur</text>
+            
+            {/* Satara */}
+            <path d="M 175,362 L 250,362 L 250,412 L 175,412 Z" 
+                  fill={getRegionColor('Pune')} stroke="#fff" strokeWidth="1"/>
+            <text x="212" y="387" textAnchor="middle" fontSize="10" fill="#000">Satara</text>
+            
+            {/* Sangli */}
+            <path d="M 175,412 L 250,412 L 250,462 L 175,462 Z" 
+                  fill={getRegionColor('Pune')} stroke="#fff" strokeWidth="1"/>
+            <text x="212" y="437" textAnchor="middle" fontSize="10" fill="#000">Sangli</text>
+            
+            {/* Kolhapur */}
+            <path d="M 175,462 L 250,462 L 250,500 L 175,500 Z" 
+                  fill={getRegionColor('Pune')} stroke="#fff" strokeWidth="1"/>
+            <text x="212" y="481" textAnchor="middle" fontSize="10" fill="#000">Kolhapur</text>
+          </g>
+
+          {/* KONKAN DIVISION (Gray) */}
+          <g 
+            className="region-group cursor-pointer transition-all duration-300"
+            onMouseEnter={() => setHoveredRegion('Konkan')}
+            onMouseLeave={() => setHoveredRegion(null)}
+            onClick={() => onRegionClick('Konkan')}
+            style={{ filter: selectedRegion !== 'all' && selectedRegion !== 'Konkan' ? 'opacity(0.3) blur(1px)' : 'none' }}
+          >
+            {/* Palghar */}
+            <path d="M 125,212 L 175,212 L 175,262 L 125,262 Z" 
+                  fill={getRegionColor('Konkan')} stroke="#fff" strokeWidth="1"/>
+            <text x="150" y="237" textAnchor="middle" fontSize="10" fill="#000">Palghar</text>
+            
+            {/* Thane */}
+            <path d="M 75,262 L 125,262 L 125,312 L 75,312 Z" 
+                  fill={getRegionColor('Konkan')} stroke="#fff" strokeWidth="1"/>
+            <text x="100" y="287" textAnchor="middle" fontSize="10" fill="#000">Thane</text>
+            
+            {/* Mumbai Suburban */}
+            <path d="M 25,262 L 75,262 L 75,312 L 25,312 Z" 
+                  fill={getRegionColor('Konkan')} stroke="#fff" strokeWidth="1"/>
+            <text x="50" y="280" textAnchor="middle" fontSize="8" fill="#000">Mumbai</text>
+            <text x="50" y="292" textAnchor="middle" fontSize="8" fill="#000">Suburban</text>
+            
+            {/* Mumbai City */}
+            <path d="M 25,312 L 75,312 L 75,362 L 25,362 Z" 
+                  fill={getRegionColor('Konkan')} stroke="#fff" strokeWidth="1"/>
+            <text x="50" y="330" textAnchor="middle" fontSize="8" fill="#000">Mumbai</text>
+            <text x="50" y="342" textAnchor="middle" fontSize="8" fill="#000">City</text>
+            
+            {/* Raigad */}
+            <path d="M 75,312 L 125,312 L 125,362 L 75,362 Z" 
+                  fill={getRegionColor('Konkan')} stroke="#fff" strokeWidth="1"/>
+            <text x="100" y="337" textAnchor="middle" fontSize="10" fill="#000">Raigad</text>
+            
+            {/* Ratnagiri */}
+            <path d="M 25,362 L 75,362 L 75,412 L 25,412 Z" 
+                  fill={getRegionColor('Konkan')} stroke="#fff" strokeWidth="1"/>
+            <text x="50" y="387" textAnchor="middle" fontSize="9" fill="#000">Ratnagiri</text>
+            
+            {/* Sindhudurg */}
+            <path d="M 25,412 L 75,412 L 75,462 L 25,462 Z" 
+                  fill={getRegionColor('Konkan')} stroke="#fff" strokeWidth="1"/>
+            <text x="50" y="437" textAnchor="middle" fontSize="9" fill="#000">Sindhudurg</text>
+          </g>
+
+          {/* Arabian Sea */}
+          <rect x="0" y="0" width="25" height="500" fill="#e0f2fe"/>
+          <text x="12" y="250" textAnchor="middle" fontSize="12" fill="#0369a1" transform="rotate(-90 12 250)">Arabian Sea</text>
 
           {/* Legend */}
-          <g transform="translate(600, 550)">
-            <rect x="0" y="0" width="180" height="120" fill="rgba(0,0,0,0.7)" rx="5"/>
-            <text x="10" y="20" fill="#ffffff" fontSize="12" fontWeight="bold">Regions</text>
+          <g transform="translate(450, 350)">
+            <rect x="0" y="0" width="180" height="140" fill="rgba(255,255,255,0.9)" stroke="#ccc" rx="5"/>
+            <text x="10" y="18" fill="#000" fontSize="12" fontWeight="bold">Maharashtra Divisions</text>
             
-            <rect x="10" y="30" width="15" height="10" fill="#FFB6C1"/>
-            <text x="30" y="40" fill="#ffffff" fontSize="10">Amravati</text>
+            <rect x="10" y="25" width="12" height="12" fill="#facc15"/>
+            <text x="28" y="35" fill="#000" fontSize="10">Nashik Division</text>
             
-            <rect x="10" y="45" width="15" height="10" fill="#f97316"/>
-            <text x="30" y="55" fill="#ffffff" fontSize="10">Nagpur</text>
+            <rect x="10" y="40" width="12" height="12" fill="#fbbf24"/>
+            <text x="28" y="50" fill="#000" fontSize="10">Amravati Division</text>
             
-            <rect x="10" y="60" width="15" height="10" fill="#38bdf8"/>
-            <text x="30" y="70" fill="#ffffff" fontSize="10">Aurangabad</text>
+            <rect x="10" y="55" width="12" height="12" fill="#4ade80"/>
+            <text x="28" y="65" fill="#000" fontSize="10">Nagpur Division</text>
             
-            <rect x="90" y="30" width="15" height="10" fill="#facc15"/>
-            <text x="110" y="40" fill="#ffffff" fontSize="10">Nashik</text>
+            <rect x="10" y="70" width="12" height="12" fill="#38bdf8"/>
+            <text x="28" y="80" fill="#000" fontSize="10">Aurangabad Division</text>
             
-            <rect x="90" y="45" width="15" height="10" fill="#9ACD32"/>
-            <text x="110" y="55" fill="#ffffff" fontSize="10">Pune</text>
+            <rect x="10" y="85" width="12" height="12" fill="#a3e635"/>
+            <text x="28" y="95" fill="#000" fontSize="10">Pune Division</text>
             
-            <rect x="90" y="60" width="15" height="10" fill="#6b7280"/>
-            <text x="110" y="70" fill="#ffffff" fontSize="10">Konkan</text>
+            <rect x="10" y="100" width="12" height="12" fill="#9ca3af"/>
+            <text x="28" y="110" fill="#000" fontSize="10">Konkan Division</text>
           </g>
+
+          {/* Hover Effect */}
+          {hoveredRegion && (
+            <text x="325" y="30" textAnchor="middle" fontSize="16" fontWeight="bold" fill="#1f2937">
+              {hoveredRegion} Division
+            </text>
+          )}
         </svg>
       </div>
     );
@@ -330,7 +444,7 @@ export default function MaharashtraOfficialMap({
         </div>
 
         <div className="relative w-full" style={{ height: '500px', overflow: 'hidden' }}>
-          {createInteractiveMap()}
+          {createDetailedMaharashtraMap()}
         </div>
       </CardContent>
     </Card>
