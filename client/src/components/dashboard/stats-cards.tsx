@@ -116,7 +116,7 @@ export default function StatsCards({ data, isLoading, layout = 'normal', selecte
                 <p className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-blue-900">
                   {schemeCounts ? 
                     (selectedRegion === "all" ? 
-                      schemeCounts.filteredCount : 
+                      `${schemeCounts.totalCount}/389` : 
                       `${schemeCounts.totalCount}/${schemeCounts.filteredCount}`
                     ) : totalSchemes}
                 </p>
