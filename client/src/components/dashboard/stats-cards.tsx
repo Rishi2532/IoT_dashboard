@@ -114,7 +114,11 @@ export default function StatsCards({ data, isLoading, layout = 'normal', selecte
               </h3>
               <div className="mt-1 flex items-baseline">
                 <p className="text-xl sm:text-2xl md:text-3xl xl:text-4xl font-bold text-blue-900">
-                  {schemeCounts ? `${schemeCounts.filteredCount}/${schemeCounts.totalCount}` : totalSchemes}
+                  {schemeCounts ? 
+                    (selectedRegion === "all" ? 
+                      schemeCounts.filteredCount : 
+                      `${schemeCounts.totalCount}/${schemeCounts.filteredCount}`
+                    ) : totalSchemes}
                 </p>
                 <p className="ml-1 sm:ml-2 text-xs sm:text-sm xl:text-base text-blue-600">
                   water schemes
