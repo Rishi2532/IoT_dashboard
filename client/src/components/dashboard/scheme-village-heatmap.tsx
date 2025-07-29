@@ -470,7 +470,7 @@ export default function SchemeVillageHeatmap() {
       <CardHeader>
         <CardTitle>Scheme Distribution Heatmap</CardTitle>
         <p className="text-sm text-gray-600">
-          Number of schemes by region and village count. Colors indicate average
+          Number of schemes by region and village count. Colors are based only on average
           LPCD values of schemes in each cell.
         </p>
       </CardHeader>
@@ -492,7 +492,7 @@ export default function SchemeVillageHeatmap() {
                 className="bg-gray-200 px-2 py-3 font-semibold text-sm border-r border-gray-300 text-center flex items-center justify-center"
                 title={`${villageRange} villages`}
               >
-                {villageRange}
+                {villageRange} Villages
               </div>
             ))}
             {/* Total header */}
@@ -605,42 +605,42 @@ export default function SchemeVillageHeatmap() {
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 border border-gray-300"
-                  style={{ backgroundColor: "#10b981" }}
+                  style={{ backgroundColor: "#ccffe7" }}
                 ></div>
                 <span className="text-xs">55-70L (Good)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 border border-gray-300"
-                  style={{ backgroundColor: "#059669" }}
+                  style={{ backgroundColor: "#6fe0abff" }}
                 ></div>
                 <span className="text-xs">70-80L (High)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 border border-gray-300"
-                  style={{ backgroundColor: "#f97316" }}
+                  style={{ backgroundColor: "#00ff86" }}
                 ></div>
                 <span className="text-xs">&gt;80L (Very High)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 border border-gray-300"
-                  style={{ backgroundColor: "#eab308" }}
+                  style={{ backgroundColor: "#fcc" }}
                 ></div>
                 <span className="text-xs">40-54L (Low)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 border border-gray-300"
-                  style={{ backgroundColor: "#fca5a5" }}
+                  style={{ backgroundColor: "#ffa6a6" }}
                 ></div>
                 <span className="text-xs">25-39L (Very Low)</span>
               </div>
               <div className="flex items-center gap-2">
                 <div
                   className="w-4 h-4 border border-gray-300"
-                  style={{ backgroundColor: "#ef4444" }}
+                  style={{ backgroundColor: "#fe4d4dff" }}
                 ></div>
                 <span className="text-xs">0-24L (Critical)</span>
               </div>
