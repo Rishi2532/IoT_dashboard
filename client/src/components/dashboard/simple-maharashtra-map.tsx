@@ -115,7 +115,7 @@ export default function SimpleMaharashtraMap({
               stroke={selectedRegion === "Nagpur" ? "#2563eb" : "#fff"}
               strokeWidth={selectedRegion === "Nagpur" ? 3 : 1}
               onClick={() => onRegionClick("Nagpur")}
-              className="cursor-pointer hover:opacity-90"
+              className="cursor-pointer"
             />
             
             {/* Region: Amravati */}
