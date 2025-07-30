@@ -140,7 +140,7 @@
     font-size: 0.875rem !important;
     vertical-align: middle !important;
     border: none !important;
-    border-bottom: none !important;
+    border-bottom: 1px solid #e5e7eb !important;
     border-top: none !important;
     border-left: none !important;
     border-right: none !important;

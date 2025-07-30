@@ -410,19 +410,19 @@ export default function SchemeDetailsPage() {
                                 return (
                                   <>
                                     <tr key={index} style={{backgroundColor: 'white', border: 'none'}}>
-                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem'}}>
+                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem'}}>
                                         <div className="flex items-center justify-center">
                                           <MapPin className="w-4 h-4 mr-2 text-blue-500" />
                                           <span className="village-name">{village.village_name}</span>
                                         </div>
                                       </td>
-                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
+                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
                                         {population.toLocaleString()}
                                       </td>
-                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
+                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
                                         {waterValue ? Math.round(parseFloat(waterValue.toString())).toLocaleString() : '-'}
                                       </td>
-                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem'}}>
+                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem'}}>
                                         <span className={`text-xs font-semibold px-2 py-1 rounded ${
                                           lpcdStatus === 'good' ? 'bg-green-100 text-green-800' :
                                           lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800' :
@@ -431,10 +431,10 @@ export default function SchemeDetailsPage() {
                                           {lpcdValue ? `${Math.round(lpcdValue)}L` : '-'}
                                         </span>
                                       </td>
-                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
+                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
                                         {villageESRs.length}
                                       </td>
-                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem'}}>
+                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem'}}>
                                         <button
                                           onClick={() => toggleVillageExpansion(villageId)}
                                           className={`text-xs font-semibold px-3 py-1 rounded transition-colors ${
@@ -453,7 +453,7 @@ export default function SchemeDetailsPage() {
                                     {/* Expanded ESR Details Row */}
                                     {isExpanded && (
                                       <tr style={{backgroundColor: '#f1f5f9', border: 'none'}}>
-                                        <td colSpan={6} style={{padding: '24px', border: 'none', backgroundColor: '#f1f5f9'}}>
+                                        <td colSpan={6} style={{padding: '24px', border: 'none', borderBottom: 'none', backgroundColor: '#f1f5f9'}}>
                                           <div className="bg-white rounded-lg p-4">
                                             <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
                                               <Building className="w-4 h-4 mr-2" />
