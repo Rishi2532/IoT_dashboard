@@ -381,17 +381,17 @@ export default function SchemeDetailsPage() {
                       </div>
 
                       {/* Villages Table for this block - Trading Style */}
-                      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+                      <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{border: 'none'}}>
                         <div className="table-responsive">
-                          <table className="village-table w-full">
-                            <thead>
+                          <table className="village-table" style={{width: '100%', border: 'none', borderCollapse: 'separate', borderSpacing: '0'}}>
+                            <thead style={{backgroundColor: '#3b2e7d'}}>
                               <tr>
-                                <th scope="col">VILLAGE</th>
-                                <th scope="col">POPULATION</th>
-                                <th scope="col">WATER (L)</th>
-                                <th scope="col">LPCD</th>
-                                <th scope="col">ESRs</th>
-                                <th scope="col">ACTION</th>
+                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>VILLAGE</th>
+                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>POPULATION</th>
+                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>WATER (L)</th>
+                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>LPCD</th>
+                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>ESRs</th>
+                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>ACTION</th>
                               </tr>
                             </thead>
                             <tbody>
@@ -409,20 +409,20 @@ export default function SchemeDetailsPage() {
 
                                 return (
                                   <>
-                                    <tr key={index}>
-                                      <td className="text-center">
+                                    <tr key={index} style={{backgroundColor: 'white', border: 'none'}}>
+                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem'}}>
                                         <div className="flex items-center justify-center">
                                           <MapPin className="w-4 h-4 mr-2 text-blue-500" />
                                           <span className="village-name">{village.village_name}</span>
                                         </div>
                                       </td>
-                                      <td className="text-center metric-value">
+                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
                                         {population.toLocaleString()}
                                       </td>
-                                      <td className="text-center metric-value">
+                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
                                         {waterValue ? Math.round(parseFloat(waterValue.toString())).toLocaleString() : '-'}
                                       </td>
-                                      <td className="text-center">
+                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem'}}>
                                         <span className={`text-xs font-semibold px-2 py-1 rounded ${
                                           lpcdStatus === 'good' ? 'bg-green-100 text-green-800' :
                                           lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800' :
@@ -431,10 +431,10 @@ export default function SchemeDetailsPage() {
                                           {lpcdValue ? `${Math.round(lpcdValue)}L` : '-'}
                                         </span>
                                       </td>
-                                      <td className="text-center metric-value">
+                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
                                         {villageESRs.length}
                                       </td>
-                                      <td className="text-center">
+                                      <td style={{textAlign: 'center', padding: '16px', border: 'none', backgroundColor: 'white', fontSize: '0.875rem'}}>
                                         <button
                                           onClick={() => toggleVillageExpansion(villageId)}
                                           className={`text-xs font-semibold px-3 py-1 rounded transition-colors ${
@@ -452,8 +452,8 @@ export default function SchemeDetailsPage() {
                                     
                                     {/* Expanded ESR Details Row */}
                                     {isExpanded && (
-                                      <tr className="esr-details">
-                                        <td colSpan={6} className="px-4 py-6">
+                                      <tr style={{backgroundColor: '#f1f5f9', border: 'none'}}>
+                                        <td colSpan={6} style={{padding: '24px', border: 'none', backgroundColor: '#f1f5f9'}}>
                                           <div className="bg-white rounded-lg p-4">
                                             <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
                                               <Building className="w-4 h-4 mr-2" />

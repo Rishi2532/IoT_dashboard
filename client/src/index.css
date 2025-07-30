@@ -93,53 +93,76 @@
     font-weight: 500 !important;
   }
 
-  /* Trading table style for village data */
+  /* Trading table style for village data - Override all existing styles */
   .village-table {
-    font-family: 'Inter', sans-serif;
-    border-collapse: separate;
-    border-spacing: 0;
+    font-family: 'Inter', sans-serif !important;
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+    width: 100% !important;
   }
   
   .village-table thead {
-    background-color: #3b2e7d;
+    background-color: #3b2e7d !important;
+    background: #3b2e7d !important;
   }
   
   .village-table thead th {
-    font-weight: 600;
-    font-size: 0.875rem;
-    text-transform: uppercase;
-    letter-spacing: 0.025em;
-    padding: 16px;
-    border: none;
-    text-align: center;
-    color: white;
+    font-weight: 600 !important;
+    font-size: 0.875rem !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.025em !important;
+    padding: 16px !important;
+    border: none !important;
+    text-align: center !important;
+    color: white !important;
+    background-color: #3b2e7d !important;
+    background: #3b2e7d !important;
   }
   
   .village-table tbody tr {
-    background-color: white;
-    border: none;
-    transition: all 0.15s ease-in-out;
+    background-color: white !important;
+    background: white !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+    transition: all 0.15s ease-in-out !important;
   }
   
   .village-table tbody tr:hover {
-    background-color: #f8fafc;
+    background-color: #f8fafc !important;
+    background: #f8fafc !important;
+    transform: none !important;
+    box-shadow: none !important;
   }
   
   .village-table tbody td {
-    padding: 16px;
-    font-size: 0.875rem;
-    vertical-align: middle;
-    border: none;
-    background-color: white;
+    padding: 16px !important;
+    font-size: 0.875rem !important;
+    vertical-align: middle !important;
+    border: none !important;
+    border-bottom: none !important;
+    border-top: none !important;
+    border-left: none !important;
+    border-right: none !important;
+    background-color: white !important;
+    background: white !important;
+    text-align: center !important;
   }
   
   .village-table .expandable-row {
     background-color: #f8fafc !important;
+    background: #f8fafc !important;
   }
   
   .village-table .esr-details {
-    background-color: #f1f5f9;
-    border-top: 1px solid #e2e8f0;
+    background-color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
+    border-top: 1px solid #e2e8f0 !important;
+  }
+  
+  .village-table .esr-details td {
+    background-color: #f1f5f9 !important;
+    background: #f1f5f9 !important;
   }
   
   .village-table .village-name {
