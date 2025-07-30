@@ -123,6 +123,15 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes
 
+### July 30, 2025
+- **Enhanced Scheme LPCD Filter Cards**: Implemented detailed LPCD filter cards similar to village LPCD dashboard showing schemes categorized by LPCD ranges
+  - Added "Schemes with LPCD > 55L" card with detailed breakdown (55-60L, 60-65L, 65-70L, 70-75L, 75-80L, >80L)
+  - Added "Schemes with LPCD < 55L" card with detailed breakdown (45-55L, 35-45L, 25-35L, 15-25L, 0-15L)
+  - Added "No Water Supply for Scheme" card showing schemes with zero or null LPCD values
+  - Enhanced visual design with green, yellow, and gray color schemes for better data categorization
+  - Added population statistics for each category to provide comprehensive scheme coverage analysis
+  - Implemented clickable cards with "View Schemes" buttons for easy filtering navigation
+
 ### July 24, 2025
 - **Block-Specific Dashboard URL Fix**: Fixed critical issue where multi-block schemes (like "83 Village RRWS Scheme MJP RR") were generating incorrect dashboard URLs
   - Corrected dashboard URLs to be block-specific: Achalpur block now links to "Block-Achalpur" and Chandur Bazar block links to "Block-Chandur Bazar"
