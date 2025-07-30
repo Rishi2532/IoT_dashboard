@@ -12,7 +12,6 @@ export const Maharashtra = ({
   selectedRegion = "all",
   showLabels = true 
 }: MaharashtraProps): JSX.Element => {
-  const [hoveredDistrict, setHoveredDistrict] = React.useState<string | null>(null);
 
   // Mapping districts to their administrative regions
   const districtToRegion: { [key: string]: string } = {
@@ -96,23 +95,6 @@ export const Maharashtra = ({
     const region = districtToRegion[districtName];
     if (region && onRegionClick) {
       onRegionClick(region);
-    }
-  };
-
-  const handleDistrictHover = (districtName: string | null) => {
-    setHoveredDistrict(districtName);
-  };
-
-  // Helper function to determine district styling
-  const getDistrictStyling = (districtName: string): string => {
-    if (!hoveredDistrict) {
-      return "transition-all duration-300"; // Smooth transitions when nothing is hovered
-    }
-    
-    if (hoveredDistrict === districtName) {
-      return "brightness-110 contrast-110 saturate-110 drop-shadow-lg transition-all duration-300"; // Highlight hovered district
-    } else {
-      return "blur-sm opacity-60 transition-all duration-300"; // Blur and fade non-hovered districts
     }
   };
 
@@ -567,7 +549,7 @@ export const Maharashtra = ({
   return (
     <Card className="bg-transparent w-full">
       <CardContent className="flex flex-row justify-center p-0">
-        <div className="relative w-[3105.78px] h-[2453.01px]">
+        <div className="relative w-[3105.78px] h-[2453.01px] maharashtra-map">
           <div className="relative w-[3101px] h-[2452px] top-px">
             <div className="relative h-[2452px]">
               {/* Map district paths */}
@@ -590,39 +572,33 @@ export const Maharashtra = ({
                     </div>
                   ) : path.id === "path3109" ? (
                     <div 
-                      className="absolute w-[614px] h-[503px] top-[1020px] left-[540px] cursor-pointer"
+                      className="absolute w-[614px] h-[503px] top-[1020px] left-[540px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
+                        className={`${path.className} district-image`}
                         alt={path.alt}
                         src={path.src}
                       />
                     </div>
                   ) : path.id === "path3113" ? (
                     <div 
-                      className="absolute w-[626px] h-[486px] top-[1311px] left-[970px] cursor-pointer"
+                      className="absolute w-[626px] h-[486px] top-[1311px] left-[970px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
+                        className={`${path.className} district-image`}
                         alt={path.alt}
                         src={path.src}
                       />
                     </div>
                   ) : path.id === "path3117" ? (
                     <div 
-                      className="absolute w-[458px] h-[377px] top-[1427px] left-[615px] cursor-pointer"
+                      className="absolute w-[458px] h-[377px] top-[1427px] left-[615px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
+                        className={`${path.className} district-image`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -708,13 +684,11 @@ export const Maharashtra = ({
                     </div>
                   ) : path.id === "path3153" ? (
                     <div 
-                      className="absolute w-[577px] h-[420px] top-[537px] left-[522px] cursor-pointer"
+                      className="absolute w-[577px] h-[420px] top-[537px] left-[522px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
+                        className={`${path.className} district-image`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -825,13 +799,11 @@ export const Maharashtra = ({
                     </div>
                   ) : path.id === "path3209" ? (
                     <div 
-                      className="absolute w-[611px] h-[421px] top-[599px] left-[1893px] cursor-pointer"
+                      className="absolute w-[611px] h-[421px] top-[599px] left-[1893px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
+                        className={`${path.className} district-image`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -862,65 +834,55 @@ export const Maharashtra = ({
                     </div>
                   ) : path.id === "path3225" ? (
                     <div 
-                      className="absolute w-[411px] h-[370px] top-[365px] left-[2129px] cursor-pointer"
+                      className="absolute w-[411px] h-[370px] top-[365px] left-[2129px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
+                        className={`${path.className} district-image`}
                         alt={path.alt}
                         src={path.src}
                       />
                     </div>
                   ) : path.id === "path3229" ? (
                     <div 
-                      className="absolute w-[355px] h-[743px] top-[516px] left-[2746px] cursor-pointer"
+                      className="absolute w-[355px] h-[743px] top-[516px] left-[2746px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
+                        className={`${path.className} district-image`}
                         alt={path.alt}
                         src={path.src}
                       />
                     </div>
                   ) : path.id === "path3233" ? (
                     <div 
-                      className="absolute w-[386px] h-[431px] top-[569px] left-[2393px] cursor-pointer"
+                      className="absolute w-[386px] h-[431px] top-[569px] left-[2393px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
+                        className={`${path.className} district-image`}
                         alt={path.alt}
                         src={path.src}
                       />
                     </div>
                   ) : path.id === "path3237" ? (
                     <div 
-                      className="absolute w-52 h-[321px] top-[270px] left-[2603px] cursor-pointer"
+                      className="absolute w-52 h-[321px] top-[270px] left-[2603px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
+                        className={`${path.className} district-image`}
                         alt={path.alt}
                         src={path.src}
                       />
                     </div>
                   ) : path.id === "path3241" ? (
                     <div 
-                      className="absolute w-[284px] h-[326px] top-[255px] left-[2723px] cursor-pointer"
+                      className="absolute w-[284px] h-[326px] top-[255px] left-[2723px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
+                        className={`${path.className} district-image`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -951,12 +913,10 @@ export const Maharashtra = ({
                     </div>
                   ) : (
                     <img
-                      className={`${path.className} cursor-pointer ${getDistrictStyling(pathToDistrict[path.id])}`}
+                      className={`${path.className} district-image`}
                       alt={path.alt}
                       src={path.src}
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     />
                   )}
                 </div>

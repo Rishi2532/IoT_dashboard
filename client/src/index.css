@@ -30,6 +30,27 @@
   user-select: none;
 }
 
+/* Maharashtra Map District Hover Effects */
+.maharashtra-map {
+  display: block;
+  margin: 0 auto;
+}
+
+.district-image {
+  fill-opacity: 1;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.maharashtra-map:hover .district-image:not(:hover) {
+  filter: blur(2px) brightness(0.6) opacity(0.6);
+}
+
+.maharashtra-map .district-image:hover {
+  filter: brightness(1.1) contrast(1.1) saturate(1.1) drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  transform: scale(1.02);
+}
+
 @layer components {
   .dashboard-card {
     transform: translateY(0);
