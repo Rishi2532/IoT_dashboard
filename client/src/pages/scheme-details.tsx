@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, MapPin, Droplets, Building, Gauge, ChevronRight, ChevronDown } from "lucide-react";
+import { ArrowLeft, MapPin, Droplets, Building, Gauge, ChevronRight, ChevronDown, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -381,21 +381,23 @@ export default function SchemeDetailsPage() {
                       </div>
 
                       {/* Villages Table for this block - Trading Style */}
-                      <div className="bg-white rounded-lg shadow-sm overflow-hidden border border-gray-200">
+                      <div className="bg-white rounded-lg shadow-sm overflow-hidden">
                         <div className="table-responsive">
                           <table className="village-table w-full">
                             <thead>
                               <tr>
-                                <th scope="col" className="text-left">VILLAGE</th>
-                                <th scope="col" className="text-right">POPULATION</th>
-                                <th scope="col" className="text-right">WATER (L)</th>
-                                <th scope="col" className="text-right">LPCD</th>
-                                <th scope="col" className="text-right">ESRs</th>
-                                <th scope="col" className="text-center">STATUS</th>
+                                <th scope="col">VILLAGE</th>
+                                <th scope="col">POPULATION</th>
+                                <th scope="col">WATER (L)</th>
+                                <th scope="col">LPCD</th>
+                                <th scope="col">ESRs</th>
+                                <th scope="col">ACTION</th>
                               </tr>
                             </thead>
                             <tbody>
                               {blockVillages.map((village: any, index: number) => {
+                                const villageId = `${blockName}-${village.village_name}-${index}`;
+                                const isExpanded = expandedVillages.has(villageId);
                                 const villageESRs = esrData?.filter(
                                   (esr: any) => esr.village_name === village.village_name
                                 ) || [];
@@ -406,43 +408,118 @@ export default function SchemeDetailsPage() {
                                 const population = village.population || 0;
 
                                 return (
-                                  <tr key={index}>
-                                    <td>
-                                      <div className="flex items-center">
-                                        <MapPin className="w-4 h-4 mr-2 text-blue-500" />
-                                        <span className="village-name">{village.village_name}</span>
-                                      </div>
-                                    </td>
-                                    <td className="text-right metric-value">
-                                      {population.toLocaleString()}
-                                    </td>
-                                    <td className="text-right metric-value">
-                                      {waterValue ? Math.round(parseFloat(waterValue.toString())).toLocaleString() : '-'}
-                                    </td>
-                                    <td className="text-right">
-                                      <span className={`metric-value ${
-                                        lpcdStatus === 'good' ? 'status-good' :
-                                        lpcdStatus === 'warning' ? 'status-warning' :
-                                        'status-critical'
-                                      }`}>
-                                        {lpcdValue ? `${Math.round(lpcdValue)}L` : '-'}
-                                      </span>
-                                    </td>
-                                    <td className="text-right metric-value">
-                                      {villageESRs.length}
-                                    </td>
-                                    <td className="text-center">
-                                      <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                                        lpcdStatus === 'good' ? 'bg-green-100 text-green-800' :
-                                        lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                                        'bg-red-100 text-red-800'
-                                      }`}>
-                                        {lpcdStatus === 'good' ? 'Good' :
-                                         lpcdStatus === 'warning' ? 'Warning' :
-                                         'Critical'}
-                                      </span>
-                                    </td>
-                                  </tr>
+                                  <>
+                                    <tr key={index}>
+                                      <td className="text-center">
+                                        <div className="flex items-center justify-center">
+                                          <MapPin className="w-4 h-4 mr-2 text-blue-500" />
+                                          <span className="village-name">{village.village_name}</span>
+                                        </div>
+                                      </td>
+                                      <td className="text-center metric-value">
+                                        {population.toLocaleString()}
+                                      </td>
+                                      <td className="text-center metric-value">
+                                        {waterValue ? Math.round(parseFloat(waterValue.toString())).toLocaleString() : '-'}
+                                      </td>
+                                      <td className="text-center">
+                                        <span className={`text-xs font-semibold px-2 py-1 rounded ${
+                                          lpcdStatus === 'good' ? 'bg-green-100 text-green-800' :
+                                          lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                                          'bg-red-100 text-red-800'
+                                        }`}>
+                                          {lpcdValue ? `${Math.round(lpcdValue)}L` : '-'}
+                                        </span>
+                                      </td>
+                                      <td className="text-center metric-value">
+                                        {villageESRs.length}
+                                      </td>
+                                      <td className="text-center">
+                                        <button
+                                          onClick={() => toggleVillageExpansion(villageId)}
+                                          className={`text-xs font-semibold px-3 py-1 rounded transition-colors ${
+                                            lpcdStatus === 'good' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
+                                            lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
+                                            'bg-red-100 text-red-800 hover:bg-red-200'
+                                          }`}
+                                        >
+                                          {lpcdStatus === 'good' ? 'Good' :
+                                           lpcdStatus === 'warning' ? 'Warning' :
+                                           'Critical'}
+                                        </button>
+                                      </td>
+                                    </tr>
+                                    
+                                    {/* Expanded ESR Details Row */}
+                                    {isExpanded && (
+                                      <tr className="esr-details">
+                                        <td colSpan={6} className="px-4 py-6">
+                                          <div className="bg-white rounded-lg p-4">
+                                            <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
+                                              <Building className="w-4 h-4 mr-2" />
+                                              ESR Details for {village.village_name} ({villageESRs.length} ESRs)
+                                            </h4>
+
+                                            {isLoadingESR ? (
+                                              <div className="animate-pulse space-y-2">
+                                                <div className="h-3 bg-gray-200 rounded w-full"></div>
+                                                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                                              </div>
+                                            ) : villageESRs.length > 0 ? (
+                                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                {villageESRs.map((esr: any, esrIndex: number) => (
+                                                  <div
+                                                    key={esrIndex}
+                                                    className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                                                  >
+                                                    <div className="flex items-center justify-between mb-3">
+                                                      <span className="font-medium text-gray-900 text-sm">
+                                                        {esr.esr_name || `ESR ${esrIndex + 1}`}
+                                                      </span>
+                                                    </div>
+                                                    
+                                                    <div className="space-y-3">
+                                                      <div className="flex items-center justify-between">
+                                                        <span className="flex items-center text-xs text-gray-600">
+                                                          <Droplets className="w-3 h-3 mr-1 text-blue-500" />
+                                                          Chlorine
+                                                        </span>
+                                                        <Badge 
+                                                          className={`${getStatusColor(
+                                                            getChlorineStatus(esr.chlorine_value)
+                                                          )} text-xs px-2 py-1`}
+                                                        >
+                                                          {formatChlorineValue(esr.chlorine_value)}
+                                                        </Badge>
+                                                      </div>
+                                                      
+                                                      <div className="flex items-center justify-between">
+                                                        <span className="flex items-center text-xs text-gray-600">
+                                                          <Gauge className="w-3 h-3 mr-1 text-orange-500" />
+                                                          Pressure
+                                                        </span>
+                                                        <Badge 
+                                                          className={`${getStatusColor(
+                                                            getPressureStatus(esr.pressure_value)
+                                                          )} text-xs px-2 py-1`}
+                                                        >
+                                                          {formatPressureValue(esr.pressure_value)}
+                                                        </Badge>
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            ) : (
+                                              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center text-sm text-gray-500">
+                                                No ESR data available for this village
+                                              </div>
+                                            )}
+                                          </div>
+                                        </td>
+                                      </tr>
+                                    )}
+                                  </>
                                 );
                               })}
                             </tbody>

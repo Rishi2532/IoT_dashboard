@@ -96,10 +96,12 @@
   /* Trading table style for village data */
   .village-table {
     font-family: 'Inter', sans-serif;
+    border-collapse: separate;
+    border-spacing: 0;
   }
   
   .village-table thead {
-    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    background-color: #3b2e7d;
   }
   
   .village-table thead th {
@@ -107,24 +109,37 @@
     font-size: 0.875rem;
     text-transform: uppercase;
     letter-spacing: 0.025em;
-    padding: 12px 16px;
+    padding: 16px;
     border: none;
+    text-align: center;
+    color: white;
   }
   
   .village-table tbody tr {
-    border-bottom: 1px solid #e5e7eb;
+    background-color: white;
+    border: none;
     transition: all 0.15s ease-in-out;
   }
   
   .village-table tbody tr:hover {
     background-color: #f8fafc;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
   }
   
   .village-table tbody td {
-    padding: 12px 16px;
+    padding: 16px;
     font-size: 0.875rem;
     vertical-align: middle;
+    border: none;
+    background-color: white;
+  }
+  
+  .village-table .expandable-row {
+    background-color: #f8fafc !important;
+  }
+  
+  .village-table .esr-details {
+    background-color: #f1f5f9;
+    border-top: 1px solid #e2e8f0;
   }
   
   .village-table .village-name {
