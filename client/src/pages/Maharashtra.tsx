@@ -12,7 +12,6 @@ export const Maharashtra = ({
   selectedRegion = "all",
   showLabels = true 
 }: MaharashtraProps): JSX.Element => {
-  const [hoveredRegion, setHoveredRegion] = React.useState<string | null>(null);
 
   // Mapping districts to their administrative regions
   const districtToRegion: { [key: string]: string } = {
@@ -99,90 +98,9 @@ export const Maharashtra = ({
     }
   };
 
-  const handleDistrictHover = (districtName: string | null) => {
-    if (districtName) {
-      const region = districtToRegion[districtName];
-      setHoveredRegion(region || null);
-    } else {
-      setHoveredRegion(null);
-    }
-  };
 
-  // Get all districts in the same region for highlighting
-  const getDistrictsInRegion = (region: string): string[] => {
-    return Object.keys(districtToRegion).filter(district => districtToRegion[district] === region);
-  };
 
-  // Check if district should be highlighted
-  const shouldHighlightDistrict = (districtName: string): boolean => {
-    if (!hoveredRegion) return false;
-    return districtToRegion[districtName] === hoveredRegion;
-  };
 
-  // Get region-specific highlight color
-  const getRegionHighlightColor = (region: string): string => {
-    const regionColors: { [key: string]: string } = {
-      "Pune": "bg-green-400",
-      "Nashik": "bg-yellow-400", 
-      "Amravati": "bg-pink-400",
-      "Chhatrapati Sambhajinagar": "bg-purple-400",
-      "Nagpur": "bg-orange-400",
-      "Konkan": "bg-blue-400"
-    };
-    return regionColors[region] || "bg-gray-400";
-  };
-
-  // Helper function to wrap district with hover functionality
-  const wrapDistrictWithHover = (pathId: string, content: JSX.Element) => {
-    const districtName = pathToDistrict[pathId];
-    if (!districtName) return content;
-
-    const region = districtToRegion[districtName];
-    const highlightColor = getRegionHighlightColor(region);
-
-    return React.cloneElement(content, {
-      className: `${content.props.className} cursor-pointer`,
-      onClick: () => handleDistrictClick(districtName),
-      onMouseEnter: () => handleDistrictHover(districtName),
-      onMouseLeave: () => handleDistrictHover(null),
-      children: [
-        ...React.Children.toArray(content.props.children).map((child: any) => {
-          if (child.type === 'img') {
-            return React.cloneElement(child, {
-              className: `${child.props.className} transition-all duration-200 ${
-                shouldHighlightDistrict(districtName) 
-                  ? 'brightness-110 drop-shadow-lg filter' 
-                  : 'hover:brightness-105'
-              }`
-            });
-          }
-          return child;
-        }),
-        shouldHighlightDistrict(districtName) && (
-          <div key="highlight" className={`absolute inset-0 ${highlightColor} opacity-30 pointer-events-none rounded-sm`}></div>
-        )
-      ]
-    });
-  };
-
-  // Get color for region highlighting
-  const getRegionColor = (region: string): string => {
-    if (selectedRegion === "all") return "rgba(59, 130, 246, 0.3)"; // Blue
-    return selectedRegion === region ? "rgba(34, 197, 94, 0.4)" : "rgba(156, 163, 175, 0.2)"; // Green for selected, gray for others
-  };
-
-  // Get region bounds for highlighting
-  const getRegionHighlight = (region: string) => {
-    const highlights: { [key: string]: { top: string; left: string; width: string; height: string } } = {
-      "Pune": { top: "1300px", left: "400px", width: "600px", height: "500px" },
-      "Nashik": { top: "800px", left: "300px", width: "500px", height: "400px" },
-      "Amravati": { top: "700px", left: "1800px", width: "600px", height: "600px" },
-      "Chhatrapati Sambhajinagar": { top: "1000px", left: "1200px", width: "500px", height: "400px" },
-      "Nagpur": { top: "400px", left: "1800px", width: "700px", height: "600px" },
-      "Konkan": { top: "1200px", left: "100px", width: "400px", height: "800px" }
-    };
-    return highlights[region] || null;
-  };
 
   // Data for divisions to enable mapping over repeated elements
   const divisions = [
@@ -656,52 +574,35 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[614px] h-[503px] top-[1020px] left-[540px] cursor-pointer"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} transition-all duration-200 ${
-                          shouldHighlightDistrict(pathToDistrict[path.id]) 
-                            ? 'brightness-110 drop-shadow-lg filter' 
-                            : 'hover:brightness-105'
-                        }`}
+                        className={path.className}
                         alt={path.alt}
                         src={path.src}
                       />
-                      {shouldHighlightDistrict(pathToDistrict[path.id]) && (
-                        <div className="absolute inset-0 bg-green-400 opacity-30 pointer-events-none rounded-sm"></div>
-                      )}
                     </div>
                   ) : path.id === "path3113" ? (
                     <div 
                       className="absolute w-[626px] h-[486px] top-[1311px] left-[970px] cursor-pointer"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} transition-all duration-200 ${
-                          shouldHighlightDistrict(pathToDistrict[path.id]) 
-                            ? 'brightness-110 drop-shadow-lg filter' 
-                            : 'hover:brightness-105'
-                        }`}
+                        className={path.className}
                         alt={path.alt}
                         src={path.src}
                       />
-                      {shouldHighlightDistrict(pathToDistrict[path.id]) && (
-                        <div className="absolute inset-0 bg-green-400 opacity-30 pointer-events-none rounded-sm"></div>
-                      )}
                     </div>
                   ) : path.id === "path3117" ? (
-                    wrapDistrictWithHover(path.id, (
-                      <div className="absolute w-[458px] h-[377px] top-[1427px] left-[615px]">
-                        <img
-                          className={path.className}
-                          alt={path.alt}
-                          src={path.src}
-                        />
-                      </div>
-                    ))
+                    <div 
+                      className="absolute w-[458px] h-[377px] top-[1427px] left-[615px] cursor-pointer"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                    >
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
                   ) : path.id === "path3121" ? (
                     <div className="absolute w-[681px] h-[306px] top-[1623px] left-[656px]">
                       <img
@@ -785,21 +686,12 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[577px] h-[420px] top-[537px] left-[522px] cursor-pointer"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} transition-all duration-200 ${
-                          shouldHighlightDistrict(pathToDistrict[path.id]) 
-                            ? 'brightness-110 drop-shadow-lg filter' 
-                            : 'hover:brightness-105'
-                        }`}
+                        className={path.className}
                         alt={path.alt}
                         src={path.src}
                       />
-                      {shouldHighlightDistrict(pathToDistrict[path.id]) && (
-                        <div className="absolute inset-0 bg-yellow-400 opacity-30 pointer-events-none rounded-sm"></div>
-                      )}
                     </div>
                   ) : path.id === "path3157" ? (
                     <div className="absolute w-[669px] h-[564px] top-[822px] left-[646px]">
@@ -909,21 +801,12 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[611px] h-[421px] top-[599px] left-[1893px] cursor-pointer"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} transition-all duration-200 ${
-                          shouldHighlightDistrict(pathToDistrict[path.id]) 
-                            ? 'brightness-110 drop-shadow-lg filter' 
-                            : 'hover:brightness-105'
-                        }`}
+                        className={path.className}
                         alt={path.alt}
                         src={path.src}
                       />
-                      {shouldHighlightDistrict(pathToDistrict[path.id]) && (
-                        <div className="absolute inset-0 bg-pink-400 opacity-30 pointer-events-none rounded-sm"></div>
-                      )}
                     </div>
                   ) : path.id === "path3213" ? (
                     <div className="absolute w-80 h-[337px] top-[406px] left-[1679px]">
@@ -953,21 +836,12 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[411px] h-[370px] top-[365px] left-[2129px] cursor-pointer"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
-                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} transition-all duration-200 ${
-                          shouldHighlightDistrict(pathToDistrict[path.id]) 
-                            ? 'brightness-110 drop-shadow-lg filter' 
-                            : 'hover:brightness-105'
-                        }`}
+                        className={path.className}
                         alt={path.alt}
                         src={path.src}
                       />
-                      {shouldHighlightDistrict(pathToDistrict[path.id]) && (
-                        <div className="absolute inset-0 bg-orange-400 opacity-30 pointer-events-none rounded-sm"></div>
-                      )}
                     </div>
                   ) : path.id === "path3229" ? (
                     <div className="absolute w-[355px] h-[743px] top-[516px] left-[2746px]">
@@ -1334,102 +1208,7 @@ export const Maharashtra = ({
                 </div>
               </div>
 
-              {/* Interactive Region Overlays */}
-              {/* Pune Region */}
-              <div 
-                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
-                style={{ 
-                  top: "1200px", 
-                  left: "300px", 
-                  width: "700px", 
-                  height: "600px", 
-                  backgroundColor: selectedRegion === "Pune" ? getRegionColor("Pune") : "transparent",
-                  border: selectedRegion === "Pune" ? "2px solid #10b981" : "none",
-                  borderRadius: "8px"
-                }}
-                onClick={() => handleDistrictClick("Pune")}
-                title="Pune Region"
-              />
 
-              {/* Nashik Region */}
-              <div 
-                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
-                style={{ 
-                  top: "500px", 
-                  left: "200px", 
-                  width: "600px", 
-                  height: "500px", 
-                  backgroundColor: selectedRegion === "Nashik" ? getRegionColor("Nashik") : "transparent",
-                  border: selectedRegion === "Nashik" ? "2px solid #10b981" : "none",
-                  borderRadius: "8px"
-                }}
-                onClick={() => handleDistrictClick("Nashik")}
-                title="Nashik Region"
-              />
-
-              {/* Amravati Region */}
-              <div 
-                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
-                style={{ 
-                  top: "500px", 
-                  left: "1700px", 
-                  width: "700px", 
-                  height: "700px", 
-                  backgroundColor: selectedRegion === "Amravati" ? getRegionColor("Amravati") : "transparent",
-                  border: selectedRegion === "Amravati" ? "2px solid #10b981" : "none",
-                  borderRadius: "8px"
-                }}
-                onClick={() => handleDistrictClick("Amravati")}
-                title="Amravati Region"
-              />
-
-              {/* Chhatrapati Sambhajinagar Region */}
-              <div 
-                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
-                style={{ 
-                  top: "800px", 
-                  left: "1000px", 
-                  width: "600px", 
-                  height: "500px", 
-                  backgroundColor: selectedRegion === "Chhatrapati Sambhajinagar" ? getRegionColor("Chhatrapati Sambhajinagar") : "transparent",
-                  border: selectedRegion === "Chhatrapati Sambhajinagar" ? "2px solid #10b981" : "none",
-                  borderRadius: "8px"
-                }}
-                onClick={() => handleDistrictClick("Chhatrapati Sambhajinagar")}
-                title="Chhatrapati Sambhajinagar Region"
-              />
-
-              {/* Nagpur Region */}
-              <div 
-                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
-                style={{ 
-                  top: "200px", 
-                  left: "2200px", 
-                  width: "800px", 
-                  height: "700px", 
-                  backgroundColor: selectedRegion === "Nagpur" ? getRegionColor("Nagpur") : "transparent",
-                  border: selectedRegion === "Nagpur" ? "2px solid #10b981" : "none",
-                  borderRadius: "8px"
-                }}
-                onClick={() => handleDistrictClick("Nagpur")}
-                title="Nagpur Region"
-              />
-
-              {/* Konkan Region */}
-              <div 
-                className="absolute cursor-pointer hover:bg-blue-200/20 transition-colors"
-                style={{ 
-                  top: "1000px", 
-                  left: "50px", 
-                  width: "500px", 
-                  height: "1000px", 
-                  backgroundColor: selectedRegion === "Konkan" ? getRegionColor("Konkan") : "transparent",
-                  border: selectedRegion === "Konkan" ? "2px solid #10b981" : "none",
-                  borderRadius: "8px"
-                }}
-                onClick={() => handleDistrictClick("Konkan")}
-                title="Konkan Region"
-              />
             </div>
           </div>
         </div>
