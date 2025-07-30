@@ -883,91 +883,75 @@ const SchemeLpcdDashboard = () => {
     },
   });
 
-  // Calculate detailed LPCD statistics using water scheme data for population
+  // Calculate detailed LPCD statistics - simplified to count unique schemes only
   const calculateDetailedLpcdStats = () => {
     const stats = {
       total: 0,
       above55: 0,
       below55: 0,
       noSupply: 0,
-      totalPopulation: 0,
-      above55Population: 0,
-      below55Population: 0,
-      noSupplyPopulation: 0,
       lpcdRanges: {
-        '55-60': { count: 0, population: 0 },
-        '60-65': { count: 0, population: 0 },
-        '65-70': { count: 0, population: 0 },
-        '70-75': { count: 0, population: 0 },
-        '75-80': { count: 0, population: 0 },
-        'above80': { count: 0, population: 0 },
-        '45-55': { count: 0, population: 0 },
-        '35-45': { count: 0, population: 0 },
-        '25-35': { count: 0, population: 0 },
-        '15-25': { count: 0, population: 0 },
-        '0-15': { count: 0, population: 0 }
+        '55-60': 0,
+        '60-65': 0,
+        '65-70': 0,
+        '70-75': 0,
+        '75-80': 0,
+        'above80': 0,
+        '45-55': 0,
+        '35-45': 0,
+        '25-35': 0,
+        '15-25': 0,
+        '0-15': 0
       }
     };
 
+    // Create a map to track unique schemes by scheme_id + block combination
+    const uniqueSchemes = new Map();
+    
     allSchemeLpcdData.forEach(scheme => {
-      stats.total++;
+      const uniqueKey = `${scheme.scheme_id}_${scheme.block}`;
       
-      // Calculate population for this scheme from water scheme data
-      const schemeVillages = waterSchemeData.filter(village => 
-        village.scheme_id === scheme.scheme_id && village.block === scheme.block
-      );
-      const schemePopulation = schemeVillages.reduce((sum, village) => sum + (village.population || 0), 0);
-      stats.totalPopulation += schemePopulation;
-      
-      const lpcdValue = getLatestLpcdValue(scheme);
-      
-      if (lpcdValue === null || lpcdValue === 0) {
-        stats.noSupply++;
-        stats.noSupplyPopulation += schemePopulation;
-      } else if (lpcdValue > 55) {
-        stats.above55++;
-        stats.above55Population += schemePopulation;
+      // Only count each unique scheme once
+      if (!uniqueSchemes.has(uniqueKey)) {
+        uniqueSchemes.set(uniqueKey, scheme);
+        stats.total++;
         
-        // Categorize into detailed ranges
-        if (lpcdValue >= 80) {
-          stats.lpcdRanges.above80.count++;
-          stats.lpcdRanges.above80.population += schemePopulation;
-        } else if (lpcdValue >= 75) {
-          stats.lpcdRanges['75-80'].count++;
-          stats.lpcdRanges['75-80'].population += schemePopulation;
-        } else if (lpcdValue >= 70) {
-          stats.lpcdRanges['70-75'].count++;
-          stats.lpcdRanges['70-75'].population += schemePopulation;
-        } else if (lpcdValue >= 65) {
-          stats.lpcdRanges['65-70'].count++;
-          stats.lpcdRanges['65-70'].population += schemePopulation;
-        } else if (lpcdValue >= 60) {
-          stats.lpcdRanges['60-65'].count++;
-          stats.lpcdRanges['60-65'].population += schemePopulation;
-        } else {
-          stats.lpcdRanges['55-60'].count++;
-          stats.lpcdRanges['55-60'].population += schemePopulation;
-        }
-      } else {
-        stats.below55++;
-        stats.below55Population += schemePopulation;
+        const lpcdValue = getLatestLpcdValue(scheme);
         
-        // Categorize into detailed ranges
-        if (lpcdValue >= 45) {
-          stats.lpcdRanges['45-55'].count++;
-          stats.lpcdRanges['45-55'].population += schemePopulation;
-        } else if (lpcdValue >= 35) {
-          stats.lpcdRanges['35-45'].count++;
-          stats.lpcdRanges['35-45'].population += schemePopulation;
-        } else if (lpcdValue >= 25) {
-          stats.lpcdRanges['25-35'].count++;
-          stats.lpcdRanges['25-35'].population += schemePopulation;
-        } else if (lpcdValue >= 15) {
-          stats.lpcdRanges['15-25'].count++;
-          stats.lpcdRanges['15-25'].population += schemePopulation;
+        if (lpcdValue === null || lpcdValue === 0) {
+          stats.noSupply++;
+        } else if (lpcdValue > 55) {
+          stats.above55++;
+          
+          // Categorize into detailed ranges
+          if (lpcdValue >= 80) {
+            stats.lpcdRanges.above80++;
+          } else if (lpcdValue >= 75) {
+            stats.lpcdRanges['75-80']++;
+          } else if (lpcdValue >= 70) {
+            stats.lpcdRanges['70-75']++;
+          } else if (lpcdValue >= 65) {
+            stats.lpcdRanges['65-70']++;
+          } else if (lpcdValue >= 60) {
+            stats.lpcdRanges['60-65']++;
+          } else {
+            stats.lpcdRanges['55-60']++;
+          }
         } else {
-          stats.lpcdRanges['0-15'].count++;
-          stats.lpcdRanges['0-15'].population += schemePopulation;
+          stats.below55++;
+          
+          // Categorize into detailed ranges
+          if (lpcdValue >= 45) {
+            stats.lpcdRanges['45-55']++;
+          } else if (lpcdValue >= 35) {
+            stats.lpcdRanges['35-45']++;
+          } else if (lpcdValue >= 25) {
+            stats.lpcdRanges['25-35']++;
+          } else if (lpcdValue >= 15) {
+            stats.lpcdRanges['15-25']++;
+          } else {
+            stats.lpcdRanges['0-15']++;
+          }
         }
       }
     });
@@ -1016,14 +1000,6 @@ const SchemeLpcdDashboard = () => {
               <div className="text-5xl font-bold text-blue-600 mt-3">
                 {detailedStats.total}
               </div>
-              <div className="mt-3">
-                <div className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium">
-                  Total Population: {detailedStats.totalPopulation.toLocaleString()}
-                </div>
-              </div>
-              <div className="text-sm text-blue-600 mt-2">
-                Population Receiving Water Supply: {(detailedStats.totalPopulation - detailedStats.noSupplyPopulation).toLocaleString()}
-              </div>
             </CardHeader>
           </Card>
         </div>
@@ -1038,11 +1014,6 @@ const SchemeLpcdDashboard = () => {
               </CardTitle>
               <div className="text-4xl font-bold text-green-600 mt-2">
                 {detailedStats.above55}
-              </div>
-              <div className="mt-2">
-                <div className="bg-green-500 text-white px-3 py-1 rounded text-sm">
-                  Population: {detailedStats.above55Population.toLocaleString()}
-                </div>
               </div>
               <Button 
                 variant="outline" 
@@ -1075,7 +1046,7 @@ const SchemeLpcdDashboard = () => {
                       {label}
                     </span>
                     <span className={`font-medium ${range === 'above80' ? 'text-orange-800' : 'text-green-800'}`}>
-                      {detailedStats.lpcdRanges[range as keyof typeof detailedStats.lpcdRanges].count}
+                      {detailedStats.lpcdRanges[range as keyof typeof detailedStats.lpcdRanges]}
                     </span>
                   </div>
                 ))}
@@ -1091,11 +1062,6 @@ const SchemeLpcdDashboard = () => {
               </CardTitle>
               <div className="text-4xl font-bold text-yellow-600 mt-2">
                 {detailedStats.below55}
-              </div>
-              <div className="mt-2">
-                <div className="bg-yellow-500 text-white px-3 py-1 rounded text-sm">
-                  Population: {detailedStats.below55Population.toLocaleString()}
-                </div>
               </div>
               <Button 
                 variant="outline" 
@@ -1113,7 +1079,7 @@ const SchemeLpcdDashboard = () => {
                      onClick={() => handleFilterChange("noSupply")}>
                   <span className="text-red-700">No Water Supply for Scheme</span>
                   <span className="font-medium text-red-800">
-                    {detailedStats.noSupply} (Pop: {((detailedStats.noSupplyPopulation / detailedStats.totalPopulation) * 100).toFixed(1)}%)
+                    {detailedStats.noSupply}
                   </span>
                 </div>
                 {[
@@ -1130,7 +1096,7 @@ const SchemeLpcdDashboard = () => {
                   >
                     <span className="text-yellow-700">{label}</span>
                     <span className="font-medium text-yellow-800">
-                      {detailedStats.lpcdRanges[range as keyof typeof detailedStats.lpcdRanges].count}
+                      {detailedStats.lpcdRanges[range as keyof typeof detailedStats.lpcdRanges]}
                     </span>
                   </div>
                 ))}
@@ -1147,11 +1113,6 @@ const SchemeLpcdDashboard = () => {
               <div className="text-4xl font-bold text-gray-600 mt-2">
                 {detailedStats.noSupply}
               </div>
-              <div className="mt-2">
-                <div className="bg-gray-500 text-white px-3 py-1 rounded text-sm">
-                  Population: {detailedStats.noSupplyPopulation.toLocaleString()}
-                </div>
-              </div>
               <Button 
                 variant="outline" 
                 size="sm" 
@@ -1167,7 +1128,7 @@ const SchemeLpcdDashboard = () => {
                 <div className="flex justify-between items-center p-2 rounded bg-gray-100">
                   <span>No Water Supply for Scheme</span>
                   <span className="font-medium text-gray-800">
-                    {detailedStats.noSupply} (Pop: {((detailedStats.noSupplyPopulation / detailedStats.totalPopulation) * 100).toFixed(1)}%)
+                    {detailedStats.noSupply}
                   </span>
                 </div>
               </div>
