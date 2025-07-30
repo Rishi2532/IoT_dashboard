@@ -12,6 +12,7 @@ export const Maharashtra = ({
   selectedRegion = "all",
   showLabels = true 
 }: MaharashtraProps): JSX.Element => {
+  const [highlightedDistrict, setHighlightedDistrict] = React.useState<string | null>(null);
 
   // Mapping districts to their administrative regions
   const districtToRegion: { [key: string]: string } = {
@@ -92,9 +93,25 @@ export const Maharashtra = ({
   };
 
   const handleDistrictClick = (districtName: string) => {
+    // Toggle highlighting - if same district clicked, remove highlight, otherwise set new highlight
+    setHighlightedDistrict(prev => prev === districtName ? null : districtName);
+    
     const region = districtToRegion[districtName];
     if (region && onRegionClick) {
       onRegionClick(region);
+    }
+  };
+
+  // Helper function to determine district styling
+  const getDistrictStyling = (districtName: string): string => {
+    if (!highlightedDistrict) {
+      return "transition-all duration-300"; // Smooth transitions when nothing is highlighted
+    }
+    
+    if (highlightedDistrict === districtName) {
+      return "brightness-110 contrast-110 saturate-110 drop-shadow-lg transition-all duration-300"; // Highlight selected district
+    } else {
+      return "blur-sm opacity-60 transition-all duration-300"; // Blur and fade non-selected districts
     }
   };
 
@@ -576,7 +593,7 @@ export const Maharashtra = ({
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
                     >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -587,7 +604,7 @@ export const Maharashtra = ({
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
                     >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -598,7 +615,7 @@ export const Maharashtra = ({
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
                     >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -688,7 +705,7 @@ export const Maharashtra = ({
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
                     >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -803,7 +820,7 @@ export const Maharashtra = ({
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
                     >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -838,39 +855,51 @@ export const Maharashtra = ({
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
                     >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
                     </div>
                   ) : path.id === "path3229" ? (
-                    <div className="absolute w-[355px] h-[743px] top-[516px] left-[2746px]">
+                    <div 
+                      className="absolute w-[355px] h-[743px] top-[516px] left-[2746px] cursor-pointer"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                    >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
                     </div>
                   ) : path.id === "path3233" ? (
-                    <div className="absolute w-[386px] h-[431px] top-[569px] left-[2393px]">
+                    <div 
+                      className="absolute w-[386px] h-[431px] top-[569px] left-[2393px] cursor-pointer"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                    >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
                     </div>
                   ) : path.id === "path3237" ? (
-                    <div className="absolute w-52 h-[321px] top-[270px] left-[2603px]">
+                    <div 
+                      className="absolute w-52 h-[321px] top-[270px] left-[2603px] cursor-pointer"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                    >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
                     </div>
                   ) : path.id === "path3241" ? (
-                    <div className="absolute w-[284px] h-[326px] top-[255px] left-[2723px]">
+                    <div 
+                      className="absolute w-[284px] h-[326px] top-[255px] left-[2723px] cursor-pointer"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                    >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getDistrictStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -901,9 +930,10 @@ export const Maharashtra = ({
                     </div>
                   ) : (
                     <img
-                      className={path.className}
+                      className={`${path.className} cursor-pointer ${getDistrictStyling(pathToDistrict[path.id])}`}
                       alt={path.alt}
                       src={path.src}
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
                     />
                   )}
                 </div>
