@@ -118,16 +118,18 @@ type LpcdRange =
   | "all"
   | "above55"
   | "below55"
-  | "45to55"
-  | "35to45"
-  | "25to35"
-  | "15to25"
-  | "0to15"
-  | "noSupply" // Filter for villages with 0 water supply
-  | "55to60"
-  | "60to65"
-  | "65to70"
-  | "above70"
+  | "45-55"
+  | "35-45"
+  | "25-35"
+  | "15-25"
+  | "0-15"
+  | "noSupply" // Filter for schemes with 0 water supply
+  | "55-60"
+  | "60-65"
+  | "65-70"
+  | "70-75"
+  | "75-80"
+  | "above80"
   | "mjpYes"
   | "mjpNo";
 
@@ -412,31 +414,31 @@ const SchemeLpcdDashboard = () => {
           return lpcdValue !== null && lpcdValue < 55;
         });
         break;
-      case "45to55":
+      case "45-55":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue >= 45 && lpcdValue < 55;
         });
         break;
-      case "35to45":
+      case "35-45":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue >= 35 && lpcdValue < 45;
         });
         break;
-      case "25to35":
+      case "25-35":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue >= 25 && lpcdValue < 35;
         });
         break;
-      case "15to25":
+      case "15-25":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue >= 15 && lpcdValue < 25;
         });
         break;
-      case "0to15":
+      case "0-15":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue >= 0 && lpcdValue < 15;
@@ -445,28 +447,40 @@ const SchemeLpcdDashboard = () => {
       case "noSupply":
         filtered = filtered.filter((scheme) => hasNoCurrentWaterSupply(scheme));
         break;
-      case "55to60":
+      case "55-60":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue >= 55 && lpcdValue < 60;
         });
         break;
-      case "60to65":
+      case "60-65":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue >= 60 && lpcdValue < 65;
         });
         break;
-      case "65to70":
+      case "65-70":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
           return lpcdValue !== null && lpcdValue >= 65 && lpcdValue < 70;
         });
         break;
-      case "above70":
+      case "70-75":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
-          return lpcdValue !== null && lpcdValue >= 70;
+          return lpcdValue !== null && lpcdValue >= 70 && lpcdValue < 75;
+        });
+        break;
+      case "75-80":
+        filtered = filtered.filter((scheme) => {
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue !== null && lpcdValue >= 75 && lpcdValue < 80;
+        });
+        break;
+      case "above80":
+        filtered = filtered.filter((scheme) => {
+          const lpcdValue = getLatestLpcdValue(scheme);
+          return lpcdValue !== null && lpcdValue >= 80;
         });
         break;
       case "mjpYes":
@@ -851,7 +865,25 @@ const SchemeLpcdDashboard = () => {
       });
   };
 
-  // Calculate detailed LPCD statistics for enhanced filter cards
+  // Fetch water scheme data to calculate population correctly
+  const { data: waterSchemeData = [], isLoading: isLoadingWaterData } = useQuery<any[]>({
+    queryKey: ["/api/water-scheme-data", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+      const queryString = params.toString();
+      const url = `/api/water-scheme-data${queryString ? `?${queryString}` : ""}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch water scheme data");
+      }
+      return await response.json();
+    },
+  });
+
+  // Calculate detailed LPCD statistics using water scheme data for population
   const calculateDetailedLpcdStats = () => {
     const stats = {
       total: 0,
@@ -863,50 +895,80 @@ const SchemeLpcdDashboard = () => {
       below55Population: 0,
       noSupplyPopulation: 0,
       lpcdRanges: {
-        '55-60': 0,
-        '60-65': 0,
-        '65-70': 0,
-        '70-75': 0,
-        '75-80': 0,
-        'above80': 0,
-        '45-55': 0,
-        '35-45': 0,
-        '25-35': 0,
-        '15-25': 0,
-        '0-15': 0
+        '55-60': { count: 0, population: 0 },
+        '60-65': { count: 0, population: 0 },
+        '65-70': { count: 0, population: 0 },
+        '70-75': { count: 0, population: 0 },
+        '75-80': { count: 0, population: 0 },
+        'above80': { count: 0, population: 0 },
+        '45-55': { count: 0, population: 0 },
+        '35-45': { count: 0, population: 0 },
+        '25-35': { count: 0, population: 0 },
+        '15-25': { count: 0, population: 0 },
+        '0-15': { count: 0, population: 0 }
       }
     };
 
     allSchemeLpcdData.forEach(scheme => {
       stats.total++;
-      stats.totalPopulation += scheme.total_population || 0;
+      
+      // Calculate population for this scheme from water scheme data
+      const schemeVillages = waterSchemeData.filter(village => 
+        village.scheme_id === scheme.scheme_id && village.block === scheme.block
+      );
+      const schemePopulation = schemeVillages.reduce((sum, village) => sum + (village.population || 0), 0);
+      stats.totalPopulation += schemePopulation;
       
       const lpcdValue = getLatestLpcdValue(scheme);
       
       if (lpcdValue === null || lpcdValue === 0) {
         stats.noSupply++;
-        stats.noSupplyPopulation += scheme.total_population || 0;
+        stats.noSupplyPopulation += schemePopulation;
       } else if (lpcdValue > 55) {
         stats.above55++;
-        stats.above55Population += scheme.total_population || 0;
+        stats.above55Population += schemePopulation;
         
         // Categorize into detailed ranges
-        if (lpcdValue >= 80) stats.lpcdRanges.above80++;
-        else if (lpcdValue >= 75) stats.lpcdRanges['75-80']++;
-        else if (lpcdValue >= 70) stats.lpcdRanges['70-75']++;
-        else if (lpcdValue >= 65) stats.lpcdRanges['65-70']++;
-        else if (lpcdValue >= 60) stats.lpcdRanges['60-65']++;
-        else stats.lpcdRanges['55-60']++;
+        if (lpcdValue >= 80) {
+          stats.lpcdRanges.above80.count++;
+          stats.lpcdRanges.above80.population += schemePopulation;
+        } else if (lpcdValue >= 75) {
+          stats.lpcdRanges['75-80'].count++;
+          stats.lpcdRanges['75-80'].population += schemePopulation;
+        } else if (lpcdValue >= 70) {
+          stats.lpcdRanges['70-75'].count++;
+          stats.lpcdRanges['70-75'].population += schemePopulation;
+        } else if (lpcdValue >= 65) {
+          stats.lpcdRanges['65-70'].count++;
+          stats.lpcdRanges['65-70'].population += schemePopulation;
+        } else if (lpcdValue >= 60) {
+          stats.lpcdRanges['60-65'].count++;
+          stats.lpcdRanges['60-65'].population += schemePopulation;
+        } else {
+          stats.lpcdRanges['55-60'].count++;
+          stats.lpcdRanges['55-60'].population += schemePopulation;
+        }
       } else {
         stats.below55++;
-        stats.below55Population += scheme.total_population || 0;
+        stats.below55Population += schemePopulation;
         
         // Categorize into detailed ranges
-        if (lpcdValue >= 45) stats.lpcdRanges['45-55']++;
-        else if (lpcdValue >= 35) stats.lpcdRanges['35-45']++;
-        else if (lpcdValue >= 25) stats.lpcdRanges['25-35']++;
-        else if (lpcdValue >= 15) stats.lpcdRanges['15-25']++;
-        else stats.lpcdRanges['0-15']++;
+        if (lpcdValue >= 45) {
+          stats.lpcdRanges['45-55'].count++;
+          stats.lpcdRanges['45-55'].population += schemePopulation;
+        } else if (lpcdValue >= 35) {
+          stats.lpcdRanges['35-45'].count++;
+          stats.lpcdRanges['35-45'].population += schemePopulation;
+        } else if (lpcdValue >= 25) {
+          stats.lpcdRanges['25-35'].count++;
+          stats.lpcdRanges['25-35'].population += schemePopulation;
+        } else if (lpcdValue >= 15) {
+          stats.lpcdRanges['15-25'].count++;
+          stats.lpcdRanges['15-25'].population += schemePopulation;
+        } else {
+          stats.lpcdRanges['0-15'].count++;
+          stats.lpcdRanges['0-15'].population += schemePopulation;
+        }
       }
     });
 
@@ -915,126 +977,203 @@ const SchemeLpcdDashboard = () => {
 
   const detailedStats = calculateDetailedLpcdStats();
 
-  // Render the enhanced LPCD filter cards section
+  // Handle LPCD range filtering
+  const handleLpcdRangeFilter = (rangeType: string) => {
+    switch (rangeType) {
+      case '55-60':
+      case '60-65':
+      case '65-70':
+      case '70-75':
+      case '75-80':
+      case 'above80':
+        setCurrentFilter(rangeType as LpcdRange);
+        break;
+      case '45-55':
+      case '35-45':
+      case '25-35':
+      case '15-25':
+      case '0-15':
+        setCurrentFilter(rangeType as LpcdRange);
+        break;
+      default:
+        setCurrentFilter("all");
+    }
+    setPage(1);
+    trackFilterUsage("scheme_lpcd_range", rangeType);
+  };
+
+  // Render the enhanced LPCD filter cards section - exactly like village LPCD dashboard
   const renderSummaryCards = () => {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-        {/* Schemes with LPCD > 55L */}
-        <Card className="bg-green-50 border-green-200 shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardHeader className="pb-3 cursor-pointer" onClick={() => handleFilterChange("above55")}>
-            <CardTitle className="text-green-800 text-lg font-semibold">
-              Schemes with LPCD &gt; 55L
-            </CardTitle>
-            <div className="text-4xl font-bold text-green-700 mt-2">
-              {detailedStats.above55}
-            </div>
-            <div className="text-sm text-green-600 font-medium">
-              Population: {detailedStats.above55Population.toLocaleString()}
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-green-700 hover:text-green-800 mt-2 justify-start p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleFilterChange("above55");
-              }}
-            >
-              <Eye className="w-4 h-4 mr-1" />
-              View Schemes
-            </Button>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-2">
-              {Object.entries(detailedStats.lpcdRanges)
-                .filter(([range]) => ['55-60', '60-65', '65-70', '70-75', '75-80', 'above80'].includes(range))
-                .map(([range, count]) => (
-                  <div key={range} className="flex justify-between items-center text-sm">
-                    <span className="text-green-700">
-                      LPCD {range === 'above80' ? '> 80L' : `${range}L`}
-                    </span>
-                    <span className="font-medium text-green-800">{count}</span>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Schemes with LPCD < 55L */}
-        <Card className="bg-yellow-50 border-yellow-200 shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardHeader className="pb-3 cursor-pointer" onClick={() => handleFilterChange("below55")}>
-            <CardTitle className="text-yellow-800 text-lg font-semibold">
-              Schemes with LPCD &lt; 55L
-            </CardTitle>
-            <div className="text-4xl font-bold text-yellow-700 mt-2">
-              {detailedStats.below55}
-            </div>
-            <div className="text-sm text-yellow-600 font-medium">
-              Population: {detailedStats.below55Population.toLocaleString()}
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-yellow-700 hover:text-yellow-800 mt-2 justify-start p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleFilterChange("below55");
-              }}
-            >
-              <Eye className="w-4 h-4 mr-1" />
-              View Schemes
-            </Button>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="space-y-2">
-              {Object.entries(detailedStats.lpcdRanges)
-                .filter(([range]) => ['45-55', '35-45', '25-35', '15-25', '0-15'].includes(range))
-                .map(([range, count]) => (
-                  <div key={range} className="flex justify-between items-center text-sm">
-                    <span className="text-yellow-700">LPCD {range}L</span>
-                    <span className="font-medium text-yellow-800">{count}</span>
-                  </div>
-                ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* No Water Supply for Scheme */}
-        <Card className="bg-gray-50 border-gray-200 shadow-lg hover:shadow-xl transition-all duration-300">
-          <CardHeader className="pb-3 cursor-pointer" onClick={() => handleFilterChange("noSupply")}>
-            <CardTitle className="text-gray-800 text-lg font-semibold">
-              No Water Supply for Scheme
-            </CardTitle>
-            <div className="text-4xl font-bold text-gray-700 mt-2">
-              {detailedStats.noSupply}
-            </div>
-            <div className="text-sm text-gray-600 font-medium">
-              Population: {detailedStats.noSupplyPopulation.toLocaleString()}
-            </div>
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              className="text-gray-700 hover:text-gray-800 mt-2 justify-start p-0"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleFilterChange("noSupply");
-              }}
-            >
-              <Eye className="w-4 h-4 mr-1" />
-              View Schemes
-            </Button>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <div className="text-sm text-gray-600">
-              <div className="flex justify-between items-center">
-                <span>No Water Supply for Scheme</span>
-                <span className="font-medium text-gray-800">
-                  {detailedStats.noSupply} (Pop: {((detailedStats.noSupplyPopulation / detailedStats.totalPopulation) * 100).toFixed(1)}%)
-                </span>
+      <div className="space-y-6 mb-6">
+        {/* Total Schemes Covered Card - Top center card */}
+        <div className="flex justify-center">
+          <Card className="bg-blue-50 border-blue-200 shadow-lg w-80">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-blue-800 text-lg font-semibold">
+                Total Schemes Covered Under LPCD
+              </CardTitle>
+              <div className="text-5xl font-bold text-blue-600 mt-3">
+                {detailedStats.total}
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <div className="mt-3">
+                <div className="bg-blue-500 text-white px-4 py-2 rounded-full text-sm font-medium">
+                  Total Population: {detailedStats.totalPopulation.toLocaleString()}
+                </div>
+              </div>
+              <div className="text-sm text-blue-600 mt-2">
+                Population Receiving Water Supply: {(detailedStats.totalPopulation - detailedStats.noSupplyPopulation).toLocaleString()}
+              </div>
+            </CardHeader>
+          </Card>
+        </div>
+
+        {/* Three main filter cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Schemes with LPCD > 55L */}
+          <Card className="bg-green-50 border-green-200 shadow-lg">
+            <CardHeader className="text-center pb-3">
+              <CardTitle className="text-green-800 text-lg font-semibold">
+                Schemes with LPCD &gt; 55L
+              </CardTitle>
+              <div className="text-4xl font-bold text-green-600 mt-2">
+                {detailedStats.above55}
+              </div>
+              <div className="mt-2">
+                <div className="bg-green-500 text-white px-3 py-1 rounded text-sm">
+                  Population: {detailedStats.above55Population.toLocaleString()}
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-green-700 border-green-300 hover:bg-green-100 mt-3 w-full"
+                onClick={() => handleFilterChange("above55")}
+              >
+                <Eye className="w-4 h-4 mr-1" />
+                View Schemes
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-1">
+                {[
+                  { range: '55-60', label: 'LPCD 55-60L' },
+                  { range: '60-65', label: 'LPCD 60-65L' },
+                  { range: '65-70', label: 'LPCD 65-70L' },
+                  { range: '70-75', label: 'LPCD 70-75L' },
+                  { range: '75-80', label: 'LPCD 75-80L' },
+                  { range: 'above80', label: 'LPCD > 80L' }
+                ].map(({ range, label }) => (
+                  <div 
+                    key={range}
+                    className={`flex justify-between items-center text-sm p-2 rounded cursor-pointer transition-colors ${
+                      range === 'above80' ? 'bg-orange-100 hover:bg-orange-200' : 'hover:bg-green-100'
+                    }`}
+                    onClick={() => handleLpcdRangeFilter(range)}
+                  >
+                    <span className={range === 'above80' ? 'text-orange-700' : 'text-green-700'}>
+                      {label}
+                    </span>
+                    <span className={`font-medium ${range === 'above80' ? 'text-orange-800' : 'text-green-800'}`}>
+                      {detailedStats.lpcdRanges[range as keyof typeof detailedStats.lpcdRanges].count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Schemes with LPCD < 55L */}
+          <Card className="bg-yellow-50 border-yellow-200 shadow-lg">
+            <CardHeader className="text-center pb-3">
+              <CardTitle className="text-yellow-800 text-lg font-semibold">
+                Schemes with LPCD &lt; 55L
+              </CardTitle>
+              <div className="text-4xl font-bold text-yellow-600 mt-2">
+                {detailedStats.below55}
+              </div>
+              <div className="mt-2">
+                <div className="bg-yellow-500 text-white px-3 py-1 rounded text-sm">
+                  Population: {detailedStats.below55Population.toLocaleString()}
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-yellow-700 border-yellow-300 hover:bg-yellow-100 mt-3 w-full"
+                onClick={() => handleFilterChange("below55")}
+              >
+                <Eye className="w-4 h-4 mr-1" />
+                View Schemes
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="space-y-1">
+                <div className="flex justify-between items-center text-sm p-2 rounded hover:bg-red-100 cursor-pointer transition-colors"
+                     onClick={() => handleFilterChange("noSupply")}>
+                  <span className="text-red-700">No Water Supply for Scheme</span>
+                  <span className="font-medium text-red-800">
+                    {detailedStats.noSupply} (Pop: {((detailedStats.noSupplyPopulation / detailedStats.totalPopulation) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+                {[
+                  { range: '45-55', label: 'LPCD 45-55L' },
+                  { range: '35-45', label: 'LPCD 35-45L' },
+                  { range: '25-35', label: 'LPCD 25-35L' },
+                  { range: '15-25', label: 'LPCD 15-25L' },
+                  { range: '0-15', label: 'LPCD 0-15L' }
+                ].map(({ range, label }) => (
+                  <div 
+                    key={range}
+                    className="flex justify-between items-center text-sm p-2 rounded hover:bg-yellow-100 cursor-pointer transition-colors"
+                    onClick={() => handleLpcdRangeFilter(range)}
+                  >
+                    <span className="text-yellow-700">{label}</span>
+                    <span className="font-medium text-yellow-800">
+                      {detailedStats.lpcdRanges[range as keyof typeof detailedStats.lpcdRanges].count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* No Water Supply for Scheme */}
+          <Card className="bg-gray-50 border-gray-200 shadow-lg">
+            <CardHeader className="text-center pb-3">
+              <CardTitle className="text-gray-800 text-lg font-semibold">
+                No Water Supply for Scheme
+              </CardTitle>
+              <div className="text-4xl font-bold text-gray-600 mt-2">
+                {detailedStats.noSupply}
+              </div>
+              <div className="mt-2">
+                <div className="bg-gray-500 text-white px-3 py-1 rounded text-sm">
+                  Population: {detailedStats.noSupplyPopulation.toLocaleString()}
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="text-gray-700 border-gray-300 hover:bg-gray-100 mt-3 w-full"
+                onClick={() => handleFilterChange("noSupply")}
+              >
+                <Eye className="w-4 h-4 mr-1" />
+                View Schemes
+              </Button>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <div className="text-sm text-gray-600 text-center py-4">
+                <div className="flex justify-between items-center p-2 rounded bg-gray-100">
+                  <span>No Water Supply for Scheme</span>
+                  <span className="font-medium text-gray-800">
+                    {detailedStats.noSupply} (Pop: {((detailedStats.noSupplyPopulation / detailedStats.totalPopulation) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   };
