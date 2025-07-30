@@ -499,7 +499,18 @@ const SchemeLpcdDashboard = () => {
         break;
     }
 
-    return filtered;
+    // Remove duplicate scheme names from filtered results
+    const uniqueFilteredSchemes = [];
+    const seenSchemeNames = new Set();
+    
+    filtered.forEach(scheme => {
+      if (!seenSchemeNames.has(scheme.scheme_name)) {
+        seenSchemeNames.add(scheme.scheme_name);
+        uniqueFilteredSchemes.push(scheme);
+      }
+    });
+
+    return uniqueFilteredSchemes;
   };
 
   // Get data with global filters applied for cards
@@ -559,7 +570,18 @@ const SchemeLpcdDashboard = () => {
       });
     }
     
-    return filtered;
+    // Remove duplicate scheme names from globally filtered results
+    const uniqueGloballyFilteredSchemes = [];
+    const seenGlobalSchemeNames = new Set();
+    
+    filtered.forEach(scheme => {
+      if (!seenGlobalSchemeNames.has(scheme.scheme_name)) {
+        seenGlobalSchemeNames.add(scheme.scheme_name);
+        uniqueGloballyFilteredSchemes.push(scheme);
+      }
+    });
+    
+    return uniqueGloballyFilteredSchemes;
   };
 
   // Calculate filter counts based on globally filtered data with unique scheme counting
@@ -905,13 +927,13 @@ const SchemeLpcdDashboard = () => {
       }
     };
 
-    // Create a map to track unique schemes by scheme_id + block combination
+    // Create a map to track unique schemes by scheme name only
     const uniqueSchemes = new Map();
     
     allSchemeLpcdData.forEach(scheme => {
-      const uniqueKey = `${scheme.scheme_id}_${scheme.block}`;
+      const uniqueKey = scheme.scheme_name;
       
-      // Only count each unique scheme once
+      // Only count each unique scheme name once
       if (!uniqueSchemes.has(uniqueKey)) {
         uniqueSchemes.set(uniqueKey, scheme);
         stats.total++;
