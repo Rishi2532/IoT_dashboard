@@ -92,6 +92,65 @@
     color: var(--text-primary) !important;
     font-weight: 500 !important;
   }
+
+  /* Trading table style for village data */
+  .village-table {
+    font-family: 'Inter', sans-serif;
+  }
+  
+  .village-table thead {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  }
+  
+  .village-table thead th {
+    font-weight: 600;
+    font-size: 0.875rem;
+    text-transform: uppercase;
+    letter-spacing: 0.025em;
+    padding: 12px 16px;
+    border: none;
+  }
+  
+  .village-table tbody tr {
+    border-bottom: 1px solid #e5e7eb;
+    transition: all 0.15s ease-in-out;
+  }
+  
+  .village-table tbody tr:hover {
+    background-color: #f8fafc;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+  
+  .village-table tbody td {
+    padding: 12px 16px;
+    font-size: 0.875rem;
+    vertical-align: middle;
+  }
+  
+  .village-table .village-name {
+    font-weight: 500;
+    color: #1f2937;
+  }
+  
+  .village-table .metric-value {
+    font-weight: 500;
+    font-family: 'Roboto Mono', monospace;
+  }
+  
+  .village-table .status-good {
+    color: #059669;
+    font-weight: 600;
+  }
+  
+  .village-table .status-warning {
+    color: #d97706;
+    font-weight: 600;
+  }
+  
+  .village-table .status-critical {
+    color: #dc2626;
+    font-weight: 600;
+  }
 }
 
 /* Base styles for improved UI */
