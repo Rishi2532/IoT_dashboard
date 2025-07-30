@@ -12,6 +12,7 @@ export const Maharashtra = ({
   selectedRegion = "all",
   showLabels = true 
 }: MaharashtraProps): JSX.Element => {
+  const [hoveredRegion, setHoveredRegion] = React.useState<string | null>(null);
 
   // Mapping districts to their administrative regions
   const districtToRegion: { [key: string]: string } = {
@@ -95,6 +96,33 @@ export const Maharashtra = ({
     const region = districtToRegion[districtName];
     if (region && onRegionClick) {
       onRegionClick(region);
+    }
+  };
+
+  const handleDistrictHover = (districtName: string | null) => {
+    if (districtName) {
+      const region = districtToRegion[districtName];
+      setHoveredRegion(region);
+    } else {
+      setHoveredRegion(null);
+    }
+  };
+
+  // Helper function to determine district styling based on region
+  const getRegionStyling = (districtName: string): string => {
+    const region = districtToRegion[districtName];
+    const baseClasses = "district-image transition-all duration-300";
+    
+    if (!hoveredRegion) {
+      return baseClasses;
+    }
+    
+    if (hoveredRegion === region) {
+      // Highlight all districts in the same region
+      return `${baseClasses} brightness-110 contrast-110 saturate-110 drop-shadow-lg`;
+    } else {
+      // Blur and fade districts from other regions
+      return `${baseClasses} blur-sm opacity-60`;
     }
   };
 
@@ -574,9 +602,11 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[614px] h-[503px] top-[1020px] left-[540px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} district-image`}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -585,9 +615,11 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[626px] h-[486px] top-[1311px] left-[970px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} district-image`}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -596,9 +628,11 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[458px] h-[377px] top-[1427px] left-[615px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} district-image`}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -686,9 +720,11 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[577px] h-[420px] top-[537px] left-[522px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} district-image`}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -801,9 +837,11 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[611px] h-[421px] top-[599px] left-[1893px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} district-image`}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -836,9 +874,11 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[411px] h-[370px] top-[365px] left-[2129px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} district-image`}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -847,9 +887,11 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[355px] h-[743px] top-[516px] left-[2746px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} district-image`}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -858,9 +900,11 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[386px] h-[431px] top-[569px] left-[2393px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} district-image`}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -869,9 +913,11 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-52 h-[321px] top-[270px] left-[2603px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} district-image`}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -880,9 +926,11 @@ export const Maharashtra = ({
                     <div 
                       className="absolute w-[284px] h-[326px] top-[255px] left-[2723px]"
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     >
                       <img
-                        className={`${path.className} district-image`}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
                       />
@@ -913,10 +961,12 @@ export const Maharashtra = ({
                     </div>
                   ) : (
                     <img
-                      className={`${path.className} district-image`}
+                      className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                       alt={path.alt}
                       src={path.src}
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
                     />
                   )}
                 </div>
