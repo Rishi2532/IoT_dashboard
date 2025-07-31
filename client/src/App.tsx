@@ -206,6 +206,12 @@ function App() {
                 </ProtectedRoute>
               </Route>
 
+              <Route path="/Maharashtra">
+                <ProtectedRoute>
+                  <Maharashtra />
+                </ProtectedRoute>
+              </Route>
+
               {/* Admin protected routes */}
               <Route path="/admin/dashboard">
                 <ProtectedRoute requireAdmin={true}>

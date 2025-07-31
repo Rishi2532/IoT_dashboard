@@ -14,45 +14,23 @@ export const Maharashtra = ({
 }: MaharashtraProps): JSX.Element => {
   const [hoveredRegion, setHoveredRegion] = React.useState<string | null>(null);
 
-  // Mapping districts to their administrative regions
-  const districtToRegion: { [key: string]: string } = {
-    "Wardha": "Nagpur",
-    "Hingoli": "Chhatrapati Sambhajinagar", 
-    "Nandurbar": "Nashik",
-    "Dhule": "Nashik",
-    "Jalgaon": "Nashik", 
-    "Jalna": "Chhatrapati Sambhajinagar",
-    "Ahilyanagar": "Chhatrapati Sambhajinagar",
-    "Pune": "Pune",
-    "Nashik": "Nashik",
-    "Satara": "Pune",
-    "Kolhapur": "Pune",
-    "Usmanabad": "Chhatrapati Sambhajinagar",
-    "Buldhana": "Amravati",
-    "Thane": "Konkan",
-    "Raigad": "Konkan",
-    "Ratnagiri": "Konkan",
-    "Sindhudurg": "Konkan",
-    "Sangli": "Pune",
-    "Solapur": "Pune",
-    "Beed": "Chhatrapati Sambhajinagar",
-    "Parbhani": "Chhatrapati Sambhajinagar",
-    "Nanded": "Chhatrapati Sambhajinagar",
-    "Latur": "Chhatrapati Sambhajinagar",
-    "Palaghar": "Konkan",
-    "Akola": "Amravati",
-    "Amaravati": "Amravati", 
-    "Washim": "Amravati",
-    "Yavatmal": "Amravati",
-    "Chandrapur": "Nagpur",
-    "Bhandara": "Nagpur",
-    "Gondia": "Nagpur",
-    "Gadchiroli": "Nagpur",
-    "Nagpur": "Nagpur",
-    "Mumbai Suburban": "Konkan",
-    "Mumbai City": "Konkan",
-    "Chhatrapati Sambhajinagar": "Chhatrapati Sambhajinagar"
+  // Region grouping for hover effects
+  const regionGroups = {
+    "Konkan": ["Mumbai City", "Mumbai Suburban", "Thane", "Palghar", "Raigad", "Ratnagiri", "Sindhudurg"],
+    "Pune": ["Pune", "Satara", "Sangli", "Kolhapur", "Solapur"],
+    "Nashik": ["Nashik", "Nandurbar", "Dhule", "Jalgaon", "Ahmednagar"],
+    "Chhatrapati Sambhajinagar": ["Chhatrapati Sambhajinagar", "Jalna", "Beed", "Parbhani", "Hingoli", "Latur", "Osmanabad", "Nanded"],
+    "Amravati": ["Akola", "Amravati", "Buldhana", "Washim", "Yavatmal"],
+    "Nagpur": ["Nagpur", "Wardha", "Chandrapur", "Gadchiroli", "Gondia", "Bhandara"]
   };
+
+  // Create reverse mapping: district -> region
+  const districtToRegion: { [key: string]: string } = {};
+  Object.entries(regionGroups).forEach(([region, districts]) => {
+    districts.forEach(district => {
+      districtToRegion[district] = region;
+    });
+  });
 
   // Map path IDs to district names (based on the SVG structure)
   const pathToDistrict: { [key: string]: string } = {
@@ -89,7 +67,19 @@ export const Maharashtra = ({
     "path3229": "Chandrapur",
     "path3233": "Gadchiroli",
     "path3237": "Gondia",
-    "path3241": "Bhandara"
+    "path3241": "Bhandara",
+    "path3245": "Thane",
+    "path3249": "Palghar"
+  };
+
+  // Region colors (normal and highlighted)
+  const regionColors = {
+    "Konkan": { normal: "#3B82F6", dark: "#1E40AF" }, // Blue
+    "Pune": { normal: "#10B981", dark: "#047857" }, // Green
+    "Nashik": { normal: "#F59E0B", dark: "#D97706" }, // Amber
+    "Chhatrapati Sambhajinagar": { normal: "#EF4444", dark: "#DC2626" }, // Red
+    "Amravati": { normal: "#8B5CF6", dark: "#7C3AED" }, // Purple
+    "Nagpur": { normal: "#06B6D4", dark: "#0891B2" } // Cyan
   };
 
   const handleDistrictClick = (districtName: string) => {
@@ -111,19 +101,24 @@ export const Maharashtra = ({
   // Helper function to determine district styling based on region
   const getRegionStyling = (districtName: string): string => {
     const region = districtToRegion[districtName];
-    const baseClasses = "district-image transition-all duration-300";
+    const baseClasses = "district-image transition-all duration-300 cursor-pointer";
     
-    if (!hoveredRegion) {
-      return baseClasses;
+    if (!hoveredRegion || !region) {
+      return `${baseClasses} hover:brightness-110`;
     }
     
     if (hoveredRegion === region) {
-      // Highlight all districts in the same region
-      return `${baseClasses} brightness-110 contrast-110 saturate-110 drop-shadow-lg`;
+      // Highlight all districts in the same region with darker color
+      return `${baseClasses} brightness-90 contrast-120 saturate-130 drop-shadow-lg scale-105`;
     } else {
-      // Blur and fade districts from other regions
-      return `${baseClasses} blur-sm opacity-60`;
+      // Fade out districts from other regions
+      return `${baseClasses} opacity-40 brightness-75`;
     }
+  };
+
+  // Get region for a district
+  const getDistrictRegion = (districtName: string): string => {
+    return districtToRegion[districtName] || '';
   };
 
 
@@ -844,6 +839,8 @@ export const Maharashtra = ({
                         className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
+                        data-district={pathToDistrict[path.id]}
+                        data-region={getDistrictRegion(pathToDistrict[path.id])}
                       />
                     </div>
                   ) : path.id === "path3213" ? (
@@ -881,6 +878,8 @@ export const Maharashtra = ({
                         className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
+                        data-district={pathToDistrict[path.id]}
+                        data-region={getDistrictRegion(pathToDistrict[path.id])}
                       />
                     </div>
                   ) : path.id === "path3229" ? (
@@ -894,6 +893,8 @@ export const Maharashtra = ({
                         className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
+                        data-district={pathToDistrict[path.id]}
+                        data-region={getDistrictRegion(pathToDistrict[path.id])}
                       />
                     </div>
                   ) : path.id === "path3233" ? (
@@ -964,6 +965,8 @@ export const Maharashtra = ({
                       className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                       alt={path.alt}
                       src={path.src}
+                      data-district={pathToDistrict[path.id]}
+                      data-region={getDistrictRegion(pathToDistrict[path.id])}
                       onClick={() => handleDistrictClick(pathToDistrict[path.id])}
                       onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
                       onMouseLeave={() => handleDistrictHover(null)}
