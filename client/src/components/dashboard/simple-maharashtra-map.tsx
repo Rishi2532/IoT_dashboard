@@ -115,7 +115,7 @@ export default function SimpleMaharashtraMap({
               stroke={selectedRegion === "Nagpur" ? "#2563eb" : "#fff"}
               strokeWidth={selectedRegion === "Nagpur" ? 3 : 1}
               onClick={() => onRegionClick("Nagpur")}
-              className="cursor-pointer"
+              className="cursor-pointer hover:opacity-80 hover:brightness-110 transition-all duration-200"
             />
             
             {/* Region: Amravati */}
@@ -125,7 +125,7 @@ export default function SimpleMaharashtraMap({
               stroke={selectedRegion === "Amravati" ? "#2563eb" : "#fff"}
               strokeWidth={selectedRegion === "Amravati" ? 3 : 1}
               onClick={() => onRegionClick("Amravati")}
-              className="cursor-pointer hover:opacity-90"
+              className="cursor-pointer hover:opacity-80 hover:brightness-110 transition-all duration-200"
             />
             
             {/* Region: Chhatrapati Sambhajinagar */}
@@ -135,7 +135,7 @@ export default function SimpleMaharashtraMap({
               stroke={selectedRegion === "Chhatrapati Sambhajinagar" ? "#2563eb" : "#fff"} 
               strokeWidth={selectedRegion === "Chhatrapati Sambhajinagar" ? 3 : 1}
               onClick={() => onRegionClick("Chhatrapati Sambhajinagar")}
-              className="cursor-pointer hover:opacity-90"
+              className="cursor-pointer hover:opacity-80 hover:brightness-110 transition-all duration-200"
             />
             
             {/* Region: Nashik */}
@@ -145,7 +145,7 @@ export default function SimpleMaharashtraMap({
               stroke={selectedRegion === "Nashik" ? "#2563eb" : "#fff"}
               strokeWidth={selectedRegion === "Nashik" ? 3 : 1}
               onClick={() => onRegionClick("Nashik")}
-              className="cursor-pointer hover:opacity-90"
+              className="cursor-pointer hover:opacity-80 hover:brightness-110 transition-all duration-200"
             />
             
             {/* Region: Pune */}
@@ -155,7 +155,7 @@ export default function SimpleMaharashtraMap({
               stroke={selectedRegion === "Pune" ? "#2563eb" : "#fff"}
               strokeWidth={selectedRegion === "Pune" ? 3 : 1}
               onClick={() => onRegionClick("Pune")}
-              className="cursor-pointer hover:opacity-90"
+              className="cursor-pointer hover:opacity-80 hover:brightness-110 transition-all duration-200"
             />
             
             {/* Region: Konkan (Updated coordinates) */}
@@ -165,7 +165,7 @@ export default function SimpleMaharashtraMap({
               stroke={selectedRegion === "Konkan" ? "#2563eb" : "#fff"}
               strokeWidth={selectedRegion === "Konkan" ? 3 : 1}
               onClick={() => onRegionClick("Konkan")}
-              className="cursor-pointer hover:opacity-90"
+              className="cursor-pointer hover:opacity-80 hover:brightness-110 transition-all duration-200"
             />
             
             {/* Region Labels */}
@@ -176,38 +176,6 @@ export default function SimpleMaharashtraMap({
             <text x="190" y="310" textAnchor="middle" className="text-xs font-semibold">Pune</text>
             <text x="115" y="280" textAnchor="middle" className="text-xs font-semibold">Konkan</text>
           </svg>
-        </div>
-        
-        {/* Map Legend */}
-        <div className="p-2 bg-white border-t border-gray-200">
-          <div className="font-semibold text-xs mb-1">Maharashtra Regions</div>
-          <div className="text-[10px] mb-2 text-gray-500">
-            {metric === 'esr' ? 'ESR Integration' : 
-            metric === 'villages' ? 'Village Completion' : 
-            metric === 'flow_meter' ? 'Flow Meter Installation' : 
-            'Scheme Completion'}
-          </div>
-          <div className="grid grid-cols-2 gap-x-2 gap-y-1">
-            {['Nashik', 'Amravati', 'Nagpur', 'Chhatrapati Sambhajinagar', 'Pune', 'Konkan'].map(region => (
-              <div 
-                key={region} 
-                className="flex items-center gap-1 cursor-pointer" 
-                onClick={() => onRegionClick(region)}
-              >
-                <div 
-                  className="w-3 h-3 rounded"
-                  style={{ 
-                    backgroundColor: getColor(region),
-                    border: region === selectedRegion ? '1.5px solid #2563eb' : '0.5px solid rgba(0,0,0,0.2)'
-                  }}
-                ></div>
-                <span className={`text-[10px] ${region === selectedRegion ? "font-semibold" : ""}`}>
-                  {region === 'Chhatrapati Sambhajinagar' ? 'C.S. Nagar' : region}
-                </span>
-                <span className="ml-auto font-mono text-[10px]">{getMetricValue(region)}</span>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
       
