@@ -16,23 +16,20 @@ export default function SchemeDetailsPage() {
 
   // Fetch scheme information - use aggregate endpoint for multi-block schemes
   const { data: scheme, isLoading: isLoadingScheme } = useQuery({
-    queryKey: ["/api/schemes/aggregate", schemeId],
+    queryKey: ["/api/schemes", schemeId],
     queryFn: async () => {
-      // First try to get individual scheme data
-      let response = await fetch(`/api/schemes?schemeId=${schemeId}`);
+      // First try to get individual scheme data using the correct endpoint
+      let response = await fetch(`/api/schemes/${schemeId}`);
       if (response.ok) {
-        const schemes = await response.json();
-        if (schemes && schemes.length > 0) {
-          const singleScheme = schemes[0];
-          // If this is a multi-block scheme, get aggregated data
-          if (singleScheme.scheme_name) {
-            const aggregateResponse = await fetch(`/api/schemes/aggregate/${encodeURIComponent(singleScheme.scheme_name)}`);
-            if (aggregateResponse.ok) {
-              return aggregateResponse.json();
-            }
+        const singleScheme = await response.json();
+        // If this is a multi-block scheme, get aggregated data
+        if (singleScheme.scheme_name) {
+          const aggregateResponse = await fetch(`/api/schemes/aggregate/${encodeURIComponent(singleScheme.scheme_name)}`);
+          if (aggregateResponse.ok) {
+            return aggregateResponse.json();
           }
-          return singleScheme;
         }
+        return singleScheme;
       }
       throw new Error("Failed to fetch scheme data");
     },
