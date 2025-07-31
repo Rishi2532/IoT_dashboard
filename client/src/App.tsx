@@ -28,6 +28,7 @@ import { PressureDashboard, PressurePage } from "./pages/pressure";
 import CommunicationStatusPage from "./pages/CommunicationStatusPage";
 import ImportCommunicationStatus from "./pages/admin/ImportCommunicationStatus";
 import { Maharashtra } from "./pages/Maharashtra";
+import InteractiveMapDemo from "./pages/InteractiveMapDemo";
 
 import ProtectedRoute from "./components/auth/protected-route";
 import { AuthProvider } from "./hooks/use-auth";
@@ -209,6 +210,12 @@ function App() {
               <Route path="/Maharashtra">
                 <ProtectedRoute>
                   <Maharashtra />
+                </ProtectedRoute>
+              </Route>
+
+              <Route path="/interactive-map">
+                <ProtectedRoute>
+                  <InteractiveMapDemo />
                 </ProtectedRoute>
               </Route>
 

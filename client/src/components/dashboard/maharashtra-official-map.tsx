@@ -41,8 +41,71 @@ export default function MaharashtraOfficialMap({
   isLoading = false,
 }: MaharashtraOfficialMapProps) {
   const [hoveredRegion, setHoveredRegion] = useState<string | null>(null);
+  const [hoveredDistrict, setHoveredDistrict] = useState<string | null>(null);
   const [svgContent, setSvgContent] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // District to region mapping
+  const districtToRegion: { [key: string]: string } = {
+    // Konkan
+    "Mumbai City": "Konkan",
+    "Mumbai Suburban": "Konkan", 
+    "Thane": "Konkan",
+    "Palghar": "Konkan",
+    "Raigad": "Konkan",
+    "Ratnagiri": "Konkan",
+    "Sindhudurg": "Konkan",
+    
+    // Pune
+    "Pune": "Pune",
+    "Satara": "Pune",
+    "Sangli": "Pune",
+    "Kolhapur": "Pune",
+    "Solapur": "Pune",
+    
+    // Nashik
+    "Nashik": "Nashik",
+    "Nandurbar": "Nashik",
+    "Dhule": "Nashik", 
+    "Jalgaon": "Nashik",
+    "Ahmednagar": "Nashik",
+    
+    // Chhatrapati Sambhajinagar
+    "Chhatrapati Sambhajinagar": "Chhatrapati Sambhajinagar",
+    "Jalna": "Chhatrapati Sambhajinagar",
+    "Beed": "Chhatrapati Sambhajinagar",
+    "Parbhani": "Chhatrapati Sambhajinagar",
+    "Hingoli": "Chhatrapati Sambhajinagar",
+    "Latur": "Chhatrapati Sambhajinagar",
+    "Osmanabad": "Chhatrapati Sambhajinagar",
+    "Dharashiv": "Chhatrapati Sambhajinagar",
+    "Nanded": "Chhatrapati Sambhajinagar",
+    
+    // Amravati
+    "Akola": "Amravati",
+    "Amravati": "Amravati",
+    "Buldhana": "Amravati",
+    "Washim": "Amravati",
+    "Yavatmal": "Amravati",
+    
+    // Nagpur
+    "Nagpur": "Nagpur",
+    "Wardha": "Nagpur",
+    "Chandrapur": "Nagpur",
+    "Gadchiroli": "Nagpur",
+    "Gondia": "Nagpur",
+    "Bhandara": "Nagpur"
+  };
+
+  const handleDistrictHover = (districtName: string | null) => {
+    setHoveredDistrict(districtName);
+    if (districtName) {
+      const region = districtToRegion[districtName];
+      setHoveredRegion(region);
+    } else {
+      setHoveredRegion(null);
+    }
+  };
 
   // Load the SVG content
   useEffect(() => {
@@ -63,16 +126,26 @@ export default function MaharashtraOfficialMap({
     fetchSvg();
   }, []);
 
-  // Get color based on metric value if available
-  const getRegionColor = (regionName: string) => {
+  // Get color based on metric value and district highlighting
+  const getDistrictColor = (districtName: string, regionName: string) => {
     const dbRegionName = SVG_TO_DB_REGION_MAP[regionName] || regionName;
     
-    if (selectedRegion === dbRegionName || hoveredRegion === dbRegionName) {
-      return '#3b82f6'; // blue-500 for selected or hovered
+    // Check if this district should be highlighted (part of hovered district's region)
+    const isHighlighted = hoveredDistrict && districtToRegion[hoveredDistrict] === dbRegionName;
+    
+    if (selectedRegion === dbRegionName || isHighlighted) {
+      // Get base color then darken it for highlighting
+      const baseColor = getBaseRegionColor(dbRegionName);
+      return darkenColor(baseColor, isHighlighted ? 0.3 : 0.1);
     }
 
+    return getBaseRegionColor(dbRegionName);
+  };
+
+  // Get base color for region based on metric
+  const getBaseRegionColor = (regionName: string) => {
     // Find the region in the regions data
-    const regionData = regions.find(r => r.region_name === dbRegionName);
+    const regionData = regions.find(r => r.region_name === regionName);
     if (!regionData) {
       return '#E5E7EB'; // gray-200 if region not found
     }
@@ -115,6 +188,18 @@ export default function MaharashtraOfficialMap({
     }
   };
 
+  // Utility function to darken a hex color
+  const darkenColor = (hex: string, amount: number) => {
+    const num = parseInt(hex.replace('#', ''), 16);
+    const amt = Math.round(2.55 * amount * 100);
+    const R = (num >> 16) - amt;
+    const G = (num >> 8 & 0x00FF) - amt;
+    const B = (num & 0x0000FF) - amt;
+    return '#' + (0x1000000 + (R < 255 ? R < 1 ? 0 : R : 255) * 0x10000 +
+      (G < 255 ? G < 1 ? 0 : G : 255) * 0x100 +
+      (B < 255 ? B < 1 ? 0 : B : 255)).toString(16).slice(1);
+  };
+
   // Create detailed Maharashtra district map matching the reference image
   const createDetailedMaharashtraMap = () => {
     return (
@@ -137,27 +222,57 @@ export default function MaharashtraOfficialMap({
           >
             {/* Nandurbar */}
             <path d="M 175,62 L 220,62 L 220,112 L 175,112 Z" 
-                  fill={getRegionColor('Nashik')} stroke="#fff" strokeWidth="1"/>
+                  data-district="Nandurbar"
+                  data-region="Nashik"
+                  fill={getDistrictColor('Nandurbar', 'Nashik')} 
+                  stroke="#fff" strokeWidth="1"
+                  className="district-path cursor-pointer transition-all duration-200"
+                  onMouseEnter={() => handleDistrictHover('Nandurbar')}
+                  onMouseLeave={() => handleDistrictHover(null)}/>
             <text x="197" y="87" textAnchor="middle" fontSize="10" fill="#000">Nandurbar</text>
             
             {/* Dhule */}
             <path d="M 175,112 L 250,112 L 250,162 L 175,162 Z" 
-                  fill={getRegionColor('Nashik')} stroke="#fff" strokeWidth="1"/>
+                  data-district="Dhule"
+                  data-region="Nashik"
+                  fill={getDistrictColor('Dhule', 'Nashik')} 
+                  stroke="#fff" strokeWidth="1"
+                  className="district-path cursor-pointer transition-all duration-200"
+                  onMouseEnter={() => handleDistrictHover('Dhule')}
+                  onMouseLeave={() => handleDistrictHover(null)}/>
             <text x="212" y="137" textAnchor="middle" fontSize="10" fill="#000">Dhule</text>
             
             {/* Jalgaon */}
             <path d="M 250,112 L 325,112 L 325,162 L 250,162 Z" 
-                  fill={getRegionColor('Nashik')} stroke="#fff" strokeWidth="1"/>
+                  data-district="Jalgaon"
+                  data-region="Nashik"
+                  fill={getDistrictColor('Jalgaon', 'Nashik')} 
+                  stroke="#fff" strokeWidth="1"
+                  className="district-path cursor-pointer transition-all duration-200"
+                  onMouseEnter={() => handleDistrictHover('Jalgaon')}
+                  onMouseLeave={() => handleDistrictHover(null)}/>
             <text x="287" y="137" textAnchor="middle" fontSize="10" fill="#000">Jalgaon</text>
             
             {/* Nashik */}
             <path d="M 175,162 L 250,162 L 250,212 L 175,212 Z" 
-                  fill={getRegionColor('Nashik')} stroke="#fff" strokeWidth="1"/>
+                  data-district="Nashik"
+                  data-region="Nashik"
+                  fill={getDistrictColor('Nashik', 'Nashik')} 
+                  stroke="#fff" strokeWidth="1"
+                  className="district-path cursor-pointer transition-all duration-200"
+                  onMouseEnter={() => handleDistrictHover('Nashik')}
+                  onMouseLeave={() => handleDistrictHover(null)}/>
             <text x="212" y="187" textAnchor="middle" fontSize="10" fill="#000">Nashik</text>
             
             {/* Ahmednagar */}
             <path d="M 250,212 L 325,212 L 325,262 L 250,262 Z" 
-                  fill={getRegionColor('Nashik')} stroke="#fff" strokeWidth="1"/>
+                  data-district="Ahmednagar"
+                  data-region="Nashik"
+                  fill={getDistrictColor('Ahmednagar', 'Nashik')} 
+                  stroke="#fff" strokeWidth="1"
+                  className="district-path cursor-pointer transition-all duration-200"
+                  onMouseEnter={() => handleDistrictHover('Ahmednagar')}
+                  onMouseLeave={() => handleDistrictHover(null)}/>
             <text x="287" y="237" textAnchor="middle" fontSize="10" fill="#000">Ahmednagar</text>
           </g>
 
@@ -171,27 +286,57 @@ export default function MaharashtraOfficialMap({
           >
             {/* Amravati */}
             <path d="M 400,112 L 475,112 L 475,162 L 400,162 Z" 
-                  fill={getRegionColor('Amravati')} stroke="#fff" strokeWidth="1"/>
+                  data-district="Amravati"
+                  data-region="Amravati"
+                  fill={getDistrictColor('Amravati', 'Amravati')} 
+                  stroke="#fff" strokeWidth="1"
+                  className="district-path cursor-pointer transition-all duration-200"
+                  onMouseEnter={() => handleDistrictHover('Amravati')}
+                  onMouseLeave={() => handleDistrictHover(null)}/>
             <text x="437" y="137" textAnchor="middle" fontSize="10" fill="#000">Amravati</text>
             
             {/* Akola */}
             <path d="M 325,112 L 400,112 L 400,162 L 325,162 Z" 
-                  fill={getRegionColor('Amravati')} stroke="#fff" strokeWidth="1"/>
+                  data-district="Akola"
+                  data-region="Amravati"
+                  fill={getDistrictColor('Akola', 'Amravati')} 
+                  stroke="#fff" strokeWidth="1"
+                  className="district-path cursor-pointer transition-all duration-200"
+                  onMouseEnter={() => handleDistrictHover('Akola')}
+                  onMouseLeave={() => handleDistrictHover(null)}/>
             <text x="362" y="137" textAnchor="middle" fontSize="10" fill="#000">Akola</text>
             
             {/* Buldhana */}
             <path d="M 325,162 L 400,162 L 400,212 L 325,212 Z" 
-                  fill={getRegionColor('Amravati')} stroke="#fff" strokeWidth="1"/>
+                  data-district="Buldhana"
+                  data-region="Amravati"
+                  fill={getDistrictColor('Buldhana', 'Amravati')} 
+                  stroke="#fff" strokeWidth="1"
+                  className="district-path cursor-pointer transition-all duration-200"
+                  onMouseEnter={() => handleDistrictHover('Buldhana')}
+                  onMouseLeave={() => handleDistrictHover(null)}/>
             <text x="362" y="187" textAnchor="middle" fontSize="10" fill="#000">Buldhana</text>
             
             {/* Washim */}
             <path d="M 400,162 L 475,162 L 475,212 L 400,212 Z" 
-                  fill={getRegionColor('Amravati')} stroke="#fff" strokeWidth="1"/>
+                  data-district="Washim"
+                  data-region="Amravati"
+                  fill={getDistrictColor('Washim', 'Amravati')} 
+                  stroke="#fff" strokeWidth="1"
+                  className="district-path cursor-pointer transition-all duration-200"
+                  onMouseEnter={() => handleDistrictHover('Washim')}
+                  onMouseLeave={() => handleDistrictHover(null)}/>
             <text x="437" y="187" textAnchor="middle" fontSize="10" fill="#000">Washim</text>
             
             {/* Yavatmal */}
             <path d="M 475,162 L 550,162 L 550,212 L 475,212 Z" 
-                  fill={getRegionColor('Amravati')} stroke="#fff" strokeWidth="1"/>
+                  data-district="Yavatmal"
+                  data-region="Amravati"
+                  fill={getDistrictColor('Yavatmal', 'Amravati')} 
+                  stroke="#fff" strokeWidth="1"
+                  className="district-path cursor-pointer transition-all duration-200"
+                  onMouseEnter={() => handleDistrictHover('Yavatmal')}
+                  onMouseLeave={() => handleDistrictHover(null)}/>
             <text x="512" y="187" textAnchor="middle" fontSize="10" fill="#000">Yavatmal</text>
           </g>
 
