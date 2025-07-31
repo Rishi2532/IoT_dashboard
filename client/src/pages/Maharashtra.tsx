@@ -972,33 +972,7 @@ export const Maharashtra = ({
                 </div>
               ))}
 
-              {/* Division legend section */}
-              <div className="absolute w-[134px] h-[623px] top-[1554px] left-[2184px]">
-                {[0, 110, 220, 330, 440, 550].map((topPosition, index) => (
-                  <img
-                    key={`legend-${index}`}
-                    className="absolute w-[134px] h-[73px] top-[${topPosition}px] left-0"
-                    alt="Path"
-                    src="/figmaAssets/path3419.svg"
-                  />
-                ))}
-              </div>
 
-              {/* Division names */}
-              <div className="absolute w-[545px] h-[603px] top-[1549px] left-[2375px]">
-                {divisions.map((division, index) => (
-                  <div
-                    key={`division-${index}`}
-                    className={`absolute w-full h-[53px] top-[${index === 0 ? 0 : index === 1 ? 104 : index === 2 ? 220 : index === 3 ? 324 : index === 4 ? 440 : 550}px] left-${index === 3 || index === 4 ? "0.5" : "0"}`}
-                  >
-                    <div
-                      className={`absolute w-full top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]`}
-                    >
-                      {division.name}
-                    </div>
-                  </div>
-                ))}
-              </div>
 
               {/* Districts section */}
               <div className="absolute w-[3025px] h-[1964px] top-[154px] left-[37px]">

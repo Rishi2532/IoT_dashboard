@@ -93,50 +93,71 @@ export default function MaharashtraDistrictMap({
               className="w-full h-full"
               style={{ backgroundColor: '#f0f9ff' }}
             >
+              <style>
+                {`
+                  .district-path {
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                  }
+                  .district-path:hover {
+                    filter: brightness(1.2) saturate(1.1);
+                    stroke-width: 2.5 !important;
+                    opacity: 0.9;
+                  }
+                  .district-text {
+                    transition: all 0.3s ease;
+                    pointer-events: none;
+                  }
+                  .district-group:hover .district-text {
+                    font-weight: bold;
+                    filter: drop-shadow(0px 1px 2px rgba(0,0,0,0.3));
+                  }
+                `}
+              </style>
               {/* Mumbai City */}
-              <g onClick={() => handleDistrictClick("Mumbai City")}>
+              <g className="district-group" onClick={() => handleDistrictClick("Mumbai City")}>
                 <path
+                  className="district-path"
                   d="M108,373 L117,375 L119,383 L112,390 L104,387 L101,380 L108,373"
                   fill={getDistrictFillColor("Mumbai City")}
                   stroke={getDistrictStrokeColor("Mumbai City")}
                   strokeWidth="1.5"
                   onMouseEnter={() => setHoveredDistrict("Mumbai City")}
                   onMouseLeave={() => setHoveredDistrict(null)}
-                  style={{ cursor: 'pointer' }}
                 />
-                <text x="112" y="383" fontSize="10" textAnchor="middle" fill="#000">
+                <text className="district-text" x="112" y="383" fontSize="10" textAnchor="middle" fill="#000">
                   {getDistrictDisplayName("Mumbai City")}
                 </text>
               </g>
 
               {/* Mumbai Suburban */}
-              <g onClick={() => handleDistrictClick("Mumbai Suburban")}>
+              <g className="district-group" onClick={() => handleDistrictClick("Mumbai Suburban")}>
                 <path
+                  className="district-path"
                   d="M120,330 L125,345 L122,365 L117,375 L101,380 L95,370 L90,360 L95,340 L105,330 L120,330"
                   fill={getDistrictFillColor("Mumbai Suburban")}
                   stroke={getDistrictStrokeColor("Mumbai Suburban")}
                   strokeWidth="1.5"
                   onMouseEnter={() => setHoveredDistrict("Mumbai Suburban")}
                   onMouseLeave={() => setHoveredDistrict(null)}
-                  style={{ cursor: 'pointer' }}
                 />
-                <text x="108" y="355" fontSize="10" textAnchor="middle" fill="#000">
+                <text className="district-text" x="108" y="355" fontSize="10" textAnchor="middle" fill="#000">
                   {getDistrictDisplayName("Mumbai Suburban")}
                 </text>
               </g>
 
               {/* Thane */}
-              <g onClick={() => handleDistrictClick("Thane")}>
+              <g className="district-group" onClick={() => handleDistrictClick("Thane")}>
                 <path
+                  className="district-path"
                   d="M120,330 L135,300 L155,285 L175,280 L178,300 L173,320 L160,330 L145,335 L125,345 L120,330"
                   fill={getDistrictFillColor("Thane")}
                   stroke={getDistrictStrokeColor("Thane")}
                   strokeWidth="1.5"
                   onMouseEnter={() => setHoveredDistrict("Thane")}
                   onMouseLeave={() => setHoveredDistrict(null)}
-                  style={{ cursor: 'pointer' }}
                 />
-                <text x="150" y="315" fontSize="12" textAnchor="middle" fill="#000">
+                <text className="district-text" x="150" y="315" fontSize="12" textAnchor="middle" fill="#000">
                   {getDistrictDisplayName("Thane")}
                 </text>
               </g>
@@ -653,26 +674,7 @@ export default function MaharashtraDistrictMap({
                 </text>
               </g>
 
-              {/* Legend */}
-              <g transform="translate(680, 515)">
-                <rect x="0" y="0" width="15" height="15" fill="#f8b4b4" stroke="#ffffff" strokeWidth="0.5" />
-                <text x="20" y="12" fontSize="10" fill="#000">Amravati</text>
-                
-                <rect x="0" y="20" width="15" height="15" fill="#cbd5e8" stroke="#ffffff" strokeWidth="0.5" />
-                <text x="20" y="32" fontSize="10" fill="#000">C.S.Nagar</text>
-                
-                <rect x="0" y="40" width="15" height="15" fill="#c0c0c0" stroke="#ffffff" strokeWidth="0.5" />
-                <text x="20" y="52" fontSize="10" fill="#000">Konkan</text>
-                
-                <rect x="0" y="60" width="15" height="15" fill="#e8c19a" stroke="#ffffff" strokeWidth="0.5" />
-                <text x="20" y="72" fontSize="10" fill="#000">Nagpur</text>
-                
-                <rect x="0" y="80" width="15" height="15" fill="#f0e68c" stroke="#ffffff" strokeWidth="0.5" />
-                <text x="20" y="92" fontSize="10" fill="#000">Nashik</text>
-                
-                <rect x="0" y="100" width="15" height="15" fill="#a8e4a0" stroke="#ffffff" strokeWidth="0.5" />
-                <text x="20" y="112" fontSize="10" fill="#000">Pune</text>
-              </g>
+
             </svg>
           </div>
         )}
