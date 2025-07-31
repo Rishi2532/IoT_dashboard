@@ -366,165 +366,166 @@ export default function SchemeDetailsPage() {
               const blockEntries = Object.entries(villagesByBlock);
 
               return (
-                <div className="space-y-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {blockEntries.map(([blockName, blockVillages]: [string, any]) => (
-                    <div key={blockName} className="space-y-4">
-                      {/* Block Header */}
-                      <div className="flex items-center justify-between">
-                        <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                          <Building className="w-5 h-5 mr-2 text-blue-600" />
-                          Block: {blockName}
-                        </h3>
-                        <Badge variant="outline" className="text-sm font-medium">
-                          {blockVillages.length} village{blockVillages.length !== 1 ? 's' : ''}
-                        </Badge>
+                    <div key={blockName} className="bg-white border border-gray-200">
+                      {/* Compact Block Header */}
+                      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-md font-semibold text-gray-900 flex items-center">
+                            <Building className="w-4 h-4 mr-2 text-blue-600" />
+                            Block: {blockName}
+                          </h3>
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                            {blockVillages.length} village{blockVillages.length !== 1 ? 's' : ''}
+                          </Badge>
+                        </div>
                       </div>
 
-                      {/* Villages Table for this block - Trading Style */}
-                      <div className="bg-white shadow-sm overflow-hidden" style={{border: 'none', borderRadius: '0'}}>
-                        <div className="table-responsive">
-                          <table className="village-table" style={{width: '100%', border: 'none', borderCollapse: 'separate', borderSpacing: '0'}}>
-                            <thead style={{backgroundColor: '#3b2e7d'}}>
-                              <tr>
-                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>VILLAGE</th>
-                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>POPULATION</th>
-                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>WATER (L)</th>
-                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>LPCD</th>
-                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>ESRs</th>
-                                <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '16px', border: 'none', fontSize: '0.875rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>ACTION</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {blockVillages.map((village: any, index: number) => {
-                                const villageId = `${blockName}-${village.village_name}-${index}`;
-                                const isExpanded = expandedVillages.has(villageId);
-                                const villageESRs = esrData?.filter(
-                                  (esr: any) => esr.village_name === village.village_name
-                                ) || [];
-                                
-                                const waterValue = village.water_value_day7 || village.water_value || 0;
-                                const lpcdValue = village.lpcd_value_day7 ? parseFloat(village.lpcd_value_day7) : null;
-                                const lpcdStatus = getLPCDStatus(lpcdValue);
-                                const population = village.population || 0;
+                      <div className="p-4">
+                        {/* Compact Villages Table */}
+                        <div className="bg-white shadow-sm overflow-hidden" style={{border: 'none', borderRadius: '0'}}>
+                          <div className="table-responsive">
+                            <table className="village-table" style={{width: '100%', border: 'none', borderCollapse: 'separate', borderSpacing: '0'}}>
+                              <thead style={{backgroundColor: '#3b2e7d'}}>
+                                <tr>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>VILLAGE</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>POP</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>WATER</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>LPCD</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>ESR</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>ACTION</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {blockVillages.map((village: any, index: number) => {
+                                  const villageId = `${blockName}-${village.village_name}-${index}`;
+                                  const isExpanded = expandedVillages.has(villageId);
+                                  const villageESRs = esrData?.filter(
+                                    (esr: any) => esr.village_name === village.village_name
+                                  ) || [];
+                                  
+                                  const waterValue = village.water_value_day7 || village.water_value || 0;
+                                  const lpcdValue = village.lpcd_value_day7 ? parseFloat(village.lpcd_value_day7) : null;
+                                  const lpcdStatus = getLPCDStatus(lpcdValue);
+                                  const population = village.population || 0;
 
-                                return (
-                                  <>
-                                    <tr key={index} style={{backgroundColor: 'white', border: 'none'}}>
-                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem'}}>
-                                        <div className="flex items-center justify-center">
-                                          <MapPin className="w-4 h-4 mr-2 text-blue-500" />
-                                          <span className="village-name">{village.village_name}</span>
-                                        </div>
-                                      </td>
-                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
-                                        {population.toLocaleString()}
-                                      </td>
-                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
-                                        {waterValue ? Math.round(parseFloat(waterValue.toString())).toLocaleString() : '-'}
-                                      </td>
-                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem'}}>
-                                        <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                                          lpcdStatus === 'good' ? 'bg-green-100 text-green-800' :
-                                          lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800' :
-                                          'bg-red-100 text-red-800'
-                                        }`}>
-                                          {lpcdValue ? `${Math.round(lpcdValue)}L` : '-'}
-                                        </span>
-                                      </td>
-                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem', fontWeight: '500'}}>
-                                        {villageESRs.length}
-                                      </td>
-                                      <td style={{textAlign: 'center', padding: '16px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.875rem'}}>
-                                        <button
-                                          onClick={() => toggleVillageExpansion(villageId)}
-                                          className={`text-xs font-semibold px-3 py-1 rounded transition-colors ${
-                                            lpcdStatus === 'good' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
-                                            lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
-                                            'bg-red-100 text-red-800 hover:bg-red-200'
-                                          }`}
-                                        >
-                                          {lpcdStatus === 'good' ? 'Good' :
-                                           lpcdStatus === 'warning' ? 'Warning' :
-                                           'Critical'}
-                                        </button>
-                                      </td>
-                                    </tr>
-                                    
-                                    {/* Expanded ESR Details Row */}
-                                    {isExpanded && (
-                                      <tr style={{backgroundColor: '#f1f5f9', border: 'none'}}>
-                                        <td colSpan={6} style={{padding: '24px', border: 'none', borderBottom: 'none', backgroundColor: '#f1f5f9'}}>
-                                          <div className="bg-white p-4" style={{borderRadius: '0'}}>
-                                            <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
-                                              <Building className="w-4 h-4 mr-2" />
-                                              ESR Details for {village.village_name} ({villageESRs.length} ESRs)
-                                            </h4>
-
-                                            {isLoadingESR ? (
-                                              <div className="animate-pulse space-y-2">
-                                                <div className="h-3 bg-gray-200 rounded w-full"></div>
-                                                <div className="h-3 bg-gray-200 rounded w-2/3"></div>
-                                              </div>
-                                            ) : villageESRs.length > 0 ? (
-                                              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                {villageESRs.map((esr: any, esrIndex: number) => (
-                                                  <div
-                                                    key={esrIndex}
-                                                    className="bg-gray-50 p-4 border border-gray-200"
-                                                    style={{borderRadius: '0'}}
-                                                  >
-                                                    <div className="flex items-center justify-between mb-3">
-                                                      <span className="font-medium text-gray-900 text-sm">
-                                                        {esr.esr_name || `ESR ${esrIndex + 1}`}
-                                                      </span>
-                                                    </div>
-                                                    
-                                                    <div className="space-y-3">
-                                                      <div className="flex items-center justify-between">
-                                                        <span className="flex items-center text-xs text-gray-600">
-                                                          <Droplets className="w-3 h-3 mr-1 text-blue-500" />
-                                                          Chlorine
-                                                        </span>
-                                                        <Badge 
-                                                          className={`${getStatusColor(
-                                                            getChlorineStatus(esr.chlorine_value)
-                                                          )} text-xs px-2 py-1`}
-                                                        >
-                                                          {formatChlorineValue(esr.chlorine_value)}
-                                                        </Badge>
-                                                      </div>
-                                                      
-                                                      <div className="flex items-center justify-between">
-                                                        <span className="flex items-center text-xs text-gray-600">
-                                                          <Gauge className="w-3 h-3 mr-1 text-orange-500" />
-                                                          Pressure
-                                                        </span>
-                                                        <Badge 
-                                                          className={`${getStatusColor(
-                                                            getPressureStatus(esr.pressure_value)
-                                                          )} text-xs px-2 py-1`}
-                                                        >
-                                                          {formatPressureValue(esr.pressure_value)}
-                                                        </Badge>
-                                                      </div>
-                                                    </div>
-                                                  </div>
-                                                ))}
-                                              </div>
-                                            ) : (
-                                              <div className="bg-gray-50 p-4 border border-gray-200 text-center text-sm text-gray-500" style={{borderRadius: '0'}}>
-                                                No ESR data available for this village
-                                              </div>
-                                            )}
-                                          </div>
+                                  return (
+                                    <>
+                                      <tr key={index} style={{backgroundColor: 'white', border: 'none'}}>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem'}}>
+                                          <span className="village-name text-xs">{village.village_name}</span>
+                                        </td>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem', fontWeight: '500'}}>
+                                          {population > 1000 ? `${Math.round(population/1000)}k` : population.toLocaleString()}
+                                        </td>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem', fontWeight: '500'}}>
+                                          {waterValue ? `${Math.round(parseFloat(waterValue.toString())/1000)}k` : '-'}
+                                        </td>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem'}}>
+                                          <span className={`text-xs font-semibold px-1 py-0.5 rounded ${
+                                            lpcdStatus === 'good' ? 'bg-green-100 text-green-800' :
+                                            lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                                            'bg-red-100 text-red-800'
+                                          }`}>
+                                            {lpcdValue ? `${Math.round(lpcdValue)}L` : '-'}
+                                          </span>
+                                        </td>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem', fontWeight: '500'}}>
+                                          {villageESRs.length}
+                                        </td>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem'}}>
+                                          <button
+                                            onClick={() => toggleVillageExpansion(villageId)}
+                                            className={`text-xs font-semibold px-2 py-0.5 rounded transition-colors ${
+                                              lpcdStatus === 'good' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
+                                              lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
+                                              'bg-red-100 text-red-800 hover:bg-red-200'
+                                            }`}
+                                          >
+                                            {lpcdStatus === 'good' ? 'Good' :
+                                             lpcdStatus === 'warning' ? 'Warn' :
+                                             'Crit'}
+                                          </button>
                                         </td>
                                       </tr>
-                                    )}
-                                  </>
-                                );
-                              })}
-                            </tbody>
-                          </table>
+                                      
+                                      {/* Expanded ESR Details Row */}
+                                      {isExpanded && (
+                                        <tr style={{backgroundColor: '#f1f5f9', border: 'none'}}>
+                                          <td colSpan={6} style={{padding: '16px', border: 'none', borderBottom: 'none', backgroundColor: '#f1f5f9'}}>
+                                            <div className="bg-white p-3" style={{borderRadius: '0'}}>
+                                              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                                <Building className="w-4 h-4 mr-2" />
+                                                ESR Details for {village.village_name} ({villageESRs.length} ESRs)
+                                              </h4>
+
+                                              {isLoadingESR ? (
+                                                <div className="animate-pulse space-y-2">
+                                                  <div className="h-3 bg-gray-200 rounded w-full"></div>
+                                                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                                                </div>
+                                              ) : villageESRs.length > 0 ? (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                  {villageESRs.map((esr: any, esrIndex: number) => (
+                                                    <div
+                                                      key={esrIndex}
+                                                      className="bg-gray-50 p-3 border border-gray-200"
+                                                      style={{borderRadius: '0'}}
+                                                    >
+                                                      <div className="flex items-center justify-between mb-2">
+                                                        <span className="font-medium text-gray-900 text-sm">
+                                                          {esr.esr_name || `ESR ${esrIndex + 1}`}
+                                                        </span>
+                                                      </div>
+                                                      
+                                                      <div className="space-y-2">
+                                                        <div className="flex items-center justify-between">
+                                                          <span className="flex items-center text-xs text-gray-600">
+                                                            <Droplets className="w-3 h-3 mr-1 text-blue-500" />
+                                                            Chlorine
+                                                          </span>
+                                                          <Badge 
+                                                            className={`${getStatusColor(
+                                                              getChlorineStatus(esr.chlorine_value)
+                                                            )} text-xs px-2 py-1`}
+                                                          >
+                                                            {formatChlorineValue(esr.chlorine_value)}
+                                                          </Badge>
+                                                        </div>
+                                                        
+                                                        <div className="flex items-center justify-between">
+                                                          <span className="flex items-center text-xs text-gray-600">
+                                                            <Gauge className="w-3 h-3 mr-1 text-orange-500" />
+                                                            Pressure
+                                                          </span>
+                                                          <Badge 
+                                                            className={`${getStatusColor(
+                                                              getPressureStatus(esr.pressure_value)
+                                                            )} text-xs px-2 py-1`}
+                                                          >
+                                                            {formatPressureValue(esr.pressure_value)}
+                                                          </Badge>
+                                                        </div>
+                                                      </div>
+                                                    </div>
+                                                  ))}
+                                                </div>
+                                              ) : (
+                                                <div className="bg-gray-50 p-3 border border-gray-200 text-center text-sm text-gray-500" style={{borderRadius: '0'}}>
+                                                  No ESR data available for this village
+                                                </div>
+                                              )}
+                                            </div>
+                                          </td>
+                                        </tr>
+                                      )}
+                                    </>
+                                  );
+                                })}
+                              </tbody>
+                            </table>
+                          </div>
                         </div>
                       </div>
                     </div>
