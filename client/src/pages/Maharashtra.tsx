@@ -101,18 +101,18 @@ export const Maharashtra = ({
   // Helper function to determine district styling based on region
   const getRegionStyling = (districtName: string): string => {
     const region = districtToRegion[districtName];
-    const baseClasses = "district-image transition-all duration-300 cursor-pointer";
+    const baseClasses = "district-image cursor-pointer";
     
     if (!hoveredRegion || !region) {
       return `${baseClasses} hover:brightness-110`;
     }
     
     if (hoveredRegion === region) {
-      // Highlight all districts in the same region with darker color
-      return `${baseClasses} brightness-90 contrast-120 saturate-130 drop-shadow-lg scale-105`;
+      // Highlight all districts in the same region
+      return `${baseClasses} district-hover-region`;
     } else {
       // Fade out districts from other regions
-      return `${baseClasses} opacity-40 brightness-75`;
+      return `${baseClasses} district-fade-region`;
     }
   };
 
@@ -757,11 +757,18 @@ export const Maharashtra = ({
                       />
                     </div>
                   ) : path.id === "path3173" ? (
-                    <div className="absolute w-[257px] h-[456px] top-[614px] left-[1314px]">
+                    <div 
+                      className="absolute w-[257px] h-[456px] top-[614px] left-[1314px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
+                        data-district={pathToDistrict[path.id]}
+                        data-region={getDistrictRegion(pathToDistrict[path.id])}
                       />
                     </div>
                   ) : path.id === "path3177" ? (
@@ -789,11 +796,18 @@ export const Maharashtra = ({
                       />
                     </div>
                   ) : path.id === "path3189" ? (
-                    <div className="absolute w-[501px] h-[363px] top-[1260px] left-[1204px]">
+                    <div 
+                      className="absolute w-[501px] h-[363px] top-[1260px] left-[1204px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
+                        data-district={pathToDistrict[path.id]}
+                        data-region={getDistrictRegion(pathToDistrict[path.id])}
                       />
                     </div>
                   ) : path.id === "path3193" ? (
@@ -813,11 +827,18 @@ export const Maharashtra = ({
                       />
                     </div>
                   ) : path.id === "path3201" ? (
-                    <div className="absolute w-[605px] h-[419px] top-[226px] left-[1660px]">
+                    <div 
+                      className="absolute w-[605px] h-[419px] top-[226px] left-[1660px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
                       <img
-                        className={path.className}
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
                         alt={path.alt}
                         src={path.src}
+                        data-district={pathToDistrict[path.id]}
+                        data-region={getDistrictRegion(pathToDistrict[path.id])}
                       />
                     </div>
                   ) : path.id === "path3205" ? (

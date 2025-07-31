@@ -36,6 +36,27 @@
   margin: 0 auto;
 }
 
+.district-image {
+  filter: brightness(1) contrast(1) saturate(1) blur(0px) grayscale(0);
+  transition: all 0.5s ease-in-out;
+  will-change: filter, transform, opacity;
+}
+
+.district-hover-region {
+  filter: brightness(1.1) contrast(1.25) saturate(1.5) blur(0px) grayscale(0) drop-shadow(0 10px 25px rgba(0,0,0,0.3));
+  transform: scale(1.02);
+  z-index: 10 !important;
+  position: relative;
+}
+
+.district-fade-region {
+  filter: brightness(0.3) contrast(0.8) saturate(0.5) blur(1px) grayscale(0.5);
+  transform: scale(0.98);
+  opacity: 0.15;
+  z-index: 0 !important;
+  position: relative;
+}
+
 @layer components {
   .dashboard-card {
     transform: translateY(0);
