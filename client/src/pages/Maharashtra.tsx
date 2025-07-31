@@ -580,24 +580,34 @@ export const Maharashtra = ({
         <style>
           {`
           .district-image {
-            transition: all 0.3s ease-in-out;
+            transition: all 0.2s ease-in-out;
             cursor: pointer;
+            pointer-events: auto;
           }
           
           .district-hover-region {
-            filter: brightness(1.3) saturate(1.4) contrast(1.1);
-            transform: scale(1.01);
-            z-index: 20;
-            box-shadow: 0 0 15px rgba(0,0,0,0.3);
+            filter: brightness(1.4) saturate(1.5) contrast(1.15) drop-shadow(0 0 8px rgba(255,255,255,0.6));
+            transform: scale(1.015);
+            z-index: 30;
+            position: relative;
           }
           
           .district-image:hover {
-            filter: brightness(1.15) saturate(1.2);
-            transform: scale(1.005);
+            filter: brightness(1.2) saturate(1.3);
+            transform: scale(1.008);
           }
           
           .maharashtra-map {
             transform-style: preserve-3d;
+          }
+          
+          .maharashtra-map > div {
+            position: relative;
+          }
+          
+          /* Enhanced hover areas */
+          .maharashtra-map [class*="absolute"]:hover {
+            z-index: 25;
           }
           `}
         </style>
@@ -1131,19 +1141,118 @@ export const Maharashtra = ({
                       />
                     </div>
                   ) : (
-                    <img
-                      className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
-                      alt={path.alt}
-                      src={path.src}
-                      data-district={pathToDistrict[path.id]}
-                      data-region={getDistrictRegion(pathToDistrict[path.id])}
-                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
-                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                    <div 
+                      className="absolute inset-0 cursor-pointer hover:z-30"
+                      onClick={() => pathToDistrict[path.id] && handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => pathToDistrict[path.id] && handleDistrictHover(pathToDistrict[path.id])}
                       onMouseLeave={() => handleDistrictHover(null)}
-                    />
+                      style={{ 
+                        padding: '10px',
+                        margin: '-10px',
+                        minWidth: '50px',
+                        minHeight: '50px'
+                      }}
+                    >
+                      <img
+                        className={`${path.className} ${pathToDistrict[path.id] ? getRegionStyling(pathToDistrict[path.id]) : 'district-image'}`}
+                        alt={path.alt}
+                        src={path.src}
+                        data-district={pathToDistrict[path.id]}
+                        data-region={pathToDistrict[path.id] ? getDistrictRegion(pathToDistrict[path.id]) : ''}
+                        style={{ pointerEvents: 'none' }}
+                      />
+                    </div>
                   )}
                 </div>
               ))}
+
+
+              {/* Additional strategic hover areas for better district coverage */}
+              <div className="absolute inset-0 pointer-events-none">
+                {/* Konkan Region Enhanced Hover Areas */}
+                <div className="absolute w-32 h-32 top-[1000px] left-[200px] pointer-events-auto cursor-pointer hover:z-40" 
+                     onClick={() => handleDistrictClick("Ratnagiri")}
+                     onMouseEnter={() => handleDistrictHover("Ratnagiri")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Ratnagiri" />
+                
+                <div className="absolute w-32 h-32 top-[800px] left-[300px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Raigad")}
+                     onMouseEnter={() => handleDistrictHover("Raigad")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Raigad" />
+                
+                <div className="absolute w-32 h-32 top-[600px] left-[200px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Thane")}
+                     onMouseEnter={() => handleDistrictHover("Thane")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Thane" />
+                
+                <div className="absolute w-32 h-32 top-[400px] left-[100px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Palghar")}
+                     onMouseEnter={() => handleDistrictHover("Palghar")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Palghar" />
+                
+                {/* Pune Region Enhanced Hover Areas */}
+                <div className="absolute w-32 h-32 top-[1200px] left-[600px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Pune")}
+                     onMouseEnter={() => handleDistrictHover("Pune")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Pune" />
+                
+                <div className="absolute w-32 h-32 top-[1100px] left-[800px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Satara")}
+                     onMouseEnter={() => handleDistrictHover("Satara")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Satara" />
+                
+                {/* Nashik Region Enhanced Hover Areas */}
+                <div className="absolute w-32 h-32 top-[600px] left-[800px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Nashik")}
+                     onMouseEnter={() => handleDistrictHover("Nashik")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Nashik" />
+                
+                <div className="absolute w-32 h-32 top-[400px] left-[600px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Dhule")}
+                     onMouseEnter={() => handleDistrictHover("Dhule")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Dhule" />
+                
+                {/* Amravati Region Enhanced Hover Areas */}
+                <div className="absolute w-32 h-32 top-[800px] left-[1600px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Amravati")}
+                     onMouseEnter={() => handleDistrictHover("Amravati")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Amravati" />
+                
+                <div className="absolute w-32 h-32 top-[600px] left-[1700px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Akola")}
+                     onMouseEnter={() => handleDistrictHover("Akola")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Akola" />
+                
+                {/* Nagpur Region Enhanced Hover Areas */}
+                <div className="absolute w-32 h-32 top-[600px] left-[2200px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Nagpur")}
+                     onMouseEnter={() => handleDistrictHover("Nagpur")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Nagpur" />
+                
+                <div className="absolute w-32 h-32 top-[800px] left-[2400px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Chandrapur")}
+                     onMouseEnter={() => handleDistrictHover("Chandrapur")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Chandrapur" />
+                
+                {/* Chhatrapati Sambhajinagar Region Enhanced Hover Areas */}
+                <div className="absolute w-32 h-32 top-[1000px] left-[1200px] pointer-events-auto cursor-pointer hover:z-40"
+                     onClick={() => handleDistrictClick("Chhatrapati Sambhajinagar")}
+                     onMouseEnter={() => handleDistrictHover("Chhatrapati Sambhajinagar")}
+                     onMouseLeave={() => handleDistrictHover(null)}
+                     title="Chhatrapati Sambhajinagar" />
+              </div>
 
 
 
