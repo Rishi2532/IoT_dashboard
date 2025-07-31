@@ -381,7 +381,7 @@ export default function SchemeDetailsPage() {
                       </div>
 
                       {/* Villages Table for this block - Trading Style */}
-                      <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{border: 'none'}}>
+                      <div className="bg-white shadow-sm overflow-hidden" style={{border: 'none', borderRadius: '0'}}>
                         <div className="table-responsive">
                           <table className="village-table" style={{width: '100%', border: 'none', borderCollapse: 'separate', borderSpacing: '0'}}>
                             <thead style={{backgroundColor: '#3b2e7d'}}>
@@ -454,7 +454,7 @@ export default function SchemeDetailsPage() {
                                     {isExpanded && (
                                       <tr style={{backgroundColor: '#f1f5f9', border: 'none'}}>
                                         <td colSpan={6} style={{padding: '24px', border: 'none', borderBottom: 'none', backgroundColor: '#f1f5f9'}}>
-                                          <div className="bg-white rounded-lg p-4">
+                                          <div className="bg-white p-4" style={{borderRadius: '0'}}>
                                             <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center">
                                               <Building className="w-4 h-4 mr-2" />
                                               ESR Details for {village.village_name} ({villageESRs.length} ESRs)
@@ -470,7 +470,8 @@ export default function SchemeDetailsPage() {
                                                 {villageESRs.map((esr: any, esrIndex: number) => (
                                                   <div
                                                     key={esrIndex}
-                                                    className="bg-gray-50 p-4 rounded-lg border border-gray-200"
+                                                    className="bg-gray-50 p-4 border border-gray-200"
+                                                    style={{borderRadius: '0'}}
                                                   >
                                                     <div className="flex items-center justify-between mb-3">
                                                       <span className="font-medium text-gray-900 text-sm">
@@ -511,7 +512,7 @@ export default function SchemeDetailsPage() {
                                                 ))}
                                               </div>
                                             ) : (
-                                              <div className="bg-gray-50 p-4 rounded-lg border border-gray-200 text-center text-sm text-gray-500">
+                                              <div className="bg-gray-50 p-4 border border-gray-200 text-center text-sm text-gray-500" style={{borderRadius: '0'}}>
                                                 No ESR data available for this village
                                               </div>
                                             )}
