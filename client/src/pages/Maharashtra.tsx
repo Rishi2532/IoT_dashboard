@@ -14,727 +14,1240 @@ export const Maharashtra = ({
 }: MaharashtraProps): JSX.Element => {
   const [hoveredRegion, setHoveredRegion] = React.useState<string | null>(null);
 
-  // Region mapping as requested
-  const regionMapping = {
-    "Konkan": ["Mumbai City", "Mumbai Suburban", "Thane", "Palghar", "Raigad", "Ratnagiri", "Sindhudurg"],
-    "Pune": ["Pune", "Satara", "Sangli", "Kolhapur", "Solapur"],
-    "Nashik": ["Nashik", "Nandurbar", "Dhule", "Jalgaon", "Ahmednagar"],
-    "Chhatrapati Sambhajinagar": ["Chhatrapati Sambhajinagar", "Jalna", "Beed", "Parbhani", "Hingoli", "Latur", "Osmanabad", "Nanded"],
-    "Amravati": ["Akola", "Amravati", "Buldhana", "Washim", "Yavatmal"],
-    "Nagpur": ["Nagpur", "Wardha", "Chandrapur", "Gadchiroli", "Gondia", "Bhandara"]
+  // Mapping districts to their administrative regions
+  const districtToRegion: { [key: string]: string } = {
+    "Wardha": "Nagpur",
+    "Hingoli": "Chhatrapati Sambhajinagar", 
+    "Nandurbar": "Nashik",
+    "Dhule": "Nashik",
+    "Jalgaon": "Nashik", 
+    "Jalna": "Chhatrapati Sambhajinagar",
+    "Ahilyanagar": "Chhatrapati Sambhajinagar",
+    "Pune": "Pune",
+    "Nashik": "Nashik",
+    "Satara": "Pune",
+    "Kolhapur": "Pune",
+    "Usmanabad": "Chhatrapati Sambhajinagar",
+    "Buldhana": "Amravati",
+    "Thane": "Konkan",
+    "Raigad": "Konkan",
+    "Ratnagiri": "Konkan",
+    "Sindhudurg": "Konkan",
+    "Sangli": "Pune",
+    "Solapur": "Pune",
+    "Beed": "Chhatrapati Sambhajinagar",
+    "Parbhani": "Chhatrapati Sambhajinagar",
+    "Nanded": "Chhatrapati Sambhajinagar",
+    "Latur": "Chhatrapati Sambhajinagar",
+    "Palaghar": "Konkan",
+    "Akola": "Amravati",
+    "Amaravati": "Amravati", 
+    "Washim": "Amravati",
+    "Yavatmal": "Amravati",
+    "Chandrapur": "Nagpur",
+    "Bhandara": "Nagpur",
+    "Gondia": "Nagpur",
+    "Gadchiroli": "Nagpur",
+    "Nagpur": "Nagpur",
+    "Mumbai Suburban": "Konkan",
+    "Mumbai City": "Konkan",
+    "Chhatrapati Sambhajinagar": "Chhatrapati Sambhajinagar"
   };
 
-  // Region base colors
-  const regionColors = {
-    "Konkan": "#60a5fa", // Blue
-    "Pune": "#4ade80", // Green  
-    "Nashik": "#fbbf24", // Yellow
-    "Chhatrapati Sambhajinagar": "#a78bfa", // Purple
-    "Amravati": "#fb7185", // Pink
-    "Nagpur": "#f97316" // Orange
+  // Map path IDs to district names (based on the SVG structure)
+  const pathToDistrict: { [key: string]: string } = {
+    "path3109": "Pune",
+    "path3113": "Solapur", 
+    "path3117": "Satara",
+    "path3121": "Sangli",
+    "path3125": "Kolhapur",
+    "path3129": "Ratnagiri",
+    "path3133": "Sindhudurg",
+    "path3137": "Raigad",
+    "path3141": "Mumbai Suburban",
+    "path3145": "Mumbai City",
+    "path3149": "Ahmednagar",
+    "path3153": "Nashik",
+    "path3157": "Dhule",
+    "path3161": "Nandurbar",
+    "path3165": "Jalgaon",
+    "path3169": "Chhatrapati Sambhajinagar",
+    "path3173": "Jalna",
+    "path3177": "Parbhani",
+    "path3181": "Beed",
+    "path3185": "Hingoli",
+    "path3189": "Nanded",
+    "path3193": "Latur",
+    "path3197": "Osmanabad",
+    "path3201": "Akola",
+    "path3205": "Washim",
+    "path3209": "Amravati",
+    "path3213": "Buldhana",
+    "path3217": "Yavatmal",
+    "path3221": "Wardha",
+    "path3225": "Nagpur",
+    "path3229": "Chandrapur",
+    "path3233": "Gadchiroli",
+    "path3237": "Gondia",
+    "path3241": "Bhandara"
   };
 
-  // Region dark colors for highlighting
-  const regionDarkColors = {
-    "Konkan": "#1d4ed8", // Dark Blue
-    "Pune": "#15803d", // Dark Green
-    "Nashik": "#d97706", // Dark Yellow
-    "Chhatrapati Sambhajinagar": "#7c3aed", // Dark Purple
-    "Amravati": "#e11d48", // Dark Pink
-    "Nagpur": "#c2410c" // Dark Orange
-  };
-
-  // Function to find which region a district belongs to
-  const getDistrictRegion = (districtName: string): string | null => {
-    for (const [region, districts] of Object.entries(regionMapping)) {
-      if (districts.includes(districtName)) {
-        return region;
-      }
+  const handleDistrictClick = (districtName: string) => {
+    const region = districtToRegion[districtName];
+    if (region && onRegionClick) {
+      onRegionClick(region);
     }
-    return null;
   };
 
-  // Handle district hover
   const handleDistrictHover = (districtName: string | null) => {
     if (districtName) {
-      const region = getDistrictRegion(districtName);
+      const region = districtToRegion[districtName];
       setHoveredRegion(region);
     } else {
       setHoveredRegion(null);
     }
   };
 
-  // Handle district click
-  const handleDistrictClick = (districtName: string) => {
-    const region = getDistrictRegion(districtName);
-    if (region && onRegionClick) {
-      onRegionClick(region);
+  // Helper function to determine district styling based on region
+  const getRegionStyling = (districtName: string): string => {
+    const region = districtToRegion[districtName];
+    const baseClasses = "district-image transition-all duration-300";
+    
+    if (!hoveredRegion) {
+      return baseClasses;
+    }
+    
+    if (hoveredRegion === region) {
+      // Highlight all districts in the same region
+      return `${baseClasses} brightness-110 contrast-110 saturate-110 drop-shadow-lg`;
+    } else {
+      // Blur and fade districts from other regions
+      return `${baseClasses} blur-sm opacity-60`;
     }
   };
 
-  // Get fill color for a district with proper type safety
-  const getDistrictFill = (districtName: string): string => {
-    const region = getDistrictRegion(districtName);
-    if (!region) return "#e5e7eb"; // Default gray
-    
-    if (hoveredRegion === region) {
-      return regionDarkColors[region as keyof typeof regionDarkColors];
-    }
-    return regionColors[region as keyof typeof regionColors];
+
+
+
+
+  // Data for divisions to enable mapping over repeated elements
+  const divisions = [
+    { name: "Amaravati Division" },
+    { name: "Aurangabad Division" },
+    { name: "Konkan Division" },
+    { name: "Nagpur Division" },
+    { name: "Nashik Division" },
+    { name: "Pune Division" },
+  ];
+
+  // Data for district paths
+  const districtPaths = [
+    {
+      id: "path2997",
+      alt: "Path",
+      src: "/figmaAssets/path2997.svg",
+      className: "absolute w-[772px] h-[2432px] top-0 left-0",
+    },
+    {
+      id: "path3001",
+      alt: "Path",
+      src: "/figmaAssets/path3001.svg",
+      className: "absolute w-[773px] h-[2453px] top-0 left-0",
+    },
+    {
+      id: "path3109",
+      alt: "Path",
+      src: "/figmaAssets/path3109.svg",
+      className: "absolute w-[619px] h-[508px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3113",
+      alt: "Path",
+      src: "/figmaAssets/path3113.svg",
+      className: "absolute w-[635px] h-[492px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3117",
+      alt: "Path",
+      src: "/figmaAssets/path3117.svg",
+      className: "absolute w-[465px] h-[383px] top-[-3px] -left-1",
+    },
+    {
+      id: "path3121",
+      alt: "Path",
+      src: "/figmaAssets/path3121.svg",
+      className: "absolute w-[689px] h-[312px] -top-1 left-[-5px]",
+    },
+    {
+      id: "path3125",
+      alt: "Path",
+      src: "/figmaAssets/path3125.svg",
+      className: "absolute w-[367px] h-[496px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3129",
+      alt: "Path",
+      src: "/figmaAssets/path3129.svg",
+      className: "absolute w-[105px] h-[147px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3133",
+      alt: "Path",
+      src: "/figmaAssets/path3133.svg",
+      className: "absolute w-[242px] h-[515px] top-[-3px] -left-1",
+    },
+    {
+      id: "path3137",
+      alt: "Path",
+      src: "/figmaAssets/path3137.svg",
+      className: "absolute w-64 h-[446px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3141",
+      alt: "Path",
+      src: "/figmaAssets/path3141.svg",
+      className: "absolute w-[250px] h-[332px] -top-0.5 left-[-3px]",
+    },
+    {
+      id: "path3145",
+      alt: "Path",
+      src: "/figmaAssets/path3145.svg",
+      className: "absolute w-[260px] h-[301px] top-0 left-0",
+    },
+    {
+      id: "path3149",
+      alt: "Path",
+      src: "/figmaAssets/path3149.svg",
+      className: "absolute w-[541px] h-[413px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3153",
+      alt: "Path",
+      src: "/figmaAssets/path3153.svg",
+      className: "absolute w-[583px] h-[424px] top-[-3px] -left-1",
+    },
+    {
+      id: "path3157",
+      alt: "Path",
+      src: "/figmaAssets/path3157.svg",
+      className: "absolute w-[674px] h-[570px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3161",
+      alt: "Path",
+      src: "/figmaAssets/path3161.svg",
+      className: "absolute w-[390px] h-[360px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3165",
+      alt: "Path",
+      src: "/figmaAssets/path3165.svg",
+      className: "absolute w-[427px] h-[357px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3169",
+      alt: "Path",
+      src: "/figmaAssets/path3169.svg",
+      className: "absolute w-[429px] h-[441px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3173",
+      alt: "Path",
+      src: "/figmaAssets/path3173.svg",
+      className: "absolute w-[263px] h-[467px] top-[-3px] left-[-5px]",
+    },
+    {
+      id: "path3177",
+      alt: "Path",
+      src: "/figmaAssets/path3177.svg",
+      className: "absolute w-[488px] h-[568px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3181",
+      alt: "Path",
+      src: "/figmaAssets/path3181.svg",
+      className: "absolute w-[648px] h-[311px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3185",
+      alt: "Path",
+      src: "/figmaAssets/path3185.svg",
+      className: "absolute w-[373px] h-[348px] top-[-3px] -left-0.5",
+    },
+    {
+      id: "path3189",
+      alt: "Path",
+      src: "/figmaAssets/path3189.svg",
+      className: "absolute w-[506px] h-[368px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3193",
+      alt: "Path",
+      src: "/figmaAssets/path3193.svg",
+      className: "absolute w-[287px] h-[396px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3197",
+      alt: "Path",
+      src: "/figmaAssets/path3197.svg",
+      className: "absolute w-[286px] h-[374px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3201",
+      alt: "Path",
+      src: "/figmaAssets/path3201.svg",
+      className: "absolute w-[610px] h-[425px] top-[-3px] -left-0.5",
+    },
+    {
+      id: "path3205",
+      alt: "Path",
+      src: "/figmaAssets/path3205.svg",
+      className: "absolute w-[307px] h-[497px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3209",
+      alt: "Path",
+      src: "/figmaAssets/path3209.svg",
+      className: "absolute w-[618px] h-[426px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3213",
+      alt: "Path",
+      src: "/figmaAssets/path3213.svg",
+      className: "absolute w-[325px] h-[344px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3217",
+      alt: "Path",
+      src: "/figmaAssets/path3217.svg",
+      className: "absolute w-[365px] h-[313px] -top-1.5 -left-1",
+    },
+    {
+      id: "path3221",
+      alt: "Path",
+      src: "/figmaAssets/path3221.svg",
+      className: "absolute w-[470px] h-[403px] -top-0.5 -left-1",
+    },
+    {
+      id: "path3225",
+      alt: "Path",
+      src: "/figmaAssets/path3225.svg",
+      className: "absolute w-[417px] h-[377px] -top-0.5 left-[-3px]",
+    },
+    {
+      id: "path3229",
+      alt: "Path",
+      src: "/figmaAssets/path3229.svg",
+      className: "absolute w-[360px] h-[749px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3233",
+      alt: "Path",
+      src: "/figmaAssets/path3233.svg",
+      className: "absolute w-[391px] h-[436px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3237",
+      alt: "Path",
+      src: "/figmaAssets/path3237.svg",
+      className: "absolute w-[214px] h-[326px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3241",
+      alt: "Path",
+      src: "/figmaAssets/path3241.svg",
+      className: "absolute w-[291px] h-[331px] top-[-3px] left-[-3px]",
+    },
+    {
+      id: "path3381",
+      alt: "Path",
+      src: "/figmaAssets/path3381.svg",
+      className: "absolute w-[115px] h-[54px] -top-0.5 -left-px",
+    },
+    {
+      id: "path3385",
+      alt: "Path",
+      src: "/figmaAssets/path3385.svg",
+      className: "absolute w-[122px] h-[92px] -top-0.5 -left-px",
+    },
+    {
+      id: "path3381-8",
+      alt: "Path",
+      src: "/figmaAssets/path3381-8.svg",
+      className: "absolute w-[52px] h-[129px] -top-px left-[-3px]",
+    },
+  ];
+
+  // Data for districts
+  const districts = [
+    {
+      name: "Wardha",
+      className:
+        "absolute w-[202px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Hingoli",
+      className:
+        "w-[182px] absolute top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Nandurbar",
+      className:
+        "absolute w-[282px] top-0 left-[734px] [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Dhule",
+      className:
+        "absolute w-[152px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Jalgaon",
+      className:
+        "absolute w-52 top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Jalna",
+      className:
+        "absolute w-[140px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Ahilyanagar",
+      className:
+        "absolute w-[311px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Pune",
+      className:
+        "absolute w-[134px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Nashik",
+      className:
+        "absolute w-[180px] top-[500px] left-[680px] [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Satara",
+      className:
+        "absolute w-[172px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Kolhapur",
+      className:
+        "w-[234px] absolute top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Usmanabad",
+      className:
+        "absolute w-[317px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Buldhana",
+      className:
+        "absolute w-[246px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Thane",
+      className:
+        "absolute w-[166px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Raigad",
+      className:
+        "w-[182px] absolute top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Ratnagiri",
+      className:
+        "w-[234px] absolute top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Sindhudurg",
+      className:
+        "absolute w-[304px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Sangli",
+      className:
+        "absolute w-[161px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Solapur",
+      className:
+        "absolute w-[202px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Beed",
+      className:
+        "absolute w-[137px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Parbhani",
+      className:
+        "w-[234px] absolute top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Nanded",
+      className:
+        "absolute w-[209px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Latur",
+      className:
+        "absolute w-[137px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Palaghar",
+      className:
+        "absolute w-[232px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Akola",
+      className:
+        "absolute w-[146px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Amaravati",
+      className:
+        "absolute w-[265px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Washim",
+      className:
+        "absolute w-[207px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Yavatmal",
+      className:
+        "absolute w-60 top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Chandrapur",
+      className:
+        "absolute w-[313px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Bhandara",
+      className:
+        "absolute w-[253px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Gondia",
+      className:
+        "absolute w-[188px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Gadchiroli",
+      className:
+        "absolute w-[266px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+    {
+      name: "Nagpur",
+      className:
+        "absolute w-[196px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+    },
+  ];
+
+  // Special cases for Mumbai
+  const mumbaiDistricts = [
+    {
+      name: "Mumbai Suburban",
+      className: "relative w-[260px] h-[123px]",
+      textClasses: [
+        "absolute w-[211px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+        "absolute w-64 top-[70px] left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+      ],
+    },
+    {
+      name: "Mumbai City",
+      className: "relative w-[215px] h-[123px]",
+      textClasses: [
+        "absolute w-[211px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+        "absolute w-[106px] top-[70px] left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
+      ],
+    },
+  ];
+
+  // Data for Chhatrapati Sambhajinagar (special case with line break)
+  const sambhajinagar = {
+    name: "Chhatrapati Sambhajinagar",
+    className:
+      "absolute w-[393px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px]",
   };
 
   return (
-    <Card className="w-full h-full">
-      <CardContent className="p-6">
-        <div className="w-full h-[600px] relative">
-          <svg 
-            viewBox="0 0 1000 800" 
-            className="w-full h-full border border-gray-200 rounded-lg bg-blue-50"
-          >
-            <style>
-              {`
-                .district-path {
-                  transition: all 0.3s ease;
-                  cursor: pointer;
-                  stroke: #ffffff;
-                  stroke-width: 2;
-                }
-                .district-path:hover {
-                  stroke: #000000;
-                  stroke-width: 3;
-                }
-              `}
-            </style>
+    <Card className="bg-transparent w-full">
+      <CardContent className="flex flex-row justify-center p-0">
+        <div className="relative w-[3105.78px] h-[2453.01px] maharashtra-map">
+          <div className="relative w-[3101px] h-[2452px] top-px">
+            <div className="relative h-[2452px]">
+              {/* Map district paths */}
+              {districtPaths.map((path, index) => (
+                <div
+                  key={`path-${index}`}
+                  className={
+                    path.id.includes("path3145")
+                      ? "absolute w-[352px] h-[392px] top-[729px] left-[352px]"
+                      : ""
+                  }
+                >
+                  {path.id === "path3001" ? (
+                    <div className="absolute w-[772px] h-[2452px] top-0 left-0">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3109" ? (
+                    <div 
+                      className="absolute w-[614px] h-[503px] top-[1020px] left-[540px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
+                      <img
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3113" ? (
+                    <div 
+                      className="absolute w-[626px] h-[486px] top-[1311px] left-[970px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
+                      <img
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3117" ? (
+                    <div 
+                      className="absolute w-[458px] h-[377px] top-[1427px] left-[615px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
+                      <img
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3121" ? (
+                    <div className="absolute w-[681px] h-[306px] top-[1623px] left-[656px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3125" ? (
+                    <div className="absolute w-[361px] h-[491px] top-[1768px] left-[641px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3129" ? (
+                    <div className="absolute w-[100px] h-[142px] top-[1039px] left-[390px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3133" ? (
+                    <div className="absolute w-[235px] h-[510px] top-[1469px] left-[473px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3137" ? (
+                    <div className="absolute w-[251px] h-[441px] top-[1094px] left-[399px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3141" ? (
+                    <div className="absolute w-[243px] h-[327px] top-[1959px] left-[562px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3145" ? (
+                    <div className="relative w-[357px] h-[397px] top-[-3px] -left-0.5">
+                      <img
+                        className="absolute w-[17px] h-[9px] top-[303px] left-[57px]"
+                        alt="Path"
+                        src="/figmaAssets/path1026.svg"
+                      />
+                      <img
+                        className="absolute w-2 h-2.5 top-[257px] left-[22px]"
+                        alt="Path"
+                        src="/figmaAssets/path1024.svg"
+                      />
+                      <img
+                        className="absolute w-[326px] h-[223px] top-[174px] left-[31px]"
+                        alt="Path"
+                        src="/figmaAssets/path1022.svg"
+                      />
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3149" ? (
+                    <div className="absolute w-[536px] h-[404px] top-[340px] left-[1045px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3153" ? (
+                    <div 
+                      className="absolute w-[577px] h-[420px] top-[537px] left-[522px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
+                      <img
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3157" ? (
+                    <div className="absolute w-[669px] h-[564px] top-[822px] left-[646px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3161" ? (
+                    <div className="absolute w-96 h-[354px] top-[126px] left-[665px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3165" ? (
+                    <div className="absolute w-[420px] h-[352px] top-[268px] left-[759px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3169" ? (
+                    <div className="absolute w-[423px] h-[435px] top-[604px] left-[993px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3173" ? (
+                    <div className="absolute w-[257px] h-[456px] top-[614px] left-[1314px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3177" ? (
+                    <div className="absolute w-[483px] h-[563px] top-[850px] left-[1756px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3181" ? (
+                    <div className="absolute w-[642px] h-[305px] top-[1028px] left-[1049px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3185" ? (
+                    <div className="absolute w-[368px] h-[343px] top-[1205px] left-[1532px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3189" ? (
+                    <div className="absolute w-[501px] h-[363px] top-[1260px] left-[1204px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3193" ? (
+                    <div className="absolute w-[282px] h-[390px] top-[847px] left-[1508px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3197" ? (
+                    <div className="absolute w-[281px] h-[368px] top-[815px] left-[1672px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3201" ? (
+                    <div className="absolute w-[605px] h-[419px] top-[226px] left-[1660px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3205" ? (
+                    <div className="absolute w-[302px] h-[491px] top-[389px] left-[1421px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3209" ? (
+                    <div 
+                      className="absolute w-[611px] h-[421px] top-[599px] left-[1893px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
+                      <img
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3213" ? (
+                    <div className="absolute w-80 h-[337px] top-[406px] left-[1679px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3217" ? (
+                    <div className="absolute w-[358px] h-[305px] top-[565px] left-[1659px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3221" ? (
+                    <div className="absolute w-[464px] h-[393px] top-[235px] left-[2196px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3225" ? (
+                    <div 
+                      className="absolute w-[411px] h-[370px] top-[365px] left-[2129px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
+                      <img
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3229" ? (
+                    <div 
+                      className="absolute w-[355px] h-[743px] top-[516px] left-[2746px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
+                      <img
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3233" ? (
+                    <div 
+                      className="absolute w-[386px] h-[431px] top-[569px] left-[2393px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
+                      <img
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3237" ? (
+                    <div 
+                      className="absolute w-52 h-[321px] top-[270px] left-[2603px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
+                      <img
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3241" ? (
+                    <div 
+                      className="absolute w-[284px] h-[326px] top-[255px] left-[2723px]"
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    >
+                      <img
+                        className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3381" ? (
+                    <div className="absolute w-[113px] h-[49px] top-[1156px] left-[289px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3385" ? (
+                    <div className="absolute w-[119px] h-[88px] top-[996px] left-[300px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : path.id === "path3381-8" ? (
+                    <div className="absolute w-[46px] h-[127px] top-[222px] left-[2694px]">
+                      <img
+                        className={path.className}
+                        alt={path.alt}
+                        src={path.src}
+                      />
+                    </div>
+                  ) : (
+                    <img
+                      className={`${path.className} ${getRegionStyling(pathToDistrict[path.id])}`}
+                      alt={path.alt}
+                      src={path.src}
+                      onClick={() => handleDistrictClick(pathToDistrict[path.id])}
+                      onMouseEnter={() => handleDistrictHover(pathToDistrict[path.id])}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                    />
+                  )}
+                </div>
+              ))}
 
-            {/* Mumbai City */}
-            <path
-              className="district-path"
-              data-district="Mumbai City"
-              data-region="Konkan"
-              d="M200,400 L220,400 L220,420 L200,420 Z"
-              fill={getDistrictFill("Mumbai City")}
-              onMouseEnter={() => handleDistrictHover("Mumbai City")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Mumbai City")}
-            />
-            {showLabels && (
-              <text x="210" y="415" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Mumbai City
-              </text>
-            )}
 
-            {/* Mumbai Suburban */}
-            <path
-              className="district-path"
-              data-district="Mumbai Suburban"
-              data-region="Konkan"
-              d="M170,380 L200,380 L200,420 L170,420 Z"
-              fill={getDistrictFill("Mumbai Suburban")}
-              onMouseEnter={() => handleDistrictHover("Mumbai Suburban")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Mumbai Suburban")}
-            />
-            {showLabels && (
-              <text x="185" y="405" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Mumbai Sub
-              </text>
-            )}
 
-            {/* Thane */}
-            <path
-              className="district-path"
-              data-district="Thane"
-              data-region="Konkan"
-              d="M220,380 L270,380 L270,420 L220,420 Z"
-              fill={getDistrictFill("Thane")}
-              onMouseEnter={() => handleDistrictHover("Thane")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Thane")}
-            />
-            {showLabels && (
-              <text x="245" y="405" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Thane
-              </text>
-            )}
+              {/* Districts section */}
+              <div className="absolute w-[3025px] h-[1964px] top-[154px] left-[37px]">
+                <div className="absolute w-[2403px] h-[1910px] top-[54px] left-0">
+                  {/* Wardha district */}
+                  <div className="absolute w-[204px] h-[53px] top-[346px] left-[2199px]">
+                    <div className="absolute w-[202px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                      Wardha
+                    </div>
+                  </div>
 
-            {/* Palghar */}
-            <path
-              className="district-path"
-              data-district="Palghar"
-              data-region="Konkan"
-              d="M170,330 L270,330 L270,380 L170,380 Z"
-              fill={getDistrictFill("Palghar")}
-              onMouseEnter={() => handleDistrictHover("Palghar")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Palghar")}
-            />
-            {showLabels && (
-              <text x="220" y="360" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Palghar
-              </text>
-            )}
+                  <div className="absolute w-[2290px] h-[1910px] top-0 left-0">
+                    <div className="absolute w-[2095px] h-[1910px] top-0 left-0">
+                      {/* Hingoli district */}
+                      <div className="absolute w-[184px] h-[53px] top-[734px] left-[1705px]">
+                        <div className="w-[182px] absolute top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                          Hingoli
+                        </div>
+                      </div>
 
-            {/* Raigad */}
-            <path
-              className="district-path"
-              data-district="Raigad"
-              data-region="Konkan"
-              d="M270,380 L320,380 L320,450 L270,450 Z"
-              fill={getDistrictFill("Raigad")}
-              onMouseEnter={() => handleDistrictHover("Raigad")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Raigad")}
-            />
-            {showLabels && (
-              <text x="295" y="420" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Raigad
-              </text>
-            )}
+                      <div className="absolute w-[1998px] h-[1910px] top-0 left-0">
+                        {/* Nandurbar district */}
+                        <div className="absolute w-[282px] top-0 left-[734px] [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                          Nandurbar
+                        </div>
 
-            {/* Ratnagiri */}
-            <path
-              className="district-path"
-              data-district="Ratnagiri"
-              data-region="Konkan"
-              d="M220,420 L270,420 L270,480 L220,480 Z"
-              fill={getDistrictFill("Ratnagiri")}
-              onMouseEnter={() => handleDistrictHover("Ratnagiri")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Ratnagiri")}
-            />
-            {showLabels && (
-              <text x="245" y="455" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Ratnagiri
-              </text>
-            )}
+                        {/* Dhule district */}
+                        <div className="absolute w-[154px] h-[53px] top-[231px] left-[863px]">
+                          <div className="absolute w-[152px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Dhule
+                          </div>
+                        </div>
 
-            {/* Sindhudurg */}
-            <path
-              className="district-path"
-              data-district="Sindhudurg"
-              data-region="Konkan"
-              d="M220,480 L270,480 L270,530 L220,530 Z"
-              fill={getDistrictFill("Sindhudurg")}
-              onMouseEnter={() => handleDistrictHover("Sindhudurg")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Sindhudurg")}
-            />
-            {showLabels && (
-              <text x="245" y="510" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Sindhudurg
-              </text>
-            )}
+                        {/* Jalgaon district */}
+                        <div className="absolute w-[210px] h-[53px] top-[286px] left-[1140px]">
+                          <div className="absolute w-52 top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Jalgaon
+                          </div>
+                        </div>
 
-            {/* Pune Region */}
-            {/* Pune */}
-            <path
-              className="district-path"
-              data-district="Pune"
-              data-region="Pune"
-              d="M320,380 L400,380 L400,430 L320,430 Z"
-              fill={getDistrictFill("Pune")}
-              onMouseEnter={() => handleDistrictHover("Pune")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Pune")}
-            />
-            {showLabels && (
-              <text x="360" y="410" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Pune
-              </text>
-            )}
+                        {/* Chhatrapati Sambhajinagar and Jalna districts */}
+                        <div className="absolute w-[476px] h-[136px] top-[591px] left-[991px]">
+                          <div className="absolute w-[395px] h-[106px] top-0 left-0">
+                            <div className="absolute w-[393px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                              Chhatrapati
+                              <br />
+                              Sambhajinagar
+                            </div>
+                          </div>
+                          <div className="absolute w-[142px] h-[53px] top-[83px] left-[334px]">
+                            <div className="absolute w-[140px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                              Jalna
+                            </div>
+                          </div>
+                        </div>
 
-            {/* Satara */}
-            <path
-              className="district-path"
-              data-district="Satara"
-              data-region="Pune"
-              d="M270,450 L350,450 L350,500 L270,500 Z"
-              fill={getDistrictFill("Satara")}
-              onMouseEnter={() => handleDistrictHover("Satara")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Satara")}
-            />
-            {showLabels && (
-              <text x="310" y="480" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Satara
-              </text>
-            )}
+                        {/* Ahilyanagar district */}
+                        <div className="absolute w-[313px] h-[53px] top-[783px] left-[831px]">
+                          <div className="absolute w-[311px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Ahilyanagar
+                          </div>
+                        </div>
 
-            {/* Sangli */}
-            <path
-              className="district-path"
-              data-district="Sangli"
-              data-region="Pune"
-              d="M350,450 L420,450 L420,500 L350,500 Z"
-              fill={getDistrictFill("Sangli")}
-              onMouseEnter={() => handleDistrictHover("Sangli")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Sangli")}
-            />
-            {showLabels && (
-              <text x="385" y="480" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Sangli
-              </text>
-            )}
+                        {/* Pune district */}
+                        <div className="absolute w-[136px] h-[53px] top-[1054px] left-[648px]">
+                          <div className="absolute w-[134px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Pune
+                          </div>
+                        </div>
 
-            {/* Kolhapur */}
-            <path
-              className="district-path"
-              data-district="Kolhapur"
-              data-region="Pune"
-              d="M270,500 L350,500 L350,550 L270,550 Z"
-              fill={getDistrictFill("Kolhapur")}
-              onMouseEnter={() => handleDistrictHover("Kolhapur")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Kolhapur")}
-            />
-            {showLabels && (
-              <text x="310" y="530" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Kolhapur
-              </text>
-            )}
+                        {/* Nashik district */}
+                        <div className="absolute w-[180px] top-[500px] left-[680px] [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                          Nashik
+                        </div>
 
-            {/* Solapur */}
-            <path
-              className="district-path"
-              data-district="Solapur"
-              data-region="Pune"
-              d="M400,380 L480,380 L480,450 L400,450 Z"
-              fill={getDistrictFill("Solapur")}
-              onMouseEnter={() => handleDistrictHover("Solapur")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Solapur")}
-            />
-            {showLabels && (
-              <text x="440" y="420" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Solapur
-              </text>
-            )}
+                        {/* Satara district */}
+                        <div className="absolute w-[174px] h-[53px] top-[1383px] left-[694px]">
+                          <div className="absolute w-[172px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Satara
+                          </div>
+                        </div>
 
-            {/* Nashik Region */}
-            {/* Nashik */}
-            <path
-              className="district-path"
-              data-district="Nashik"
-              data-region="Nashik"
-              d="M320,280 L400,280 L400,330 L320,330 Z"
-              fill={getDistrictFill("Nashik")}
-              onMouseEnter={() => handleDistrictHover("Nashik")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Nashik")}
-            />
-            {showLabels && (
-              <text x="360" y="310" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Nashik
-              </text>
-            )}
+                        {/* Kolhapur district */}
+                        <div className="absolute w-[236px] h-[53px] top-[1809px] left-[703px]">
+                          <div className="w-[234px] absolute top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Kolhapur
+                          </div>
+                        </div>
 
-            {/* Nandurbar */}
-            <path
-              className="district-path"
-              data-district="Nandurbar"
-              data-region="Nashik"
-              d="M270,230 L350,230 L350,280 L270,280 Z"
-              fill={getDistrictFill("Nandurbar")}
-              onMouseEnter={() => handleDistrictHover("Nandurbar")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Nandurbar")}
-            />
-            {showLabels && (
-              <text x="310" y="260" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Nandurbar
-              </text>
-            )}
+                        {/* Usmanabad district */}
+                        <div className="absolute w-[319px] h-[53px] top-[1294px] left-[1480px]">
+                          <div className="absolute w-[317px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Usmanabad
+                          </div>
+                        </div>
 
-            {/* Dhule */}
-            <path
-              className="district-path"
-              data-district="Dhule"
-              data-region="Nashik"
-              d="M350,230 L430,230 L430,280 L350,280 Z"
-              fill={getDistrictFill("Dhule")}
-              onMouseEnter={() => handleDistrictHover("Dhule")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Dhule")}
-            />
-            {showLabels && (
-              <text x="390" y="260" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Dhule
-              </text>
-            )}
+                        {/* Buldhana district */}
+                        <div className="absolute w-[248px] h-[53px] top-[426px] left-[1420px]">
+                          <div className="absolute w-[246px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Buldhana
+                          </div>
+                        </div>
 
-            {/* Jalgaon */}
-            <path
-              className="district-path"
-              data-district="Jalgaon"
-              data-region="Nashik"
-              d="M430,230 L510,230 L510,280 L430,280 Z"
-              fill={getDistrictFill("Jalgaon")}
-              onMouseEnter={() => handleDistrictHover("Jalgaon")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Jalgaon")}
-            />
-            {showLabels && (
-              <text x="470" y="260" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Jalgaon
-              </text>
-            )}
+                        {/* Thane district */}
+                        <div className="absolute w-[168px] h-[53px] top-[784px] left-[440px]">
+                          <div className="absolute w-[166px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Thane
+                          </div>
+                        </div>
 
-            {/* Ahmednagar */}
-            <path
-              className="district-path"
-              data-district="Ahmednagar"
-              data-region="Nashik"
-              d="M400,280 L480,280 L480,330 L400,330 Z"
-              fill={getDistrictFill("Ahmednagar")}
-              onMouseEnter={() => handleDistrictHover("Ahmednagar")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Ahmednagar")}
-            />
-            {showLabels && (
-              <text x="440" y="310" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Ahmednagar
-              </text>
-            )}
+                        {/* Mumbai Suburban district */}
+                        <div className="absolute w-64 h-[123px] top-[654px] left-0">
+                          <div className="relative w-[260px] h-[123px]">
+                            <div className="absolute w-[211px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                              Mumbai
+                            </div>
+                            <div className="absolute w-64 top-[70px] left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                              Suburban
+                            </div>
+                          </div>
+                        </div>
 
-            {/* Chhatrapati Sambhajinagar Region */}
-            {/* Chhatrapati Sambhajinagar */}
-            <path
-              className="district-path"
-              data-district="Chhatrapati Sambhajinagar"
-              data-region="Chhatrapati Sambhajinagar"
-              d="M510,280 L590,280 L590,330 L510,330 Z"
-              fill={getDistrictFill("Chhatrapati Sambhajinagar")}
-              onMouseEnter={() => handleDistrictHover("Chhatrapati Sambhajinagar")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Chhatrapati Sambhajinagar")}
-            />
-            {showLabels && (
-              <text x="550" y="310" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                C.S.Nagar
-              </text>
-            )}
+                        {/* Mumbai City district */}
+                        <div className="absolute w-[211px] h-[123px] top-[997px] left-[34px]">
+                          <div className="relative w-[215px] h-[123px]">
+                            <div className="absolute w-[211px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                              Mumbai
+                            </div>
+                            <div className="absolute w-[106px] top-[70px] left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                              City
+                            </div>
+                          </div>
+                        </div>
 
-            {/* Jalna */}
-            <path
-              className="district-path"
-              data-district="Jalna"
-              data-region="Chhatrapati Sambhajinagar"
-              d="M510,230 L570,230 L570,280 L510,280 Z"
-              fill={getDistrictFill("Jalna")}
-              onMouseEnter={() => handleDistrictHover("Jalna")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Jalna")}
-            />
-            {showLabels && (
-              <text x="540" y="260" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Jalna
-              </text>
-            )}
+                        {/* Raigad district */}
+                        <div className="absolute w-[184px] h-[53px] top-[1123px] left-[306px]">
+                          <div className="w-[182px] absolute top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Raigad
+                          </div>
+                        </div>
 
-            {/* Beed */}
-            <path
-              className="district-path"
-              data-district="Beed"
-              data-region="Chhatrapati Sambhajinagar"
-              d="M480,330 L560,330 L560,380 L480,380 Z"
-              fill={getDistrictFill("Beed")}
-              onMouseEnter={() => handleDistrictHover("Beed")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Beed")}
-            />
-            {showLabels && (
-              <text x="520" y="360" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Beed
-              </text>
-            )}
+                        {/* Ratnagiri district */}
+                        <div className="absolute w-[236px] h-[53px] top-[1426px] left-[343px]">
+                          <div className="w-[234px] absolute top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Ratnagiri
+                          </div>
+                        </div>
 
-            {/* Parbhani */}
-            <path
-              className="district-path"
-              data-district="Parbhani"
-              data-region="Chhatrapati Sambhajinagar"
-              d="M590,280 L650,280 L650,330 L590,330 Z"
-              fill={getDistrictFill("Parbhani")}
-              onMouseEnter={() => handleDistrictHover("Parbhani")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Parbhani")}
-            />
-            {showLabels && (
-              <text x="620" y="310" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Parbhani
-              </text>
-            )}
+                        {/* Sindhudurg district */}
+                        <div className="absolute w-[306px] h-[53px] top-[1857px] left-[337px]">
+                          <div className="absolute w-[304px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Sindhudurg
+                          </div>
+                        </div>
 
-            {/* Hingoli */}
-            <path
-              className="district-path"
-              data-district="Hingoli"
-              data-region="Chhatrapati Sambhajinagar"
-              d="M570,230 L630,230 L630,280 L570,280 Z"
-              fill={getDistrictFill("Hingoli")}
-              onMouseEnter={() => handleDistrictHover("Hingoli")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Hingoli")}
-            />
-            {showLabels && (
-              <text x="600" y="260" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Hingoli
-              </text>
-            )}
+                        {/* Sangli district */}
+                        <div className="absolute w-[163px] h-[53px] top-[1577px] left-[868px]">
+                          <div className="absolute w-[161px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Sangli
+                          </div>
+                        </div>
 
-            {/* Latur */}
-            <path
-              className="district-path"
-              data-district="Latur"
-              data-region="Chhatrapati Sambhajinagar"
-              d="M560,330 L620,330 L620,380 L560,380 Z"
-              fill={getDistrictFill("Latur")}
-              onMouseEnter={() => handleDistrictHover("Latur")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Latur")}
-            />
-            {showLabels && (
-              <text x="590" y="360" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Latur
-              </text>
-            )}
+                        {/* Solapur district */}
+                        <div className="absolute w-[204px] h-[53px] top-[1334px] left-[1120px]">
+                          <div className="absolute w-[202px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Solapur
+                          </div>
+                        </div>
 
-            {/* Osmanabad */}
-            <path
-              className="district-path"
-              data-district="Osmanabad"
-              data-region="Chhatrapati Sambhajinagar"
-              d="M480,380 L560,380 L560,430 L480,430 Z"
-              fill={getDistrictFill("Osmanabad")}
-              onMouseEnter={() => handleDistrictHover("Osmanabad")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Osmanabad")}
-            />
-            {showLabels && (
-              <text x="520" y="410" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Osmanabad
-              </text>
-            )}
+                        {/* Beed district */}
+                        <div className="absolute w-[139px] h-[53px] top-[923px] left-[1300px]">
+                          <div className="absolute w-[137px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Beed
+                          </div>
+                        </div>
 
-            {/* Nanded */}
-            <path
-              className="district-path"
-              data-district="Nanded"
-              data-region="Chhatrapati Sambhajinagar"
-              d="M620,330 L700,330 L700,400 L620,400 Z"
-              fill={getDistrictFill("Nanded")}
-              onMouseEnter={() => handleDistrictHover("Nanded")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Nanded")}
-            />
-            {showLabels && (
-              <text x="660" y="370" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Nanded
-              </text>
-            )}
+                        {/* Parbhani district */}
+                        <div className="absolute w-[236px] h-[53px] top-[786px] left-[1477px]">
+                          <div className="w-[234px] absolute top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Parbhani
+                          </div>
+                        </div>
 
-            {/* Amravati Region */}
-            {/* Akola */}
-            <path
-              className="district-path"
-              data-district="Akola"
-              data-region="Amravati"
-              d="M630,230 L710,230 L710,280 L630,280 Z"
-              fill={getDistrictFill("Akola")}
-              onMouseEnter={() => handleDistrictHover("Akola")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Akola")}
-            />
-            {showLabels && (
-              <text x="670" y="260" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Akola
-              </text>
-            )}
+                        {/* Nanded district */}
+                        <div className="absolute w-[211px] h-[53px] top-[960px] left-[1785px]">
+                          <div className="absolute w-[209px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Nanded
+                          </div>
+                        </div>
 
-            {/* Amravati */}
-            <path
-              className="district-path"
-              data-district="Amravati"
-              data-region="Amravati"
-              d="M710,230 L790,230 L790,280 L710,280 Z"
-              fill={getDistrictFill("Amravati")}
-              onMouseEnter={() => handleDistrictHover("Amravati")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Amravati")}
-            />
-            {showLabels && (
-              <text x="750" y="260" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Amravati
-              </text>
-            )}
+                        {/* Latur district */}
+                        <div className="absolute w-[139px] h-[53px] top-[1149px] left-[1611px]">
+                          <div className="absolute w-[137px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Latur
+                          </div>
+                        </div>
 
-            {/* Buldhana */}
-            <path
-              className="district-path"
-              data-district="Buldhana"
-              data-region="Amravati"
-              d="M650,280 L730,280 L730,330 L650,330 Z"
-              fill={getDistrictFill("Buldhana")}
-              onMouseEnter={() => handleDistrictHover("Buldhana")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Buldhana")}
-            />
-            {showLabels && (
-              <text x="690" y="310" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Buldhana
-              </text>
-            )}
+                        {/* Palaghar district */}
+                        <div className="absolute w-[234px] h-[53px] top-[635px] left-[314px]">
+                          <div className="absolute w-[232px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                            Palaghar
+                          </div>
+                        </div>
+                      </div>
 
-            {/* Washim */}
-            <path
-              className="district-path"
-              data-district="Washim"
-              data-region="Amravati"
-              d="M700,330 L770,330 L770,380 L700,380 Z"
-              fill={getDistrictFill("Washim")}
-              onMouseEnter={() => handleDistrictHover("Washim")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Washim")}
-            />
-            {showLabels && (
-              <text x="735" y="360" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Washim
-              </text>
-            )}
+                      {/* Akola district */}
+                      <div className="absolute w-[148px] h-[53px] top-[326px] left-[1677px]">
+                        <div className="absolute w-[146px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                          Akola
+                        </div>
+                      </div>
 
-            {/* Yavatmal */}
-            <path
-              className="district-path"
-              data-district="Yavatmal"
-              data-region="Amravati"
-              d="M770,280 L850,280 L850,350 L770,350 Z"
-              fill={getDistrictFill("Yavatmal")}
-              onMouseEnter={() => handleDistrictHover("Yavatmal")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Yavatmal")}
-            />
-            {showLabels && (
-              <text x="810" y="320" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Yavatmal
-              </text>
-            )}
+                      {/* Amaravati district */}
+                      <div className="absolute w-[267px] h-[53px] top-[246px] left-[1828px]">
+                        <div className="absolute w-[265px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                          Amaravati
+                        </div>
+                      </div>
 
-            {/* Nagpur Region */}
-            {/* Nagpur */}
-            <path
-              className="district-path"
-              data-district="Nagpur"
-              data-region="Nagpur"
-              d="M730,330 L810,330 L810,400 L730,400 Z"
-              fill={getDistrictFill("Nagpur")}
-              onMouseEnter={() => handleDistrictHover("Nagpur")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Nagpur")}
-            />
-            {showLabels && (
-              <text x="770" y="370" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Nagpur
-              </text>
-            )}
+                      {/* Washim district */}
+                      <div className="absolute w-[209px] h-[53px] top-[503px] left-[1728px]">
+                        <div className="absolute w-[207px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                          Washim
+                        </div>
+                      </div>
+                    </div>
 
-            {/* Wardha */}
-            <path
-              className="district-path"
-              data-district="Wardha"
-              data-region="Nagpur"
-              d="M790,230 L850,230 L850,280 L790,280 Z"
-              fill={getDistrictFill("Wardha")}
-              onMouseEnter={() => handleDistrictHover("Wardha")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Wardha")}
-            />
-            {showLabels && (
-              <text x="820" y="260" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Wardha
-              </text>
-            )}
+                    {/* Yavatmal district */}
+                    <div className="absolute w-[242px] h-[53px] top-[529px] left-[2048px]">
+                      <div className="absolute w-60 top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                        Yavatmal
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
-            {/* Chandrapur */}
-            <path
-              className="district-path"
-              data-district="Chandrapur"
-              data-region="Nagpur"
-              d="M810,350 L890,350 L890,420 L810,420 Z"
-              fill={getDistrictFill("Chandrapur")}
-              onMouseEnter={() => handleDistrictHover("Chandrapur")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Chandrapur")}
-            />
-            {showLabels && (
-              <text x="850" y="390" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Chandrapur
-              </text>
-            )}
+                {/* Chandrapur district */}
+                <div className="absolute w-[315px] h-[53px] top-[557px] left-[2414px]">
+                  <div className="absolute w-[313px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                    Chandrapur
+                  </div>
+                </div>
 
-            {/* Gadchiroli */}
-            <path
-              className="district-path"
-              data-district="Gadchiroli"
-              data-region="Nagpur"
-              d="M810,420 L890,420 L890,490 L810,490 Z"
-              fill={getDistrictFill("Gadchiroli")}
-              onMouseEnter={() => handleDistrictHover("Gadchiroli")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Gadchiroli")}
-            />
-            {showLabels && (
-              <text x="850" y="460" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Gadchiroli
-              </text>
-            )}
+                {/* Bhandara district */}
+                <div className="absolute w-[255px] h-[53px] top-0 left-[2588px]">
+                  <div className="absolute w-[253px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                    Bhandara
+                  </div>
+                </div>
 
-            {/* Gondia */}
-            <path
-              className="district-path"
-              data-district="Gondia"
-              data-region="Nagpur"
-              d="M850,230 L930,230 L930,300 L850,300 Z"
-              fill={getDistrictFill("Gondia")}
-              onMouseEnter={() => handleDistrictHover("Gondia")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Gondia")}
-            />
-            {showLabels && (
-              <text x="890" y="270" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Gondia
-              </text>
-            )}
+                {/* Gondia district */}
+                <div className="absolute w-[190px] h-[53px] top-[183px] left-[2751px]">
+                  <div className="absolute w-[188px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                    Gondia
+                  </div>
+                </div>
 
-            {/* Bhandara */}
-            <path
-              className="district-path"
-              data-district="Bhandara"
-              data-region="Nagpur"
-              d="M850,300 L930,300 L930,370 L850,370 Z"
-              fill={getDistrictFill("Bhandara")}
-              onMouseEnter={() => handleDistrictHover("Bhandara")}
-              onMouseLeave={() => handleDistrictHover(null)}
-              onClick={() => handleDistrictClick("Bhandara")}
-            />
-            {showLabels && (
-              <text x="890" y="340" textAnchor="middle" className="text-xs font-medium pointer-events-none">
-                Bhandara
-              </text>
-            )}
+                {/* Gadchiroli district */}
+                <div className="absolute w-[268px] h-[53px] top-[777px] left-[2759px]">
+                  <div className="absolute w-[266px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                    Gadchiroli
+                  </div>
+                </div>
 
-            {/* Title */}
-            <text x="500" y="40" textAnchor="middle" className="text-xl font-bold">
-              Maharashtra Districts
-            </text>
+                {/* Nagpur district */}
+                <div className="absolute w-[198px] h-[53px] top-[237px] left-[2354px]">
+                  <div className="absolute w-[196px] top-0 left-0 [font-family:'Inter',Helvetica] font-normal text-black text-[44px] tracking-[0] leading-[normal]">
+                    Nagpur
+                  </div>
+                </div>
+              </div>
 
-            {/* Current selection indicator */}
-            {hoveredRegion && (
-              <text x="500" y="70" textAnchor="middle" className="text-lg font-medium">
-                Hovering: {hoveredRegion} Region
-              </text>
-            )}
-          </svg>
+
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
