@@ -122,55 +122,55 @@ export default function MaharashtraMap({
     setHoveredDistrict(districtName);
   };
 
-  // District paths with realistic Maharashtra shapes and proper coordinates
+  // District paths with larger, more hoverable shapes
   const districts = [
     // Konkan Division - Western coastal region
-    { name: "Mumbai City", region: "Konkan", path: "M50,320 L90,315 L95,340 L88,355 L50,360 Z" },
-    { name: "Mumbai Suburban", region: "Konkan", path: "M50,280 L95,275 L100,295 L95,315 L50,320 Z" },
-    { name: "Thane", region: "Konkan", path: "M95,275 L140,270 L145,295 L140,315 L100,295 Z" },
-    { name: "Palghar", region: "Konkan", path: "M95,220 L145,215 L155,240 L145,265 L95,275 Z" },
-    { name: "Raigad", region: "Konkan", path: "M95,315 L140,310 L150,335 L145,365 L95,340 Z" },
-    { name: "Ratnagiri", region: "Konkan", path: "M50,360 L88,355 L95,380 L85,420 L45,425 Z" },
-    { name: "Sindhudurg", region: "Konkan", path: "M45,425 L85,420 L90,445 L80,475 L40,480 Z" },
+    { name: "Mumbai City", region: "Konkan", path: "M50,320 L110,315 L115,350 L108,365 L50,370 Z" },
+    { name: "Mumbai Suburban", region: "Konkan", path: "M50,280 L115,275 L120,305 L115,325 L50,330 Z" },
+    { name: "Thane", region: "Konkan", path: "M115,275 L160,270 L165,305 L160,325 L120,305 Z" },
+    { name: "Palghar", region: "Konkan", path: "M115,220 L165,215 L175,250 L165,275 L115,280 Z" },
+    { name: "Raigad", region: "Konkan", path: "M115,325 L160,320 L170,355 L165,385 L115,350 Z" },
+    { name: "Ratnagiri", region: "Konkan", path: "M50,370 L108,365 L115,400 L105,440 L45,445 Z" },
+    { name: "Sindhudurg", region: "Konkan", path: "M45,445 L105,440 L110,475 L100,505 L40,510 Z" },
     
     // Pune Division - South-central region
-    { name: "Pune", region: "Pune", path: "M180,290 L240,285 L250,315 L245,340 L180,345 Z" },
-    { name: "Solapur", region: "Pune", path: "M250,315 L320,310 L330,340 L325,370 L250,375 Z" },
-    { name: "Satara", region: "Pune", path: "M150,345 L240,340 L250,370 L240,400 L150,405 Z" },
-    { name: "Sangli", region: "Pune", path: "M150,405 L240,400 L250,430 L240,460 L150,465 Z" },
-    { name: "Kolhapur", region: "Pune", path: "M150,465 L240,460 L250,490 L240,520 L150,525 Z" },
+    { name: "Pune", region: "Pune", path: "M180,290 L260,285 L270,325 L265,360 L180,365 Z" },
+    { name: "Solapur", region: "Pune", path: "M270,325 L350,320 L360,360 L355,400 L270,405 Z" },
+    { name: "Satara", region: "Pune", path: "M150,365 L260,360 L270,400 L260,440 L150,445 Z" },
+    { name: "Sangli", region: "Pune", path: "M150,445 L260,440 L270,480 L260,520 L150,525 Z" },
+    { name: "Kolhapur", region: "Pune", path: "M150,525 L260,520 L270,560 L260,600 L150,605 Z" },
     
     // Nashik Division - North-western region  
-    { name: "Nandurbar", region: "Nashik", path: "M155,80 L205,75 L215,105 L205,135 L155,140 Z" },
-    { name: "Dhule", region: "Nashik", path: "M205,135 L270,130 L280,160 L270,190 L205,195 Z" },
-    { name: "Jalgaon", region: "Nashik", path: "M270,130 L340,125 L350,155 L340,185 L270,190 Z" },
-    { name: "Nashik", region: "Nashik", path: "M155,180 L240,175 L250,205 L240,235 L155,240 Z" },
-    { name: "Ahmednagar", region: "Nashik", path: "M240,235 L320,230 L330,260 L320,290 L240,295 Z" },
+    { name: "Nandurbar", region: "Nashik", path: "M175,80 L225,75 L235,115 L225,155 L175,160 Z" },
+    { name: "Dhule", region: "Nashik", path: "M225,155 L290,150 L300,190 L290,230 L225,235 Z" },
+    { name: "Jalgaon", region: "Nashik", path: "M290,150 L360,145 L370,185 L360,225 L290,230 Z" },
+    { name: "Nashik", region: "Nashik", path: "M175,200 L260,195 L270,235 L260,275 L175,280 Z" },
+    { name: "Ahmednagar", region: "Nashik", path: "M260,275 L340,270 L350,310 L340,350 L260,355 Z" },
     
     // Amravati Division - Central region
-    { name: "Akola", region: "Amravati", path: "M350,130 L410,125 L420,155 L410,185 L350,190 Z" },
-    { name: "Amravati", region: "Amravati", path: "M410,125 L470,120 L480,150 L470,180 L410,185 Z" },
-    { name: "Buldhana", region: "Amravati", path: "M350,190 L410,185 L420,215 L410,245 L350,250 Z" },
-    { name: "Washim", region: "Amravati", path: "M410,185 L470,180 L480,210 L470,240 L410,245 Z" },
-    { name: "Yavatmal", region: "Amravati", path: "M470,180 L530,175 L540,205 L530,235 L470,240 Z" },
+    { name: "Akola", region: "Amravati", path: "M370,150 L430,145 L440,185 L430,225 L370,230 Z" },
+    { name: "Amravati", region: "Amravati", path: "M430,145 L490,140 L500,180 L490,220 L430,225 Z" },
+    { name: "Buldhana", region: "Amravati", path: "M370,230 L430,225 L440,265 L430,305 L370,310 Z" },
+    { name: "Washim", region: "Amravati", path: "M430,225 L490,220 L500,260 L490,300 L430,305 Z" },
+    { name: "Yavatmal", region: "Amravati", path: "M490,220 L550,215 L560,255 L550,295 L490,300 Z" },
     
     // Nagpur Division - Eastern region
-    { name: "Nagpur", region: "Nagpur", path: "M480,80 L540,75 L550,105 L540,135 L480,140 Z" },
-    { name: "Bhandara", region: "Nagpur", path: "M540,75 L600,70 L610,100 L600,130 L540,135 Z" },
-    { name: "Gondia", region: "Nagpur", path: "M600,70 L660,65 L670,95 L660,125 L600,130 Z" },
-    { name: "Wardha", region: "Nagpur", path: "M480,140 L540,135 L550,165 L540,195 L480,200 Z" },
-    { name: "Chandrapur", region: "Nagpur", path: "M540,240 L600,235 L610,265 L600,295 L540,300 Z" },
-    { name: "Gadchiroli", region: "Nagpur", path: "M600,235 L670,230 L680,280 L670,330 L600,335 Z" },
+    { name: "Nagpur", region: "Nagpur", path: "M500,80 L560,75 L570,115 L560,155 L500,160 Z" },
+    { name: "Bhandara", region: "Nagpur", path: "M560,75 L620,70 L630,110 L620,150 L560,155 Z" },
+    { name: "Gondia", region: "Nagpur", path: "M620,70 L680,65 L690,105 L680,145 L620,150 Z" },
+    { name: "Wardha", region: "Nagpur", path: "M500,160 L560,155 L570,195 L560,235 L500,240 Z" },
+    { name: "Chandrapur", region: "Nagpur", path: "M560,280 L620,275 L630,315 L620,355 L560,360 Z" },
+    { name: "Gadchiroli", region: "Nagpur", path: "M620,275 L690,270 L700,330 L690,390 L620,395 Z" },
     
     // Chhatrapati Sambhajinagar Division - Central-eastern region
-    { name: "Chhatrapati Sambhajinagar", region: "Chhatrapati Sambhajinagar", path: "M240,175 L320,170 L330,200 L320,230 L240,235 Z" },
-    { name: "Jalna", region: "Chhatrapati Sambhajinagar", path: "M320,230 L380,225 L390,255 L380,285 L320,290 Z" },
-    { name: "Parbhani", region: "Chhatrapati Sambhajinagar", path: "M380,225 L440,220 L450,250 L440,280 L380,285 Z" },
-    { name: "Hingoli", region: "Chhatrapati Sambhajinagar", path: "M440,220 L500,215 L510,245 L500,275 L440,280 Z" },
-    { name: "Beed", region: "Chhatrapati Sambhajinagar", path: "M320,290 L380,285 L390,315 L380,345 L320,350 Z" },
-    { name: "Nanded", region: "Chhatrapati Sambhajinagar", path: "M440,280 L500,275 L510,305 L500,335 L440,340 Z" },
-    { name: "Latur", region: "Chhatrapati Sambhajinagar", path: "M380,345 L440,340 L450,370 L440,400 L380,405 Z" },
-    { name: "Osmanabad", region: "Chhatrapati Sambhajinagar", path: "M320,350 L380,345 L390,375 L380,405 L320,410 Z" },
+    { name: "Chhatrapati Sambhajinagar", region: "Chhatrapati Sambhajinagar", path: "M260,195 L340,190 L350,230 L340,270 L260,275 Z" },
+    { name: "Jalna", region: "Chhatrapati Sambhajinagar", path: "M340,270 L400,265 L410,305 L400,345 L340,350 Z" },
+    { name: "Parbhani", region: "Chhatrapati Sambhajinagar", path: "M400,265 L460,260 L470,300 L460,340 L400,345 Z" },
+    { name: "Hingoli", region: "Chhatrapati Sambhajinagar", path: "M460,260 L520,255 L530,295 L520,335 L460,340 Z" },
+    { name: "Beed", region: "Chhatrapati Sambhajinagar", path: "M340,350 L400,345 L410,385 L400,425 L340,430 Z" },
+    { name: "Nanded", region: "Chhatrapati Sambhajinagar", path: "M460,340 L520,335 L530,375 L520,415 L460,420 Z" },
+    { name: "Latur", region: "Chhatrapati Sambhajinagar", path: "M400,425 L460,420 L470,460 L460,500 L400,505 Z" },
+    { name: "Osmanabad", region: "Chhatrapati Sambhajinagar", path: "M340,430 L400,425 L410,465 L400,505 L340,510 Z" },
   ];
 
   if (isLoading) {
@@ -212,17 +212,17 @@ export default function MaharashtraMap({
                 <style>
                   {`
                     path {
-                      pointer-events: all;
-                      fill-opacity: 1;
+                      pointer-events: all !important;
+                      fill-opacity: 1 !important;
                       stroke: #fff;
-                      stroke-width: 0.5;
+                      stroke-width: 1;
                       transition: fill 0.2s ease, stroke 0.2s ease;
                       cursor: pointer;
                     }
                     
                     .district-path {
-                      pointer-events: all;
-                      fill-opacity: 1;
+                      pointer-events: all !important;
+                      fill-opacity: 1 !important;
                       stroke: #fff;
                       stroke-width: 1;
                       transition: fill 0.2s ease, stroke 0.2s ease;
@@ -294,6 +294,25 @@ export default function MaharashtraMap({
                       data-region={district.region}
                       fill={getDistrictColor(district.name)}
                       className={`district-path ${isHighlighted ? 'district-highlighted highlight' : ''}`}
+                      style={{ pointerEvents: 'all', cursor: 'pointer' }}
+                      onMouseEnter={() => handleDistrictHover(district.name)}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                      onClick={() => onRegionClick(district.region)}
+                    />
+                    {/* Invisible larger hover area for better responsiveness */}
+                    <rect
+                      x={(() => {
+                        const coords = district.path.split(' ')[1].split(',');
+                        return parseInt(coords[0]) - 10;
+                      })()}
+                      y={(() => {
+                        const coords = district.path.split(' ')[1].split(',');
+                        return parseInt(coords[1]) - 10;
+                      })()}
+                      width="80"
+                      height="60"
+                      fill="transparent"
+                      style={{ pointerEvents: 'all', cursor: 'pointer' }}
                       onMouseEnter={() => handleDistrictHover(district.name)}
                       onMouseLeave={() => handleDistrictHover(null)}
                       onClick={() => onRegionClick(district.region)}
