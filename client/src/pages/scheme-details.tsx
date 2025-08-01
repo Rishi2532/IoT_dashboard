@@ -383,15 +383,15 @@ export default function SchemeDetailsPage() {
                         {/* Compact Villages Table */}
                         <div className="bg-white shadow-sm overflow-hidden" style={{border: 'none', borderRadius: '0'}}>
                           <div className="table-responsive">
-                            <table className="village-table" style={{width: '100%', border: 'none', borderCollapse: 'separate', borderSpacing: '0'}}>
+                            <table className="village-table" style={{width: '100%', border: 'none', borderCollapse: 'separate', borderSpacing: '0', fontFamily: 'Poppins, sans-serif', fontSize: '14px'}}>
                               <thead style={{backgroundColor: '#3b2e7d'}}>
                                 <tr>
-                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>VILLAGE</th>
-                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>POP</th>
-                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>WATER</th>
-                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>LPCD</th>
-                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>ESR</th>
-                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '0.75rem', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em'}}>ACTION</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>VILLAGE</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>POP</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>WATER</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>LPCD</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>ESR</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>ACTION</th>
                                 </tr>
                               </thead>
                               <tbody>
@@ -410,35 +410,36 @@ export default function SchemeDetailsPage() {
                                   return (
                                     <>
                                       <tr key={index} style={{backgroundColor: 'white', border: 'none'}}>
-                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem'}}>
-                                          <span className="village-name text-xs">{village.village_name}</span>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '14px', fontFamily: 'Poppins, sans-serif', borderRadius: '0'}}>
+                                          <span className="village-name" style={{fontSize: '14px', fontFamily: 'Poppins, sans-serif'}}>{village.village_name}</span>
                                         </td>
-                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem', fontWeight: '500'}}>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '500', borderRadius: '0'}}>
                                           {population > 1000 ? `${Math.round(population/1000)}k` : population.toLocaleString()}
                                         </td>
-                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem', fontWeight: '500'}}>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '500', borderRadius: '0'}}>
                                           {waterValue ? `${Math.round(parseFloat(waterValue.toString())/1000)}k` : '-'}
                                         </td>
-                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem'}}>
-                                          <span className={`text-xs font-semibold px-1 py-0.5 rounded ${
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '14px', fontFamily: 'Poppins, sans-serif', borderRadius: '0'}}>
+                                          <span className={`font-semibold px-1 py-0.5 ${
                                             lpcdStatus === 'good' ? 'bg-green-100 text-green-800' :
                                             lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800' :
                                             'bg-red-100 text-red-800'
-                                          }`}>
+                                          }`} style={{fontSize: '14px', fontFamily: 'Poppins, sans-serif', borderRadius: '0'}}>
                                             {lpcdValue ? `${Math.round(lpcdValue)}L` : '-'}
                                           </span>
                                         </td>
-                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem', fontWeight: '500'}}>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '500', borderRadius: '0'}}>
                                           {villageESRs.length}
                                         </td>
-                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '0.75rem'}}>
+                                        <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '14px', fontFamily: 'Poppins, sans-serif', borderRadius: '0'}}>
                                           <button
                                             onClick={() => toggleVillageExpansion(villageId)}
-                                            className={`text-xs font-semibold px-2 py-0.5 rounded transition-colors ${
+                                            className={`font-semibold px-2 py-0.5 transition-colors ${
                                               lpcdStatus === 'good' ? 'bg-green-100 text-green-800 hover:bg-green-200' :
                                               lpcdStatus === 'warning' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' :
                                               'bg-red-100 text-red-800 hover:bg-red-200'
                                             }`}
+                                            style={{fontSize: '14px', fontFamily: 'Poppins, sans-serif', borderRadius: '0'}}
                                           >
                                             {lpcdStatus === 'good' ? 'Good' :
                                              lpcdStatus === 'warning' ? 'Warn' :
@@ -451,8 +452,8 @@ export default function SchemeDetailsPage() {
                                       {isExpanded && (
                                         <tr style={{backgroundColor: '#f1f5f9', border: 'none'}}>
                                           <td colSpan={6} style={{padding: '16px', border: 'none', borderBottom: 'none', backgroundColor: '#f1f5f9'}}>
-                                            <div className="bg-white p-3" style={{borderRadius: '0'}}>
-                                              <h4 className="text-sm font-semibold text-gray-700 mb-3 flex items-center">
+                                            <div className="bg-white p-3" style={{borderRadius: '0', fontFamily: 'Poppins, sans-serif'}}>
+                                              <h4 className="font-semibold text-gray-700 mb-3 flex items-center" style={{fontSize: '14px', fontFamily: 'Poppins, sans-serif'}}>
                                                 <Building className="w-4 h-4 mr-2" />
                                                 ESR Details for {village.village_name} ({villageESRs.length} ESRs)
                                               </h4>
