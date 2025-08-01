@@ -54,6 +54,10 @@ import {
   Calendar,
   History,
   TrendingUp,
+  Wifi,
+  WifiOff,
+  Zap,
+  Power,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -126,6 +130,33 @@ interface HistoricalChlorineData {
   dashboard_url?: string;
 }
 
+interface CommunicationStatus {
+  id: number;
+  region: string;
+  circle: string;
+  division: string;
+  sub_division: string;
+  block: string;
+  scheme_id: string;
+  scheme_name: string;
+  village_name: string;
+  esr_name: string;
+  chlorine_connected: string;
+  pressure_connected: string;
+  flow_meter_connected: string;
+  chlorine_status: string;
+  pressure_status: string;
+  flow_meter_status: string;
+  overall_status: string;
+}
+
+interface ChlorineSensorStatus {
+  connected: number;
+  online: number;
+  offline: number;
+  noWater: number;
+}
+
 type ChlorineRange =
   | "all"
   | "below_0.2"
@@ -135,6 +166,12 @@ type ChlorineRange =
   | "consistent_below"
   | "consistent_optimal"
   | "consistent_above";
+
+type SensorStatusFilter =
+  | "all"
+  | "connected"
+  | "online"
+  | "offline";
 
 const ChlorineDashboard: React.FC = () => {
   const { toast } = useToast();
@@ -150,6 +187,9 @@ const ChlorineDashboard: React.FC = () => {
   
   // Card-specific filter state (only affects table data, not card values)
   const [selectedCardFilter, setSelectedCardFilter] = useState<ChlorineRange>("all");
+  
+  // Sensor status filter state
+  const [sensorStatusFilter, setSensorStatusFilter] = useState<SensorStatusFilter>("all");
   
   // Remove the old selectedCardFilter state entirely - we'll use selectedCardFilter instead
 
@@ -288,6 +328,15 @@ const ChlorineDashboard: React.FC = () => {
     queryKey: ["/api/regions"],
   });
 
+  // Fetch communication status data
+  const {
+    data: communicationStatusData = [],
+    isLoading: communicationStatusLoading,
+    error: communicationStatusError,
+  } = useQuery<CommunicationStatus[]>({
+    queryKey: ["/api/communication-status/schemes"],
+  });
+
   // Fetch scheme status data for filtering
   const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } =
     useQuery<any[]>({
@@ -344,6 +393,50 @@ const ChlorineDashboard: React.FC = () => {
     },
     enabled: showHistoricalData, // Only fetch when historical view is enabled
   });
+
+  // Calculate sensor status counts for chlorine sensors
+  const calculateChlorineSensorStatus = useMemo((): ChlorineSensorStatus => {
+    const status = { connected: 0, online: 0, offline: 0, noWater: 0 };
+    
+    if (!allChlorineData || !communicationStatusData) {
+      return status;
+    }
+
+    // Create a map of ESR names from chlorine data
+    const chlorineESRs = new Set(allChlorineData.map(item => item.esr_name));
+    
+    // Filter communication status for regions if selected
+    const filteredCommStatus = selectedRegion === "all" 
+      ? communicationStatusData 
+      : communicationStatusData.filter(comm => comm.region === selectedRegion);
+
+    filteredCommStatus.forEach(commStatus => {
+      // Only count if this ESR has chlorine data
+      if (chlorineESRs.has(commStatus.esr_name)) {
+        // Count connected sensors
+        if (commStatus.chlorine_connected === 'connected') {
+          status.connected++;
+          
+          // Count online/offline status for connected sensors
+          if (commStatus.chlorine_status === 'online') {
+            status.online++;
+          } else if (commStatus.chlorine_status === 'offline') {
+            status.offline++;
+          }
+        }
+      }
+    });
+
+    // Count sensors with no water (chlorine value is 0 for latest reading)
+    allChlorineData.forEach(chlorineData => {
+      const latestValue = getLatestChlorineValue(chlorineData);
+      if (latestValue === 0) {
+        status.noWater++;
+      }
+    });
+
+    return status;
+  }, [allChlorineData, communicationStatusData, selectedRegion]);
 
   // Get latest chlorine value
   const getLatestChlorineValue = (data: ChlorineData): number | null => {
@@ -635,8 +728,31 @@ const ChlorineDashboard: React.FC = () => {
       });
     }
 
+    // Apply sensor status filter for table only
+    if (sensorStatusFilter && sensorStatusFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        const commStatus = communicationStatusData.find(
+          comm => comm.esr_name === item.esr_name
+        );
+        
+        if (!commStatus) return false;
+        
+        if (sensorStatusFilter === "connected") {
+          return commStatus.chlorine_connected === "connected";
+        } else if (sensorStatusFilter === "online") {
+          return commStatus.chlorine_connected === "connected" && 
+                 commStatus.chlorine_status === "online";
+        } else if (sensorStatusFilter === "offline") {
+          return commStatus.chlorine_connected === "connected" && 
+                 commStatus.chlorine_status === "offline";
+        }
+        
+        return false;
+      });
+    }
+
     return filtered;
-  }, [globallyFilteredData, selectedCardFilter, showHistoricalData, historicalChlorineData, searchQuery]);
+  }, [globallyFilteredData, selectedCardFilter, sensorStatusFilter, communicationStatusData, showHistoricalData, historicalChlorineData, searchQuery]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -674,6 +790,19 @@ const ChlorineDashboard: React.FC = () => {
     // Track card filter usage
     if (range !== "all") {
       trackFilterUsage("chlorine_range", getFilterTitle(range), filteredData.length, "chlorine_dashboard");
+    }
+    
+    setPage(1); // Reset to first page when filter changes
+  };
+
+  // Handler for sensor status filter clicks
+  const handleSensorStatusClick = (status: SensorStatusFilter) => {
+    setSensorStatusFilter(status);
+    setSelectedCardFilter("all"); // Reset chlorine range filter when switching to sensor status
+    
+    // Track sensor filter usage
+    if (status !== "all") {
+      trackFilterUsage("sensor_status", status, filteredData.length, "chlorine_dashboard");
     }
     
     setPage(1); // Reset to first page when filter changes
@@ -1194,6 +1323,104 @@ const ChlorineDashboard: React.FC = () => {
             )}
           </div>
         )}
+      </div>
+
+      {/* Status Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-4 mb-6">
+        {/* Connected Sensors Card */}
+        <Card
+          className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${
+            sensorStatusFilter === "connected" ? "ring-2 ring-blue-500 ring-offset-2" : ""
+          } transform hover:scale-[1.02]`}
+          onClick={() => handleSensorStatusClick("connected")}
+        >
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-blue-100 p-3 rounded-full mr-4">
+              <Wifi className="h-6 w-6 text-blue-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-800 mb-1">
+                Connected Sensors
+              </h3>
+              <p className="text-2xl font-bold text-blue-600">
+                {calculateChlorineSensorStatus.connected}
+              </p>
+              <p className="text-xs text-blue-600/70">
+                Chlorine sensors connected
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Online Sensors Card */}
+        <Card
+          className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${
+            sensorStatusFilter === "online" ? "ring-2 ring-green-500 ring-offset-2" : ""
+          } transform hover:scale-[1.02]`}
+          onClick={() => handleSensorStatusClick("online")}
+        >
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-green-100 p-3 rounded-full mr-4">
+              <Zap className="h-6 w-6 text-green-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-green-800 mb-1">
+                Online Sensors
+              </h3>
+              <p className="text-2xl font-bold text-green-600">
+                {calculateChlorineSensorStatus.online}
+              </p>
+              <p className="text-xs text-green-600/70">
+                Currently online & active
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Offline Sensors Card */}
+        <Card
+          className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${
+            sensorStatusFilter === "offline" ? "ring-2 ring-orange-500 ring-offset-2" : ""
+          } transform hover:scale-[1.02]`}
+          onClick={() => handleSensorStatusClick("offline")}
+        >
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-orange-100 p-3 rounded-full mr-4">
+              <WifiOff className="h-6 w-6 text-orange-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-orange-800 mb-1">
+                Offline Sensors
+              </h3>
+              <p className="text-2xl font-bold text-orange-600">
+                {calculateChlorineSensorStatus.offline}
+              </p>
+              <p className="text-xs text-orange-600/70">
+                Connected but offline
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* No Water Sensors Card - Non-clickable */}
+        <Card className="opacity-90">
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-red-100 p-3 rounded-full mr-4">
+              <Droplet className="h-6 w-6 text-red-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-800 mb-1">
+                Sensors with No Water
+              </h3>
+              <p className="text-2xl font-bold text-red-600">
+                {calculateChlorineSensorStatus.noWater}
+              </p>
+              <p className="text-xs text-red-600/70">
+                Zero chlorine detected
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Dashboard Cards */}

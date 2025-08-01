@@ -53,6 +53,11 @@ import {
   Calendar,
   History,
   TrendingUp,
+  Wifi,
+  WifiOff,
+  Zap,
+  Power,
+  Droplet,
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -117,6 +122,33 @@ interface HistoricalPressureData {
   recorded_at: string;
 }
 
+interface CommunicationStatus {
+  id: number;
+  region: string;
+  circle: string;
+  division: string;
+  sub_division: string;
+  block: string;
+  scheme_id: string;
+  scheme_name: string;
+  village_name: string;
+  esr_name: string;
+  chlorine_connected: string;
+  pressure_connected: string;
+  flow_meter_connected: string;
+  chlorine_status: string;
+  pressure_status: string;
+  flow_meter_status: string;
+  overall_status: string;
+}
+
+interface PressureSensorStatus {
+  connected: number;
+  online: number;
+  offline: number;
+  noWater: number;
+}
+
 interface ImportStats {
   inserted: number;
   updated: number;
@@ -146,6 +178,12 @@ type PressureRange =
   | "consistent_below"
   | "consistent_optimal"
   | "consistent_above";
+
+type SensorStatusFilter =
+  | "all"
+  | "connected"
+  | "online"
+  | "offline";
 
 const PressureDashboard: React.FC = () => {
   const { toast } = useToast();
@@ -215,6 +253,9 @@ const PressureDashboard: React.FC = () => {
   
   // Card-specific filter state (only affects table data, not card counts)
   const [selectedCardFilter, setSelectedCardFilter] = useState<PressureRange>("all");
+  
+  // Sensor status filter state
+  const [sensorStatusFilter, setSensorStatusFilter] = useState<SensorStatusFilter>("all");
 
   // Pagination state
   const [page, setPage] = useState(1);
@@ -301,6 +342,15 @@ const PressureDashboard: React.FC = () => {
     queryKey: ["/api/regions"],
   });
 
+  // Fetch communication status data
+  const {
+    data: communicationStatusData = [],
+    isLoading: communicationStatusLoading,
+    error: communicationStatusError,
+  } = useQuery<CommunicationStatus[]>({
+    queryKey: ["/api/communication-status/schemes"],
+  });
+
   // Fetch scheme status data for filtering
   const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } =
     useQuery<any[]>({
@@ -357,6 +407,50 @@ const PressureDashboard: React.FC = () => {
     },
     enabled: showHistoricalData, // Only fetch when historical view is enabled
   });
+
+  // Calculate sensor status counts for pressure sensors
+  const calculatePressureSensorStatus = useMemo((): PressureSensorStatus => {
+    const status = { connected: 0, online: 0, offline: 0, noWater: 0 };
+    
+    if (!allPressureData || !communicationStatusData) {
+      return status;
+    }
+
+    // Create a map of ESR names from pressure data
+    const pressureESRs = new Set(allPressureData.map(item => item.esr_name));
+    
+    // Filter communication status for regions if selected
+    const filteredCommStatus = selectedRegion === "all" 
+      ? communicationStatusData 
+      : communicationStatusData.filter(comm => comm.region === selectedRegion);
+
+    filteredCommStatus.forEach(commStatus => {
+      // Only count if this ESR has pressure data
+      if (pressureESRs.has(commStatus.esr_name)) {
+        // Count connected sensors
+        if (commStatus.pressure_connected === 'connected') {
+          status.connected++;
+          
+          // Count online/offline status for connected sensors
+          if (commStatus.pressure_status === 'online') {
+            status.online++;
+          } else if (commStatus.pressure_status === 'offline') {
+            status.offline++;
+          }
+        }
+      }
+    });
+
+    // Count sensors with no water (pressure value is 0 for latest reading)
+    allPressureData.forEach(pressureData => {
+      const latestValue = getLatestPressureValue(pressureData);
+      if (latestValue === 0) {
+        status.noWater++;
+      }
+    });
+
+    return status;
+  }, [allPressureData, communicationStatusData, selectedRegion]);
 
   // Get latest pressure value
   const getLatestPressureValue = (data: PressureData): number | null => {
@@ -673,6 +767,29 @@ const PressureDashboard: React.FC = () => {
       }
     }
 
+    // Apply sensor status filter for table only
+    if (sensorStatusFilter && sensorStatusFilter !== "all") {
+      filtered = filtered.filter((item) => {
+        const commStatus = communicationStatusData.find(
+          comm => comm.esr_name === item.esr_name
+        );
+        
+        if (!commStatus) return false;
+        
+        if (sensorStatusFilter === "connected") {
+          return commStatus.pressure_connected === "connected";
+        } else if (sensorStatusFilter === "online") {
+          return commStatus.pressure_connected === "connected" && 
+                 commStatus.pressure_status === "online";
+        } else if (sensorStatusFilter === "offline") {
+          return commStatus.pressure_connected === "connected" && 
+                 commStatus.pressure_status === "offline";
+        }
+        
+        return false;
+      });
+    }
+
     return filtered;
   }, [
     allPressureData,
@@ -682,7 +799,9 @@ const PressureDashboard: React.FC = () => {
     fullyCompletedFilter,
     schemeStatusFilter,
     schemeStatusData,
-    selectedCardFilter, // Add this to dependencies
+    selectedCardFilter,
+    sensorStatusFilter,
+    communicationStatusData, // Add this to dependencies
   ]);
 
   // Calculate pagination
@@ -788,6 +907,19 @@ const PressureDashboard: React.FC = () => {
     // Only update the selected card filter - this affects the table display
     // but not the card values which come from dashboardStats
     setSelectedCardFilter(range);
+    setPage(1); // Reset to first page when filter changes
+  };
+
+  // Handler for sensor status filter clicks
+  const handleSensorStatusClick = (status: SensorStatusFilter) => {
+    setSensorStatusFilter(status);
+    setSelectedCardFilter("all"); // Reset pressure range filter when switching to sensor status
+    
+    // Track sensor filter usage
+    if (status !== "all") {
+      trackFilterUsage("sensor_status", status, filteredData.length, "pressure_dashboard");
+    }
+    
     setPage(1); // Reset to first page when filter changes
   };
 
@@ -1459,6 +1591,104 @@ const PressureDashboard: React.FC = () => {
           </div>
         </div>
       )} */}
+
+      {/* Status Summary Cards */}
+      <div className="grid gap-4 md:grid-cols-4 mb-6">
+        {/* Connected Sensors Card */}
+        <Card
+          className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${
+            sensorStatusFilter === "connected" ? "ring-2 ring-blue-500 ring-offset-2" : ""
+          } transform hover:scale-[1.02]`}
+          onClick={() => handleSensorStatusClick("connected")}
+        >
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-blue-100 p-3 rounded-full mr-4">
+              <Wifi className="h-6 w-6 text-blue-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-800 mb-1">
+                Connected Sensors
+              </h3>
+              <p className="text-2xl font-bold text-blue-600">
+                {calculatePressureSensorStatus.connected}
+              </p>
+              <p className="text-xs text-blue-600/70">
+                Pressure sensors connected
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Online Sensors Card */}
+        <Card
+          className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${
+            sensorStatusFilter === "online" ? "ring-2 ring-green-500 ring-offset-2" : ""
+          } transform hover:scale-[1.02]`}
+          onClick={() => handleSensorStatusClick("online")}
+        >
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-green-100 p-3 rounded-full mr-4">
+              <Zap className="h-6 w-6 text-green-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-green-800 mb-1">
+                Online Sensors
+              </h3>
+              <p className="text-2xl font-bold text-green-600">
+                {calculatePressureSensorStatus.online}
+              </p>
+              <p className="text-xs text-green-600/70">
+                Currently online & active
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Offline Sensors Card */}
+        <Card
+          className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${
+            sensorStatusFilter === "offline" ? "ring-2 ring-orange-500 ring-offset-2" : ""
+          } transform hover:scale-[1.02]`}
+          onClick={() => handleSensorStatusClick("offline")}
+        >
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-orange-100 p-3 rounded-full mr-4">
+              <WifiOff className="h-6 w-6 text-orange-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-orange-800 mb-1">
+                Offline Sensors
+              </h3>
+              <p className="text-2xl font-bold text-orange-600">
+                {calculatePressureSensorStatus.offline}
+              </p>
+              <p className="text-xs text-orange-600/70">
+                Connected but offline
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* No Water Sensors Card - Non-clickable */}
+        <Card className="opacity-90">
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-red-100 p-3 rounded-full mr-4">
+              <Droplet className="h-6 w-6 text-red-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-red-800 mb-1">
+                Sensors with No Water
+              </h3>
+              <p className="text-2xl font-bold text-red-600">
+                {calculatePressureSensorStatus.noWater}
+              </p>
+              <p className="text-xs text-red-600/70">
+                Zero pressure detected
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Dashboard Cards */}
       <div className="grid gap-6 md:grid-cols-4 mb-8">
