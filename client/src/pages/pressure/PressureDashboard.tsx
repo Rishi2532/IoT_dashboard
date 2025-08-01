@@ -408,6 +408,23 @@ const PressureDashboard: React.FC = () => {
     enabled: showHistoricalData, // Only fetch when historical view is enabled
   });
 
+  // Get latest pressure value
+  const getLatestPressureValue = (data: PressureData): number | null => {
+    // Try to get the latest non-null value
+    for (const day of [7, 6, 5, 4, 3, 2, 1]) {
+      const value = data[`pressure_value_${day}` as keyof PressureData];
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        !isNaN(Number(value))
+      ) {
+        return Number(value);
+      }
+    }
+    return null;
+  };
+
   // Calculate sensor status counts for pressure sensors
   const calculatePressureSensorStatus = useMemo((): PressureSensorStatus => {
     const status = { connected: 0, online: 0, offline: 0, noWater: 0 };
@@ -451,23 +468,6 @@ const PressureDashboard: React.FC = () => {
 
     return status;
   }, [allPressureData, communicationStatusData, selectedRegion]);
-
-  // Get latest pressure value
-  const getLatestPressureValue = (data: PressureData): number | null => {
-    // Try to get the latest non-null value
-    for (const day of [7, 6, 5, 4, 3, 2, 1]) {
-      const value = data[`pressure_value_${day}` as keyof PressureData];
-      if (
-        value !== undefined &&
-        value !== null &&
-        value !== "" &&
-        !isNaN(Number(value))
-      ) {
-        return Number(value);
-      }
-    }
-    return null;
-  };
 
   // Get the CSS class and status text based on pressure value
   const getPressureStatusInfo = (value: number | null) => {
