@@ -394,6 +394,23 @@ const ChlorineDashboard: React.FC = () => {
     enabled: showHistoricalData, // Only fetch when historical view is enabled
   });
 
+  // Get latest chlorine value
+  const getLatestChlorineValue = (data: ChlorineData): number | null => {
+    // Try to get the latest non-null value
+    for (const day of [7, 6, 5, 4, 3, 2, 1]) {
+      const value = data[`chlorine_value_${day}` as keyof ChlorineData];
+      if (
+        value !== undefined &&
+        value !== null &&
+        value !== "" &&
+        !isNaN(Number(value))
+      ) {
+        return Number(value);
+      }
+    }
+    return null;
+  };
+
   // Calculate sensor status counts for chlorine sensors
   const calculateChlorineSensorStatus = useMemo((): ChlorineSensorStatus => {
     const status = { connected: 0, online: 0, offline: 0, noWater: 0 };
@@ -437,23 +454,6 @@ const ChlorineDashboard: React.FC = () => {
 
     return status;
   }, [allChlorineData, communicationStatusData, selectedRegion]);
-
-  // Get latest chlorine value
-  const getLatestChlorineValue = (data: ChlorineData): number | null => {
-    // Try to get the latest non-null value
-    for (const day of [7, 6, 5, 4, 3, 2, 1]) {
-      const value = data[`chlorine_value_${day}` as keyof ChlorineData];
-      if (
-        value !== undefined &&
-        value !== null &&
-        value !== "" &&
-        !isNaN(Number(value))
-      ) {
-        return Number(value);
-      }
-    }
-    return null;
-  };
 
   // Get the CSS class and status text based on chlorine value
   const getChlorineStatusInfo = (value: number | null) => {
