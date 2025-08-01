@@ -43,6 +43,7 @@ import {
   BarChart,
   BarChart2 as BarChart3,
   BarChartHorizontal as ChartBarOff,
+  Droplets,
   ExternalLink,
   ChevronLeft,
   ChevronRight,
@@ -127,6 +128,7 @@ type LpcdRange =
   | "15to25"
   | "0to15"
   | "noSupply" // Filter for villages with 0 water supply
+  | "consistentZeroWaterSupply" // Filter for villages with consistent 0 water supply for all 7 days
   | "55to60"
   | "60to65"
   | "65to70"
@@ -407,6 +409,25 @@ const EnhancedLpcdDashboard = () => {
     return currentWaterSupply !== null && currentWaterSupply === 0;
   };
 
+  // Check if a scheme has consistent zero water supply for all 7 days
+  const hasConsistentZeroWaterSupply = (scheme: WaterSchemeData): boolean => {
+    const waterValues = [
+      scheme.water_value_day1,
+      scheme.water_value_day2,
+      scheme.water_value_day3,
+      scheme.water_value_day4,
+      scheme.water_value_day5,
+      scheme.water_value_day6,
+      scheme.water_value_day7,
+    ];
+
+    // Check if all water values are 0 (excluding null/undefined)
+    return waterValues.every((value) => {
+      if (value === null || value === undefined) return false;
+      return Number(value) === 0;
+    });
+  };
+
   // Extract all LPCD values
   const extractLpcdValues = (scheme: WaterSchemeData): number[] => {
     return [
@@ -555,6 +576,9 @@ const EnhancedLpcdDashboard = () => {
       case "noSupply":
         filtered = filtered.filter((scheme) => hasNoCurrentWaterSupply(scheme));
         break;
+      case "consistentZeroWaterSupply":
+        filtered = filtered.filter((scheme) => hasConsistentZeroWaterSupply(scheme));
+        break;
       case "55to60":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
@@ -607,6 +631,11 @@ const EnhancedLpcdDashboard = () => {
           isConsistentlyBelowThreshold(scheme, 55),
         );
         break;
+      case "consistentZeroWaterSupply":
+        filtered = filtered.filter((scheme) =>
+          hasConsistentZeroWaterSupply(scheme),
+        );
+        break;
     }
 
     return filtered;
@@ -640,6 +669,7 @@ const EnhancedLpcdDashboard = () => {
       },
       consistentlyAbove55: 0,
       consistentlyBelow55: 0,
+      consistentZeroWaterSupply: 0,
     };
 
     if (globallyFilteredData.length === 0) return counts;
@@ -707,6 +737,11 @@ const EnhancedLpcdDashboard = () => {
       }
       if (isConsistentlyBelowThreshold(scheme, 55)) {
         counts.consistentlyBelow55++;
+      }
+
+      // Count consistent zero water supply
+      if (hasConsistentZeroWaterSupply(scheme)) {
+        counts.consistentZeroWaterSupply++;
       }
     });
 
@@ -2074,7 +2109,7 @@ const EnhancedLpcdDashboard = () => {
 
             {/* Bottom Cards Row - Consistent Trends */}
             {showCharts && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Consistently Above 55L LPCD */}
                 <Card
                   className="border-blue-200 dashboard-card card-shadow bg-gradient-to-b from-white to-blue-50"
@@ -2117,6 +2152,29 @@ const EnhancedLpcdDashboard = () => {
                     </div>
                     <div className="text-2xl font-bold text-orange-700 bg-orange-100 px-4 py-2 rounded-lg">
                       {filterCounts.consistentlyBelow55}
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Consistent Zero Water Supply */}
+                <Card
+                  className="border-red-200 dashboard-card card-shadow bg-gradient-to-b from-white to-red-50"
+                  onClick={() => handleFilterChange("consistentZeroWaterSupply")}
+                >
+                  <CardContent className="p-5 flex items-center cursor-pointer hover:bg-red-50 transition-all">
+                    <div className="bg-red-100 p-3 rounded-full mr-4">
+                      <Droplets className="h-6 w-6 text-red-700" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-red-800 mb-1">
+                        Zero Water Supply
+                      </h3>
+                      <p className="text-red-700 text-sm">
+                        Villages with zero water supply for entire week
+                      </p>
+                    </div>
+                    <div className="text-2xl font-bold text-red-700 bg-red-100 px-4 py-2 rounded-lg">
+                      {filterCounts.consistentZeroWaterSupply}
                     </div>
                   </CardContent>
                 </Card>
