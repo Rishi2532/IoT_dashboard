@@ -66,10 +66,10 @@ interface PressureData {
   scheme_id: string;
   scheme_name: string;
   region: string;
-  circle?: string;
-  division?: string;
-  sub_division?: string;
-  block?: string;
+  circle: string;
+  division: string;
+  sub_division: string;
+  block: string;
   village_name: string;
   esr_name: string;
   sensor_id?: string;
@@ -433,8 +433,12 @@ const PressureDashboard: React.FC = () => {
       return status;
     }
 
-    // Create a map of ESR names from pressure data
-    const pressureESRs = new Set(allPressureData.map(item => item.esr_name));
+    // Create a map of the full hierarchy from pressure data for exact matching
+    const pressureLocationKeys = new Set(
+      allPressureData.map(item => 
+        `${item.region}|${item.circle}|${item.division}|${item.sub_division}|${item.block}|${item.village_name}|${item.esr_name}`
+      )
+    );
     
     // Filter communication status for regions if selected
     const filteredCommStatus = selectedRegion === "all" 
@@ -447,17 +451,20 @@ const PressureDashboard: React.FC = () => {
     const uniqueOfflineESRs = new Set<string>();
 
     filteredCommStatus.forEach(commStatus => {
-      // Only count if this ESR has pressure data
-      if (pressureESRs.has(commStatus.esr_name)) {
+      // Create the location key for this communication status record
+      const commLocationKey = `${commStatus.region}|${commStatus.circle}|${commStatus.division}|${commStatus.sub_division}|${commStatus.block}|${commStatus.village_name}|${commStatus.esr_name}`;
+      
+      // Only count if this exact location hierarchy has pressure data
+      if (pressureLocationKeys.has(commLocationKey)) {
         // Count connected sensors (match exact database values)
         if (commStatus.pressure_connected === 'Connected') {
-          uniqueConnectedESRs.add(commStatus.esr_name);
+          uniqueConnectedESRs.add(commLocationKey);
           
           // Count online/offline status for connected sensors (match exact database values)
           if (commStatus.pressure_status === 'Online') {
-            uniqueOnlineESRs.add(commStatus.esr_name);
+            uniqueOnlineESRs.add(commLocationKey);
           } else if (commStatus.pressure_status === 'Offline') {
-            uniqueOfflineESRs.add(commStatus.esr_name);
+            uniqueOfflineESRs.add(commLocationKey);
           }
         }
       }
@@ -780,7 +787,13 @@ const PressureDashboard: React.FC = () => {
     if (sensorStatusFilter && sensorStatusFilter !== "all") {
       filtered = filtered.filter((item) => {
         const commStatus = communicationStatusData.find(
-          comm => comm.esr_name === item.esr_name
+          comm => comm.region === item.region &&
+                  comm.circle === item.circle &&
+                  comm.division === item.division &&
+                  comm.sub_division === item.sub_division &&
+                  comm.block === item.block &&
+                  comm.village_name === item.village_name &&
+                  comm.esr_name === item.esr_name
         );
         
         if (!commStatus) return false;
