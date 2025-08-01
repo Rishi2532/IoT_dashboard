@@ -430,14 +430,14 @@ const ChlorineDashboard: React.FC = () => {
     filteredCommStatus.forEach(commStatus => {
       // Only count if this ESR has chlorine data
       if (chlorineESRs.has(commStatus.esr_name)) {
-        // Count connected sensors
-        if (commStatus.chlorine_connected === 'connected') {
+        // Count connected sensors (case insensitive)
+        if (commStatus.chlorine_connected?.toLowerCase() === 'connected') {
           status.connected++;
           
-          // Count online/offline status for connected sensors
-          if (commStatus.chlorine_status === 'online') {
+          // Count online/offline status for connected sensors (case insensitive)
+          if (commStatus.chlorine_status?.toLowerCase() === 'online') {
             status.online++;
-          } else if (commStatus.chlorine_status === 'offline') {
+          } else if (commStatus.chlorine_status?.toLowerCase() === 'offline') {
             status.offline++;
           }
         }
@@ -738,13 +738,13 @@ const ChlorineDashboard: React.FC = () => {
         if (!commStatus) return false;
         
         if (sensorStatusFilter === "connected") {
-          return commStatus.chlorine_connected === "connected";
+          return commStatus.chlorine_connected?.toLowerCase() === "connected";
         } else if (sensorStatusFilter === "online") {
-          return commStatus.chlorine_connected === "connected" && 
-                 commStatus.chlorine_status === "online";
+          return commStatus.chlorine_connected?.toLowerCase() === "connected" && 
+                 commStatus.chlorine_status?.toLowerCase() === "online";
         } else if (sensorStatusFilter === "offline") {
-          return commStatus.chlorine_connected === "connected" && 
-                 commStatus.chlorine_status === "offline";
+          return commStatus.chlorine_connected?.toLowerCase() === "connected" && 
+                 commStatus.chlorine_status?.toLowerCase() === "offline";
         }
         
         return false;

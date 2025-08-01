@@ -444,14 +444,14 @@ const PressureDashboard: React.FC = () => {
     filteredCommStatus.forEach(commStatus => {
       // Only count if this ESR has pressure data
       if (pressureESRs.has(commStatus.esr_name)) {
-        // Count connected sensors
-        if (commStatus.pressure_connected === 'connected') {
+        // Count connected sensors (case insensitive)
+        if (commStatus.pressure_connected?.toLowerCase() === 'connected') {
           status.connected++;
           
-          // Count online/offline status for connected sensors
-          if (commStatus.pressure_status === 'online') {
+          // Count online/offline status for connected sensors (case insensitive)
+          if (commStatus.pressure_status?.toLowerCase() === 'online') {
             status.online++;
-          } else if (commStatus.pressure_status === 'offline') {
+          } else if (commStatus.pressure_status?.toLowerCase() === 'offline') {
             status.offline++;
           }
         }
@@ -777,13 +777,13 @@ const PressureDashboard: React.FC = () => {
         if (!commStatus) return false;
         
         if (sensorStatusFilter === "connected") {
-          return commStatus.pressure_connected === "connected";
+          return commStatus.pressure_connected?.toLowerCase() === "connected";
         } else if (sensorStatusFilter === "online") {
-          return commStatus.pressure_connected === "connected" && 
-                 commStatus.pressure_status === "online";
+          return commStatus.pressure_connected?.toLowerCase() === "connected" && 
+                 commStatus.pressure_status?.toLowerCase() === "online";
         } else if (sensorStatusFilter === "offline") {
-          return commStatus.pressure_connected === "connected" && 
-                 commStatus.pressure_status === "offline";
+          return commStatus.pressure_connected?.toLowerCase() === "connected" && 
+                 commStatus.pressure_status?.toLowerCase() === "offline";
         }
         
         return false;
