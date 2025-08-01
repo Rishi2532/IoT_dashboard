@@ -224,7 +224,9 @@ export default function MaharashtraMap({
                       pointer-events: all !important;
                       fill-opacity: 1 !important;
                       stroke: #fff;
-                      stroke-width: 1;
+                      stroke-width: 2;
+                      stroke-linejoin: round;  
+                      stroke-linecap: round;
                       transition: fill 0.2s ease, stroke 0.2s ease;
                       cursor: pointer;
                     }
@@ -299,20 +301,31 @@ export default function MaharashtraMap({
                       onMouseLeave={() => handleDistrictHover(null)}
                       onClick={() => onRegionClick(district.region)}
                     />
-                    {/* Invisible larger hover area for better responsiveness */}
-                    <rect
-                      x={(() => {
+                    {/* Large circular hover detection area for maximum coverage */}
+                    <circle
+                      cx={(() => {
                         const coords = district.path.split(' ')[1].split(',');
-                        return parseInt(coords[0]) - 10;
+                        const x1 = parseInt(coords[0]);
+                        const pathParts = district.path.split(' ');
+                        const lastCoord = pathParts[pathParts.length - 2].split(',');
+                        const x2 = parseInt(lastCoord[0]);
+                        return (x1 + x2) / 2;
                       })()}
-                      y={(() => {
+                      cy={(() => {
                         const coords = district.path.split(' ')[1].split(',');
-                        return parseInt(coords[1]) - 10;
+                        const y1 = parseInt(coords[1]);
+                        const pathParts = district.path.split(' ');
+                        const lastCoord = pathParts[pathParts.length - 2].split(',');
+                        const y2 = parseInt(lastCoord[1]);
+                        return (y1 + y2) / 2;
                       })()}
-                      width="80"
-                      height="60"
+                      r="35"
                       fill="transparent"
-                      style={{ pointerEvents: 'all', cursor: 'pointer' }}
+                      style={{ 
+                        pointerEvents: 'all', 
+                        cursor: 'pointer',
+                        opacity: 0 
+                      }}
                       onMouseEnter={() => handleDistrictHover(district.name)}
                       onMouseLeave={() => handleDistrictHover(null)}
                       onClick={() => onRegionClick(district.region)}
