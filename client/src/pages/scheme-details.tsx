@@ -7,6 +7,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import DashboardLayout from "@/components/dashboard/dashboard-layout";
 
+// Custom styles for sharp corners
+const sharpTableStyles = `
+  .sharp-table * {
+    border-radius: 0 !important;
+    font-family: 'Poppins', sans-serif !important;
+    font-size: 14px !important;
+  }
+  .sharp-table table {
+    border-collapse: separate !important;
+    border-spacing: 0 !important;
+  }
+  .sharp-table th,
+  .sharp-table td {
+    border-radius: 0 !important;
+  }
+`;
+
 export default function SchemeDetailsPage() {
   const [location, setLocation] = useLocation();
   const pathParts = location.split("/").slice(2);
@@ -176,6 +193,7 @@ export default function SchemeDetailsPage() {
 
   return (
     <DashboardLayout>
+      <style>{sharpTableStyles}</style>
       <div className="space-y-6">
         {/* Enhanced Header - Stock Market Style */}
         <div className="space-y-4">
@@ -365,23 +383,23 @@ export default function SchemeDetailsPage() {
               return (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {blockEntries.map(([blockName, blockVillages]: [string, any]) => (
-                    <div key={blockName} className="bg-white border border-gray-200">
+                    <div key={blockName} className="bg-white border border-gray-200" style={{borderRadius: '0'}}>
                       {/* Compact Block Header */}
-                      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200">
+                      <div className="bg-gray-50 px-4 py-3 border-b border-gray-200" style={{borderRadius: '0'}}>
                         <div className="flex items-center justify-between">
-                          <h3 className="text-md font-semibold text-gray-900 flex items-center">
+                          <h3 className="text-md font-semibold text-gray-900 flex items-center" style={{fontSize: '14px', fontFamily: 'Poppins, sans-serif'}}>
                             <Building className="w-4 h-4 mr-2 text-blue-600" />
                             Block: {blockName}
                           </h3>
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">
+                          <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200" style={{fontSize: '14px', fontFamily: 'Poppins, sans-serif', borderRadius: '0'}}>
                             {blockVillages.length} village{blockVillages.length !== 1 ? 's' : ''}
                           </Badge>
                         </div>
                       </div>
 
-                      <div className="p-4">
+                      <div className="p-4" style={{borderRadius: '0'}}>
                         {/* Compact Villages Table */}
-                        <div className="bg-white shadow-sm overflow-hidden" style={{border: 'none', borderRadius: '0'}}>
+                        <div className="bg-white shadow-sm overflow-hidden sharp-table" style={{border: 'none', borderRadius: '0'}}>
                           <div className="table-responsive">
                             <table className="village-table" style={{width: '100%', border: 'none', borderCollapse: 'separate', borderSpacing: '0', fontFamily: 'Poppins, sans-serif', fontSize: '14px'}}>
                               <thead style={{backgroundColor: '#3b2e7d'}}>
