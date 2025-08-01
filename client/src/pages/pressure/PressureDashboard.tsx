@@ -444,14 +444,14 @@ const PressureDashboard: React.FC = () => {
     filteredCommStatus.forEach(commStatus => {
       // Only count if this ESR has pressure data
       if (pressureESRs.has(commStatus.esr_name)) {
-        // Count connected sensors (case insensitive)
-        if (commStatus.pressure_connected?.toLowerCase() === 'connected') {
+        // Count connected sensors (match exact database values)
+        if (commStatus.pressure_connected === 'Connected') {
           status.connected++;
           
-          // Count online/offline status for connected sensors (case insensitive)
-          if (commStatus.pressure_status?.toLowerCase() === 'online') {
+          // Count online/offline status for connected sensors (match exact database values)
+          if (commStatus.pressure_status === 'Online') {
             status.online++;
-          } else if (commStatus.pressure_status?.toLowerCase() === 'offline') {
+          } else if (commStatus.pressure_status === 'Offline') {
             status.offline++;
           }
         }
@@ -777,13 +777,13 @@ const PressureDashboard: React.FC = () => {
         if (!commStatus) return false;
         
         if (sensorStatusFilter === "connected") {
-          return commStatus.pressure_connected?.toLowerCase() === "connected";
+          return commStatus.pressure_connected === "Connected";
         } else if (sensorStatusFilter === "online") {
-          return commStatus.pressure_connected?.toLowerCase() === "connected" && 
-                 commStatus.pressure_status?.toLowerCase() === "online";
+          return commStatus.pressure_connected === "Connected" && 
+                 commStatus.pressure_status === "Online";
         } else if (sensorStatusFilter === "offline") {
-          return commStatus.pressure_connected?.toLowerCase() === "connected" && 
-                 commStatus.pressure_status?.toLowerCase() === "offline";
+          return commStatus.pressure_connected === "Connected" && 
+                 commStatus.pressure_status === "Offline";
         }
         
         return false;
