@@ -238,32 +238,41 @@ export default function MaharashtraInteractiveMap({
                 <style>
                   {`
                     .district-path {
-                      transition: all 0.2s ease;
+                      pointer-events: all;
+                      fill-opacity: 1;
+                      stroke: #fff;
+                      stroke-width: 1;
+                      transition: fill 0.2s ease, stroke 0.2s ease;
                       cursor: pointer;
                     }
                     .district-path:hover {
                       stroke-width: 2;
-                      filter: brightness(0.9);
+                    }
+                    .district-highlighted {
+                      stroke-width: 2;
+                      stroke: #1f2937;
                     }
                   `}
                 </style>
               </defs>
 
               {/* Render all districts */}
-              {districts.map((district) => (
-                <g key={district.name}>
-                  <path
-                    d={district.path}
-                    data-district={district.name}
-                    data-region={district.region}
-                    fill={getDistrictColor(district.name)}
-                    stroke="#fff"
-                    strokeWidth="1"
-                    className="district-path"
-                    onMouseEnter={() => handleDistrictHover(district.name)}
-                    onMouseLeave={() => handleDistrictHover(null)}
-                    onClick={() => onRegionClick(district.region)}
-                  />
+              {districts.map((district) => {
+                const isHighlighted = hoveredDistrict && 
+                  districtToRegion[hoveredDistrict] === district.region;
+                
+                return (
+                  <g key={district.name}>
+                    <path
+                      d={district.path}
+                      data-district={district.name}
+                      data-region={district.region}
+                      fill={getDistrictColor(district.name)}
+                      className={`district-path ${isHighlighted ? 'district-highlighted' : ''}`}
+                      onMouseEnter={() => handleDistrictHover(district.name)}
+                      onMouseLeave={() => handleDistrictHover(null)}
+                      onClick={() => onRegionClick(district.region)}
+                    />
                   <text 
                     x={district.labelX} 
                     y={district.labelY} 
@@ -287,7 +296,8 @@ export default function MaharashtraInteractiveMap({
                     )}
                   </text>
                 </g>
-              ))}
+                );
+              })}
 
               {/* Arabian Sea */}
               <rect x="0" y="0" width="25" height="500" fill="#e0f2fe"/>
