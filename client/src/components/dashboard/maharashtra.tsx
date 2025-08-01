@@ -20,56 +20,33 @@ export default function MaharashtraMap({
 }: MaharashtraMapProps) {
   const [hoveredDistrict, setHoveredDistrict] = useState<string | null>(null);
 
-  // District to region mapping as specified
-  const districtToRegion: { [key: string]: string } = {
-    // Konkan
-    "Mumbai City": "Konkan",
-    "Mumbai Suburban": "Konkan", 
-    "Thane": "Konkan",
-    "Palghar": "Konkan",
-    "Raigad": "Konkan",
-    "Ratnagiri": "Konkan",
-    "Sindhudurg": "Konkan",
-    
-    // Pune
-    "Pune": "Pune",
-    "Satara": "Pune",
-    "Sangli": "Pune",
-    "Kolhapur": "Pune",
-    "Solapur": "Pune",
-    
-    // Nashik
-    "Nashik": "Nashik",
-    "Nandurbar": "Nashik",
-    "Dhule": "Nashik", 
-    "Jalgaon": "Nashik",
-    "Ahmednagar": "Nashik",
-    
-    // Chhatrapati Sambhajinagar
-    "Chhatrapati Sambhajinagar": "Chhatrapati Sambhajinagar",
-    "Jalna": "Chhatrapati Sambhajinagar",
-    "Beed": "Chhatrapati Sambhajinagar",
-    "Parbhani": "Chhatrapati Sambhajinagar",
-    "Hingoli": "Chhatrapati Sambhajinagar",
-    "Latur": "Chhatrapati Sambhajinagar",
-    "Osmanabad": "Chhatrapati Sambhajinagar",
-    "Nanded": "Chhatrapati Sambhajinagar",
-    
-    // Amravati
-    "Akola": "Amravati",
-    "Amravati": "Amravati",
-    "Buldhana": "Amravati",
-    "Washim": "Amravati",
-    "Yavatmal": "Amravati",
-    
-    // Nagpur
-    "Nagpur": "Nagpur",
-    "Wardha": "Nagpur",
-    "Chandrapur": "Nagpur",
-    "Gadchiroli": "Nagpur",
-    "Gondia": "Nagpur",
-    "Bhandara": "Nagpur"
+  // District to region mapping (exact JSON structure provided by user)
+  const regionMapping = {
+    "Konkan": ["Mumbai City", "Mumbai Suburban", "Thane", "Palghar", "Raigad", "Ratnagiri", "Sindhudurg"],
+    "Pune": ["Pune", "Satara", "Sangli", "Kolhapur", "Solapur"],
+    "Nashik": ["Nashik", "Nandurbar", "Dhule", "Jalgaon", "Ahmednagar"],
+    "Chhatrapati Sambhajinagar": ["Chhatrapati Sambhajinagar", "Jalna", "Beed", "Parbhani", "Hingoli", "Latur", "Osmanabad", "Nanded"],
+    "Amravati": ["Akola", "Amravati", "Buldhana", "Washim", "Yavatmal"],
+    "Nagpur": ["Nagpur", "Wardha", "Chandrapur", "Gadchiroli", "Gondia", "Bhandara"]
   };
+
+  // Function to find region for a district
+  const getRegionForDistrict = (districtName: string): string | null => {
+    for (const [region, districts] of Object.entries(regionMapping)) {
+      if (districts.includes(districtName)) {
+        return region;
+      }
+    }
+    return null;
+  };
+
+  // Legacy mapping for backwards compatibility
+  const districtToRegion: { [key: string]: string } = {};
+  Object.entries(regionMapping).forEach(([region, districts]) => {
+    districts.forEach(district => {
+      districtToRegion[district] = region;
+    });
+  });
 
   // Get base color for region based on metric
   const getBaseRegionColor = (regionName: string) => {
@@ -234,6 +211,15 @@ export default function MaharashtraMap({
               <defs>
                 <style>
                   {`
+                    path {
+                      pointer-events: all;
+                      fill-opacity: 1;
+                      stroke: #fff;
+                      stroke-width: 0.5;
+                      transition: fill 0.2s ease, stroke 0.2s ease;
+                      cursor: pointer;
+                    }
+                    
                     .district-path {
                       pointer-events: all;
                       fill-opacity: 1;
@@ -242,32 +228,54 @@ export default function MaharashtraMap({
                       transition: fill 0.2s ease, stroke 0.2s ease;
                       cursor: pointer;
                     }
+                    
                     .district-path:hover {
                       stroke-width: 2;
                     }
+                    
                     .district-highlighted {
                       stroke-width: 2;
                       stroke: #1f2937;
                     }
                     
-                    /* Default region colors - applied when no metric-based color is set */
-                    [data-region="Konkan"]:not([fill]) {
+                    /* Region-based default colors */
+                    [data-region="Konkan"] {
                       fill: #BFC0C0;
                     }
-                    [data-region="Pune"]:not([fill]) {
+                    [data-region="Pune"] {
                       fill: #4CAF50;
                     }
-                    [data-region="Nashik"]:not([fill]) {
+                    [data-region="Nashik"] {
                       fill: #F1E476;
                     }
-                    [data-region="Chhatrapati Sambhajinagar"]:not([fill]) {
+                    [data-region="Chhatrapati Sambhajinagar"] {
                       fill: #C0D1F0;
                     }
-                    [data-region="Amravati"]:not([fill]) {
+                    [data-region="Amravati"] {
                       fill: #F8BFC7;
                     }
-                    [data-region="Nagpur"]:not([fill]) {
+                    [data-region="Nagpur"] {
                       fill: #E8CEAD;
+                    }
+                    
+                    /* Darker colors for highlighting (hover effect) */
+                    [data-region="Konkan"].highlight {
+                      fill: #888B8B !important;
+                    }
+                    [data-region="Pune"].highlight {
+                      fill: #2E7D32 !important;
+                    }
+                    [data-region="Nashik"].highlight {
+                      fill: #C9B037 !important;
+                    }
+                    [data-region="Chhatrapati Sambhajinagar"].highlight {
+                      fill: #7A9BC2 !important;
+                    }
+                    [data-region="Amravati"].highlight {
+                      fill: #D1899F !important;
+                    }
+                    [data-region="Nagpur"].highlight {
+                      fill: #C4A475 !important;
                     }
                   `}
                 </style>
@@ -285,7 +293,7 @@ export default function MaharashtraMap({
                       data-district={district.name}
                       data-region={district.region}
                       fill={getDistrictColor(district.name)}
-                      className={`district-path ${isHighlighted ? 'district-highlighted' : ''}`}
+                      className={`district-path ${isHighlighted ? 'district-highlighted highlight' : ''}`}
                       onMouseEnter={() => handleDistrictHover(district.name)}
                       onMouseLeave={() => handleDistrictHover(null)}
                       onClick={() => onRegionClick(district.region)}
