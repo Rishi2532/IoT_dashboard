@@ -416,6 +416,12 @@ const ChlorineDashboard: React.FC = () => {
     const status = { connected: 0, online: 0, offline: 0, noWater: 0 };
     
     if (!allChlorineData || !communicationStatusData) {
+      console.log("Missing data:", { 
+        allChlorineData: !!allChlorineData, 
+        communicationStatusData: !!communicationStatusData,
+        chlorineLength: allChlorineData?.length,
+        commStatusLength: communicationStatusData?.length
+      });
       return status;
     }
 
@@ -442,6 +448,17 @@ const ChlorineDashboard: React.FC = () => {
           }
         }
       }
+    });
+
+    console.log("Chlorine sensor status calculation:", {
+      chlorineESRsCount: chlorineESRs.size,
+      filteredCommStatusCount: filteredCommStatus.length,
+      finalStatus: status,
+      sampleCommStatus: filteredCommStatus.slice(0, 3).map(cs => ({
+        esr_name: cs.esr_name,
+        chlorine_connected: cs.chlorine_connected,
+        chlorine_status: cs.chlorine_status
+      }))
     });
 
     // Count sensors with no water (chlorine value is 0 for latest reading)
