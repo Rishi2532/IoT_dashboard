@@ -576,9 +576,6 @@ const EnhancedLpcdDashboard = () => {
       case "noSupply":
         filtered = filtered.filter((scheme) => hasNoCurrentWaterSupply(scheme));
         break;
-      case "consistentZeroWaterSupply":
-        filtered = filtered.filter((scheme) => hasConsistentZeroWaterSupply(scheme));
-        break;
       case "55to60":
         filtered = filtered.filter((scheme) => {
           const lpcdValue = getLatestLpcdValue(scheme);
