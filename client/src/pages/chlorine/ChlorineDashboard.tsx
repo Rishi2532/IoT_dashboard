@@ -427,22 +427,31 @@ const ChlorineDashboard: React.FC = () => {
       ? communicationStatusData 
       : communicationStatusData.filter(comm => comm.region === selectedRegion);
 
+    // Use Sets to track unique ESR names to avoid double counting
+    const uniqueConnectedESRs = new Set<string>();
+    const uniqueOnlineESRs = new Set<string>();
+    const uniqueOfflineESRs = new Set<string>();
+
     filteredCommStatus.forEach(commStatus => {
       // Only count if this ESR has chlorine data
       if (chlorineESRs.has(commStatus.esr_name)) {
         // Count connected sensors (match exact database values)
         if (commStatus.chlorine_connected === 'Connected') {
-          status.connected++;
+          uniqueConnectedESRs.add(commStatus.esr_name);
           
           // Count online/offline status for connected sensors (match exact database values)
           if (commStatus.chlorine_status === 'Online') {
-            status.online++;
+            uniqueOnlineESRs.add(commStatus.esr_name);
           } else if (commStatus.chlorine_status === 'Offline') {
-            status.offline++;
+            uniqueOfflineESRs.add(commStatus.esr_name);
           }
         }
       }
     });
+
+    status.connected = uniqueConnectedESRs.size;
+    status.online = uniqueOnlineESRs.size;
+    status.offline = uniqueOfflineESRs.size;
 
     // Count sensors with no water (chlorine value is 0 for latest reading)
     allChlorineData.forEach(chlorineData => {
