@@ -145,55 +145,55 @@ export default function MaharashtraMap({
     setHoveredDistrict(districtName);
   };
 
-  // District paths with proper SVG coordinates
+  // District paths with realistic Maharashtra shapes and proper coordinates
   const districts = [
-    // Konkan Division
-    { name: "Mumbai City", region: "Konkan", path: "M80,280 L120,280 L120,320 L80,320 Z" },
-    { name: "Mumbai Suburban", region: "Konkan", path: "M80,240 L120,240 L120,280 L80,280 Z" },
-    { name: "Thane", region: "Konkan", path: "M120,240 L160,240 L160,280 L120,280 Z" },
-    { name: "Palghar", region: "Konkan", path: "M120,200 L160,200 L160,240 L120,240 Z" },
-    { name: "Raigad", region: "Konkan", path: "M120,280 L160,280 L160,320 L120,320 Z" },
-    { name: "Ratnagiri", region: "Konkan", path: "M80,320 L120,320 L120,360 L80,360 Z" },
-    { name: "Sindhudurg", region: "Konkan", path: "M80,360 L120,360 L120,400 L80,400 Z" },
+    // Konkan Division - Western coastal region
+    { name: "Mumbai City", region: "Konkan", path: "M50,320 L90,315 L95,340 L88,355 L50,360 Z" },
+    { name: "Mumbai Suburban", region: "Konkan", path: "M50,280 L95,275 L100,295 L95,315 L50,320 Z" },
+    { name: "Thane", region: "Konkan", path: "M95,275 L140,270 L145,295 L140,315 L100,295 Z" },
+    { name: "Palghar", region: "Konkan", path: "M95,220 L145,215 L155,240 L145,265 L95,275 Z" },
+    { name: "Raigad", region: "Konkan", path: "M95,315 L140,310 L150,335 L145,365 L95,340 Z" },
+    { name: "Ratnagiri", region: "Konkan", path: "M50,360 L88,355 L95,380 L85,420 L45,425 Z" },
+    { name: "Sindhudurg", region: "Konkan", path: "M45,425 L85,420 L90,445 L80,475 L40,480 Z" },
     
-    // Pune Division
-    { name: "Pune", region: "Pune", path: "M200,280 L260,280 L260,320 L200,320 Z" },
-    { name: "Solapur", region: "Pune", path: "M260,280 L320,280 L320,320 L260,320 Z" },
-    { name: "Satara", region: "Pune", path: "M200,320 L260,320 L260,360 L200,360 Z" },
-    { name: "Sangli", region: "Pune", path: "M200,360 L260,360 L260,400 L200,400 Z" },
-    { name: "Kolhapur", region: "Pune", path: "M200,400 L260,400 L260,440 L200,440 Z" },
+    // Pune Division - South-central region
+    { name: "Pune", region: "Pune", path: "M180,290 L240,285 L250,315 L245,340 L180,345 Z" },
+    { name: "Solapur", region: "Pune", path: "M250,315 L320,310 L330,340 L325,370 L250,375 Z" },
+    { name: "Satara", region: "Pune", path: "M150,345 L240,340 L250,370 L240,400 L150,405 Z" },
+    { name: "Sangli", region: "Pune", path: "M150,405 L240,400 L250,430 L240,460 L150,465 Z" },
+    { name: "Kolhapur", region: "Pune", path: "M150,465 L240,460 L250,490 L240,520 L150,525 Z" },
     
-    // Nashik Division
-    { name: "Nandurbar", region: "Nashik", path: "M160,80 L200,80 L200,120 L160,120 Z" },
-    { name: "Dhule", region: "Nashik", path: "M160,120 L220,120 L220,160 L160,160 Z" },
-    { name: "Jalgaon", region: "Nashik", path: "M220,120 L280,120 L280,160 L220,160 Z" },
-    { name: "Nashik", region: "Nashik", path: "M160,160 L220,160 L220,200 L160,200 Z" },
-    { name: "Ahmednagar", region: "Nashik", path: "M220,200 L280,200 L280,240 L220,240 Z" },
+    // Nashik Division - North-western region  
+    { name: "Nandurbar", region: "Nashik", path: "M155,80 L205,75 L215,105 L205,135 L155,140 Z" },
+    { name: "Dhule", region: "Nashik", path: "M205,135 L270,130 L280,160 L270,190 L205,195 Z" },
+    { name: "Jalgaon", region: "Nashik", path: "M270,130 L340,125 L350,155 L340,185 L270,190 Z" },
+    { name: "Nashik", region: "Nashik", path: "M155,180 L240,175 L250,205 L240,235 L155,240 Z" },
+    { name: "Ahmednagar", region: "Nashik", path: "M240,235 L320,230 L330,260 L320,290 L240,295 Z" },
     
-    // Amravati Division
-    { name: "Akola", region: "Amravati", path: "M320,120 L380,120 L380,160 L320,160 Z" },
-    { name: "Amravati", region: "Amravati", path: "M380,120 L440,120 L440,160 L380,160 Z" },
-    { name: "Buldhana", region: "Amravati", path: "M320,160 L380,160 L380,200 L320,200 Z" },
-    { name: "Washim", region: "Amravati", path: "M380,160 L440,160 L440,200 L380,200 Z" },
-    { name: "Yavatmal", region: "Amravati", path: "M440,160 L500,160 L500,200 L440,200 Z" },
+    // Amravati Division - Central region
+    { name: "Akola", region: "Amravati", path: "M350,130 L410,125 L420,155 L410,185 L350,190 Z" },
+    { name: "Amravati", region: "Amravati", path: "M410,125 L470,120 L480,150 L470,180 L410,185 Z" },
+    { name: "Buldhana", region: "Amravati", path: "M350,190 L410,185 L420,215 L410,245 L350,250 Z" },
+    { name: "Washim", region: "Amravati", path: "M410,185 L470,180 L480,210 L470,240 L410,245 Z" },
+    { name: "Yavatmal", region: "Amravati", path: "M470,180 L530,175 L540,205 L530,235 L470,240 Z" },
     
-    // Nagpur Division
-    { name: "Nagpur", region: "Nagpur", path: "M440,80 L500,80 L500,120 L440,120 Z" },
-    { name: "Bhandara", region: "Nagpur", path: "M500,80 L560,80 L560,120 L500,120 Z" },
-    { name: "Gondia", region: "Nagpur", path: "M560,80 L620,80 L620,120 L560,120 Z" },
-    { name: "Wardha", region: "Nagpur", path: "M440,120 L500,120 L500,160 L440,160 Z" },
-    { name: "Chandrapur", region: "Nagpur", path: "M500,200 L560,200 L560,240 L500,240 Z" },
-    { name: "Gadchiroli", region: "Nagpur", path: "M560,200 L620,200 L620,280 L560,280 Z" },
+    // Nagpur Division - Eastern region
+    { name: "Nagpur", region: "Nagpur", path: "M480,80 L540,75 L550,105 L540,135 L480,140 Z" },
+    { name: "Bhandara", region: "Nagpur", path: "M540,75 L600,70 L610,100 L600,130 L540,135 Z" },
+    { name: "Gondia", region: "Nagpur", path: "M600,70 L660,65 L670,95 L660,125 L600,130 Z" },
+    { name: "Wardha", region: "Nagpur", path: "M480,140 L540,135 L550,165 L540,195 L480,200 Z" },
+    { name: "Chandrapur", region: "Nagpur", path: "M540,240 L600,235 L610,265 L600,295 L540,300 Z" },
+    { name: "Gadchiroli", region: "Nagpur", path: "M600,235 L670,230 L680,280 L670,330 L600,335 Z" },
     
-    // Chhatrapati Sambhajinagar Division
-    { name: "Chhatrapati Sambhajinagar", region: "Chhatrapati Sambhajinagar", path: "M220,160 L280,160 L280,200 L220,200 Z" },
-    { name: "Jalna", region: "Chhatrapati Sambhajinagar", path: "M280,200 L340,200 L340,240 L280,240 Z" },
-    { name: "Parbhani", region: "Chhatrapati Sambhajinagar", path: "M340,200 L400,200 L400,240 L340,240 Z" },
-    { name: "Hingoli", region: "Chhatrapati Sambhajinagar", path: "M400,200 L460,200 L460,240 L400,240 Z" },
-    { name: "Beed", region: "Chhatrapati Sambhajinagar", path: "M280,240 L340,240 L340,280 L280,280 Z" },
-    { name: "Nanded", region: "Chhatrapati Sambhajinagar", path: "M400,240 L460,240 L460,280 L400,280 Z" },
-    { name: "Latur", region: "Chhatrapati Sambhajinagar", path: "M340,280 L400,280 L400,320 L340,320 Z" },
-    { name: "Osmanabad", region: "Chhatrapati Sambhajinagar", path: "M280,280 L340,280 L340,320 L280,320 Z" },
+    // Chhatrapati Sambhajinagar Division - Central-eastern region
+    { name: "Chhatrapati Sambhajinagar", region: "Chhatrapati Sambhajinagar", path: "M240,175 L320,170 L330,200 L320,230 L240,235 Z" },
+    { name: "Jalna", region: "Chhatrapati Sambhajinagar", path: "M320,230 L380,225 L390,255 L380,285 L320,290 Z" },
+    { name: "Parbhani", region: "Chhatrapati Sambhajinagar", path: "M380,225 L440,220 L450,250 L440,280 L380,285 Z" },
+    { name: "Hingoli", region: "Chhatrapati Sambhajinagar", path: "M440,220 L500,215 L510,245 L500,275 L440,280 Z" },
+    { name: "Beed", region: "Chhatrapati Sambhajinagar", path: "M320,290 L380,285 L390,315 L380,345 L320,350 Z" },
+    { name: "Nanded", region: "Chhatrapati Sambhajinagar", path: "M440,280 L500,275 L510,305 L500,335 L440,340 Z" },
+    { name: "Latur", region: "Chhatrapati Sambhajinagar", path: "M380,345 L440,340 L450,370 L440,400 L380,405 Z" },
+    { name: "Osmanabad", region: "Chhatrapati Sambhajinagar", path: "M320,350 L380,345 L390,375 L380,405 L320,410 Z" },
   ];
 
   if (isLoading) {
@@ -250,24 +250,24 @@ export default function MaharashtraMap({
                       stroke: #1f2937;
                     }
                     
-                    /* Region-based default colors */
-                    [data-region="Konkan"] {
-                      fill: var(--konkan-color, #BFC0C0);
+                    /* Default region colors - applied when no metric-based color is set */
+                    [data-region="Konkan"]:not([fill]) {
+                      fill: #BFC0C0;
                     }
-                    [data-region="Pune"] {
-                      fill: var(--pune-color, #ADEBAD);
+                    [data-region="Pune"]:not([fill]) {
+                      fill: #4CAF50;
                     }
-                    [data-region="Nashik"] {
-                      fill: var(--nashik-color, #F1E476);
+                    [data-region="Nashik"]:not([fill]) {
+                      fill: #F1E476;
                     }
-                    [data-region="Chhatrapati Sambhajinagar"] {
-                      fill: var(--sambhajinagar-color, #C0D1F0);
+                    [data-region="Chhatrapati Sambhajinagar"]:not([fill]) {
+                      fill: #C0D1F0;
                     }
-                    [data-region="Amravati"] {
-                      fill: var(--amravati-color, #F8BFC7);
+                    [data-region="Amravati"]:not([fill]) {
+                      fill: #F8BFC7;
                     }
-                    [data-region="Nagpur"] {
-                      fill: var(--nagpur-color, #E8CEAD);
+                    [data-region="Nagpur"]:not([fill]) {
+                      fill: #E8CEAD;
                     }
                   `}
                 </style>
@@ -291,11 +291,26 @@ export default function MaharashtraMap({
                       onClick={() => onRegionClick(district.region)}
                     />
                     <text 
-                      x={parseInt(district.path.split(' ')[1].split(',')[0]) + 30} 
-                      y={parseInt(district.path.split(' ')[1].split(',')[1]) + 25} 
+                      x={(() => {
+                        const coords = district.path.split(' ')[1].split(',');
+                        const x1 = parseInt(coords[0]);
+                        const pathParts = district.path.split(' ');
+                        const lastCoord = pathParts[pathParts.length - 2].split(',');
+                        const x2 = parseInt(lastCoord[0]);
+                        return (x1 + x2) / 2;
+                      })()} 
+                      y={(() => {
+                        const coords = district.path.split(' ')[1].split(',');
+                        const y1 = parseInt(coords[1]);
+                        const pathParts = district.path.split(' ');
+                        const lastCoord = pathParts[pathParts.length - 2].split(',');
+                        const y2 = parseInt(lastCoord[1]);
+                        return (y1 + y2) / 2 + 3;
+                      })()} 
                       textAnchor="middle" 
                       fontSize="9" 
                       fill="#000"
+                      fontWeight="500"
                       style={{ pointerEvents: 'none' }}
                     >
                       {district.name === "Mumbai Suburban" ? "Mumbai Sub." : 
