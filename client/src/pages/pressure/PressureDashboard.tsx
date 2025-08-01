@@ -123,7 +123,7 @@ interface HistoricalPressureData {
 }
 
 interface CommunicationStatus {
-  id: number;
+  id?: number;
   region: string;
   circle: string;
   division: string;
