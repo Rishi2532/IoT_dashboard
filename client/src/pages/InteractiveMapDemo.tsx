@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import MaharashtraInteractiveMap from '@/components/dashboard/maharashtra-interactive-map';
+import MaharashtraMap from '@/components/dashboard/maharashtra';
 import { useQuery } from '@tanstack/react-query';
 import { Region } from '@/types';
 
@@ -55,7 +55,7 @@ export default function InteractiveMapDemo() {
       </div>
 
       {/* Interactive Map */}
-      <MaharashtraInteractiveMap
+      <MaharashtraMap
         regions={regions}
         selectedRegion={selectedRegion}
         onRegionClick={handleRegionClick}
