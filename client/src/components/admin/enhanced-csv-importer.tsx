@@ -70,6 +70,38 @@ const regionFields = [
   { value: "pressure_transmitter_integrated", label: "Pressure Transmitters", required: false },
 ];
 
+const waterConsumptionFields = [
+  { value: "region", label: "Region", required: true },
+  { value: "circle", label: "Circle", required: false },
+  { value: "division", label: "Division", required: false },
+  { value: "sub_division", label: "Sub Division", required: false },
+  { value: "block", label: "Block", required: false },
+  { value: "scheme_id", label: "Scheme ID", required: true },
+  { value: "scheme_name", label: "Scheme Name", required: true },
+  { value: "village_name", label: "Village Name", required: true },
+  { value: "esr_name", label: "ESR Name", required: true },
+  { value: "flow_rate_m3", label: "Flow Rate (m³)", required: false },
+  { value: "flow_meter_connected", label: "Flow Meter Connected", required: false },
+  { value: "online_status", label: "Online Status", required: false },
+  { value: "esr_capacity", label: "ESR Capacity", required: false },
+  { value: "water_value_day1", label: "Water Value Day 1", required: false },
+  { value: "water_value_day2", label: "Water Value Day 2", required: false },
+  { value: "water_value_day3", label: "Water Value Day 3", required: false },
+  { value: "water_value_day4", label: "Water Value Day 4", required: false },
+  { value: "water_value_day5", label: "Water Value Day 5", required: false },
+  { value: "water_value_day6", label: "Water Value Day 6", required: false },
+  { value: "water_value_day7", label: "Water Value Day 7", required: false },
+  { value: "water_date_day1", label: "Water Date Day 1", required: false },
+  { value: "water_date_day2", label: "Water Date Day 2", required: false },
+  { value: "water_date_day3", label: "Water Date Day 3", required: false },
+  { value: "water_date_day4", label: "Water Date Day 4", required: false },
+  { value: "water_date_day5", label: "Water Date Day 5", required: false },
+  { value: "water_date_day6", label: "Water Date Day 6", required: false },
+  { value: "water_date_day7", label: "Water Date Day 7", required: false },
+  { value: "consistent_zero_consumption", label: "Consistent Zero Consumption", required: false },
+  { value: "percentage_consumption_previous_day", label: "Percentage Consumption Previous Day", required: false },
+];
+
 // Regions for the dropdown
 const regions = [
   { value: "Nagpur", label: "Nagpur" },
@@ -84,6 +116,7 @@ const regions = [
 const tableOptions = [
   { value: "scheme_status", label: "Scheme Status Table" },
   { value: "region", label: "Region Table" },
+  { value: "water_consumption", label: "Water Consumption Table" },
 ];
 
 export default function EnhancedCsvImporter() {
@@ -191,7 +224,15 @@ export default function EnhancedCsvImporter() {
           headers.forEach((header, index) => {
             const lowerHeader = header.toLowerCase().trim();
 
-            const fields = tableName === "scheme_status" ? schemeFields : regionFields;
+            let fields;
+            if (tableName === "scheme_status") {
+              fields = schemeFields;
+            } else if (tableName === "region") {
+              fields = regionFields;
+            } else {
+              fields = waterConsumptionFields;
+            }
+            
             const matchedField = fields.find(field => 
               field.label.toLowerCase() === lowerHeader ||
               field.value.toLowerCase() === lowerHeader
@@ -243,7 +284,14 @@ export default function EnhancedCsvImporter() {
   // Validate mappings before upload
   const validateMappings = (): boolean => {
     const errors: string[] = [];
-    const fields = tableName === "scheme_status" ? schemeFields : regionFields;
+    let fields;
+    if (tableName === "scheme_status") {
+      fields = schemeFields;
+    } else if (tableName === "region") {
+      fields = regionFields;
+    } else {
+      fields = waterConsumptionFields;
+    }
 
     // Check required fields
     const requiredFields = fields.filter(field => field.required);
@@ -319,7 +367,15 @@ export default function EnhancedCsvImporter() {
         formData.append("regionName", regionName);
       }
 
-      const response = await fetch("/api/admin/import-csv", {
+      // Determine the correct API endpoint based on table type
+      let apiEndpoint;
+      if (tableName === "water_consumption") {
+        apiEndpoint = "/api/water-consumption/import/csv";
+      } else {
+        apiEndpoint = "/api/admin/import-csv";
+      }
+
+      const response = await fetch(apiEndpoint, {
         method: "POST",
         body: formData,
         // Don't set Content-Type header, it will be set automatically with correct boundary
@@ -371,7 +427,14 @@ export default function EnhancedCsvImporter() {
   ];
 
   // Get the appropriate fields for the selected table
-  const fields = tableName === "scheme_status" ? schemeFields : regionFields;
+  let fields;
+  if (tableName === "scheme_status") {
+    fields = schemeFields;
+  } else if (tableName === "region") {
+    fields = regionFields;
+  } else {
+    fields = waterConsumptionFields;
+  }
 
   return (
     <Card className="w-full max-w-4xl">
