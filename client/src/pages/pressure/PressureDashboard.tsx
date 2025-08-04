@@ -166,6 +166,7 @@ interface PressureDashboardStats {
   consistentBelowRangeSensors: number;
   consistentOptimalSensors: number;
   consistentAboveRangeSensors: number;
+  noWaterSensors: number;
   lastImport?: ImportStats;
 }
 

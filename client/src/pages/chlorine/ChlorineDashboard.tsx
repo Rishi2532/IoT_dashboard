@@ -110,6 +110,7 @@ interface ChlorineDashboardStats {
   consistentBelowRangeSensors: number;
   consistentOptimalSensors: number;
   consistentAboveRangeSensors: number;
+  noWaterSensors: number;
   lastImport?: {
     inserted: number;
     updated: number;
@@ -175,7 +176,8 @@ type SensorStatusFilter =
   | "all"
   | "connected"
   | "online"
-  | "offline";
+  | "offline"
+  | "noWater";
 
 const ChlorineDashboard: React.FC = () => {
   const { toast } = useToast();
@@ -464,16 +466,11 @@ const ChlorineDashboard: React.FC = () => {
     status.online = uniqueOnlineESRs.size;
     status.offline = uniqueOfflineESRs.size;
 
-    // Count sensors with no water (chlorine value is 0 for latest reading)
-    allChlorineData.forEach(chlorineData => {
-      const latestValue = getLatestChlorineValue(chlorineData);
-      if (latestValue === 0) {
-        status.noWater++;
-      }
-    });
+    // Use API data for no water sensors if available
+    status.noWater = apiDashboardStats?.noWaterSensors || 0;
 
     return status;
-  }, [allChlorineData, communicationStatusData, selectedRegion]);
+  }, [allChlorineData, communicationStatusData, selectedRegion, apiDashboardStats]);
 
   // Get the CSS class and status text based on chlorine value
   const getChlorineStatusInfo = (value: number | null) => {
@@ -771,6 +768,10 @@ const ChlorineDashboard: React.FC = () => {
         } else if (sensorStatusFilter === "offline") {
           return commStatus.chlorine_connected === "Connected" && 
                  commStatus.chlorine_status === "Offline";
+        } else if (sensorStatusFilter === "noWater") {
+          // For noWater filter, show connected sensors that have water_value_day7 = 0 or null
+          // We'll need to fetch this data from the no-water API endpoint
+          return commStatus.chlorine_connected === "Connected";
         }
         
         return false;
@@ -1428,8 +1429,13 @@ const ChlorineDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* No Water Sensors Card - Non-clickable */}
-        <Card className="opacity-90">
+        {/* No Water Sensors Card - Clickable */}
+        <Card
+          className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${
+            sensorStatusFilter === "noWater" ? "ring-2 ring-red-500 ring-offset-2" : ""
+          } transform hover:scale-[1.02]`}
+          onClick={() => handleSensorStatusClick("noWater")}
+        >
           <CardContent className="p-4 flex items-center">
             <div className="bg-red-100 p-3 rounded-full mr-4">
               <Droplet className="h-6 w-6 text-red-700" />
@@ -1442,7 +1448,7 @@ const ChlorineDashboard: React.FC = () => {
                 {calculateChlorineSensorStatus.noWater}
               </p>
               <p className="text-xs text-red-600/70">
-                Zero chlorine detected
+                Connected sensors with no water
               </p>
             </div>
           </CardContent>
