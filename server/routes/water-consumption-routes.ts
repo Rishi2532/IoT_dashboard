@@ -107,7 +107,7 @@ router.delete("/:schemeId/:villageName/:esrName", async (req, res) => {
 });
 
 // Import water consumption data from CSV
-router.post("/import-csv", upload.single("csvFile"), async (req, res) => {
+router.post("/import-csv", upload.single("file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No CSV file uploaded" });
   }
@@ -117,11 +117,11 @@ router.post("/import-csv", upload.single("csvFile"), async (req, res) => {
   try {
     console.log(`Processing CSV file: ${req.file.originalname}`);
     
-    // Read CSV file
-    const csvContent = fs.readFileSync(csvFilePath, "utf-8");
+    // Read CSV file as Buffer
+    const csvBuffer = fs.readFileSync(csvFilePath);
     
     // Parse and import the CSV data
-    const result = await storage.importWaterConsumptionFromCSV(csvContent);
+    const result = await storage.importWaterConsumptionFromCSV(csvBuffer);
     
     // Clean up uploaded file
     fs.unlinkSync(csvFilePath);
