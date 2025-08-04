@@ -219,8 +219,43 @@ export default function EnhancedCsvImporter({ defaultTable = "scheme_status" }: 
       if (parsedRows.length > 0) {
         setColumnCount(parsedRows[0].length);
 
-        // If we have headers, use them for initial mapping
-        if (skipHeader && parsedRows.length > 1) {
+        // For water consumption, use predefined column mapping (29 columns)
+        if (tableName === "water_consumption" && parsedRows[0].length >= 29) {
+          const waterConsumptionMapping: Record<string, string> = {
+            "region": "0",
+            "circle": "1", 
+            "division": "2",
+            "sub_division": "3",
+            "block": "4",
+            "scheme_id": "5",
+            "scheme_name": "6",
+            "village_name": "7",
+            "esr_name": "8",
+            "flow_rate_m3": "9",
+            "flow_meter_connected": "10",
+            "online_status": "11",
+            "esr_capacity": "12",
+            "water_value_day1": "13",
+            "water_value_day2": "14",
+            "water_value_day3": "15",
+            "water_value_day4": "16",
+            "water_value_day5": "17",
+            "water_value_day6": "18",
+            "water_value_day7": "19",
+            "water_date_day1": "20",
+            "water_date_day2": "21",
+            "water_date_day3": "22",
+            "water_date_day4": "23",
+            "water_date_day5": "24",
+            "water_date_day6": "25",
+            "water_date_day7": "26",
+            "consistent_zero_consumption": "27",
+            "percentage_consumption_previous_day": "28"
+          };
+          setColumnMappings(waterConsumptionMapping);
+        }
+        // If we have headers, use them for initial mapping for other tables
+        else if (skipHeader && parsedRows.length > 1) {
           const headers = parsedRows[0];
           const initialMappings: Record<string, string> = {};
 
