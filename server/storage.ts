@@ -4657,6 +4657,149 @@ export class PostgresStorage implements IStorage {
     }
   }
 
+  // Get all water consumption data
+  async getAllWaterConsumption(): Promise<WaterConsumption[]> {
+    try {
+      const db = await getDB();
+      const result = await db.select().from(waterConsumption);
+      return result;
+    } catch (error) {
+      console.error("Error fetching all water consumption data:", error);
+      throw error;
+    }
+  }
+
+  // Get water consumption data by composite key
+  async getWaterConsumptionByCompositeKey(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+  ): Promise<WaterConsumption | null> {
+    try {
+      const db = await getDB();
+      const result = await db
+        .select()
+        .from(waterConsumption)
+        .where(
+          and(
+            eq(waterConsumption.scheme_id, schemeId),
+            eq(waterConsumption.village_name, villageName),
+            eq(waterConsumption.esr_name, esrName),
+          ),
+        )
+        .limit(1);
+      
+      return result[0] || null;
+    } catch (error) {
+      console.error("Error fetching water consumption data by composite key:", error);
+      throw error;
+    }
+  }
+
+  // Update water consumption data
+  async updateWaterConsumption(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+    data: UpdateWaterConsumption,
+  ): Promise<WaterConsumption> {
+    try {
+      const db = await getDB();
+      const result = await db
+        .update(waterConsumption)
+        .set(data)
+        .where(
+          and(
+            eq(waterConsumption.scheme_id, schemeId),
+            eq(waterConsumption.village_name, villageName),
+            eq(waterConsumption.esr_name, esrName),
+          ),
+        )
+        .returning();
+      
+      if (result.length === 0) {
+        throw new Error("Water consumption data not found for update");
+      }
+      
+      return result[0];
+    } catch (error) {
+      console.error("Error updating water consumption data:", error);
+      throw error;
+    }
+  }
+
+  // Delete water consumption data
+  async deleteWaterConsumption(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+  ): Promise<void> {
+    try {
+      const db = await getDB();
+      await db
+        .delete(waterConsumption)
+        .where(
+          and(
+            eq(waterConsumption.scheme_id, schemeId),
+            eq(waterConsumption.village_name, villageName),
+            eq(waterConsumption.esr_name, esrName),
+          ),
+        );
+    } catch (error) {
+      console.error("Error deleting water consumption data:", error);
+      throw error;
+    }
+  }
+
+  // Get water consumption statistics
+  async getWaterConsumptionStats(): Promise<{
+    totalESRs: number;
+    connectedESRs: number;
+    onlineESRs: number;
+    regionStats: Array<{
+      region: string;
+      total: number;
+      connected: number;
+      online: number;
+    }>;
+  }> {
+    try {
+      const db = await getDB();
+      const allData = await db.select().from(waterConsumption);
+      
+      const totalESRs = allData.length;
+      const connectedESRs = allData.filter(record => record.flow_meter_connected).length;
+      const onlineESRs = allData.filter(record => record.online_status === "Online").length;
+      
+      // Group by region
+      const regionGroups = allData.reduce((acc, record) => {
+        const region = record.region || "Unknown";
+        if (!acc[region]) {
+          acc[region] = { total: 0, connected: 0, online: 0 };
+        }
+        acc[region].total++;
+        if (record.flow_meter_connected) acc[region].connected++;
+        if (record.online_status === "Online") acc[region].online++;
+        return acc;
+      }, {} as Record<string, { total: number; connected: number; online: number }>);
+      
+      const regionStats = Object.entries(regionGroups).map(([region, stats]) => ({
+        region,
+        ...stats,
+      }));
+      
+      return {
+        totalESRs,
+        connectedESRs,
+        onlineESRs,
+        regionStats,
+      };
+    } catch (error) {
+      console.error("Error fetching water consumption statistics:", error);
+      throw error;
+    }
+  }
+
   // Helper to execute database operations with retry logic
   private async executeWithRetry<T>(operation: () => Promise<T>): Promise<T> {
     // Import executeWithRetry from db.ts

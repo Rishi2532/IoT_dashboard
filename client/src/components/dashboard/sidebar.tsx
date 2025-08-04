@@ -26,6 +26,7 @@ const navigationItems: NavigationItem[] = [
   { name: "Scheme LPCD", href: "/scheme-lpcd", icon: Droplet },
   { name: "Chlorine Monitoring", href: "/chlorine", prefix: "CL" },
   { name: "Pressure Monitoring", href: "/pressure", icon: Gauge },
+  { name: "Water Consumption", href: "/water-consumption", prefix: "WC" },
   { name: "Communication Status", href: "/communication", icon: Wifi },
   { name: "Settings", href: "/settings", icon: Settings },
 ];

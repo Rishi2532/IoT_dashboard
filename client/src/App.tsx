@@ -25,6 +25,7 @@ import {
   ChlorinePage,
 } from "./pages/chlorine";
 import { PressureDashboard, PressurePage } from "./pages/pressure";
+import WaterConsumptionPage from "./pages/water-consumption";
 import CommunicationStatusPage from "./pages/CommunicationStatusPage";
 import ImportCommunicationStatus from "./pages/admin/ImportCommunicationStatus";
 import { Maharashtra } from "./pages/Maharashtra";
@@ -174,6 +175,12 @@ function App() {
               <Route path="/pressure">
                 <ProtectedRoute>
                   <PressurePage />
+                </ProtectedRoute>
+              </Route>
+
+              <Route path="/water-consumption">
+                <ProtectedRoute>
+                  <WaterConsumptionPage />
                 </ProtectedRoute>
               </Route>
 

@@ -1,26 +1,23 @@
-import express from "express";
+import { Router } from "express";
 import multer from "multer";
-import { storage } from "../storage";
-import { ZodError } from "zod";
-import { insertWaterConsumptionSchema, updateWaterConsumptionSchema } from "@shared/schema";
+import path from "path";
+import fs from "fs";
+import { PostgresStorage } from "../storage";
 
-const router = express.Router();
+const router = Router();
+const storage = new PostgresStorage();
 
-// Configure multer for file uploads
+// Configure multer for CSV uploads
 const upload = multer({
-  storage: multer.memoryStorage(),
-  limits: {
-    fileSize: 10 * 1024 * 1024, // 10MB limit
+  dest: "uploads/",
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === "text/csv" || path.extname(file.originalname) === ".csv") {
+      cb(null, true);
+    } else {
+      cb(new Error("Only CSV files are allowed"));
+    }
   },
 });
-
-// Middleware to require admin rights
-const requireAdmin = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (!req.session || !req.session.userId || !req.session.isAdmin) {
-    return res.status(403).json({ error: "Admin access required" });
-  }
-  next();
-};
 
 // Get all water consumption data
 router.get("/", async (req, res) => {
@@ -29,36 +26,21 @@ router.get("/", async (req, res) => {
     res.json(waterConsumptionData);
   } catch (error) {
     console.error("Error fetching water consumption data:", error);
-    res.status(500).json({ error: "Failed to fetch water consumption data" });
+    res.status(500).json({
+      error: "Failed to fetch water consumption data",
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
-// Get water consumption data by scheme
-router.get("/scheme/:schemeId", async (req, res) => {
-  try {
-    const { schemeId } = req.params;
-    const { block } = req.query;
-    
-    const waterConsumptionData = await storage.getWaterConsumptionByScheme(
-      schemeId, 
-      block as string | undefined
-    );
-    res.json(waterConsumptionData);
-  } catch (error) {
-    console.error(`Error fetching water consumption data for scheme ${req.params.schemeId}:`, error);
-    res.status(500).json({ error: "Failed to fetch water consumption data" });
-  }
-});
-
-// Get specific water consumption data by composite key
-router.get("/scheme/:schemeId/village/:villageName/esr/:esrName", async (req, res) => {
+// Get water consumption data by composite key
+router.get("/:schemeId/:villageName/:esrName", async (req, res) => {
   try {
     const { schemeId, villageName, esrName } = req.params;
-    
     const waterConsumptionData = await storage.getWaterConsumptionByCompositeKey(
       schemeId,
       villageName,
-      esrName
+      esrName,
     );
     
     if (!waterConsumptionData) {
@@ -67,127 +49,112 @@ router.get("/scheme/:schemeId/village/:villageName/esr/:esrName", async (req, re
     
     res.json(waterConsumptionData);
   } catch (error) {
-    console.error(`Error fetching water consumption data:`, error);
-    res.status(500).json({ error: "Failed to fetch water consumption data" });
+    console.error("Error fetching water consumption data:", error);
+    res.status(500).json({
+      error: "Failed to fetch water consumption data",
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
 // Create new water consumption data
-router.post("/", requireAdmin, async (req, res) => {
+router.post("/", async (req, res) => {
   try {
-    const validatedData = insertWaterConsumptionSchema.parse(req.body);
-    const newWaterConsumption = await storage.createWaterConsumption(validatedData);
-    res.status(201).json(newWaterConsumption);
+    const waterConsumptionData = await storage.createWaterConsumption(req.body);
+    res.status(201).json(waterConsumptionData);
   } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({ error: "Validation failed", details: error.errors });
-    }
     console.error("Error creating water consumption data:", error);
-    res.status(500).json({ error: "Failed to create water consumption data" });
+    res.status(500).json({
+      error: "Failed to create water consumption data",
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
 // Update water consumption data
-router.put("/scheme/:schemeId/village/:villageName/esr/:esrName", requireAdmin, async (req, res) => {
+router.put("/:schemeId/:villageName/:esrName", async (req, res) => {
   try {
     const { schemeId, villageName, esrName } = req.params;
-    const validatedData = updateWaterConsumptionSchema.parse(req.body);
-    
-    const updatedWaterConsumption = await storage.updateWaterConsumption(
+    const waterConsumptionData = await storage.updateWaterConsumption(
       schemeId,
       villageName,
       esrName,
-      validatedData
+      req.body,
     );
-    res.json(updatedWaterConsumption);
+    res.json(waterConsumptionData);
   } catch (error) {
-    if (error instanceof ZodError) {
-      return res.status(400).json({ error: "Validation failed", details: error.errors });
-    }
     console.error("Error updating water consumption data:", error);
-    res.status(500).json({ error: "Failed to update water consumption data" });
-  }
-});
-
-// Import water consumption data from CSV
-router.post("/import-csv", requireAdmin, upload.single("file"), async (req, res) => {
-  try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-
-    console.log("Starting water consumption CSV import...");
-    const result = await storage.importWaterConsumptionFromCSV(req.file.buffer);
-    
-    res.json({
-      message: "CSV data imported successfully",
-      inserted: result.inserted,
-      updated: result.updated,
-      removed: result.removed,
-      errors: result.errors,
-    });
-  } catch (error) {
-    console.error("Error importing water consumption CSV:", error);
-    res.status(500).json({ 
-      error: "Failed to import CSV data",
-      details: (error as Error).message
+    res.status(500).json({
+      error: "Failed to update water consumption data",
+      message: error instanceof Error ? error.message : String(error),
     });
   }
 });
 
 // Delete water consumption data
-router.delete("/scheme/:schemeId/village/:villageName/esr/:esrName", requireAdmin, async (req, res) => {
+router.delete("/:schemeId/:villageName/:esrName", async (req, res) => {
   try {
     const { schemeId, villageName, esrName } = req.params;
-    
-    const deleted = await storage.deleteWaterConsumption(schemeId, villageName, esrName);
-    
-    if (!deleted) {
-      return res.status(404).json({ error: "Water consumption data not found" });
-    }
-    
-    res.json({ message: "Water consumption data deleted successfully" });
+    await storage.deleteWaterConsumption(schemeId, villageName, esrName);
+    res.status(204).send();
   } catch (error) {
     console.error("Error deleting water consumption data:", error);
-    res.status(500).json({ error: "Failed to delete water consumption data" });
+    res.status(500).json({
+      error: "Failed to delete water consumption data",
+      message: error instanceof Error ? error.message : String(error),
+    });
   }
 });
 
 // Import water consumption data from CSV
-router.post("/import/csv", requireAdmin, upload.single("file"), async (req, res) => {
+router.post("/import-csv", upload.single("csvFile"), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: "No CSV file uploaded" });
+  }
+
+  const csvFilePath = req.file.path;
+
   try {
-    if (!req.file) {
-      return res.status(400).json({ error: "No file uploaded" });
-    }
-
-    const fileBuffer = req.file.buffer;
-    console.log(`Processing water consumption CSV file: ${req.file.originalname} (${fileBuffer.length} bytes)`);
-
-    // Import data using storage method
-    const result = await storage.importWaterConsumptionFromCSV(fileBuffer);
-
-    console.log("Water consumption import result:", result);
-
+    console.log(`Processing CSV file: ${req.file.originalname}`);
+    
+    // Read CSV file
+    const csvContent = fs.readFileSync(csvFilePath, "utf-8");
+    
+    // Parse and import the CSV data
+    const result = await storage.importWaterConsumptionFromCSV(csvContent);
+    
+    // Clean up uploaded file
+    fs.unlinkSync(csvFilePath);
+    
     res.json({
-      message: "Water consumption data imported successfully",
-      inserted: result.inserted,
-      updated: result.updated,
-      errors: result.errors,
-      totalProcessed: result.inserted + result.updated,
+      message: "CSV data imported successfully",
+      result,
     });
-  } catch (error: any) {
-    console.error("Error importing water consumption CSV:", error);
+  } catch (error) {
+    console.error("Error importing CSV:", error);
     
-    // Return detailed error information
-    const errorMessage = error instanceof Error ? error.message : String(error);
+    // Clean up uploaded file in case of error
+    if (fs.existsSync(csvFilePath)) {
+      fs.unlinkSync(csvFilePath);
+    }
     
-    res.status(500).json({ 
-      error: "Failed to import water consumption data",
-      details: errorMessage,
-      // Include any partial results if available
-      inserted: 0,
-      updated: 0,
-      errors: [errorMessage]
+    res.status(500).json({
+      error: "Failed to import CSV data",
+      message: error instanceof Error ? error.message : String(error),
+    });
+  }
+});
+
+// Get water consumption statistics
+router.get("/stats/summary", async (req, res) => {
+  try {
+    const stats = await storage.getWaterConsumptionStats();
+    res.json(stats);
+  } catch (error) {
+    console.error("Error fetching water consumption stats:", error);
+    res.status(500).json({
+      error: "Failed to fetch water consumption statistics",
+      message: error instanceof Error ? error.message : String(error),
     });
   }
 });

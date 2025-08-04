@@ -314,6 +314,17 @@ export default function Header() {
               <span className="text-xs font-medium">Pressure</span>
             </Button>
           </Link>
+          <Link href="/water-consumption">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-blue-100 hover:text-white hover:bg-white/15 backdrop-blur-sm px-2.5 h-8 rounded-md transition-all duration-200 hover:scale-[1.02] border border-white/20 hover:border-white/40 shadow-sm hover:shadow-md"
+              title="Water Consumption"
+            >
+              <Droplet className="h-3.5 w-3.5 mr-1.5" />
+              <span className="text-xs font-medium">Water</span>
+            </Button>
+          </Link>
           <Link href="/communication-status">
             <Button
               variant="ghost"
