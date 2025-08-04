@@ -9,6 +9,7 @@ import {
   chlorineHistory,
   pressureData,
   pressureHistory,
+  waterConsumption,
   communicationStatus,
   reportFiles,
   userLoginLogs,
@@ -36,6 +37,9 @@ import {
   type UpdatePressureData,
   type PressureHistory,
   type InsertPressureHistory,
+  type WaterConsumption,
+  type InsertWaterConsumption,
+  type UpdateWaterConsumption,
   type CommunicationStatus,
   type InsertCommunicationStatus,
   type ReportFile,
@@ -328,6 +332,33 @@ export interface IStorage {
     consistentBelowRangeSensors: number;
     consistentOptimalSensors: number;
     consistentAboveRangeSensors: number;
+  }>;
+
+  // Water Consumption operations
+  getAllWaterConsumption(): Promise<WaterConsumption[]>;
+  getWaterConsumptionByScheme(schemeId: string, block?: string): Promise<WaterConsumption[]>;
+  getWaterConsumptionByCompositeKey(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+  ): Promise<WaterConsumption | undefined>;
+  createWaterConsumption(data: InsertWaterConsumption): Promise<WaterConsumption>;
+  updateWaterConsumption(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+    data: UpdateWaterConsumption,
+  ): Promise<WaterConsumption>;
+  deleteWaterConsumption(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+  ): Promise<boolean>;
+  importWaterConsumptionFromCSV(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    removed: number;
+    errors: string[];
   }>;
 
   // Report File operations
@@ -4268,6 +4299,335 @@ export class PostgresStorage implements IStorage {
   private async ensureInitialized() {
     await this.initialized;
     return getDB();
+  }
+
+  // Water Consumption CRUD operations
+  async getAllWaterConsumption(): Promise<WaterConsumption[]> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    try {
+      const result = await db.select().from(waterConsumption);
+      return result;
+    } catch (error) {
+      console.error("Error getting all water consumption data:", error);
+      throw error;
+    }
+  }
+
+  async getWaterConsumptionByScheme(schemeId: string, block?: string): Promise<WaterConsumption[]> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    try {
+      let query = db.select().from(waterConsumption).where(eq(waterConsumption.scheme_id, schemeId));
+      if (block) {
+        query = query.where(eq(waterConsumption.block, block));
+      }
+      const result = await query;
+      return result;
+    } catch (error) {
+      console.error(`Error getting water consumption data for scheme ${schemeId}:`, error);
+      throw error;
+    }
+  }
+
+  async getWaterConsumptionByCompositeKey(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+  ): Promise<WaterConsumption | undefined> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    try {
+      const result = await db
+        .select()
+        .from(waterConsumption)
+        .where(
+          and(
+            eq(waterConsumption.scheme_id, schemeId),
+            eq(waterConsumption.village_name, villageName),
+            eq(waterConsumption.esr_name, esrName),
+          ),
+        )
+        .limit(1);
+      return result[0];
+    } catch (error) {
+      console.error(`Error getting water consumption data for ${schemeId}/${villageName}/${esrName}:`, error);
+      throw error;
+    }
+  }
+
+  async createWaterConsumption(data: InsertWaterConsumption): Promise<WaterConsumption> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    try {
+      const result = await db.insert(waterConsumption).values(data).returning();
+      return result[0];
+    } catch (error) {
+      console.error("Error creating water consumption data:", error);
+      throw error;
+    }
+  }
+
+  async updateWaterConsumption(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+    data: UpdateWaterConsumption,
+  ): Promise<WaterConsumption> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    try {
+      const result = await db
+        .update(waterConsumption)
+        .set(data)
+        .where(
+          and(
+            eq(waterConsumption.scheme_id, schemeId),
+            eq(waterConsumption.village_name, villageName),
+            eq(waterConsumption.esr_name, esrName),
+          ),
+        )
+        .returning();
+      return result[0];
+    } catch (error) {
+      console.error("Error updating water consumption data:", error);
+      throw error;
+    }
+  }
+
+  async deleteWaterConsumption(
+    schemeId: string,
+    villageName: string,
+    esrName: string,
+  ): Promise<boolean> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    try {
+      const result = await db
+        .delete(waterConsumption)
+        .where(
+          and(
+            eq(waterConsumption.scheme_id, schemeId),
+            eq(waterConsumption.village_name, villageName),
+            eq(waterConsumption.esr_name, esrName),
+          ),
+        );
+      return result.rowCount > 0;
+    } catch (error) {
+      console.error("Error deleting water consumption data:", error);
+      throw error;
+    }
+  }
+
+  async importWaterConsumptionFromCSV(fileBuffer: Buffer): Promise<{
+    inserted: number;
+    updated: number;
+    removed: number;
+    errors: string[];
+  }> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+    const errors: string[] = [];
+    let inserted = 0;
+    let updated = 0;
+
+    try {
+      console.log("Starting water consumption data import from CSV...");
+      // CSV column mapping as per requirements
+      const csvColumnMapping = [
+        "region", // Column 0
+        "circle", // Column 1
+        "division", // Column 2
+        "sub_division", // Column 3
+        "block", // Column 4
+        "scheme_id", // Column 5
+        "scheme_name", // Column 6
+        "village_name", // Column 7
+        "esr_name", // Column 8
+        "flow_rate_m3", // Column 9
+        "flow_meter_connected", // Column 10
+        "online_status", // Column 11
+        "esr_capacity", // Column 12
+        "water_value_day1", // Column 13
+        "water_value_day2", // Column 14
+        "water_value_day3", // Column 15
+        "water_value_day4", // Column 16
+        "water_value_day5", // Column 17
+        "water_value_day6", // Column 18
+        "water_value_day7", // Column 19
+        "water_date_day1", // Column 20
+        "water_date_day2", // Column 21
+        "water_date_day3", // Column 22
+        "water_date_day4", // Column 23
+        "water_date_day5", // Column 24
+        "water_date_day6", // Column 25
+        "water_date_day7", // Column 26
+        "consistent_zero_consumption", // Column 27
+        "percentage_consumption_previous_day", // Column 28
+      ];
+
+      const parser = parse({
+        delimiter: ",",
+        skip_empty_lines: true,
+        trim: true,
+        encoding: "utf8",
+        relaxQuotes: true,
+        skipLinesWithError: true,
+      });
+
+      const records: any[] = [];
+      const csvString = fileBuffer.toString("utf8");
+
+      // Parse CSV data
+      const parsingPromise = new Promise<void>((resolve, reject) => {
+        parser.on("readable", function () {
+          let record;
+          while ((record = parser.read()) !== null) {
+            records.push(record);
+          }
+        });
+
+        parser.on("error", function (err) {
+          reject(err);
+        });
+
+        parser.on("end", function () {
+          resolve();
+        });
+      });
+
+      parser.write(csvString);
+      parser.end();
+
+      await parsingPromise;
+
+      console.log(`Parsed ${records.length} records from CSV`);
+
+      // Process records
+      for (let i = 0; i < records.length; i++) {
+        const record = records[i];
+        const rowNumber = i + 1;
+
+        try {
+          if (!record || record.length < csvColumnMapping.length) {
+            errors.push(`Row ${rowNumber}: Invalid record format`);
+            continue;
+          }
+
+          // Map CSV columns to database fields
+          const waterConsumptionRecord: Partial<InsertWaterConsumption> = {};
+
+          for (let colIndex = 0; colIndex < csvColumnMapping.length; colIndex++) {
+            const fieldName = csvColumnMapping[colIndex];
+            const value = record[colIndex]?.toString().trim();
+
+            if (value === undefined || value === "") {
+              continue;
+            }
+
+            // Type conversions based on field type
+            switch (fieldName) {
+              case "flow_rate_m3":
+              case "esr_capacity":
+              case "water_value_day1":
+              case "water_value_day2":
+              case "water_value_day3":
+              case "water_value_day4":
+              case "water_value_day5":
+              case "water_value_day6":
+              case "water_value_day7":
+                const numValue = parseFloat(value.replace(/[^\d.-]/g, ""));
+                if (!isNaN(numValue)) {
+                  (waterConsumptionRecord as any)[fieldName] = numValue.toString();
+                }
+                break;
+              case "flow_meter_connected":
+                (waterConsumptionRecord as any)[fieldName] = 
+                  value.toLowerCase() === "true" || value === "1" || value.toLowerCase() === "yes";
+                break;
+              case "consistent_zero_consumption":
+                const intValue = parseInt(value.replace(/[^\d-]/g, ""));
+                if (!isNaN(intValue)) {
+                  (waterConsumptionRecord as any)[fieldName] = intValue;
+                }
+                break;
+              case "percentage_consumption_previous_day":
+                // Strip % and convert to decimal
+                const percentValue = parseFloat(value.replace(/[%\s]/g, ""));
+                if (!isNaN(percentValue)) {
+                  (waterConsumptionRecord as any)[fieldName] = percentValue.toString();
+                }
+                break;
+              case "water_date_day1":
+              case "water_date_day2":
+              case "water_date_day3":
+              case "water_date_day4":
+              case "water_date_day5":
+              case "water_date_day6":
+              case "water_date_day7":
+                // Format date if needed
+                if (value && value.length > 0) {
+                  (waterConsumptionRecord as any)[fieldName] = value;
+                }
+                break;
+              default:
+                (waterConsumptionRecord as any)[fieldName] = value;
+                break;
+            }
+          }
+
+          // Generate dashboard URL
+          if (waterConsumptionRecord.scheme_id && waterConsumptionRecord.village_name && waterConsumptionRecord.esr_name) {
+            waterConsumptionRecord.dashboard_url = this.generateDashboardUrl(
+              "water_consumption",
+              waterConsumptionRecord.scheme_id,
+              waterConsumptionRecord.village_name,
+              waterConsumptionRecord.esr_name,
+            );
+          }
+
+          // Check if record exists
+          const existingRecord = await this.getWaterConsumptionByCompositeKey(
+            waterConsumptionRecord.scheme_id || "",
+            waterConsumptionRecord.village_name || "",
+            waterConsumptionRecord.esr_name || "",
+          );
+
+          if (existingRecord) {
+            // Update existing record
+            await this.updateWaterConsumption(
+              waterConsumptionRecord.scheme_id || "",
+              waterConsumptionRecord.village_name || "",
+              waterConsumptionRecord.esr_name || "",
+              waterConsumptionRecord as UpdateWaterConsumption,
+            );
+            updated++;
+          } else {
+            // Insert new record
+            await this.createWaterConsumption(waterConsumptionRecord as InsertWaterConsumption);
+            inserted++;
+          }
+        } catch (recordError: any) {
+          const errorMsg = `Row ${rowNumber}: ${recordError instanceof Error ? recordError.message : String(recordError)}`;
+          errors.push(errorMsg);
+          console.error(errorMsg);
+        }
+      }
+
+      console.log(`Water consumption import completed: ${inserted} inserted, ${updated} updated, ${errors.length} errors`);
+
+      return {
+        inserted,
+        updated,
+        removed: 0,
+        errors,
+      };
+    } catch (error: any) {
+      console.error("Error importing water consumption data from CSV:", error);
+      throw new Error(
+        `Failed to import water consumption data: ${error instanceof Error ? error.message : String(error)}`,
+      );
+    }
   }
 
   // Helper to execute database operations with retry logic

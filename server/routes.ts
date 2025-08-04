@@ -33,6 +33,7 @@ import waterSchemeRoutes from "./routes/water-scheme-routes";
 import lpcdImportRoutes from "./routes/admin/import-lpcd";
 import chlorineRoutes from "./routes/chlorine-routes";
 import pressureRoutes from "./routes/pressure-routes";
+import waterConsumptionRoutes from "./routes/water-consumption-routes";
 import communicationRoutes from "./routes/communication-routes";
 import translationRoutes from "./routes/translation";
 import schemeLpcdRoutes from "./routes/scheme-lpcd-routes";
@@ -104,6 +105,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Mount pressure data routes
   app.use("/api/pressure", pressureRoutes);
+
+  // Mount water consumption data routes
+  app.use("/api/water-consumption", waterConsumptionRoutes);
 
   // Mount communication status routes
   app.use("/api/communication", communicationRoutes);

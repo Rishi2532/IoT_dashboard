@@ -9,6 +9,7 @@ import {
   waterSchemeData,
   chlorineData,
   pressureData,
+  waterConsumption,
   reportFiles,
 } from "@shared/schema";
 
@@ -646,6 +647,69 @@ export async function initializeTables(db: any) {
       CREATE INDEX IF NOT EXISTS "idx_water_scheme_data_history_latest" 
       ON "water_scheme_data_history" ("scheme_id", "village_name", "data_date", "uploaded_at" DESC);
     `);
+
+    // Create water_consumption table
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS "water_consumption" (
+        "region" VARCHAR(100),
+        "circle" VARCHAR(100),
+        "division" VARCHAR(100),
+        "sub_division" VARCHAR(100),
+        "block" VARCHAR(100),
+        "scheme_id" VARCHAR(50),
+        "scheme_name" VARCHAR(255),
+        "village_name" VARCHAR(255),
+        "esr_name" VARCHAR(255),
+        "flow_rate_m3" DECIMAL(10, 2),
+        "flow_meter_connected" BOOLEAN,
+        "online_status" VARCHAR(20),
+        "esr_capacity" DECIMAL(10, 2),
+        "water_value_day1" DECIMAL(10, 2),
+        "water_value_day2" DECIMAL(10, 2),
+        "water_value_day3" DECIMAL(10, 2),
+        "water_value_day4" DECIMAL(10, 2),
+        "water_value_day5" DECIMAL(10, 2),
+        "water_value_day6" DECIMAL(10, 2),
+        "water_value_day7" DECIMAL(10, 2),
+        "water_date_day1" DATE,
+        "water_date_day2" DATE,
+        "water_date_day3" DATE,
+        "water_date_day4" DATE,
+        "water_date_day5" DATE,
+        "water_date_day6" DATE,
+        "water_date_day7" DATE,
+        "consistent_zero_consumption" INTEGER,
+        "percentage_consumption_previous_day" DECIMAL(5, 2),
+        "dashboard_url" TEXT,
+        PRIMARY KEY ("scheme_id", "village_name", "esr_name")
+      );
+    `);
+
+    // Check if dashboard_url column exists in water_consumption, add if missing
+    try {
+      const result = await db.execute(`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'water_consumption' AND column_name = 'dashboard_url';
+      `);
+
+      if (result.rows.length === 0) {
+        console.log(
+          "Adding missing dashboard_url column to water_consumption table...",
+        );
+        await db.execute(
+          `ALTER TABLE "water_consumption" ADD COLUMN "dashboard_url" TEXT;`,
+        );
+        console.log(
+          "Successfully added dashboard_url column to water_consumption table",
+        );
+      }
+    } catch (error) {
+      console.error(
+        "Error checking for dashboard_url column in water_consumption:",
+        error,
+      );
+    }
 
     // Check if the users table has any records using raw SQL to avoid Drizzle ORM issues
     try {

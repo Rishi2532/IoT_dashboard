@@ -645,6 +645,74 @@ export const insertPressureHistorySchema = createInsertSchema(
 export type InsertPressureHistory = z.infer<typeof insertPressureHistorySchema>;
 export type PressureHistory = typeof pressureHistory.$inferSelect;
 
+// Water Consumption table for tracking water consumption data
+export const waterConsumption = pgTable(
+  "water_consumption",
+  {
+    // Location information
+    region: varchar("region", { length: 100 }),
+    circle: varchar("circle", { length: 100 }),
+    division: varchar("division", { length: 100 }),
+    sub_division: varchar("sub_division", { length: 100 }),
+    block: varchar("block", { length: 100 }),
+
+    // Identification
+    scheme_id: varchar("scheme_id", { length: 50 }),
+    scheme_name: varchar("scheme_name", { length: 255 }),
+    village_name: varchar("village_name", { length: 255 }),
+    esr_name: varchar("esr_name", { length: 255 }),
+
+    // Flow metrics
+    flow_rate_m3: decimal("flow_rate_m3", { precision: 10, scale: 2 }),
+    flow_meter_connected: boolean("flow_meter_connected"),
+    online_status: varchar("online_status", { length: 20 }),
+    esr_capacity: decimal("esr_capacity", { precision: 10, scale: 2 }),
+
+    // Water consumption values for 7 days
+    water_value_day1: decimal("water_value_day1", { precision: 10, scale: 2 }),
+    water_value_day2: decimal("water_value_day2", { precision: 10, scale: 2 }),
+    water_value_day3: decimal("water_value_day3", { precision: 10, scale: 2 }),
+    water_value_day4: decimal("water_value_day4", { precision: 10, scale: 2 }),
+    water_value_day5: decimal("water_value_day5", { precision: 10, scale: 2 }),
+    water_value_day6: decimal("water_value_day6", { precision: 10, scale: 2 }),
+    water_value_day7: decimal("water_value_day7", { precision: 10, scale: 2 }),
+
+    // Water consumption dates for 7 days
+    water_date_day1: varchar("water_date_day1", { length: 15 }),
+    water_date_day2: varchar("water_date_day2", { length: 15 }),
+    water_date_day3: varchar("water_date_day3", { length: 15 }),
+    water_date_day4: varchar("water_date_day4", { length: 15 }),
+    water_date_day5: varchar("water_date_day5", { length: 15 }),
+    water_date_day6: varchar("water_date_day6", { length: 15 }),
+    water_date_day7: varchar("water_date_day7", { length: 15 }),
+
+    // Analysis metrics
+    consistent_zero_consumption: integer("consistent_zero_consumption"),
+    percentage_consumption_previous_day: decimal("percentage_consumption_previous_day", { precision: 5, scale: 2 }),
+
+    // Dashboard URL
+    dashboard_url: text("dashboard_url"),
+  },
+  (table) => {
+    return {
+      pk: primaryKey({
+        columns: [table.scheme_id, table.village_name, table.esr_name],
+      }),
+    };
+  },
+);
+
+export const insertWaterConsumptionSchema = createInsertSchema(waterConsumption);
+export const updateWaterConsumptionSchema = createInsertSchema(waterConsumption).omit({
+  scheme_id: true,
+  village_name: true,
+  esr_name: true,
+});
+
+export type InsertWaterConsumption = z.infer<typeof insertWaterConsumptionSchema>;
+export type UpdateWaterConsumption = z.infer<typeof updateWaterConsumptionSchema>;
+export type WaterConsumption = typeof waterConsumption.$inferSelect;
+
 // Report Files table for managing uploaded Excel reports
 export const reportFiles = pgTable("report_files", {
   id: serial("id").primaryKey(),
