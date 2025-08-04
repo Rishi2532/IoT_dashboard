@@ -44,10 +44,10 @@ interface WaterConsumptionRecord {
 
 export default function WaterConsumptionPage() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [regionFilter, setRegionFilter] = useState<string>("");
-  const [mjpCommissionedFilter, setMjpCommissionedFilter] = useState<string>("");
-  const [mjpCompletedFilter, setMjpCompletedFilter] = useState<string>("");
-  const [iotStatusFilter, setIotStatusFilter] = useState<string>("");
+  const [regionFilter, setRegionFilter] = useState<string>("all_regions");
+  const [mjpCommissionedFilter, setMjpCommissionedFilter] = useState<string>("all_mjp_status");
+  const [mjpCompletedFilter, setMjpCompletedFilter] = useState<string>("all_completion");
+  const [iotStatusFilter, setIotStatusFilter] = useState<string>("all_iot_status");
   const [selectedRecord, setSelectedRecord] = useState<WaterConsumptionRecord | null>(null);
 
   // Fetch water consumption data
@@ -70,20 +70,20 @@ export default function WaterConsumptionPage() {
         record.scheme_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         record.scheme_id?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesRegion = regionFilter === "" || record.region === regionFilter;
+      const matchesRegion = regionFilter === "" || regionFilter === "all_regions" || record.region === regionFilter;
 
       // MJP Commissioned filter (based on online_status or flow_meter_connected)
-      const matchesMjpCommissioned = mjpCommissionedFilter === "" || 
+      const matchesMjpCommissioned = mjpCommissionedFilter === "" || mjpCommissionedFilter === "all_mjp_status" || 
         (mjpCommissionedFilter === "commissioned" && (record.online_status === "Online" || record.flow_meter_connected)) ||
         (mjpCommissionedFilter === "not_commissioned" && record.online_status !== "Online" && !record.flow_meter_connected);
 
       // MJP Completion filter (based on scheme completion status - using esr_capacity as proxy)
-      const matchesMjpCompleted = mjpCompletedFilter === "" ||
+      const matchesMjpCompleted = mjpCompletedFilter === "" || mjpCompletedFilter === "all_completion" ||
         (mjpCompletedFilter === "fully_completed" && record.esr_capacity && record.esr_capacity > 0) ||
         (mjpCompletedFilter === "partially_completed" && (!record.esr_capacity || record.esr_capacity === 0));
 
       // IoT Status filter (based on flow_meter_connected and online_status)
-      const matchesIotStatus = iotStatusFilter === "" ||
+      const matchesIotStatus = iotStatusFilter === "" || iotStatusFilter === "all_iot_status" ||
         (iotStatusFilter === "fully_connected" && record.flow_meter_connected && record.online_status === "Online") ||
         (iotStatusFilter === "partially_connected" && (record.flow_meter_connected || record.online_status === "Online")) ||
         (iotStatusFilter === "not_connected" && !record.flow_meter_connected && record.online_status !== "Online");
@@ -157,7 +157,7 @@ export default function WaterConsumptionPage() {
                 <SelectValue placeholder="All Regions" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Regions</SelectItem>
+                <SelectItem value="all_regions">All Regions</SelectItem>
                 {regions.map((region) => (
                   <SelectItem key={region} value={region}>
                     {region}
@@ -172,7 +172,7 @@ export default function WaterConsumptionPage() {
                 <SelectValue placeholder="MJP Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All MJP Status</SelectItem>
+                <SelectItem value="all_mjp_status">All MJP Status</SelectItem>
                 <SelectItem value="commissioned">Commissioned</SelectItem>
                 <SelectItem value="not_commissioned">Not Commissioned</SelectItem>
               </SelectContent>
@@ -184,7 +184,7 @@ export default function WaterConsumptionPage() {
                 <SelectValue placeholder="Completion Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Completion</SelectItem>
+                <SelectItem value="all_completion">All Completion</SelectItem>
                 <SelectItem value="fully_completed">Fully Completed</SelectItem>
                 <SelectItem value="partially_completed">Partially Completed</SelectItem>
               </SelectContent>
@@ -196,7 +196,7 @@ export default function WaterConsumptionPage() {
                 <SelectValue placeholder="IoT Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All IoT Status</SelectItem>
+                <SelectItem value="all_iot_status">All IoT Status</SelectItem>
                 <SelectItem value="fully_connected">Fully Connected</SelectItem>
                 <SelectItem value="partially_connected">Partially Connected</SelectItem>
                 <SelectItem value="not_connected">Not Connected</SelectItem>
@@ -210,10 +210,10 @@ export default function WaterConsumptionPage() {
               variant="outline"
               onClick={() => {
                 setSearchTerm("");
-                setRegionFilter("");
-                setMjpCommissionedFilter("");
-                setMjpCompletedFilter("");
-                setIotStatusFilter("");
+                setRegionFilter("all_regions");
+                setMjpCommissionedFilter("all_mjp_status");
+                setMjpCompletedFilter("all_completion");
+                setIotStatusFilter("all_iot_status");
               }}
               data-testid="clear-filters-button"
             >
