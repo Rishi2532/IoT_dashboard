@@ -663,19 +663,19 @@ export const waterConsumption = pgTable(
     esr_name: varchar("esr_name", { length: 255 }),
 
     // Flow metrics
-    flow_rate_m3: decimal("flow_rate_m3", { precision: 15, scale: 2 }),
-    flow_meter_connected: boolean("flow_meter_connected"),
+    flow_rate_m3: decimal("flow_rate_m3"), // Removed precision constraints to handle overflow
+    flow_meter_connected: varchar("flow_meter_connected", { length: 50 }), // Changed from boolean to varchar
     online_status: varchar("online_status", { length: 20 }),
-    esr_capacity: decimal("esr_capacity", { precision: 15, scale: 2 }),
+    esr_capacity: decimal("esr_capacity"), // Removed precision constraints to handle overflow
 
     // Water consumption values for 7 days
-    water_value_day1: decimal("water_value_day1", { precision: 15, scale: 2 }),
-    water_value_day2: decimal("water_value_day2", { precision: 15, scale: 2 }),
-    water_value_day3: decimal("water_value_day3", { precision: 15, scale: 2 }),
-    water_value_day4: decimal("water_value_day4", { precision: 15, scale: 2 }),
-    water_value_day5: decimal("water_value_day5", { precision: 15, scale: 2 }),
-    water_value_day6: decimal("water_value_day6", { precision: 15, scale: 2 }),
-    water_value_day7: decimal("water_value_day7", { precision: 15, scale: 2 }),
+    water_value_day1: decimal("water_value_day1"), // Removed precision constraints to handle overflow
+    water_value_day2: decimal("water_value_day2"), // Removed precision constraints to handle overflow
+    water_value_day3: decimal("water_value_day3"), // Removed precision constraints to handle overflow
+    water_value_day4: decimal("water_value_day4"), // Removed precision constraints to handle overflow
+    water_value_day5: decimal("water_value_day5"), // Removed precision constraints to handle overflow
+    water_value_day6: decimal("water_value_day6"), // Removed precision constraints to handle overflow
+    water_value_day7: decimal("water_value_day7"), // Removed precision constraints to handle overflow
 
     // Water consumption dates for 7 days
     water_date_day1: varchar("water_date_day1", { length: 15 }),
@@ -688,7 +688,7 @@ export const waterConsumption = pgTable(
 
     // Analysis metrics
     consistent_zero_consumption: integer("consistent_zero_consumption"),
-    percentage_consumption_previous_day: decimal("percentage_consumption_previous_day", { precision: 15, scale: 2 }),
+    percentage_consumption_previous_day: decimal("percentage_consumption_previous_day"), // Removed precision constraints to handle overflow
 
     // Dashboard URL
     dashboard_url: text("dashboard_url"),
