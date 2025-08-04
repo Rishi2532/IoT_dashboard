@@ -688,7 +688,7 @@ export const waterConsumption = pgTable(
 
     // Analysis metrics
     consistent_zero_consumption: integer("consistent_zero_consumption"),
-    percentage_consumption_previous_day: decimal("percentage_consumption_previous_day", { precision: 5, scale: 2 }),
+    percentage_consumption_previous_day: decimal("percentage_consumption_previous_day", { precision: 10, scale: 2 }),
 
     // Dashboard URL
     dashboard_url: text("dashboard_url"),

@@ -21,18 +21,19 @@ Preferred communication style: Simple, everyday language.
 - **Backend**: Node.js with Express.js framework, written in TypeScript. Implements a RESTful API and supports Excel/CSV imports using the XLSX library. Uses Express sessions for user authentication.
 - **Database**: PostgreSQL with Drizzle ORM for schema management and migrations. Features comprehensive data models for regions, schemes, villages, users, population, and chlorine data.
 - **AI Integration**: OpenAI-powered conversational interface for data queries, supporting multi-language communication and natural language processing.
-- **Data Import System**: Handles Excel and CSV imports with validation, error handling, and background processing for large datasets.
+- **Data Import System**: Advanced CSV import system with automatic column mapping for water consumption data (29 columns), intelligent date format parsing (DD-MMM, DD/MM/YYYY, MM/DD/YYYY), and comprehensive error handling for large datasets.
 - **Authentication**: User authentication with role-based access control and session management.
 
 ### Feature Specifications
 - **Regional Management**: Summaries and statistics for regional water infrastructure.
 - **Scheme Tracking**: Detailed monitoring of water scheme statuses and completion.
-- **Water Consumption**: Village-level LPCD (Liters Per Capita per Day) tracking and analysis.
+- **Water Consumption**: Village-level LPCD (Liters Per Capita per Day) tracking and analysis with automatic CSV import supporting 29-column format.
 - **Population Tracking**: Historical population data storage and analysis.
 - **Water Quality**: Chlorine level tracking and water quality monitoring.
 - **Interactive Dashboards**: Comprehensive dashboards featuring regional overviews, scheme monitoring, LPCD analysis, and geospatial visualization.
 - **Data Export**: Capabilities to export data in various formats.
 - **Communication Status**: System to monitor communication status of ESR locations, including real-time sensor connectivity.
+- **CSV Import System**: Robust CSV import with automatic column mapping for water consumption data (29 columns) and flexible date format parsing (supports "DD-MMM", "DD/MM/YYYY", etc.).
 
 ## External Dependencies
 

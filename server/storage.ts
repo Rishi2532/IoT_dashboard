@@ -4509,6 +4509,13 @@ export class PostgresStorage implements IStorage {
             switch (fieldName) {
               case "flow_rate_m3":
               case "esr_capacity":
+                const flowValue = parseFloat(value.replace(/[^\d.-]/g, ""));
+                if (!isNaN(flowValue)) {
+                  // Cap values to prevent overflow (precision 10, scale 2 = max 99999999.99)
+                  const cappedFlowValue = Math.min(Math.max(flowValue, -99999999.99), 99999999.99);
+                  (waterConsumptionRecord as any)[fieldName] = cappedFlowValue.toString();
+                }
+                break;
               case "water_value_day1":
               case "water_value_day2":
               case "water_value_day3":
@@ -4518,7 +4525,9 @@ export class PostgresStorage implements IStorage {
               case "water_value_day7":
                 const numValue = parseFloat(value.replace(/[^\d.-]/g, ""));
                 if (!isNaN(numValue)) {
-                  (waterConsumptionRecord as any)[fieldName] = numValue.toString();
+                  // Cap values to prevent overflow (precision 10, scale 2 = max 99999999.99)
+                  const cappedNumValue = Math.min(Math.max(numValue, -99999999.99), 99999999.99);
+                  (waterConsumptionRecord as any)[fieldName] = cappedNumValue.toString();
                 }
                 break;
               case "flow_meter_connected":
@@ -4532,10 +4541,12 @@ export class PostgresStorage implements IStorage {
                 }
                 break;
               case "percentage_consumption_previous_day":
-                // Strip % and convert to decimal
+                // Strip % and convert to decimal, handle large values
                 const percentValue = parseFloat(value.replace(/[%\s]/g, ""));
                 if (!isNaN(percentValue)) {
-                  (waterConsumptionRecord as any)[fieldName] = percentValue.toString();
+                  // Cap extremely large values to prevent overflow
+                  const cappedValue = Math.min(Math.max(percentValue, -99999999.99), 99999999.99);
+                  (waterConsumptionRecord as any)[fieldName] = cappedValue.toString();
                 }
                 break;
               case "water_date_day1":
@@ -4561,7 +4572,6 @@ export class PostgresStorage implements IStorage {
                     const month = monthMap[monthAbbr];
                     if (month) {
                       formattedDate = `${currentYear}-${month}-${day.padStart(2, '0')}`;
-                      console.log(`Converted date "${value}" to "${formattedDate}"`);
                     }
                   }
                   // Handle "DD/MM/YYYY" format

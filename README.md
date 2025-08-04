@@ -46,7 +46,15 @@ You can access the administrative features using the default credentials:
 
 ## CSV Import Feature
 
-The platform supports importing scheme data via CSV files. The CSV should match the structure of the `scheme_status` table in the database.
+The platform supports importing water consumption data via CSV files with automatic column mapping and intelligent date format parsing.
+
+**See [CSV-IMPORT-GUIDE.md](./CSV-IMPORT-GUIDE.md) for detailed import instructions and supported formats.**
+
+Key features:
+- Automatic 29-column mapping for water consumption data
+- Intelligent date format parsing (DD-MMM, DD/MM/YYYY, etc.)
+- Comprehensive error handling and validation
+- Dashboard URL generation for imported records
 
 ## Development Guidelines
 
