@@ -370,7 +370,7 @@ export default function EnhancedCsvImporter() {
       // Determine the correct API endpoint based on table type
       let apiEndpoint;
       if (tableName === "water_consumption") {
-        apiEndpoint = "/api/water-consumption/import/csv";
+        apiEndpoint = "/api/water-consumption/import-csv";
       } else {
         apiEndpoint = "/api/admin/import-csv";
       }
