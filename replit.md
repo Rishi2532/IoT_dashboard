@@ -4,6 +4,26 @@
 
 This is a comprehensive water infrastructure management platform for Maharashtra, designed to provide intelligent insights into regional water projects through data analysis and multi-block scheme management. The platform features real-time water consumption tracking, scheme management, and AI-powered chatbot assistance, aiming to provide intelligent insights into regional water projects.
 
+## Recent Updates (August 2025)
+
+✓ **Fixed CSV Import Issues**: Resolved water consumption CSV upload failures caused by field name mismatch and numeric overflow
+✓ **Database Schema Updates**: Increased precision for numeric fields to handle larger water consumption values (precision 15, scale 2)
+✓ **Permanent Field Name Fix**: Updated backend routes to use consistent 'file' field name for all CSV uploads
+✓ **Enhanced Error Handling**: Improved error reporting for CSV import processes
+
+## Known Issues Fixed for Remixers
+
+### CSV Upload "Unexpected field" Error
+**Problem**: Water consumption CSV uploads failed with "Unexpected field" error.
+**Solution**: Updated `server/routes/water-consumption-routes.ts` to use `upload.single("file")` instead of `upload.single("csvFile")` to match frontend field name.
+
+### Numeric Field Overflow Error  
+**Problem**: Database rejected values with error "precision 5, scale 2 must round to an absolute value less than 10^3"
+**Solution**: Updated `shared/schema.ts` to use `precision: 15, scale: 2` for all water consumption decimal fields to handle larger values.
+
+### Database Migration Required
+After remixing this project, run `npm run db:push` to ensure the latest schema changes are applied to your database.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
