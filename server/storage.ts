@@ -4545,9 +4545,41 @@ export class PostgresStorage implements IStorage {
               case "water_date_day5":
               case "water_date_day6":
               case "water_date_day7":
-                // Format date if needed
+                // Format date if needed - convert from formats like "28-Jul" to proper date
                 if (value && value.length > 0) {
-                  (waterConsumptionRecord as any)[fieldName] = value;
+                  let formattedDate = value;
+                  
+                  // Handle "DD-MMM" format (e.g., "28-Jul")
+                  if (/^\d{1,2}-[A-Za-z]{3}$/.test(value)) {
+                    const currentYear = new Date().getFullYear();
+                    const [day, monthAbbr] = value.split('-');
+                    const monthMap: { [key: string]: string } = {
+                      'Jan': '01', 'Feb': '02', 'Mar': '03', 'Apr': '04',
+                      'May': '05', 'Jun': '06', 'Jul': '07', 'Aug': '08',
+                      'Sep': '09', 'Oct': '10', 'Nov': '11', 'Dec': '12'
+                    };
+                    const month = monthMap[monthAbbr];
+                    if (month) {
+                      formattedDate = `${currentYear}-${month}-${day.padStart(2, '0')}`;
+                      console.log(`Converted date "${value}" to "${formattedDate}"`);
+                    }
+                  }
+                  // Handle "DD/MM/YYYY" format
+                  else if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(value)) {
+                    const [day, month, year] = value.split('/');
+                    formattedDate = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+                  }
+                  // Handle "MM/DD/YYYY" format
+                  else if (/^\d{1,2}\/\d{1,2}\/\d{2,4}$/.test(value)) {
+                    const parts = value.split('/');
+                    let year = parts[2];
+                    if (year.length === 2) {
+                      year = '20' + year; // Assume 2000s for 2-digit years
+                    }
+                    formattedDate = `${year}-${parts[0].padStart(2, '0')}-${parts[1].padStart(2, '0')}`;
+                  }
+                  
+                  (waterConsumptionRecord as any)[fieldName] = formattedDate;
                 }
                 break;
               default:
