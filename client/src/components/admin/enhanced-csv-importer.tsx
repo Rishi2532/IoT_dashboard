@@ -363,7 +363,7 @@ export default function EnhancedCsvImporter() {
       formData.append("delimiter", delimiter);
       formData.append("hasHeader", hasHeader.toString());
 
-      if (regionName) {
+      if (regionName && regionName !== "no_region") {
         formData.append("regionName", regionName);
       }
 
@@ -491,7 +491,7 @@ export default function EnhancedCsvImporter() {
                       <SelectValue placeholder="Select region (optional)" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">No region (use CSV values)</SelectItem>
+                      <SelectItem value="no_region">No region (use CSV values)</SelectItem>
                       {regions.map((region) => (
                         <SelectItem key={region.value} value={region.value}>
                           {region.label}
