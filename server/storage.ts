@@ -1125,7 +1125,7 @@ export class PostgresStorage implements IStorage {
     scheme: SchemeStatus | InsertSchemeStatus,
   ): string | null {
     // If dashboard_url is already present in the scheme and we're not forcing regeneration, return it
-    if ("dashboard_url" in scheme && scheme.dashboard_url) {
+    if (scheme && typeof scheme === 'object' && 'dashboard_url' in scheme && scheme.dashboard_url) {
       return scheme.dashboard_url;
     }
 
@@ -4556,14 +4556,19 @@ export class PostgresStorage implements IStorage {
             }
           }
 
-          // Generate dashboard URL
+          // Generate dashboard URL for water consumption record
           if (waterConsumptionRecord.scheme_id && waterConsumptionRecord.village_name && waterConsumptionRecord.esr_name) {
-            waterConsumptionRecord.dashboard_url = this.generateDashboardUrl(
-              "water_consumption",
-              waterConsumptionRecord.scheme_id,
-              waterConsumptionRecord.village_name,
-              waterConsumptionRecord.esr_name,
-            );
+            // Create a scheme-like object for the dashboard URL generator
+            const schemeForUrl = {
+              scheme_id: waterConsumptionRecord.scheme_id,
+              scheme_name: waterConsumptionRecord.scheme_name || `Scheme ${waterConsumptionRecord.scheme_id}`,
+              region: waterConsumptionRecord.region,
+              circle: waterConsumptionRecord.circle,
+              division: waterConsumptionRecord.division,
+              sub_division: waterConsumptionRecord.sub_division,
+              block: waterConsumptionRecord.block
+            };
+            waterConsumptionRecord.dashboard_url = this.generateDashboardUrl(schemeForUrl);
           }
 
           // Check if record exists
