@@ -369,6 +369,46 @@ const ChlorineDashboard: React.FC = () => {
       },
     });
 
+  // Fetch chlorine sensors with no water data
+  const { data: noWaterSensorsData } = useQuery<{
+    totalNoWaterSensors: number;
+    noWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      chlorine_connected: string | null;
+    }>;
+  }>({
+    queryKey: ["/api/chlorine/no-water-sensors", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/chlorine/no-water-sensors${queryString ? `?${queryString}` : ""}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch chlorine sensors with no water");
+      }
+
+      const result = await response.json();
+      console.log(`Received chlorine no water sensors data:`, result);
+      return result.data;
+    },
+  });
+
   // Fetch historical chlorine data when dates change
   const {
     data: historicalChlorineData = [],
@@ -466,11 +506,11 @@ const ChlorineDashboard: React.FC = () => {
     status.online = uniqueOnlineESRs.size;
     status.offline = uniqueOfflineESRs.size;
 
-    // Use API data for no water sensors if available
-    status.noWater = apiDashboardStats?.noWaterSensors || 0;
+    // Use the no water sensors data from the dedicated API
+    status.noWater = noWaterSensorsData?.totalNoWaterSensors || 0;
 
     return status;
-  }, [allChlorineData, communicationStatusData, selectedRegion, apiDashboardStats]);
+  }, [allChlorineData, communicationStatusData, selectedRegion, noWaterSensorsData]);
 
   // Get the CSS class and status text based on chlorine value
   const getChlorineStatusInfo = (value: number | null) => {
