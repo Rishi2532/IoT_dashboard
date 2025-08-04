@@ -352,6 +352,46 @@ const PressureDashboard: React.FC = () => {
     queryKey: ["/api/communication-status/schemes"],
   });
 
+  // Fetch pressure sensors with no water data
+  const { data: noWaterSensorsData } = useQuery<{
+    totalNoWaterSensors: number;
+    noWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      flow_meter_connected: string | null;
+    }>;
+  }>({
+    queryKey: ["/api/pressure/no-water-sensors", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/pressure/no-water-sensors${queryString ? `?${queryString}` : ""}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch pressure sensors with no water");
+      }
+
+      const result = await response.json();
+      console.log(`Received no water sensors data:`, result);
+      return result.data;
+    },
+  });
+
   // Fetch scheme status data for filtering
   const { data: schemeStatusData = [], isLoading: isLoadingSchemeStatus } =
     useQuery<any[]>({
@@ -475,16 +515,11 @@ const PressureDashboard: React.FC = () => {
     status.online = uniqueOnlineESRs.size;
     status.offline = uniqueOfflineESRs.size;
 
-    // Count sensors with no water (pressure value is 0 for latest reading)
-    allPressureData.forEach(pressureData => {
-      const latestValue = getLatestPressureValue(pressureData);
-      if (latestValue === 0) {
-        status.noWater++;
-      }
-    });
+    // Use the no water sensors data from the API
+    status.noWater = noWaterSensorsData?.totalNoWaterSensors || 0;
 
     return status;
-  }, [allPressureData, communicationStatusData, selectedRegion]);
+  }, [allPressureData, communicationStatusData, selectedRegion, noWaterSensorsData]);
 
   // Get the CSS class and status text based on pressure value
   const getPressureStatusInfo = (value: number | null) => {
@@ -1706,7 +1741,7 @@ const PressureDashboard: React.FC = () => {
                 {calculatePressureSensorStatus.noWater}
               </p>
               <p className="text-xs text-red-600/70">
-                Zero pressure detected
+                Connected sensors with no water
               </p>
             </div>
           </CardContent>

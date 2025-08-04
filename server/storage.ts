@@ -2771,11 +2771,13 @@ export class PostgresStorage implements IStorage {
 
       const result = await db.execute(query);
       
-      console.log(`Found ${result.length} chlorine sensors with no water`);
+      console.log(`Found ${result.rows ? result.rows.length : 0} chlorine sensors with no water`);
+      
+      const resultRows = result.rows || [];
       
       return {
-        totalNoWaterSensors: result.length,
-        noWaterSensors: result.map((row: any) => ({
+        totalNoWaterSensors: resultRows.length,
+        noWaterSensors: resultRows.map((row: any) => ({
           region: row.region,
           circle: row.circle,
           division: row.division,
@@ -2868,11 +2870,13 @@ export class PostgresStorage implements IStorage {
 
       const result = await db.execute(query);
       
-      console.log(`Found ${result.length} pressure sensors with no water`);
+      console.log(`Found ${result.rows ? result.rows.length : 0} pressure sensors with no water`);
+      
+      const resultRows = result.rows || [];
       
       return {
-        totalNoWaterSensors: result.length,
-        noWaterSensors: result.map((row: any) => ({
+        totalNoWaterSensors: resultRows.length,
+        noWaterSensors: resultRows.map((row: any) => ({
           region: row.region,
           circle: row.circle,
           division: row.division,
