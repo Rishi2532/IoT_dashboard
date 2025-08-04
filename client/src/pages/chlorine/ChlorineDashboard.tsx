@@ -589,6 +589,23 @@ const ChlorineDashboard: React.FC = () => {
     setPage(1);
   };
 
+  // Handler for sensor status card clicks
+  const handleSensorStatusClick = (status: SensorStatusFilter) => {
+    if (sensorStatusFilter === status) {
+      // If same filter is clicked, clear the filter
+      setSensorStatusFilter("all");
+    } else {
+      // Apply the new filter
+      setSensorStatusFilter(status);
+    }
+    
+    // Track filter usage
+    trackFilterUsage("sensor_status", status, undefined, "chlorine_dashboard");
+    
+    // Reset page to 1 when filter changes
+    setPage(1);
+  };
+
   // Calculate dashboard stats locally based on filtered data
   // Apply global filters to data for both cards and table
   const globallyFilteredData = useMemo(() => {
@@ -609,6 +626,37 @@ const ChlorineDashboard: React.FC = () => {
     // Double-check region filtering to ensure only data from selected region is shown
     if (selectedRegion && selectedRegion !== "all") {
       filtered = filtered.filter((item) => item.region === selectedRegion);
+    }
+
+    // Apply sensor status filter
+    if (sensorStatusFilter !== "all") {
+      // Create a map of ESR location keys to their communication status
+      const commStatusMap = new Map<string, CommunicationStatus>();
+      communicationStatusData?.forEach(status => {
+        const key = `${status.region}|${status.circle}|${status.division}|${status.sub_division}|${status.block}|${status.village_name}|${status.esr_name}`;
+        commStatusMap.set(key, status);
+      });
+
+      filtered = filtered.filter(item => {
+        const key = `${item.region}|${item.circle}|${item.division}|${item.sub_division}|${item.block}|${item.village_name}|${item.esr_name}`;
+        const commStatus = commStatusMap.get(key);
+        
+        if (!commStatus) return false;
+
+        switch (sensorStatusFilter) {
+          case "connected":
+            return commStatus.chlorine_connected === 'Connected';
+          case "online":
+            return commStatus.chlorine_connected === 'Connected' && commStatus.chlorine_status === 'Online';
+          case "offline":
+            return commStatus.chlorine_connected === 'Connected' && commStatus.chlorine_status === 'Offline';
+          case "noWater":
+            // Filter for ESRs with no water consumption in the last 7 days
+            return item.water_value_day7 === 0 || item.water_value_day7 === null;
+          default:
+            return true;
+        }
+      });
     }
 
     // Create a map of scheme IDs to their scheme status data for filtering
@@ -654,7 +702,7 @@ const ChlorineDashboard: React.FC = () => {
     // No need for additional filtering here as global filters are already applied in globallyFilteredData
     
     return filtered;
-  }, [allChlorineData, selectedRegion, searchQuery, commissionedFilter, fullyCompletedFilter, schemeStatusFilter, schemeStatusData]);
+  }, [allChlorineData, selectedRegion, searchQuery, commissionedFilter, fullyCompletedFilter, schemeStatusFilter, schemeStatusData, sensorStatusFilter, communicationStatusData]);
   
   // Calculate card statistics based on the globally filtered data
   const updatedCardStats = useMemo(() => {
@@ -862,18 +910,7 @@ const ChlorineDashboard: React.FC = () => {
     setPage(1); // Reset to first page when filter changes
   };
 
-  // Handler for sensor status filter clicks
-  const handleSensorStatusClick = (status: SensorStatusFilter) => {
-    setSensorStatusFilter(status);
-    setSelectedCardFilter("all"); // Reset chlorine range filter when switching to sensor status
-    
-    // Track sensor filter usage
-    if (status !== "all") {
-      trackFilterUsage("sensor_status", status, filteredData.length, "chlorine_dashboard");
-    }
-    
-    setPage(1); // Reset to first page when filter changes
-  };
+
 
   // Handler for exporting historical chlorine data
   const exportHistoricalData = async () => {
