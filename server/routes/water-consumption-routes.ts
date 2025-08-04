@@ -109,6 +109,32 @@ router.put("/scheme/:schemeId/village/:villageName/esr/:esrName", requireAdmin, 
   }
 });
 
+// Import water consumption data from CSV
+router.post("/import-csv", requireAdmin, upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    console.log("Starting water consumption CSV import...");
+    const result = await storage.importWaterConsumptionFromCSV(req.file.buffer);
+    
+    res.json({
+      message: "CSV data imported successfully",
+      inserted: result.inserted,
+      updated: result.updated,
+      removed: result.removed,
+      errors: result.errors,
+    });
+  } catch (error) {
+    console.error("Error importing water consumption CSV:", error);
+    res.status(500).json({ 
+      error: "Failed to import CSV data",
+      details: (error as Error).message
+    });
+  }
+});
+
 // Delete water consumption data
 router.delete("/scheme/:schemeId/village/:villageName/esr/:esrName", requireAdmin, async (req, res) => {
   try {

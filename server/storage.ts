@@ -4466,40 +4466,20 @@ export class PostgresStorage implements IStorage {
         "percentage_consumption_previous_day", // Column 28
       ];
 
-      const parser = parse({
-        delimiter: ",",
-        skip_empty_lines: true,
-        trim: true,
-        encoding: "utf8",
-        relaxQuotes: true,
-        skipLinesWithError: true,
-      });
-
-      const records: any[] = [];
       const csvString = fileBuffer.toString("utf8");
 
-      // Parse CSV data
-      const parsingPromise = new Promise<void>((resolve, reject) => {
-        parser.on("readable", function () {
-          let record;
-          while ((record = parser.read()) !== null) {
-            records.push(record);
-          }
-        });
+      // Use synchronous parse function from csv-parse for better performance
+      const { parse } = await import("csv-parse/sync");
 
-        parser.on("error", function (err) {
-          reject(err);
-        });
+      const options = {
+        columns: false, // No headers in the CSV file, use positional mapping
+        skip_empty_lines: true,
+        trim: true,
+        relax_column_count: true, // Allow different column counts in rows
+        bom: true, // Handle byte order mark if present
+      };
 
-        parser.on("end", function () {
-          resolve();
-        });
-      });
-
-      parser.write(csvString);
-      parser.end();
-
-      await parsingPromise;
+      const records = parse(csvString, options);
 
       console.log(`Parsed ${records.length} records from CSV`);
 
