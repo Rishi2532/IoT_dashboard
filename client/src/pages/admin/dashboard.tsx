@@ -31,6 +31,7 @@ import SchemeImporter from '@/components/admin/scheme-importer';
 import LpcdImport from '@/pages/lpcd/LpcdImport';
 import { ChlorineImport } from '@/pages/chlorine';
 import { PressureImportContent } from '@/pages/pressure';
+import EnhancedCsvImporter from '@/components/admin/enhanced-csv-importer';
 import {
   Table,
   TableHeader,
@@ -640,6 +641,10 @@ export default function AdminDashboard() {
                 <Gauge className="h-4 w-4 mr-2" />
                 Import Pressure Data
               </TabsTrigger>
+              <TabsTrigger value="water-consumption-import" className="flex items-center">
+                <Droplets className="h-4 w-4 mr-2" />
+                Water Consumption Data
+              </TabsTrigger>
               <TabsTrigger value="manage-schemes" className="flex items-center">
                 <Cog className="h-4 w-4 mr-2" />
                 Manage Schemes
@@ -696,6 +701,20 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent>
                   <PressureImportContent />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="water-consumption-import" className="mt-0">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Import Water Consumption Data</CardTitle>
+                  <CardDescription>
+                    Upload CSV files with water consumption data including flow rates, daily water values, and consumption metrics for ESRs.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <EnhancedCsvImporter />
                 </CardContent>
               </Card>
             </TabsContent>
