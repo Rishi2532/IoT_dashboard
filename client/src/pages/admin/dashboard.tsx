@@ -714,7 +714,7 @@ export default function AdminDashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <EnhancedCsvImporter />
+                  <EnhancedCsvImporter defaultTable="water_consumption" />
                 </CardContent>
               </Card>
             </TabsContent>

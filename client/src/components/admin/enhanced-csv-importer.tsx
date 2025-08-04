@@ -119,7 +119,11 @@ const tableOptions = [
   { value: "water_consumption", label: "Water Consumption Table" },
 ];
 
-export default function EnhancedCsvImporter() {
+interface EnhancedCsvImporterProps {
+  defaultTable?: string;
+}
+
+export default function EnhancedCsvImporter({ defaultTable = "scheme_status" }: EnhancedCsvImporterProps) {
   const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [fileContents, setFileContents] = useState<string>("");
@@ -127,7 +131,7 @@ export default function EnhancedCsvImporter() {
   const [columnMappings, setColumnMappings] = useState<Record<string, string>>({});
   const [isUploading, setIsUploading] = useState(false);
   const [previewData, setPreviewData] = useState<string[][]>([]);
-  const [tableName, setTableName] = useState("scheme_status");
+  const [tableName, setTableName] = useState(defaultTable);
   const [regionName, setRegionName] = useState("");
   const [uploadResult, setUploadResult] = useState<{
     message: string;
