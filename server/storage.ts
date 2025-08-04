@@ -270,6 +270,24 @@ export interface IStorage {
     consistentBelowRangeSensors: number;
     consistentOptimalSensors: number;
     consistentAboveRangeSensors: number;
+    noWaterSensors: number;
+  }>;
+  getChlorineSensorsWithNoWater(regionName?: string): Promise<{
+    totalNoWaterSensors: number;
+    noWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      chlorine_connected: string | null;
+    }>;
   }>;
 
   // Pressure Data operations
@@ -332,6 +350,24 @@ export interface IStorage {
     consistentBelowRangeSensors: number;
     consistentOptimalSensors: number;
     consistentAboveRangeSensors: number;
+    noWaterSensors: number;
+  }>;
+  getPressureSensorsWithNoWater(regionName?: string): Promise<{
+    totalNoWaterSensors: number;
+    noWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      flow_meter_connected: string | null;
+    }>;
   }>;
 
   // Water Consumption operations
@@ -2727,8 +2763,7 @@ export class PostgresStorage implements IStorage {
           AND (
             wc.water_value_day7 = 0 OR 
             wc.water_value_day7 IS NULL OR 
-            wc.water_date_day7 IS NULL OR 
-            wc.water_date_day7 = ''
+            wc.water_value_day7 = ''
           )
       `;
 
@@ -2819,8 +2854,7 @@ export class PostgresStorage implements IStorage {
           AND (
             wc.water_value_day7 = 0 OR 
             wc.water_value_day7 IS NULL OR 
-            wc.water_date_day7 IS NULL OR 
-            wc.water_date_day7 = ''
+            wc.water_value_day7 = ''
           )
       `;
 
@@ -3041,6 +3075,11 @@ export class PostgresStorage implements IStorage {
         consistentAboveRangeSensors,
       );
 
+      // Get no water sensors count
+      const noWaterResult = await this.getChlorineSensorsWithNoWater(regionName);
+      const noWaterSensors = noWaterResult.totalNoWaterSensors;
+      console.log("No water sensors:", noWaterSensors);
+
       console.log("Dashboard stats:", {
         totalSensors,
         belowRangeSensors,
@@ -3050,6 +3089,7 @@ export class PostgresStorage implements IStorage {
         consistentBelowRangeSensors,
         consistentOptimalSensors,
         consistentAboveRangeSensors,
+        noWaterSensors,
       });
 
       return {
@@ -3061,6 +3101,7 @@ export class PostgresStorage implements IStorage {
         consistentBelowRangeSensors,
         consistentOptimalSensors,
         consistentAboveRangeSensors,
+        noWaterSensors,
       };
     } catch (error) {
       console.error("Error fetching chlorine dashboard stats:", error);
@@ -3073,6 +3114,7 @@ export class PostgresStorage implements IStorage {
         consistentBelowRangeSensors: 0,
         consistentOptimalSensors: 0,
         consistentAboveRangeSensors: 0,
+        noWaterSensors: 0,
       };
     }
   }
@@ -3643,6 +3685,7 @@ export class PostgresStorage implements IStorage {
     consistentBelowRangeSensors: number;
     consistentOptimalSensors: number;
     consistentAboveRangeSensors: number;
+    noWaterSensors: number;
   }> {
     await this.initialized;
     const db = await this.ensureInitialized();
@@ -3823,6 +3866,11 @@ export class PostgresStorage implements IStorage {
         consistentAboveRangeSensors,
       );
 
+      // Get no water sensors count
+      const noWaterResult = await this.getPressureSensorsWithNoWater(regionName);
+      const noWaterSensors = noWaterResult.totalNoWaterSensors;
+      console.log("No water sensors:", noWaterSensors);
+
       return {
         totalSensors,
         belowRangeSensors,
@@ -3832,10 +3880,21 @@ export class PostgresStorage implements IStorage {
         consistentBelowRangeSensors,
         consistentOptimalSensors,
         consistentAboveRangeSensors,
+        noWaterSensors,
       };
     } catch (error) {
       console.error("Error fetching pressure dashboard stats:", error);
-      throw error;
+      return {
+        totalSensors: 0,
+        belowRangeSensors: 0,
+        optimalRangeSensors: 0,
+        aboveRangeSensors: 0,
+        consistentZeroSensors: 0,
+        consistentBelowRangeSensors: 0,
+        consistentOptimalSensors: 0,
+        consistentAboveRangeSensors: 0,
+        noWaterSensors: 0,
+      };
     }
   }
 

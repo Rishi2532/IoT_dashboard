@@ -501,6 +501,7 @@ export class DatabaseStorage implements IStorage {
     consistentBelowRangeSensors: number;
     consistentOptimalSensors: number;
     consistentAboveRangeSensors: number;
+    noWaterSensors: number;
   }> {
     // Simplified implementation - would normally perform complex queries
     return {
@@ -512,6 +513,30 @@ export class DatabaseStorage implements IStorage {
       consistentBelowRangeSensors: 0,
       consistentOptimalSensors: 0,
       consistentAboveRangeSensors: 0,
+      noWaterSensors: 0,
+    };
+  }
+
+  async getChlorineSensorsWithNoWater(regionName?: string): Promise<{
+    totalNoWaterSensors: number;
+    noWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      chlorine_connected: string | null;
+    }>;
+  }> {
+    return {
+      totalNoWaterSensors: 0,
+      noWaterSensors: [],
     };
   }
   
@@ -586,6 +611,7 @@ export class DatabaseStorage implements IStorage {
     consistentBelowRangeSensors: number;
     consistentOptimalSensors: number;
     consistentAboveRangeSensors: number;
+    noWaterSensors: number;
   }> {
     // Simplified implementation - would normally perform complex queries
     return {
@@ -597,6 +623,30 @@ export class DatabaseStorage implements IStorage {
       consistentBelowRangeSensors: 0,
       consistentOptimalSensors: 0,
       consistentAboveRangeSensors: 0,
+      noWaterSensors: 0,
+    };
+  }
+
+  async getPressureSensorsWithNoWater(regionName?: string): Promise<{
+    totalNoWaterSensors: number;
+    noWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      flow_meter_connected: string | null;
+    }>;
+  }> {
+    return {
+      totalNoWaterSensors: 0,
+      noWaterSensors: [],
     };
   }
 }
