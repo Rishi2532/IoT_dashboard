@@ -184,7 +184,8 @@ type SensorStatusFilter =
   | "all"
   | "connected"
   | "online"
-  | "offline";
+  | "offline"
+  | "noWater";
 
 const PressureDashboard: React.FC = () => {
   const { toast } = useToast();
@@ -367,7 +368,7 @@ const PressureDashboard: React.FC = () => {
       esr_name: string;
       water_date_day7: string | null;
       water_value_day7: number | null;
-      flow_meter_connected: string | null;
+      pressure_connected: string | null;
     }>;
   }>({
     queryKey: ["/api/pressure/no-water-sensors", selectedRegion],
@@ -387,7 +388,7 @@ const PressureDashboard: React.FC = () => {
       }
 
       const result = await response.json();
-      console.log(`Received no water sensors data:`, result);
+      console.log(`Received pressure no water sensors data:`, result);
       return result.data;
     },
   });
@@ -735,6 +736,21 @@ const PressureDashboard: React.FC = () => {
             return commStatus.pressure_connected === 'Connected' && commStatus.pressure_status === 'Online';
           case "offline":
             return commStatus.pressure_connected === 'Connected' && commStatus.pressure_status === 'Offline';
+          case "noWater":
+            // Check if this ESR is in the no-water sensors list
+            if (noWaterSensorsData?.noWaterSensors) {
+              return noWaterSensorsData.noWaterSensors.some(sensor => 
+                sensor.region === item.region &&
+                sensor.circle === item.circle &&
+                sensor.division === item.division &&
+                sensor.sub_division === item.sub_division &&
+                sensor.block === item.block &&
+                sensor.scheme_id === item.scheme_id &&
+                sensor.village_name === item.village_name &&
+                sensor.esr_name === item.esr_name
+              );
+            }
+            return false;
           default:
             return true;
         }
