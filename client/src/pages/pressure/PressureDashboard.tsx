@@ -450,19 +450,17 @@ const PressureDashboard: React.FC = () => {
     enabled: showHistoricalData, // Only fetch when historical view is enabled
   });
 
-  // Get latest pressure value
-  const getLatestPressureValue = (data: PressureData): number | null => {
-    // Try to get the latest non-null value
-    for (const day of [7, 6, 5, 4, 3, 2, 1]) {
-      const value = data[`pressure_value_${day}` as keyof PressureData];
-      if (
-        value !== undefined &&
-        value !== null &&
-        value !== "" &&
-        !isNaN(Number(value))
-      ) {
-        return Number(value);
-      }
+  // Get current pressure value (day 7 only - no fallback to previous days)
+  const getCurrentPressureValue = (data: PressureData): number | null => {
+    // Only use the current day (day 7) value - if it's null/blank, return null
+    const currentValue = data.pressure_value_7;
+    if (
+      currentValue !== undefined &&
+      currentValue !== null &&
+      String(currentValue) !== "" &&
+      !isNaN(Number(currentValue))
+    ) {
+      return Number(currentValue);
     }
     return null;
   };
@@ -649,16 +647,17 @@ const PressureDashboard: React.FC = () => {
     
     // Count by category
     data.forEach(item => {
-      const latestValue = getLatestPressureValue(item);
+      const latestValue = getCurrentPressureValue(item);
       
-      if (latestValue !== null) {
-        if (latestValue < 0.2 && latestValue >= 0) {
-          stats.belowRangeSensors++;
-        } else if (latestValue >= 0.2 && latestValue <= 0.7) {
-          stats.optimalRangeSensors++;
-        } else if (latestValue > 0.7) {
-          stats.aboveRangeSensors++;
-        }
+      // Treat null/blank current values as "below range" 
+      if (latestValue === null) {
+        stats.belowRangeSensors++;
+      } else if (latestValue < 0.2 && latestValue >= 0) {
+        stats.belowRangeSensors++;
+      } else if (latestValue >= 0.2 && latestValue <= 0.7) {
+        stats.optimalRangeSensors++;
+      } else if (latestValue > 0.7) {
+        stats.aboveRangeSensors++;
       }
       
       // Count consistent readings
@@ -812,19 +811,20 @@ const PressureDashboard: React.FC = () => {
       switch (selectedCardFilter) {
         case "below_0.2":
           filtered = filtered.filter((item) => {
-            const latestValue = getLatestPressureValue(item);
-            return latestValue !== null && latestValue < 0.2 && latestValue >= 0;
+            const latestValue = getCurrentPressureValue(item);
+            // Include null values (blank current day) and values < 0.2
+            return latestValue === null || (latestValue !== null && latestValue < 0.2 && latestValue >= 0);
           });
           break;
         case "between_0.2_0.7":
           filtered = filtered.filter((item) => {
-            const latestValue = getLatestPressureValue(item);
+            const latestValue = getCurrentPressureValue(item);
             return latestValue !== null && latestValue >= 0.2 && latestValue <= 0.7;
           });
           break;
         case "above_0.7":
           filtered = filtered.filter((item) => {
-            const latestValue = getLatestPressureValue(item);
+            const latestValue = getCurrentPressureValue(item);
             return latestValue !== null && latestValue > 0.7;
           });
           break;
@@ -951,16 +951,17 @@ const PressureDashboard: React.FC = () => {
     globallyFilteredData.forEach(item => {
       totalSensors++;
       
-      const latestValue = getLatestPressureValue(item);
+      const latestValue = getCurrentPressureValue(item);
       
-      if (latestValue !== null) {
-        if (latestValue < 0.2 && latestValue >= 0) {
-          belowRangeSensors++;
-        } else if (latestValue >= 0.2 && latestValue <= 0.7) {
-          optimalRangeSensors++;
-        } else if (latestValue > 0.7) {
-          aboveRangeSensors++;
-        }
+      // Treat null/blank current values as "below range" 
+      if (latestValue === null) {
+        belowRangeSensors++;
+      } else if (latestValue < 0.2 && latestValue >= 0) {
+        belowRangeSensors++;
+      } else if (latestValue >= 0.2 && latestValue <= 0.7) {
+        optimalRangeSensors++;
+      } else if (latestValue > 0.7) {
+        aboveRangeSensors++;
       }
       
       // Count consistent readings
@@ -1059,7 +1060,7 @@ const PressureDashboard: React.FC = () => {
 
       // Format data for Excel
       const worksheetData = data.map((item) => {
-        const latestPressure = getLatestPressureValue(item);
+        const latestPressure = getCurrentPressureValue(item);
         const { statusText } = getPressureStatusInfo(latestPressure);
 
         // Get the latest date
@@ -2085,7 +2086,7 @@ const PressureDashboard: React.FC = () => {
             <TableBody>
               {paginatedData.length > 0 ? (
                 paginatedData.map((item, idx) => {
-                  const latestPressure = getLatestPressureValue(item);
+                  const latestPressure = getCurrentPressureValue(item);
                   const statusInfo = getPressureStatusInfo(latestPressure);
 
                   return (
@@ -2232,7 +2233,7 @@ const PressureDashboard: React.FC = () => {
 
                                       {(() => {
                                         const latestValue =
-                                          getLatestPressureValue(selectedESR);
+                                          getCurrentPressureValue(selectedESR);
                                         const statusInfo =
                                           getPressureStatusInfo(latestValue);
 

@@ -440,19 +440,17 @@ const ChlorineDashboard: React.FC = () => {
     enabled: showHistoricalData, // Only fetch when historical view is enabled
   });
 
-  // Get latest chlorine value
-  const getLatestChlorineValue = (data: ChlorineData): number | null => {
-    // Try to get the latest non-null value
-    for (const day of [7, 6, 5, 4, 3, 2, 1]) {
-      const value = data[`chlorine_value_${day}` as keyof ChlorineData];
-      if (
-        value !== undefined &&
-        value !== null &&
-        value !== "" &&
-        !isNaN(Number(value))
-      ) {
-        return Number(value);
-      }
+  // Get current chlorine value (day 7 only - no fallback to previous days)
+  const getCurrentChlorineValue = (data: ChlorineData): number | null => {
+    // Only use the current day (day 7) value - if it's null/blank, return null
+    const currentValue = data.chlorine_value_7;
+    if (
+      currentValue !== undefined &&
+      currentValue !== null &&
+      String(currentValue) !== "" &&
+      !isNaN(Number(currentValue))
+    ) {
+      return Number(currentValue);
     }
     return null;
   };
@@ -736,16 +734,17 @@ const ChlorineDashboard: React.FC = () => {
     globallyFilteredData.forEach(item => {
       totalSensors++;
       
-      const latestValue = getLatestChlorineValue(item);
+      const latestValue = getCurrentChlorineValue(item);
       
-      if (latestValue !== null) {
-        if (latestValue < 0.2 && latestValue >= 0) {
-          belowRangeSensors++;
-        } else if (latestValue >= 0.2 && latestValue <= 0.5) {
-          optimalRangeSensors++;
-        } else if (latestValue > 0.5) {
-          aboveRangeSensors++;
-        }
+      // Treat null/blank current values as "below range" 
+      if (latestValue === null) {
+        belowRangeSensors++;
+      } else if (latestValue < 0.2 && latestValue >= 0) {
+        belowRangeSensors++;
+      } else if (latestValue >= 0.2 && latestValue <= 0.5) {
+        optimalRangeSensors++;
+      } else if (latestValue > 0.5) {
+        aboveRangeSensors++;
       }
       
       // Count consistent readings
@@ -793,11 +792,12 @@ const ChlorineDashboard: React.FC = () => {
     // Apply card-specific filter if selected (only affects table, not card values)
     if (selectedCardFilter && selectedCardFilter !== "all") {
       filtered = filtered.filter((item) => {
-        const latestValue = getLatestChlorineValue(item);
+        const latestValue = getCurrentChlorineValue(item);
 
         switch (selectedCardFilter) {
           case "below_0.2":
-            return latestValue !== null && latestValue < 0.2 && latestValue >= 0;
+            // Include null values (blank current day) and values < 0.2
+            return latestValue === null || (latestValue !== null && latestValue < 0.2 && latestValue >= 0);
           case "between_0.2_0.5":
             return (
               latestValue !== null && latestValue >= 0.2 && latestValue <= 0.5
@@ -1017,7 +1017,7 @@ const ChlorineDashboard: React.FC = () => {
 
       // Format data for Excel
       const worksheetData = data.map((item) => {
-        const latestChlorine = getLatestChlorineValue(item);
+        const latestChlorine = getCurrentChlorineValue(item);
         const { statusText } = getChlorineStatusInfo(latestChlorine);
 
         // Format dates for headers
@@ -2049,7 +2049,7 @@ const ChlorineDashboard: React.FC = () => {
                   </TableHeader>
                   <TableBody>
                     {paginatedData.map((item, index) => {
-                      const latestValue = getLatestChlorineValue(item);
+                      const latestValue = getCurrentChlorineValue(item);
                       const { className, statusText, textColor, icon } =
                         getChlorineStatusInfo(latestValue);
 
@@ -2261,7 +2261,7 @@ const ChlorineDashboard: React.FC = () => {
 
                                           {(() => {
                                             const latestValue =
-                                              getLatestChlorineValue(
+                                              getCurrentChlorineValue(
                                                 selectedESR,
                                               );
                                             const {
