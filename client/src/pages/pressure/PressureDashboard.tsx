@@ -904,6 +904,21 @@ const PressureDashboard: React.FC = () => {
         } else if (sensorStatusFilter === "offline") {
           return commStatus.pressure_connected === "Connected" && 
                  commStatus.pressure_status === "Offline";
+        } else if (sensorStatusFilter === "noWater") {
+          // Check if this ESR is in the no-water sensors list
+          if (noWaterSensorsData?.noWaterSensors) {
+            return noWaterSensorsData.noWaterSensors.some(sensor => 
+              sensor.region === item.region &&
+              sensor.circle === item.circle &&
+              sensor.division === item.division &&
+              sensor.sub_division === item.sub_division &&
+              sensor.block === item.block &&
+              sensor.scheme_id === item.scheme_id &&
+              sensor.village_name === item.village_name &&
+              sensor.esr_name === item.esr_name
+            );
+          }
+          return false;
         }
         
         return false;
@@ -921,7 +936,8 @@ const PressureDashboard: React.FC = () => {
     schemeStatusData,
     selectedCardFilter,
     sensorStatusFilter,
-    communicationStatusData, // Add this to dependencies
+    communicationStatusData,
+    noWaterSensorsData, // Add this dependency for noWater filtering
   ]);
 
   // Calculate pagination
