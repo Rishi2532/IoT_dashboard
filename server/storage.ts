@@ -289,6 +289,23 @@ export interface IStorage {
       chlorine_connected: string | null;
     }>;
   }>;
+  getChlorineSensorsWithWater(regionName?: string): Promise<{
+    totalWithWaterSensors: number;
+    withWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      chlorine_connected: string | null;
+    }>;
+  }>;
 
   // Pressure Data operations
   getAllPressureData(filter?: PressureDataFilter): Promise<PressureData[]>;
@@ -367,6 +384,23 @@ export interface IStorage {
       water_date_day7: string | null;
       water_value_day7: number | null;
       flow_meter_connected: string | null;
+    }>;
+  }>;
+  getPressureSensorsWithWater(regionName?: string): Promise<{
+    totalWithWaterSensors: number;
+    withWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      pressure_connected: string | null;
     }>;
   }>;
 
@@ -2802,6 +2836,102 @@ export class PostgresStorage implements IStorage {
     }
   }
 
+  async getChlorineSensorsWithWater(regionName?: string): Promise<{
+    totalWithWaterSensors: number;
+    withWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      chlorine_connected: string | null;
+    }>;
+  }> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+
+    try {
+      console.log("Finding chlorine sensors with water...");
+
+      // Base SQL query to match chlorine sensors with water consumption data
+      const baseConditions = regionName && regionName !== "all" 
+        ? sql`cs.region = ${regionName}` 
+        : sql`1 = 1`;
+
+      const query = sql`
+        SELECT 
+          cs.region,
+          cs.circle,
+          cs.division,
+          cs.sub_division,
+          cs.block,
+          cs.scheme_id,
+          cs.scheme_name,
+          cs.village_name,
+          cs.esr_name,
+          wc.water_date_day7,
+          wc.water_value_day7,
+          cs.chlorine_connected
+        FROM communication_status cs
+        LEFT JOIN water_consumption wc ON (
+          cs.region = wc.region AND
+          cs.circle = wc.circle AND
+          cs.division = wc.division AND
+          cs.sub_division = wc.sub_division AND
+          cs.block = wc.block AND
+          cs.scheme_id = wc.scheme_id AND
+          cs.scheme_name = wc.scheme_name AND
+          cs.village_name = wc.village_name AND
+          cs.esr_name = wc.esr_name
+        )
+        WHERE ${baseConditions}
+          AND cs.chlorine_connected = 'Connected'
+          AND wc.water_value_day7 IS NOT NULL 
+          AND CAST(wc.water_value_day7 AS text) != '0'
+          AND CAST(wc.water_value_day7 AS text) != '0.0'
+          AND CAST(wc.water_value_day7 AS text) != '0.00'
+          AND wc.water_value_day7 > 0
+      `;
+
+      const result = await db.execute(query);
+      
+      console.log(`Found ${result.rows ? result.rows.length : 0} chlorine sensors with water`);
+      
+      const resultRows = result.rows || [];
+      
+      return {
+        totalWithWaterSensors: resultRows.length,
+        withWaterSensors: resultRows.map((row: any) => ({
+          region: row.region,
+          circle: row.circle,
+          division: row.division,
+          sub_division: row.sub_division,
+          block: row.block,
+          scheme_id: row.scheme_id,
+          scheme_name: row.scheme_name,
+          village_name: row.village_name,
+          esr_name: row.esr_name,
+          water_date_day7: row.water_date_day7,
+          water_value_day7: row.water_value_day7 ? Number(row.water_value_day7) : null,
+          chlorine_connected: row.chlorine_connected
+        }))
+      };
+    } catch (error) {
+      console.error("Error getting chlorine sensors with water:", error);
+      // Return empty result instead of throwing to allow dashboard to continue
+      return {
+        totalWithWaterSensors: 0,
+        withWaterSensors: []
+      };
+    }
+  }
+
   // Get sensors with no water by cross-referencing pressure data with water consumption
   async getPressureSensorsWithNoWater(regionName?: string): Promise<{
     totalNoWaterSensors: number;
@@ -2897,6 +3027,102 @@ export class PostgresStorage implements IStorage {
       return {
         totalNoWaterSensors: 0,
         noWaterSensors: []
+      };
+    }
+  }
+
+  async getPressureSensorsWithWater(regionName?: string): Promise<{
+    totalWithWaterSensors: number;
+    withWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      pressure_connected: string | null;
+    }>;
+  }> {
+    await this.initialized;
+    const db = await this.ensureInitialized();
+
+    try {
+      console.log("Finding pressure sensors with water...");
+
+      // Base SQL query to match pressure sensors with water consumption data
+      const baseConditions = regionName && regionName !== "all" 
+        ? sql`cs.region = ${regionName}` 
+        : sql`1 = 1`;
+
+      const query = sql`
+        SELECT 
+          cs.region,
+          cs.circle,
+          cs.division,
+          cs.sub_division,
+          cs.block,
+          cs.scheme_id,
+          cs.scheme_name,
+          cs.village_name,
+          cs.esr_name,
+          wc.water_date_day7,
+          wc.water_value_day7,
+          cs.pressure_connected
+        FROM communication_status cs
+        LEFT JOIN water_consumption wc ON (
+          cs.region = wc.region AND
+          cs.circle = wc.circle AND
+          cs.division = wc.division AND
+          cs.sub_division = wc.sub_division AND
+          cs.block = wc.block AND
+          cs.scheme_id = wc.scheme_id AND
+          cs.scheme_name = wc.scheme_name AND
+          cs.village_name = wc.village_name AND
+          cs.esr_name = wc.esr_name
+        )
+        WHERE ${baseConditions}
+          AND cs.pressure_connected = 'Connected'
+          AND wc.water_value_day7 IS NOT NULL 
+          AND CAST(wc.water_value_day7 AS text) != '0'
+          AND CAST(wc.water_value_day7 AS text) != '0.0'
+          AND CAST(wc.water_value_day7 AS text) != '0.00'
+          AND wc.water_value_day7 > 0
+      `;
+
+      const result = await db.execute(query);
+      
+      console.log(`Found ${result.rows ? result.rows.length : 0} pressure sensors with water`);
+      
+      const resultRows = result.rows || [];
+      
+      return {
+        totalWithWaterSensors: resultRows.length,
+        withWaterSensors: resultRows.map((row: any) => ({
+          region: row.region,
+          circle: row.circle,
+          division: row.division,
+          sub_division: row.sub_division,
+          block: row.block,
+          scheme_id: row.scheme_id,
+          scheme_name: row.scheme_name,
+          village_name: row.village_name,
+          esr_name: row.esr_name,
+          water_date_day7: row.water_date_day7,
+          water_value_day7: row.water_value_day7 ? Number(row.water_value_day7) : null,
+          pressure_connected: row.pressure_connected
+        }))
+      };
+    } catch (error) {
+      console.error("Error getting pressure sensors with water:", error);
+      // Return empty result instead of throwing to allow dashboard to continue
+      return {
+        totalWithWaterSensors: 0,
+        withWaterSensors: []
       };
     }
   }

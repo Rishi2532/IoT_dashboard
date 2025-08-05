@@ -539,6 +539,29 @@ export class DatabaseStorage implements IStorage {
       noWaterSensors: [],
     };
   }
+
+  async getChlorineSensorsWithWater(regionName?: string): Promise<{
+    totalWithWaterSensors: number;
+    withWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      chlorine_connected: string | null;
+    }>;
+  }> {
+    return {
+      totalWithWaterSensors: 0,
+      withWaterSensors: [],
+    };
+  }
   
   // Pressure Data operations
   async getAllPressureData(filter?: PressureDataFilter): Promise<PressureData[]> {
@@ -647,6 +670,29 @@ export class DatabaseStorage implements IStorage {
     return {
       totalNoWaterSensors: 0,
       noWaterSensors: [],
+    };
+  }
+
+  async getPressureSensorsWithWater(regionName?: string): Promise<{
+    totalWithWaterSensors: number;
+    withWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      pressure_connected: string | null;
+    }>;
+  }> {
+    return {
+      totalWithWaterSensors: 0,
+      withWaterSensors: [],
     };
   }
 }

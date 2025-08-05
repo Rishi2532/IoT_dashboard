@@ -177,7 +177,8 @@ type SensorStatusFilter =
   | "connected"
   | "online"
   | "offline"
-  | "noWater";
+  | "noWater"
+  | "withWater";
 
 const ChlorineDashboard: React.FC = () => {
   const { toast } = useToast();
@@ -405,6 +406,46 @@ const ChlorineDashboard: React.FC = () => {
 
       const result = await response.json();
       console.log(`Received chlorine no water sensors data:`, result);
+      return result.data;
+    },
+  });
+
+  // Fetch chlorine sensors with water data
+  const { data: withWaterSensorsData } = useQuery<{
+    totalWithWaterSensors: number;
+    withWaterSensors: Array<{
+      region: string;
+      circle: string;
+      division: string;
+      sub_division: string;
+      block: string;
+      scheme_id: string;
+      scheme_name: string;
+      village_name: string;
+      esr_name: string;
+      water_date_day7: string | null;
+      water_value_day7: number | null;
+      chlorine_connected: string | null;
+    }>;
+  }>({
+    queryKey: ["/api/chlorine/with-water-sensors", selectedRegion],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+
+      if (selectedRegion && selectedRegion !== "all") {
+        params.append("region", selectedRegion);
+      }
+
+      const queryString = params.toString();
+      const url = `/api/chlorine/with-water-sensors${queryString ? `?${queryString}` : ""}`;
+
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error("Failed to fetch chlorine sensors with water");
+      }
+
+      const result = await response.json();
+      console.log(`Received chlorine with water sensors data:`, result);
       return result.data;
     },
   });
@@ -869,9 +910,35 @@ const ChlorineDashboard: React.FC = () => {
           return commStatus.chlorine_connected === "Connected" && 
                  commStatus.chlorine_status === "Offline";
         } else if (sensorStatusFilter === "noWater") {
-          // For noWater filter, show connected sensors that have water_value_day7 = 0 or null
-          // We'll need to fetch this data from the no-water API endpoint
-          return commStatus.chlorine_connected === "Connected";
+          // Check if this ESR is in the no-water sensors list
+          if (noWaterSensorsData?.noWaterSensors) {
+            return noWaterSensorsData.noWaterSensors.some(sensor => 
+              sensor.region === item.region &&
+              sensor.circle === item.circle &&
+              sensor.division === item.division &&
+              sensor.sub_division === item.sub_division &&
+              sensor.block === item.block &&
+              sensor.scheme_id === item.scheme_id &&
+              sensor.village_name === item.village_name &&
+              sensor.esr_name === item.esr_name
+            );
+          }
+          return false;
+        } else if (sensorStatusFilter === "withWater") {
+          // Check if this ESR is in the with-water sensors list
+          if (withWaterSensorsData?.withWaterSensors) {
+            return withWaterSensorsData.withWaterSensors.some(sensor => 
+              sensor.region === item.region &&
+              sensor.circle === item.circle &&
+              sensor.division === item.division &&
+              sensor.sub_division === item.sub_division &&
+              sensor.block === item.block &&
+              sensor.scheme_id === item.scheme_id &&
+              sensor.village_name === item.village_name &&
+              sensor.esr_name === item.esr_name
+            );
+          }
+          return false;
         }
         
         return false;
@@ -879,7 +946,7 @@ const ChlorineDashboard: React.FC = () => {
     }
 
     return filtered;
-  }, [globallyFilteredData, selectedCardFilter, sensorStatusFilter, communicationStatusData, showHistoricalData, historicalChlorineData, searchQuery]);
+  }, [globallyFilteredData, selectedCardFilter, sensorStatusFilter, communicationStatusData, showHistoricalData, historicalChlorineData, searchQuery, noWaterSensorsData, withWaterSensorsData]);
 
   // Calculate pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -1538,6 +1605,31 @@ const ChlorineDashboard: React.FC = () => {
               </p>
               <p className="text-xs text-red-600/70">
                 Connected sensors with no water
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Sensors with Water Card - Clickable */}
+        <Card
+          className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${
+            sensorStatusFilter === "withWater" ? "ring-2 ring-blue-500 ring-offset-2" : ""
+          } transform hover:scale-[1.02]`}
+          onClick={() => handleSensorStatusClick("withWater")}
+        >
+          <CardContent className="p-4 flex items-center">
+            <div className="bg-blue-100 p-3 rounded-full mr-4">
+              <Droplet className="h-6 w-6 text-blue-700" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold text-blue-800 mb-1">
+                Sensors with Water
+              </h3>
+              <p className="text-2xl font-bold text-blue-600">
+                {withWaterSensorsData?.totalWithWaterSensors || 0}
+              </p>
+              <p className="text-xs text-blue-600/70">
+                Connected sensors with water
               </p>
             </div>
           </CardContent>

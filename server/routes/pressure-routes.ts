@@ -161,6 +161,28 @@ router.get("/no-water-sensors", async (req, res) => {
   }
 });
 
+// Get pressure sensors with water (cross-referenced with water consumption)
+router.get("/with-water-sensors", async (req, res) => {
+  try {
+    const { region } = req.query;
+    console.log("Fetching pressure sensors with water for region:", region);
+    
+    const result = await storage.getPressureSensorsWithWater(region as string | undefined);
+    
+    res.json({
+      success: true,
+      data: result,
+      message: `Found ${result.totalWithWaterSensors} pressure sensors with water`
+    });
+  } catch (error) {
+    console.error("Error getting pressure sensors with water:", error);
+    res.status(500).json({ 
+      error: "Failed to get pressure sensors with water",
+      details: error instanceof Error ? error.message : String(error)
+    });
+  }
+});
+
 // Get single pressure record by composite key
 router.get("/:schemeId/:villageName/:esrName", async (req, res) => {
   try {
