@@ -406,7 +406,7 @@ export default function SchemeDetailsPage() {
                                 <tr>
                                   <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>VILLAGE</th>
                                   <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>POP</th>
-                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>WATER</th>
+                                  <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>WATER CONSUMPTION</th>
                                   <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>LPCD</th>
                                   <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>ESR</th>
                                   <th scope="col" style={{backgroundColor: '#3b2e7d', color: 'white', textAlign: 'center', padding: '8px', border: 'none', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.025em', borderRadius: '0'}}>ACTION</th>
@@ -435,7 +435,7 @@ export default function SchemeDetailsPage() {
                                           {population > 1000 ? `${Math.round(population/1000)}k` : population.toLocaleString()}
                                         </td>
                                         <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '14px', fontFamily: 'Poppins, sans-serif', fontWeight: '500', borderRadius: '0'}}>
-                                          {waterValue ? `${Math.round(parseFloat(waterValue.toString())/1000)}k` : '-'}
+                                          {waterValue ? `${Math.round(parseFloat(waterValue.toString()))} LL` : '-'}
                                         </td>
                                         <td style={{textAlign: 'center', padding: '8px', borderBottom: '1px solid #e5e7eb', backgroundColor: 'white', fontSize: '14px', fontFamily: 'Poppins, sans-serif', borderRadius: '0'}}>
                                           <span className={`font-semibold px-1 py-0.5 ${
