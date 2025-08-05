@@ -1779,8 +1779,13 @@ const PressureDashboard: React.FC = () => {
           </CardContent>
         </Card>
 
-        {/* No Water Sensors Card - Non-clickable */}
-        <Card className="opacity-90">
+        {/* No Water Sensors Card */}
+        <Card
+          className={`cursor-pointer hover:shadow-lg transition-all duration-200 ${
+            sensorStatusFilter === "noWater" ? "ring-2 ring-red-500 ring-offset-2" : ""
+          } transform hover:scale-[1.02]`}
+          onClick={() => handleSensorStatusClick("noWater")}
+        >
           <CardContent className="p-4 flex items-center">
             <div className="bg-red-100 p-3 rounded-full mr-4">
               <Droplet className="h-6 w-6 text-red-700" />
